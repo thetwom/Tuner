@@ -1,0 +1,26 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorSecondary">@color/colorAccent</item>
+
+        <item name="plotViewStyle">@style/PlotViewStyle</item>
+    </style>
+
+    <declare-styleable name="CustomTheme">
+        <attr name="plotViewStyle" format="reference"/>
+    </declare-styleable>
+    
+    <declare-styleable name="PlotView">
+        <attr name="strokeColor" format="color"/>
+        <attr name="strokeWidth" format="dimension"/>
+    </declare-styleable>
+
+    <style name="PlotViewStyle">
+        <item name="strokeColor">?attr/colorPrimary</item>
+        <item name="strokeWidth">3dp</item>
+    </style>
+</resources>
