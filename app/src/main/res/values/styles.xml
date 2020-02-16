@@ -8,10 +8,12 @@
         <item name="colorSecondary">@color/colorAccent</item>
 
         <item name="plotViewStyle">@style/PlotViewStyle</item>
+        <item name="volumeMeterStyle">@style/VolumeMeterStyle</item>
     </style>
 
     <declare-styleable name="CustomTheme">
         <attr name="plotViewStyle" format="reference"/>
+        <attr name="volumeMeterStyle" format="reference"/>
     </declare-styleable>
     
     <declare-styleable name="PlotView">
@@ -22,5 +24,21 @@
     <style name="PlotViewStyle">
         <item name="strokeColor">?attr/colorPrimary</item>
         <item name="strokeWidth">3dp</item>
+    </style>
+
+    <declare-styleable name="VolumeMeter">
+        <attr name="barColor" format="color"/>
+        <attr name="peakMarkerColor" format="color"/>
+        <attr name="peakMarkerSize" format="dimension"/>
+        <attr name="min" format="float"/>
+        <attr name="max" format="float"/>"
+    </declare-styleable>
+
+    <style name="VolumeMeterStyle">
+        <item name="barColor">?attr/colorPrimary</item>
+        <item name="peakMarkerColor">?attr/colorSecondary</item>
+        <item name="peakMarkerSize">2dp</item>
+        <item name="min">0.0</item>
+        <item name="max">1.0</item>
     </style>
 </resources>

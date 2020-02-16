@@ -1,0 +1,67 @@
+package de.moekadu.tuner
+
+import kotlin.math.min
+
+class CircularRecordData(size : Int) {
+
+    inner class ReadBuffer(val startRead : Int, val size : Int) {
+       private val dataIdxStart = dataIdx(startRead)
+        var locked = true
+
+        fun copyToFloatArray(floatArray: FloatArray) {
+            require(floatArray.size <= size)
+            data.copyInto(floatArray, 0, dataIdxStart, min(data.size, dataIdxStart + floatArray.size))
+            val nRemain = dataIdxStart + floatArray.size - data.size
+            if(nRemain > 0)
+                data.copyInto(floatArray, floatArray.size - nRemain, 0, nRemain)
+        }
+    }
+
+    inner class WriteBuffer(val startWrite: Int, val size : Int, val data : FloatArray) {
+        val offset = dataIdx(startWrite)
+        var locked = true
+    }
+
+    val data = FloatArray(size)
+    private var idxMax = 0
+
+    private val readBufferStartRead = ArrayList<Int>()
+
+    private var numLockWrite = 0
+
+    fun dataIdx(idx : Int) : Int {
+        return idx % data.size
+    }
+
+    fun lockWrite(num : Int) : WriteBuffer?{
+        val startIdxWrite = idxMax
+        val endIdxWrite = startIdxWrite + num
+        val minStartIdxRead = readBufferStartRead.min() ?: idxMax
+
+        if(numLockWrite > 0 || endIdxWrite > minStartIdxRead + data.size)
+            return null
+        require(data.size - dataIdx(idxMax) >= num) {"Writer buffer size to large -> data cannot be written inline"}
+
+        numLockWrite = num
+        return WriteBuffer(idxMax, num, data)
+    }
+
+    fun unlockWrite(writeBuffer: WriteBuffer) {
+        require(writeBuffer.locked) {"Write buffer has already been unlocked"}
+        idxMax += writeBuffer.size
+        numLockWrite = 0
+        writeBuffer.locked = false
+    }
+
+    fun lockRead(startIdx : Int, num : Int) : ReadBuffer{
+        require(startIdx + num <= idxMax && startIdx >= idxMax - data.size + numLockWrite) {"Read buffer cannot be locked"}
+        readBufferStartRead.add(startIdx)
+        return ReadBuffer(startIdx, num)
+    }
+
+    fun unlockRead(readBuffer: ReadBuffer){
+        require(readBuffer.locked) {"Read buffer has already been unlocked"}
+        readBufferStartRead.remove(readBuffer.startRead)
+        readBuffer.locked = false
+    }
+}

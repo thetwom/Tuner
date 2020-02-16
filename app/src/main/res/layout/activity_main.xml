@@ -23,4 +23,14 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         />
+
+    <de.moekadu.tuner.VolumeMeter
+        android:id="@+id/volume_meter"
+        android:layout_width="30dp"
+        android:layout_height="match_parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:padding="12dp"
+        app:min="-3"
+        app:max="1"
+        />
 </androidx.constraintlayout.widget.ConstraintLayout>
