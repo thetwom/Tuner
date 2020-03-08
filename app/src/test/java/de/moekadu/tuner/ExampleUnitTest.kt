@@ -33,6 +33,7 @@ class ExampleUnitTest {
         val read = circRec.lockRead(0, 5)
         val someFloats = FloatArray(5)
         read.copyToFloatArray(someFloats)
+        assertEquals(read[3], someFloats[3])
         circRec.unlockRead(read)
 
         val write2 = circRec.lockWrite(5)
@@ -61,6 +62,44 @@ class ExampleUnitTest {
 
         val read3 = circRec.lockRead(5, 5)
         read3.copyToFloatArray(someFloats)
+        assertEquals(read3[3], someFloats[3])
         circRec.unlockRead(read3)
+    }
+
+    @Test
+    fun resultBuffer_Test() {
+        val test = ResultBuffer(5, 5)
+
+        for (i in 0 until 10) {
+            val writeBuffer1 = test.lockWrite()
+            val writeBuffer2 = test.lockWrite()
+            assertEquals(test.unlockWrite(writeBuffer2),0)
+            assertEquals(test.unlockWrite(writeBuffer1), 2)
+        }
+        var writeBuffer = test.lockWrite()
+
+        var readBuffer1 = test.lockRead(-5)
+        assertNull(readBuffer1)
+        val readBuffer2 = test.lockRead(-4)
+        assertNotNull(readBuffer2)
+        val readBuffer3 = test.lockRead(-3)
+        assertNotNull(readBuffer3)
+        val readBuffer4 = test.lockRead(-2)
+        assertNotNull(readBuffer4)
+        val readBuffer5 = test.lockRead(-1)
+        assertNotNull(readBuffer5)
+
+        assertEquals(test.unlockWrite(writeBuffer), 1)
+        readBuffer1 = test.lockRead(-5)
+        assertNotNull(readBuffer1)
+
+        writeBuffer = test.lockWrite()
+        assertNull(writeBuffer)
+
+        test.unlockRead(readBuffer1)
+        test.unlockRead(readBuffer2)
+        test.unlockRead(readBuffer3)
+        test.unlockRead(readBuffer4)
+        test.unlockRead(readBuffer5)
     }
 }

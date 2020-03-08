@@ -46,6 +46,37 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             val y = sin(x)
             rawPlotLine.lineTo(x, y)
         }
+        rawPlotBounds.set(0f, -0.8f, 2.0f*PI.toFloat(), 0.8f)
+    }
+
+    fun plot(yvalues : FloatArray, startIdx: Int, endIdx: Int) {
+        rawPlotLine.rewind()
+
+        //rawPlotBounds.set(0.0f, yvalues.min() ?: 0.0f, (yvalues.size-1).toFloat(), yvalues.max() ?: 1.0f)
+
+        var ymin = yvalues[startIdx]
+        var ymax = yvalues[startIdx]
+
+        for(i in startIdx until endIdx) {
+            rawPlotLine.lineTo((i - startIdx).toFloat(), yvalues[i])
+            ymin = kotlin.math.min(ymin, yvalues[i])
+            ymax = kotlin.math.max(ymax, yvalues[i])
+        }
+        rawPlotBounds.set(0.0f, ymin, (endIdx-startIdx).toFloat(), ymax)
+
+        //for(i in 0 until yvalues.size)
+        //    rawPlotLine.lineTo(i.toFloat(), yvalues[i])
+        invalidate()
+    }
+
+    fun plot(xvalues : FloatArray, yvalues : FloatArray) {
+        rawPlotLine.rewind()
+
+        rawPlotBounds.set(xvalues[0], yvalues.min() ?: 0.0f, xvalues[xvalues.size-1], yvalues.max() ?: 1.0f)
+
+        for(i in 0 until xvalues.size)
+            rawPlotLine.lineTo(xvalues[i], yvalues[i])
+        invalidate()
     }
 
     override fun onDraw(canvas: Canvas?) {
@@ -58,7 +89,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             (height - paddingBottom).toFloat()
         )
 
-        rawPlotBounds.set(0f, -0.8f, 2.0f*PI.toFloat(), 0.8f)
+        //rawPlotBounds.set(0f, -0.8f, 2.0f*PI.toFloat(), 0.8f)
 
         plotTransformationMatrix.setRectToRect(rawPlotBounds, viewPlotBounds, Matrix.ScaleToFit.FILL)
         plotTransformationMatrix.postScale(1f, -1f, 0f, viewPlotBounds.centerY())

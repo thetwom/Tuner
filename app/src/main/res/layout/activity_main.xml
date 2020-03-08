@@ -16,8 +16,9 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <de.moekadu.tuner.PlotView
-        android:layout_width="200dp"
-        android:layout_height="60dp"
+        android:id="@+id/spectrum_plot"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
         android:padding="12dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"

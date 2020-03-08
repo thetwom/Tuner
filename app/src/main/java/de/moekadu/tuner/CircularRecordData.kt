@@ -1,11 +1,12 @@
 package de.moekadu.tuner
 
+import android.util.Log
 import kotlin.math.min
 
 class CircularRecordData(size : Int) {
 
     inner class ReadBuffer(val startRead : Int, val size : Int) {
-       private val dataIdxStart = dataIdx(startRead)
+        private val dataIdxStart = dataIdx(startRead)
         var locked = true
 
         fun copyToFloatArray(floatArray: FloatArray) {
@@ -14,6 +15,12 @@ class CircularRecordData(size : Int) {
             val nRemain = dataIdxStart + floatArray.size - data.size
             if(nRemain > 0)
                 data.copyInto(floatArray, floatArray.size - nRemain, 0, nRemain)
+        }
+
+        operator fun get(i : Int): Float {
+            require(i < size)
+            val idx = (dataIdxStart + i) % data.size
+            return data[idx]
         }
     }
 
@@ -38,8 +45,10 @@ class CircularRecordData(size : Int) {
         val endIdxWrite = startIdxWrite + num
         val minStartIdxRead = readBufferStartRead.min() ?: idxMax
 
-        if(numLockWrite > 0 || endIdxWrite > minStartIdxRead + data.size)
+        if(numLockWrite > 0 || endIdxWrite > minStartIdxRead + data.size) {
+            Log.v("Tuner", "CircularRecordData:lockWrite: Refusing to grant write access, numLockWrite="+numLockWrite+" endIdxWrite="+endIdxWrite+" minStartIdxRead+data.size="+(minStartIdxRead+data.size))
             return null
+        }
         require(data.size - dataIdx(idxMax) >= num) {"Writer buffer size to large -> data cannot be written inline"}
 
         numLockWrite = num
