@@ -8,19 +8,15 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
-import android.view.animation.LinearInterpolator
 
 class VolumeMeter(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr){
 
-    var barColor = Color.BLACK
-       private set
-    var peakMarkerColor = Color.RED
-        private set
+    private var barColor = Color.BLACK
+    private var peakMarkerColor = Color.RED
     var minValue = 0.0f
        private set
-    var maxValue = 1.0f
-       private set
+    private var maxValue = 1.0f
     var volume = 0.0f
        set(value) {
            field = value
@@ -28,16 +24,14 @@ class VolumeMeter(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
            invalidate()
        }
 
-    var startDelay = 100L
+    private var startDelay = 100L
        set(value) {
-           field = startDelay
+           field = value
            peakMarkerAnimator.startDelay = value
        }
 
-    var peakVolume = 0.0f
-      private set
-    var peakMarkerSize = 1.0f
-      private set
+    private var peakVolume = 0.0f
+    private var peakMarkerSize = 1.0f
 
     private val paint = Paint()
     private val barRect = RectF()
@@ -53,7 +47,7 @@ class VolumeMeter(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 R.styleable.VolumeMeter,
                 defStyleAttr,
                 R.style.VolumeMeterStyle
-            );
+            )
 
             barColor = ta.getColor(R.styleable.VolumeMeter_barColor, Color.BLACK)
             peakMarkerColor = ta.getColor(R.styleable.VolumeMeter_peakMarkerColor, Color.RED)

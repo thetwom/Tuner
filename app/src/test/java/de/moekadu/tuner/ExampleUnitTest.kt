@@ -68,7 +68,7 @@ class ExampleUnitTest {
 
     @Test
     fun resultBuffer_Test() {
-        val test = ResultBuffer(5, 5)
+        val test = ProcessingResultBuffer(5) {PreprocessorThread.PreprocessingResults(5)}
 
         for (i in 0 until 10) {
             val writeBuffer1 = test.lockWrite()

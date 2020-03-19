@@ -1,19 +1,24 @@
 package de.moekadu.tuner
 
-import android.util.Log
-
-
 fun bitReverse(value : Int, num_bits : Int) : Int {
-    var myval = value
+    var myValue = value
     var rev = 0
 
     for (i in 0 until num_bits) {
         rev = rev shl (1)
-        rev = rev or (myval and 1)
-        myval = myval shr (1)
+        rev = rev or (myValue and 1)
+        myValue = myValue shr (1)
     }
 
     return rev
+}
+
+fun RealFFT.Companion.nFrequencies(size: Int) : Int {
+    return size/2
+}
+
+fun RealFFT.Companion.getFreq(idx : Int, size: Int, dt : Float) : Float {
+    return idx / (dt * size)
 }
 
 class RealFFT(val size : Int, val windowType : Int = NO_WINDOW) {
@@ -101,14 +106,14 @@ class RealFFT(val size : Int, val windowType : Int = NO_WINDOW) {
 
         val halfSize = size / 2
 
-        var ninner = 1
-        var wstep = halfSize / 2
+        var numInner = 1
+        var wStep = halfSize / 2
 
-        for (iouter in 0 until nBits - 1) {
+        for (iOuter in 0 until nBits - 1) {
             var idx1 = 0
             var idx2 = halfSize / 2
 
-            for (i in 0 until ninner) {
+            for (i in 0 until numInner) {
                 val cos1 = cosTable[idx1]
                 val sin1 = sinTable[idx1]
                 val cos2 = cosTable[idx2]
@@ -116,9 +121,9 @@ class RealFFT(val size : Int, val windowType : Int = NO_WINDOW) {
 
                 var k1re = 2 * i
 
-                for (j in 0 until wstep) {
+                for (j in 0 until wStep) {
                     val k1im = k1re + 1
-                    val k2re = k1re + 2 * ninner
+                    val k2re = k1re + 2 * numInner
                     val k2im = k2re + 1
 
                     val tmp2Re = output[k2re]
@@ -129,13 +134,13 @@ class RealFFT(val size : Int, val windowType : Int = NO_WINDOW) {
                     output[k1re] += cos1 * tmp2Re - sin1 * tmp2Im
                     output[k1im] += cos1 * tmp2Im + sin1 * tmp2Re
 
-                    k1re += 4 * ninner
+                    k1re += 4 * numInner
                 }
-                idx1 += wstep
-                idx2 += wstep
+                idx1 += wStep
+                idx2 += wStep
             }
-            ninner *= 2
-            wstep /= 2
+            numInner *= 2
+            wStep /= 2
         }
 
         output[0] = 2 * output[0]
@@ -169,7 +174,7 @@ class RealFFT(val size : Int, val windowType : Int = NO_WINDOW) {
         }
     }
 
-    fun getFreq(idx : Int, dt : Float) : Float {
-        return idx / (dt * size)
-    }
+//    fun getFreq(idx : Int, dt : Float) : Float {
+//        return idx / (dt * size)
+//    }
 }

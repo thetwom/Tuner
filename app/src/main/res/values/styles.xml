@@ -19,11 +19,23 @@
     <declare-styleable name="PlotView">
         <attr name="strokeColor" format="color"/>
         <attr name="strokeWidth" format="dimension"/>
+        <attr name="markColor" format="color"/>
+        <attr name="markWidth" format="dimension"/>
+        <attr name="markTextSize" format="dimension"/>
+        <attr name="tickColor" format="color"/>
+        <attr name="tickWidth" format="dimension"/>
+        <attr name="tickTextSize" format="dimension"/>
     </declare-styleable>
 
     <style name="PlotViewStyle">
         <item name="strokeColor">?attr/colorPrimary</item>
         <item name="strokeWidth">3dp</item>
+        <item name="markColor">?attr/colorPrimary</item>
+        <item name="markWidth">1dp</item>
+        <item name="markTextSize">12sp</item>
+        <item name="tickColor">?attr/colorPrimary</item>
+        <item name="tickWidth">1dp</item>
+        <item name="tickTextSize">12sp</item>
     </style>
 
     <declare-styleable name="VolumeMeter">

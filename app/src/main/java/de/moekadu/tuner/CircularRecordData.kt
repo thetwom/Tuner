@@ -44,7 +44,7 @@ class CircularRecordData(size : Int) {
         val startIdxWrite = idxMax
         val endIdxWrite = startIdxWrite + num
         val minStartIdxRead = readBufferStartRead.min() ?: idxMax
-
+        //Log.v("Tuner", "CircularRecordData:lockWrite: startIdxWrite="+ startIdxWrite)
         if(numLockWrite > 0 || endIdxWrite > minStartIdxRead + data.size) {
             Log.v("Tuner", "CircularRecordData:lockWrite: Refusing to grant write access, numLockWrite="+numLockWrite+" endIdxWrite="+endIdxWrite+" minStartIdxRead+data.size="+(minStartIdxRead+data.size))
             return null
@@ -64,6 +64,7 @@ class CircularRecordData(size : Int) {
 
     fun lockRead(startIdx : Int, num : Int) : ReadBuffer{
         require(startIdx + num <= idxMax && startIdx >= idxMax - data.size + numLockWrite) {"Read buffer cannot be locked"}
+        //Log.v("Tuner", "CircularRecordData:lockRead: startIdxRead="+ startIdx)
         readBufferStartRead.add(startIdx)
         return ReadBuffer(startIdx, num)
     }

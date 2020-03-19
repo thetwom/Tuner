@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Tuner</string>
+
+    <string name="hertz">%.0f&#x200A;Hz</string>
 </resources>

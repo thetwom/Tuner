@@ -5,17 +5,15 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
 
-class RecordReaderThread(val uiHandler: Handler) : HandlerThread("Tuner:RecoredReaderThread") {
+class RecordReaderThread(private val uiHandler: Handler) : HandlerThread("Tuner:RecordReaderThread") {
     lateinit var handler : Handler
 
     companion object{
-        const val READDATA = 200001
-        const val FINISHWRITE = 200002
+        const val READDATA = 100001
+        const val FINISHWRITE = 100002
     }
 
-    class RecordAndData(val record : AudioRecord, val dataBuffer : CircularRecordData.WriteBuffer) {
-
-    }
+    class RecordAndData(val record : AudioRecord, val dataBuffer : CircularRecordData.WriteBuffer)
 
     override fun onLooperPrepared() {
         super.onLooperPrepared()
@@ -25,8 +23,7 @@ class RecordReaderThread(val uiHandler: Handler) : HandlerThread("Tuner:RecoredR
                 super.handleMessage(msg)
 
                 if(msg.what == READDATA){
-                    val obj = msg.obj
-                    when(obj) {
+                    when(val obj = msg.obj) {
                         is RecordAndData -> readAudioRecord(obj.record, obj.dataBuffer)
                     }
                 }

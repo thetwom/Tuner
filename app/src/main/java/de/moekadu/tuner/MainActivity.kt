@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Message
 import android.util.Log
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -21,56 +22,83 @@ class MainActivity : AppCompatActivity() {
     companion object {
         const val sampleRate = 44100
         const val REQUEST_AUDIO_RECORD_PERMISSION = 1001
+
         //const val processingBufferSize = 16384
         const val processingBufferSize = 4096
+        //const val processingBufferSize = 8192
+        const val numBufferForPostprocessing = 2
     }
 
-    // TODO: next steps:
-    // - The record processor must compute the spectrum and store it in the passed processing result
+    private var record: AudioRecord? = null
+    private var recordReader: RecordReaderThread? = null
+    private val dummyAudioBuffer = FloatArray(processingBufferSize)
+    // val audioTimestamp = AudioTimestamp()
 
-    var record : AudioRecord ?= null
+    /// Buffer, where we store the audio data
+    private var audioData: CircularRecordData? = null
 
-    var recordReader : RecordReaderThread ?= null
-    var recordBuffer : CircularRecordData ?= null
+    private var preprocessor: PreprocessorThread? = null
+    private var preprocessingResults: ProcessingResultBuffer<PreprocessorThread.PreprocessingResults>? =
+        null
 
-    var recordProcessor : RecordProcessorThread ?= null
-    var processingResults : ResultBuffer ?= null
+    private var postprocessor: PostprocessorThread? = null
+    private var postprocessingResults: ProcessingResultBuffer<PostprocessorThread.PostprocessingResults>? =
+        null
 
     //val overlapFraction = 4
-    val overlapFraction = 2
+    private val overlapFraction = 2
 
-    var volumeMeter : VolumeMeter ?= null
+    private var volumeMeter: VolumeMeter? = null
 
-    var spectrumPlot : PlotView ?= null
+    private var spectrumPlot: PlotView? = null
+    private val spectrumPlotXMarks = FloatArray(1)
 
-    var i = 0
+    private var frequencyText: TextView? = null
 
-    class UiHandler(private val activity : WeakReference<MainActivity>) : Handler() {
+    private val frequencies = FloatArray(RealFFT.nFrequencies(processingBufferSize))
+
+    private var pitchPlot: PlotView? = null
+    private val pitchHistory = FloatArray(200) { 0.0f }
+
+    class UiHandler(private val activity: WeakReference<MainActivity>) : Handler() {
 
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
             activity.get()?.let {
                 //Log.v("Tuner", "something finished " + it.i)
-                it.i = it.i + 1
+//                it.i = it.i + 1
 
                 val obj = msg.obj
-
-                if(msg.what == RecordReaderThread.FINISHWRITE)
-                {
-                    when(obj) {
-                        is CircularRecordData.WriteBuffer -> it.onFinishReadRecordData(obj)
+                //Log.v("Tuner", "MainActivity:UiHandler:handleMessage : message num="+msg.what)
+                when (msg.what) {
+                    RecordReaderThread.FINISHWRITE -> {
+                        //Log.v("Tuner", "MainActivity:UiHandler:handleMessage : write finished")
+                        when (obj) {
+                            is CircularRecordData.WriteBuffer -> it.doPreprocessing(obj)
+                        }
                     }
-                }
-                else if(msg.what == RecordProcessorThread.PROCESSING_FINISHED)
-                {
-                    when(obj) {
-                        is RecordProcessorThread.ReadBufferAndProcessingResults -> it.onFinishProcessingData(obj)
+                    PreprocessorThread.PREPROCESSING_FINISHED -> {
+                        //Log.v("Tuner", "MainActivity:UiHandler:handleMessage : preprocessing finished")
+                        when (obj) {
+                            is PreprocessorThread.ReadBufferAndProcessingResults -> it.doPostprocessing(
+                                obj
+                            )
+                        }
+                    }
+                    PostprocessorThread.POSTPROCESSING_FINISHED -> {
+                        //Log.v("Tuner", "MainActivity:UiHandler:handleMessage : postprocessing finished")
+                        when (obj) {
+                            is PostprocessorThread.PreprocessingDataAndPostprocessingResults -> it.doVisualize(
+                                obj
+                            )
+                        }
                     }
                 }
             }
         }
     }
-    val uiHandler = UiHandler(WeakReference(this))
+
+    private val uiHandler = UiHandler(WeakReference(this))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,17 +107,40 @@ class MainActivity : AppCompatActivity() {
         volumeMeter = findViewById(R.id.volume_meter)
         //volumeMeter?.startDelay = kotlin.math.max((2 * 1000 * processingBufferSize / overlapFraction / sampleRate).toLong(), 200L)
         spectrumPlot = findViewById(R.id.spectrum_plot)
+        //spectrumPlot?.xRange(0f, 880f)
+        //spectrumPlot?.setXTicks(floatArrayOf(0f,200f,400f,600f,800f), true)
+        spectrumPlot?.xRange(0f, 1760f, false)
+        spectrumPlot?.setXTicks(floatArrayOf(0f,200f, 400f, 600f, 800f, 1000f,1200f, 1400f, 1600f), true)
+        spectrumPlot?.setXMarkTextFormat { i -> getString(R.string.hertz, i) }
+        spectrumPlot?.setXTickTextFormat { i -> getString(R.string.hertz, i) }
+        frequencyText = findViewById(R.id.frequency_text)
+
+        for(i in 0 until processingBufferSize/2)
+            frequencies[i] = RealFFT.getFreq(i, processingBufferSize, 1.0f/ sampleRate)
+
+        pitchPlot = findViewById(R.id.pitch_plot)
+        pitchPlot?.xRange(0f, 1.1f*pitchHistory.size.toFloat(), false)
+        pitchPlot?.yRange(0f, 1760f, false)
+        pitchPlot?.plot(pitchHistory)
     }
 
     override fun onStart() {
         super.onStart()
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_AUDIO_RECORD_PERMISSION)
-        }
-        else {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                REQUEST_AUDIO_RECORD_PERMISSION
+            )
+        } else {
             startAudioRecorder()
         }
     }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -97,34 +148,49 @@ class MainActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        when(requestCode) {
+        when (requestCode) {
             REQUEST_AUDIO_RECORD_PERMISSION -> {
-                if(grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     startAudioRecorder()
-                }
-                else {
-                    Toast.makeText(this, "No audio recording permission is granted", Toast.LENGTH_LONG).show();
-                    Log.v("Tuner", "MainActivity:onRequestPermissionsResult: No audio recording permission is granted.")
+                } else {
+                    Toast.makeText(
+                        this,
+                        "No audio recording permission is granted",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    Log.v(
+                        "Tuner",
+                        "MainActivity:onRequestPermissionsResult: No audio recording permission is granted."
+                    )
                 }
             }
         }
     }
 
-    fun startAudioRecorder() {
+    private fun startAudioRecorder() {
         Log.v("Tuner", "MainActivity::startAudioRecorder")
 
-        if(recordProcessor == null) {
-            recordProcessor = RecordProcessorThread(processingBufferSize, uiHandler)
-            processingResults = ResultBuffer(3, processingBufferSize)
-            recordProcessor?.start()
+        if (preprocessor == null) {
+            preprocessor = PreprocessorThread(processingBufferSize, uiHandler)
+            preprocessingResults = ProcessingResultBuffer(3 + numBufferForPostprocessing) {
+                PreprocessorThread.PreprocessingResults(processingBufferSize)
+            }
+            preprocessor?.start()
         }
 
-        if(recordReader == null) {
+        if (postprocessor == null) {
+            postprocessor = PostprocessorThread(processingBufferSize, uiHandler)
+            postprocessingResults =
+                ProcessingResultBuffer(3) { PostprocessorThread.PostprocessingResults() }
+            postprocessor?.start()
+        }
+
+        if (recordReader == null) {
             recordReader = RecordReaderThread(uiHandler)
             recordReader?.start()
         }
 
-        if(record == null) {
+        if (record == null) {
             val processingInterval = getProcessingInterval()
 
             //val sampleRate = AudioFormat.SAMPLE_RATE_UNSPECIFIED
@@ -135,7 +201,7 @@ class MainActivity : AppCompatActivity() {
             )
 
             // Times four because size is given in bytes, but we are reading floats
-            val audioRecordBufferSize = kotlin.math.max(2*processingInterval*4, minBufferSize)
+            val audioRecordBufferSize = kotlin.math.max(2 * processingInterval * 4, minBufferSize)
 
             val localRecord = AudioRecord(
                 MediaRecorder.AudioSource.MIC,
@@ -144,31 +210,51 @@ class MainActivity : AppCompatActivity() {
                 AudioFormat.ENCODING_PCM_FLOAT,
                 audioRecordBufferSize
             )
-            if (localRecord.getState() == AudioRecord.STATE_UNINITIALIZED) {
-                Log.v("Tuner", "MainActivity::startAudioRecorder: Not able to aquire audio resource")
+            if (localRecord.state == AudioRecord.STATE_UNINITIALIZED) {
+                Log.v(
+                    "Tuner",
+                    "MainActivity::startAudioRecorder: Not able to acquire audio resource"
+                )
                 Toast.makeText(this, "Not able to acquire audio resource", Toast.LENGTH_LONG).show()
             }
 
-            var circularBufferSize = 3 * kotlin.math.max(processingBufferSize, processingInterval)  // Smaller size might be enough?
-            if(circularBufferSize % processingInterval > 0)  // Make sure, the circularBufferSize is a multiple of the processingInterval
-                circularBufferSize = (circularBufferSize / processingInterval + 1) * processingInterval
+            var circularBufferSize = 3 * kotlin.math.max(
+                processingBufferSize,
+                processingInterval
+            )  // Smaller size might be enough?
+            if (circularBufferSize % processingInterval > 0)  // Make sure, the circularBufferSize is a multiple of the processingInterval
+                circularBufferSize =
+                    (circularBufferSize / processingInterval + 1) * processingInterval
 
-            recordBuffer = CircularRecordData(circularBufferSize)
+            audioData = CircularRecordData(circularBufferSize)
 
-            val posNotifState = localRecord.setPositionNotificationPeriod(processingInterval)
+            val posNotificationState = localRecord.setPositionNotificationPeriod(processingInterval)
 
-            if(posNotifState != AudioRecord.SUCCESS) {
+            if (posNotificationState != AudioRecord.SUCCESS) {
                 Log.v(
                     "Tuner",
                     "MainActivity::startAudioRecord: Not able to set position notification period"
                 )
-                Toast.makeText(this, "Not able to set position notification period", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this,
+                    "Not able to set position notification period",
+                    Toast.LENGTH_LONG
+                ).show()
             }
 
             Log.v("Tuner", "MainActivity::startAudioRecorder: minBufferSize = " + minBufferSize)
-            Log.v("Tuner", "MainActivity::startAudioRecorder: circularBufferSize = " + circularBufferSize)
-            Log.v("Tuner", "MainActivity::startAudioRecorder: processingInterval = " + processingInterval)
-            Log.v("Tuner", "MainActivity::startAudioRecorder: audioRecordBufferSize = " + audioRecordBufferSize)
+            Log.v(
+                "Tuner",
+                "MainActivity::startAudioRecorder: circularBufferSize = " + circularBufferSize
+            )
+            Log.v(
+                "Tuner",
+                "MainActivity::startAudioRecorder: processingInterval = " + processingInterval
+            )
+            Log.v(
+                "Tuner",
+                "MainActivity::startAudioRecorder: audioRecordBufferSize = " + audioRecordBufferSize
+            )
 
             localRecord.setRecordPositionUpdateListener(object :
                 AudioRecord.OnRecordPositionUpdateListener {
@@ -176,31 +262,13 @@ class MainActivity : AppCompatActivity() {
                     Log.v("Tuner", "MainActivity:onMarkerReached")
                 }
 
+                //@RequiresApi(Build.VERSION_CODES.N)
                 override fun onPeriodicNotification(recorder: AudioRecord?) {
                     //Log.v("Tuner", "MainActivity:onPeriodicNotification")
-
-                    recorder?.let {
-                        if(recorder.state == AudioRecord.STATE_UNINITIALIZED)
-                            return
-
-                        val writeBuffer = recordBuffer?.lockWrite(recorder.positionNotificationPeriod)
-
-                        if(recordBuffer == null)
-                            Log.v("Tuner", "MainActivity::onPeriodicNotification: recordBuffer does not exist")
-                        else if(writeBuffer == null)
-                            Log.v("Tuner", "MainActivity::onPeriodicNotification: cannot acquire write buffer")
-
-                        writeBuffer?.let {
-                            val recordAndData = RecordReaderThread.RecordAndData(recorder, writeBuffer)
-                            val handler = recordReader?.handler
-                            val message = handler?.obtainMessage(RecordReaderThread.READDATA, recordAndData)
-                            message?.let {
-                                handler.sendMessage(message)
-                            }
-                        }
-                    }
+                    //recorder?.getTimestamp(audioTimestamp, TIMEBASE_MONOTONIC)
+                    //Log.v("Tuner", "MainActivity:onPeriodicNotification : timestamp=" +audioTimestamp.framePosition)
+                    readAudioData(recorder)
                 }
-
             })
 
             record = localRecord
@@ -217,8 +285,8 @@ class MainActivity : AppCompatActivity() {
         record?.release()
         record = null
 
-        recordProcessor?.quit()
-        recordProcessor = null
+        preprocessor?.quit()
+        preprocessor = null
 
         recordReader?.quit()
         recordReader = null
@@ -231,73 +299,184 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
+    private fun readAudioData(recorder: AudioRecord?) {
+        //Log.v("Tuner", "MainActivity:readAudioData")
+        if(recorder != null) {
+            if (recorder.state == AudioRecord.STATE_UNINITIALIZED) {
+                return
+            }
+
+            val writeBuffer = audioData?.lockWrite(recorder.positionNotificationPeriod)
+
+            var readToDummy = false
+
+            if (audioData == null) {
+                Log.v("Tuner", "MainActivity::onPeriodicNotification: recordBuffer does not exist")
+                readToDummy = true
+            }
+            else if (writeBuffer == null) {
+                Log.v("Tuner", "MainActivity::onPeriodicNotification: cannot acquire write buffer")
+                readToDummy = true
+            }
+            else {
+                val recordAndData = RecordReaderThread.RecordAndData(recorder, writeBuffer)
+                val handler = recordReader?.handler
+                val message = handler?.obtainMessage(RecordReaderThread.READDATA, recordAndData)
+                if (message != null){
+                    handler.sendMessage(message)
+                }
+                else  {
+                    audioData?.unlockWrite(writeBuffer)
+                }
+            }
+
+            if(readToDummy)
+                recorder.read(dummyAudioBuffer, 0, recorder.positionNotificationPeriod, AudioRecord.READ_BLOCKING)
+        }
+    }
+
     /// Inhere we trigger the processing of the audio data we just read
-    private fun onFinishReadRecordData(writeBuffer : CircularRecordData.WriteBuffer) {
+    private fun doPreprocessing(writeBuffer: CircularRecordData.WriteBuffer) {
+        //Log.v("Tuner", "MainActivity:doPreprocessing")
         val startWrite = writeBuffer.startWrite
         val endWrite = startWrite + writeBuffer.size
 
-        recordBuffer?.unlockWrite(writeBuffer)
+        audioData?.unlockWrite(writeBuffer)
 
-        val processingInterval = getProcessingInterval();
+        val processingInterval = getProcessingInterval()
         // Log.v("Tuner", "MainActivity:onFinishedReadRecordData " + startWrite + " " + endWrite)
 
         // We might want to process audio on more than one thread in future
-        for (i in startWrite+processingInterval .. endWrite step processingInterval)
-        {
-            //Log.v("Tuner", "MainActivity:onFinshReadRecordData:loop: " + j)
+        for (i in startWrite + processingInterval..endWrite step processingInterval) {
+            //Log.v("Tuner", "MainActivity:onFinishReadRecordData:loop: " + i)
             val startProcessingIndex = i - processingBufferSize
 
-            if(startProcessingIndex >= 0) {
+            if (startProcessingIndex >= 0) {
 
-                val readBuffer = recordBuffer?.lockRead(startProcessingIndex, processingBufferSize)
-                if (readBuffer == null)
-                    Log.v("Tuner", "MainActivity:onFinishReadRecordData: Not able to get read access to recordBuffer")
+                val readBuffer = audioData?.lockRead(startProcessingIndex, processingBufferSize)
+                if (readBuffer == null) {
+                    Log.v(
+                        "Tuner",
+                        "MainActivity:doPreprocessing: Not able to get read access to recordBuffer"
+                    )
+                }
+                else {
+                    val results = preprocessingResults?.lockWrite()
+                    if (results == null) {
+                        Log.v(
+                            "Tuner",
+                            "MainActivity:doPreprocessing: Not able to get write access to the processingResults"
+                        )
+                        audioData?.unlockRead(readBuffer)
+                    }
+                    else {
+                        //Log.v("Tuner", "MainActivity:doPreprocessing: Sending data to preprocessing thread")
 
-                val results = processingResults?.lockWrite()
-                if (results == null)
-                    Log.v("Tuner", "MainActivity:onFinishReadRecordData: Not able to get write access to the processingResults")
-
-                readBuffer?.let {
-                    results?.let {
-                        val sendObject = RecordProcessorThread.ReadBufferAndProcessingResults(readBuffer, results)
-                        val handler = recordProcessor?.handler
+                        val sendObject =
+                            PreprocessorThread.ReadBufferAndProcessingResults(readBuffer, results)
+                        val handler = preprocessor?.handler
                         val message =
-                            handler?.obtainMessage(RecordProcessorThread.PROCESS_AUDIO, sendObject)
-                        message?.let {
+                            handler?.obtainMessage(PreprocessorThread.PREPROCESS_AUDIO, sendObject)
+                        if(message != null) {
                             handler.sendMessage(message)
+                        }
+                        else {
+                            audioData?.unlockRead(readBuffer)
+                            preprocessingResults?.unlockWrite(results)
                         }
                     }
                 }
             }
+            else {
+                Log.v("Tuner", "MainActivity:doPreprocessing: Not enough data yet to preprocess")
+            }
         }
     }
 
-    private fun onFinishProcessingData(readBufferAndProcessingResults: RecordProcessorThread.ReadBufferAndProcessingResults) {
-        recordBuffer?.unlockRead(readBufferAndProcessingResults.readBuffer)
-        val numUnlocked = processingResults?.unlockWrite(readBufferAndProcessingResults.processingResults) ?: 0
+    private fun doPostprocessing(readBufferAndProcessingResults: PreprocessorThread.ReadBufferAndProcessingResults) {
+        //Log.v("Tuner", "MainActivity:doPostprocessing")
+        audioData?.unlockRead(readBufferAndProcessingResults.readBuffer)
+        val numUnlocked =
+            preprocessingResults?.unlockWrite(readBufferAndProcessingResults.preprocessingResults)
+                ?: 0
 
-        if(numUnlocked > 0) {
-            val result = processingResults?.lockRead(-1)
-            result?.let {
-                //Log.v("Tuner", "Max level: " + result.maxValue)
-                volumeMeter?.let {
-                    val minAllowedVal = 10.0f.pow(it.minValue)
-                    val value = kotlin.math.max(minAllowedVal, result.maxValue)
-                    val spl = kotlin.math.log10(value)
-                    //Log.v("Tuner", "spl: " + spl)
-                    it.volume = spl
+        for (j in numUnlocked downTo 1) {
+            val prepArray =
+                Array(numBufferForPostprocessing) { i -> preprocessingResults?.lockRead(i - numBufferForPostprocessing + 1 - j) }
 
-                    val freq = result.idxMaxFreq * sampleRate / result.spectrum.size
-                    Log.v("Tuner", "freq=" + freq)
-                }
-
-                spectrumPlot?.let {
-                    it.plot(result.ampSpec, 0, 100)
-                }
+            if (prepArray.contains(null)) {
+                for (pA in prepArray)
+                    preprocessingResults?.unlockRead(pA)
+                continue
             }
 
-            processingResults?.unlockRead(result)
+            val post = postprocessingResults?.lockWrite()
+
+            // Make sure, that prepArray has only non-null entries and post is not null, otherwise unlock and go on
+            if (post == null) {
+                for (pA in prepArray)
+                    preprocessingResults?.unlockRead(pA)
+                continue
+            }
+            //Log.v("Tuner", "MainActivity:doPostprocessing : sending data to postprocessing thread")
+            val sendObject =
+                PostprocessorThread.PreprocessingDataAndPostprocessingResults(prepArray, post, getProcessingInterval())
+            val handler = postprocessor?.handler
+            val message = handler?.obtainMessage(PostprocessorThread.POSTPROCESS_AUDIO, sendObject)
+            if(message != null) {
+                handler.sendMessage(message)
+            }
+            else {
+                for (pA in prepArray)
+                    preprocessingResults?.unlockRead(pA)
+                postprocessingResults?.unlockWrite(post)
+            }
         }
+    }
+
+    private fun doVisualize(preprocessingDataAndPostprocessingResults: PostprocessorThread.PreprocessingDataAndPostprocessingResults) {
+        //Log.v("Tuner", "MainActivity:doVisualize")
+        val prepArray = preprocessingDataAndPostprocessingResults.preprocessingResults
+        val post = preprocessingDataAndPostprocessingResults.postprocessingResults
+
+        val numUnlocked = postprocessingResults?.unlockWrite(post) ?: 0
+        if(numUnlocked == 0) {
+            for (pA in prepArray)
+                preprocessingResults?.unlockRead(pA)
+            return
+        }
+
+        val postResults = postprocessingResults?.lockRead(-1)
+
+        prepArray.last()?.let {result ->
+            //Log.v("Tuner", "Max level: " + result.maxValue)
+            volumeMeter?.let {
+                val minAllowedVal = 10.0f.pow(it.minValue)
+                val value = kotlin.math.max(minAllowedVal, result.maxValue)
+                val spl = kotlin.math.log10(value)
+                //Log.v("Tuner", "spl: " + spl)
+                it.volume = spl
+
+                val freq = result.idxMaxFreq * sampleRate / result.spectrum.size
+                val pitchFreq = result.idxMaxPitch * sampleRate / result.spectrum.size
+                Log.v("Tuner", "freq=" + freq + "   pitch="+pitchFreq)
+            }
+            spectrumPlotXMarks[0] = postResults?.frequency ?: 0f
+            spectrumPlot?.setXMarks(spectrumPlotXMarks, false)
+            spectrumPlot?.plot(frequencies, result.ampSpec)
+        }
+
+        postResults?.let {
+            Log.v("Tuner", "freqcorr=" + it.frequency)
+            frequencyText?.text = "frequency: " + it.frequency + "Hz"
+            pitchHistory.copyInto(pitchHistory, 0, 1)
+            pitchHistory[pitchHistory.lastIndex] = it.frequency
+            pitchPlot?.plot(pitchHistory)
+        }
+
+        for (pA in prepArray)
+            preprocessingResults?.unlockRead(pA)
+        postprocessingResults?.unlockRead(postResults)
     }
 
     private fun getProcessingInterval() : Int {
