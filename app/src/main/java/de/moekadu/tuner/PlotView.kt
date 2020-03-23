@@ -1,18 +1,29 @@
 package de.moekadu.tuner
 
+import android.animation.FloatArrayEvaluator
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import kotlin.math.*
 
 class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr)
 {
-    val noLimit = Float.MAX_VALUE
+    companion object {
+        const val NO_REDRAW = Long.MAX_VALUE
+        const val TYPE_MIN = 0
+        const val TYPE_MAX = 1
+    }
+    val autoLimit = Float.MAX_VALUE
 
-    private var strokeColor = Color.BLACK
-    private var strokeWidth = 5f
+    private var plotCalled = false
+
+    private var plotLineColor = Color.BLACK
+    private var plotLineWidth = 5f
+
     private val paint = Paint()
     private val arrowPath = Path()
     private val rawPlotLine = Path()
@@ -21,28 +32,36 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private val rawPlotBounds = RectF()
     private val viewPlotBounds = RectF()
 
-    private var xMin = noLimit
-    private var xMax = noLimit
+    private var xRange = FloatArray(2) { autoLimit }
+    private var yRange = FloatArray(2) { autoLimit }
 
-    private var yMin = noLimit
-    private var yMax = noLimit
-
-    private var xMarks : FloatArray? = null
+    private val xRangeEvaluator = FloatArrayEvaluator(xRange)
+    private val yRangeEvaluator = FloatArrayEvaluator(yRange)
+    private val xRangeAnimator = ValueAnimator.ofObject(xRangeEvaluator)
+    private val yRangeAnimator = ValueAnimator.ofObject(yRangeEvaluator, floatArrayOf(0f, 100f), floatArrayOf(100f, 200f))
 
     private val markPaint = Paint()
     private var markColor = Color.BLACK
-    private var markWidth = 2f
+    private var markLineWidth = 2f
     private var markTextSize = 10f
 
+    private var xMarks : FloatArray? = null
     private var xMarkTextFormatter : ((Float) -> String)? = null
+    private var yMarks : FloatArray? = null
+    private var yMarkTextFormatter : ((Float) -> String)? = null
+    private var yTickLabelWidth = 0.0f
 
     private val tickPaint = Paint()
-    private var xTicks : FloatArray ?= null
     private var tickColor = Color.BLACK
-    private var tickWidth = 2f
+    private var tickLineWidth = 2f
     private var tickTextSize = 10f
 
-    private var xTickTextFormatter : ((Float) -> String)? = null
+    private var xTicks : FloatArray ?= null
+    private var xTickLabels : Array<String> ?= null
+    //private var xTickTextFormatter : ((Float) -> String)? = null
+    private var yTicks : FloatArray ?= null
+    private var yTickLabels : Array<String> ?= null
+    //private var yTickTextFormatter : ((Float) -> String)? = null
 
     private val straightLinePath = Path()
     private val point = FloatArray(2)
@@ -53,18 +72,19 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         attrs?.let {
             val ta = context.obtainStyledAttributes(attrs, R.styleable.PlotView, defStyleAttr, R.style.PlotViewStyle)
             //val ta = context.obtainStyledAttributes(it, R.styleable.PlotView)
-            strokeColor = ta.getColor(R.styleable.PlotView_strokeColor, strokeColor)
-            strokeWidth = ta.getDimension(R.styleable.PlotView_strokeWidth, strokeWidth)
+            plotLineColor = ta.getColor(R.styleable.PlotView_plotLineColor, plotLineColor)
+            plotLineWidth = ta.getDimension(R.styleable.PlotView_plotLineWidth, plotLineWidth)
             markColor = ta.getColor(R.styleable.PlotView_markColor, markColor)
-            markWidth = ta.getDimension(R.styleable.PlotView_markWidth, markWidth)
+            markLineWidth = ta.getDimension(R.styleable.PlotView_markLineWidth, markLineWidth)
             markTextSize = ta.getDimension(R.styleable.PlotView_markTextSize, markTextSize)
             tickColor = ta.getColor(R.styleable.PlotView_tickColor, tickColor)
-            tickWidth = ta.getDimension(R.styleable.PlotView_tickWidth, tickWidth)
+            tickLineWidth = ta.getDimension(R.styleable.PlotView_tickLineWidth, tickLineWidth)
             tickTextSize = ta.getDimension(R.styleable.PlotView_tickTextSize, tickTextSize)
+            yTickLabelWidth = ta.getDimension(R.styleable.PlotView_yTickLabelWidth, yTickLabelWidth)
             ta.recycle()
         }
-        paint.color = strokeColor
-        paint.strokeWidth = strokeWidth
+        paint.color = plotLineColor
+        paint.strokeWidth = plotLineWidth
         paint.isAntiAlias = true
 
         rawPlotLine.moveTo(0f, 0f)
@@ -77,44 +97,97 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         rawPlotBounds.set(0f, -0.8f, 2.0f*PI.toFloat(), 0.8f)
 
         markPaint.color = markColor
-        markPaint.strokeWidth = markWidth
+        markPaint.strokeWidth = markLineWidth
         markPaint.isAntiAlias = true
         markPaint.style = Paint.Style.STROKE
-        markPaint.textAlign = Paint.Align.LEFT
         markPaint.textSize = markTextSize
 
         tickPaint.color = tickColor
-        tickPaint.strokeWidth = tickWidth
+        tickPaint.strokeWidth = tickLineWidth
         tickPaint.isAntiAlias = true
-        tickPaint.style = Paint.Style.STROKE
-        tickPaint.textAlign = Paint.Align.CENTER
         tickPaint.textSize = tickTextSize
-    }
 
-    fun xRange(minValue : Float, maxValue : Float, redraw: Boolean = true) {
-        xMin = minValue
-        xMax = maxValue
-        if(redraw)
+        xRangeAnimator.addUpdateListener {
+            if(xRange[0] != autoLimit)
+                rawPlotBounds.left = xRange[0]
+            if(xRange[1] != autoLimit)
+                rawPlotBounds.right = xRange[1]
             invalidate()
+        }
+        yRangeAnimator.addUpdateListener {
+            if(yRange[0] != autoLimit)
+                rawPlotBounds.bottom = yRange[1]
+            if(yRange[1] != autoLimit)
+                rawPlotBounds.top = yRange[0]
+            invalidate()
+        }
     }
 
-    fun yRange(minValue : Float, maxValue : Float, redraw : Boolean = true) {
-        yMin = minValue
-        yMax = maxValue
-        if(redraw)
+    fun xRange(minValue : Float, maxValue : Float, animationDuration: Long = 0L) {
+        if(xRangeAnimator.isStarted)
+            xRangeAnimator.end()
+        if(animationDuration in 1 until NO_REDRAW) {
+            xRangeAnimator.setObjectValues(floatArrayOf(rawPlotBounds.left, rawPlotBounds.right), floatArrayOf(minValue, maxValue))
+            xRangeAnimator.duration = animationDuration
+            xRangeAnimator.start()
+            return
+        }
+
+        xRange[0] = minValue
+        xRange[1] = maxValue
+
+        if(minValue != autoLimit)
+            rawPlotBounds.left = minValue
+        if(maxValue != autoLimit)
+            rawPlotBounds.right = maxValue
+
+        if(animationDuration == 0L) {
+            invalidate()
+        }
+    }
+
+    fun yRange(minValue : Float, maxValue : Float, animationDuration: Long = 0L) {
+        if(yRangeAnimator.isStarted)
+            yRangeAnimator.end()
+        if(animationDuration in 1 until NO_REDRAW) {
+            yRangeAnimator.setObjectValues(floatArrayOf(rawPlotBounds.top, rawPlotBounds.bottom), floatArrayOf(minValue, maxValue))
+            yRangeAnimator.duration = animationDuration
+            yRangeAnimator.start()
+            return
+        }
+
+        yRange[0] = minValue
+        yRange[1] = maxValue
+
+        if(minValue != autoLimit)
+            rawPlotBounds.top = minValue
+        if(maxValue != autoLimit)
+            rawPlotBounds.bottom = maxValue
+
+        if(animationDuration == 0L)
             invalidate()
     }
 
     fun plot(yValues : FloatArray, redraw: Boolean = true) {
         rawPlotLine.rewind()
+        plotCalled = true
+
+        if(yValues.isEmpty()) {
+            resolveBounds(0f, 0f, 0f, 0f)
+            return
+        }
+        else if(yValues.size == 1) {
+            resolveBounds(0f, 0f, yValues[0], yValues[1])
+            return
+        }
 
         var startIdx = 0
         var endIdx = yValues.size
 
-        if (xMin != noLimit)
-            startIdx = round(xMin).toInt()
-        if (xMax != noLimit)
-            endIdx = round(xMax).toInt() + 1
+        if (xRange[0] != autoLimit)
+            startIdx = xRange[0].roundToInt()
+        if (xRange[1] != autoLimit)
+            endIdx = xRange[1].roundToInt() + 1
 
         var yMinData = yValues[startIdx]
         var yMaxData = yValues[startIdx]
@@ -128,30 +201,37 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             yMaxData = max(yMaxData, yValues[i])
         }
 
-        val yMinVal = if(yMin == noLimit) yMinData else yMin
-        val yMaxVal = if(yMax == noLimit) yMaxData else yMax
-
-        rawPlotBounds.set(0.0f, yMinVal, (endIdx-startIdx).toFloat(), yMaxVal)
+        resolveBounds(0f, (endIdx-startIdx).toFloat(), yMinData, yMaxData)
 
         if(redraw)
             invalidate()
     }
 
     fun plot(xValues : FloatArray, yValues : FloatArray, redraw : Boolean = true) {
+        plotCalled = true
         require(xValues.size == yValues.size) {"Size of x-values and y-values not equal: " + xValues.size + " != " + yValues.size}
         rawPlotLine.rewind()
+
+        if(yValues.isEmpty()) {
+            resolveBounds(0f, 0f, 0f, 0f)
+            return
+        }
+        else if(yValues.size == 1) {
+            resolveBounds(xValues[0], xValues[0], yValues[0], yValues[0])
+            return
+        }
 
         var startIndex = 0
         var endIndex = xValues.size
 
-        if(xMin != noLimit) {
-            startIndex = xValues.binarySearch(xMin)
+        if(xRange[0] != autoLimit) {
+            startIndex = xValues.binarySearch(xRange[0])
             if(startIndex < 0)
                 startIndex = - (startIndex + 1)
         }
 
-        if(xMax != noLimit) {
-            endIndex = xValues.binarySearch(xMax) + 1
+        if(xRange[1] != autoLimit) {
+            endIndex = xValues.binarySearch(xRange[1]) + 1
             if(endIndex < 0)
                 endIndex = -endIndex
         }
@@ -165,12 +245,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             yMaxData = max(yMaxData, yValues[i])
         }
 
-        val xMinVal = if(xMin == noLimit) xValues[0] else xMin
-        val xMaxVal = if(xMax == noLimit) xValues.last() else xMax
-        val yMinVal = if(yMin == noLimit) yMinData else yMin
-        val yMaxVal = if(yMax == noLimit) yMaxData else yMax
-
-        rawPlotBounds.set(xMinVal, yMinVal, xMaxVal, yMaxVal)
+        resolveBounds(xValues[0], xValues.last(), yMinData, yMaxData)
 
         if(redraw)
             invalidate()
@@ -184,7 +259,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             bottom -= tickTextSize
 
         viewPlotBounds.set(
-            paddingLeft.toFloat(),
+            paddingLeft + yTickLabelWidth,
             paddingTop.toFloat(),
             (width - paddingRight).toFloat(),
             bottom
@@ -194,7 +269,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         plotTransformationMatrix.postScale(1f, -1f, 0f, viewPlotBounds.centerY())
 
         drawXTicks(canvas)
+        drawYTicks(canvas)
+
         drawXMarks(canvas)
+        drawYMarks(canvas)
 
         rawPlotLine.transform(plotTransformationMatrix, transformedPlotLine)
 
@@ -214,21 +292,52 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             straightLinePath.rewind()
             point[1] = 0f
 
-            for(x in it) {
-                if(x >= rawPlotBounds.left && x <= rawPlotBounds.right) {
-                    point[0] = x
+            for(xVal in it) {
+                if(xVal >= rawPlotBounds.left && xVal <= rawPlotBounds.right) {
+                    point[0] = xVal
                     plotTransformationMatrix.mapPoints(point)
+                    //Log.v("Tuner", "PlotView.drawXMarks: xRaw="+xVal + " xView=" + point[0])
                     straightLinePath.moveTo(point[0], viewPlotBounds.bottom)
                     straightLinePath.lineTo(point[0], viewPlotBounds.top)
                     markPaint.style = Paint.Style.STROKE
                     canvas?.drawPath(straightLinePath, markPaint)
 
-                    xMarkTextFormatter?. let{ textFormatter ->
+                    xMarkTextFormatter?.let{ textFormatter ->
                         markPaint.style = Paint.Style.FILL
+                        markPaint.textAlign = Paint.Align.LEFT
                         canvas?.drawText(
-                            textFormatter(x),
+                            textFormatter(xVal),
                             point[0] + markTextSize / 2,
                             viewPlotBounds.top - markPaint.ascent(),
+                            markPaint
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun drawYMarks(canvas: Canvas?) {
+        yMarks?.let {
+            straightLinePath.rewind()
+            point[0] = 0f
+
+            for(yVal in it) {
+                if(yVal >= rawPlotBounds.top && yVal <= rawPlotBounds.bottom) {
+                    point[1] = yVal
+                    plotTransformationMatrix.mapPoints(point)
+                    straightLinePath.moveTo(viewPlotBounds.left, point[1])
+                    straightLinePath.lineTo(viewPlotBounds.right, point[1])
+                    markPaint.style = Paint.Style.STROKE
+                    canvas?.drawPath(straightLinePath, markPaint)
+
+                    yMarkTextFormatter?. let{ textFormatter ->
+                        markPaint.style = Paint.Style.FILL
+                        markPaint.textAlign = Paint.Align.RIGHT
+                        canvas?.drawText(
+                            textFormatter(yVal),
+                            viewPlotBounds.right-markTextSize/2,
+                            point[1] - markTextSize / 2,
                             markPaint
                         )
                     }
@@ -241,25 +350,68 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         xTicks?.let {
             straightLinePath.rewind()
             point[1] = 0f
+            var startIndex = it.binarySearch(rawPlotBounds.left)
+            var endIndex = it.binarySearch(rawPlotBounds.right)
+            if(startIndex < 0)
+                startIndex = -(startIndex + 1)
+            if(endIndex < 0)
+                endIndex = -(endIndex + 1)
+            // Log.v("Tuner", "PlotView:drawXTicks: startidx = $startIndex, endindex = $endIndex, xTicks.size = "+ it.size)
+            for(i in startIndex until endIndex) {
+                val xVal = it[i]
+                point[0] = xVal
+                // Log.v("Tuner", "PlotView:drawXTicks: xTicks[$i] = $xVal")
+                plotTransformationMatrix.mapPoints(point)
+                straightLinePath.moveTo(point[0], viewPlotBounds.bottom)
+                straightLinePath.lineTo(point[0], viewPlotBounds.top)
+                tickPaint.style = Paint.Style.STROKE
+                canvas?.drawPath(straightLinePath, tickPaint)
 
-            for(x in it) {
-                if(x >= rawPlotBounds.left && x <= rawPlotBounds.right) {
-                    point[0] = x
-                    plotTransformationMatrix.mapPoints(point)
-                    straightLinePath.moveTo(point[0], viewPlotBounds.bottom)
-                    straightLinePath.lineTo(point[0], viewPlotBounds.top)
-                    tickPaint.style = Paint.Style.STROKE
-                    canvas?.drawPath(straightLinePath, tickPaint)
+                xTickLabels?.let { tickLabels ->
+                    tickPaint.style = Paint.Style.FILL
+                    tickPaint.textAlign = Paint.Align.CENTER
+                    // Log.v("Tuner", "PlotView:drawXTicks: tickLabels[$i] = " + tickLabels[i])
+                    canvas?.drawText(
+                        tickLabels[i],
+                        point[0],
+                        viewPlotBounds.bottom - tickPaint.ascent(),
+                        tickPaint
+                    )
+                }
+            }
+        }
+    }
 
-                    xTickTextFormatter?.let { textFormatter ->
-                        tickPaint.style = Paint.Style.FILL
-                        canvas?.drawText(
-                            textFormatter(x),
-                            point[0],
-                            viewPlotBounds.bottom - tickPaint.ascent(),
-                            tickPaint
-                        )
-                    }
+    private fun drawYTicks(canvas: Canvas?) {
+        yTicks?.let {
+            straightLinePath.rewind()
+            point[0] = 0f
+            var startIndex = it.binarySearch(rawPlotBounds.top)
+            var endIndex = it.binarySearch(rawPlotBounds.bottom)
+            if(startIndex < 0)
+                startIndex = -(startIndex + 1)
+            if(endIndex < 0)
+                endIndex = -(endIndex + 1)
+
+            for(i in startIndex until endIndex) {
+                val yVal = it[i]
+                point[1] = yVal
+                plotTransformationMatrix.mapPoints(point)
+                straightLinePath.moveTo(viewPlotBounds.left, point[1])
+                straightLinePath.lineTo(viewPlotBounds.right, point[1])
+                tickPaint.style = Paint.Style.STROKE
+                canvas?.drawPath(straightLinePath, tickPaint)
+
+                yTickLabels?.let { tickLabels ->
+                    require(yTickLabelWidth > 0.0f) { "PlotView::drawYTicks: If you define yTick labels you must specify a yTickLabelWidth larger than 0.0f" }
+                    tickPaint.style = Paint.Style.FILL
+                    tickPaint.textAlign = Paint.Align.RIGHT
+                    canvas?.drawText(
+                        tickLabels[i],
+                        viewPlotBounds.left - tickTextSize / 2,
+                        point[1],
+                        tickPaint
+                    )
                 }
             }
         }
@@ -269,7 +421,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         val lineLength = sqrt((endX - startX).pow(2) + (endY - startY).pow(2))
         val dx = (endX-startX) / lineLength
         val dy = (endY-startY) / lineLength
-        val sW = strokeWidth
+        val sW = plotLineWidth
 
         val arrowLength = 5 * sW
         val strokeEndX = endX - dx*arrowLength
@@ -301,18 +453,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             invalidate()
     }
 
-    fun setXMarkTextFormat(format : ((Float) -> String)?) {
-        xMarkTextFormatter = format
-    }
-
-    fun setXTicks(value : FloatArray?, redraw: Boolean = true) {
+    fun setYMarks(value : FloatArray?, redraw: Boolean = true) {
         if (value == null) {
-            xTicks = null
+            yMarks = null
         }
         else {
-            if (xTicks == null || xTicks?.size != value.size)
-                xTicks = FloatArray(value.size)
-            xTicks?.let {
+            if (yMarks == null || yMarks?.size != value.size)
+                yMarks = FloatArray(value.size)
+            yMarks?.let {
                 value.copyInto(it)
             }
         }
@@ -320,8 +468,84 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             invalidate()
     }
 
-    fun setXTickTextFormat(format : ((Float) -> String)?) {
-        xTickTextFormatter = format
+    fun setXMarkTextFormat(format : ((Float) -> String)?) {
+        xMarkTextFormatter = format
     }
+
+    fun setYMarkTextFormat(format : ((Float) -> String)?) {
+        yMarkTextFormatter = format
+    }
+
+    fun setXTicks(value : FloatArray?, redraw: Boolean = true, format : ((Float) -> String)?) {
+        if (value == null) {
+            xTicks = null
+            xTickLabels = null
+        }
+        else {
+            xTicks = FloatArray(value.size) {i -> value[i]}
+            if (format != null)
+                xTickLabels = Array(value.size) { i -> format(value[i]) }
+            else
+                xTickLabels = Array(value.size) { i -> value[i].toString() }
+        }
+        if(!plotCalled)
+            resolveBounds(0f,0f, 0f, 0f)
+        if(redraw)
+            invalidate()
+    }
+
+    fun setYTicks(value : FloatArray?, redraw: Boolean = true, format : ((Float) -> String)?) {
+        if (value == null) {
+            yTicks = null
+            yTickLabels = null
+        }
+        else {
+            yTicks = FloatArray(value.size) {i -> value[i]}
+            if (format != null)
+                yTickLabels = Array(value.size) { i -> format(value[i]) }
+            else
+                yTickLabels = Array(value.size) { i -> value[i].toString() }
+        }
+        if(!plotCalled)
+            resolveBounds(0f,0f, 0f, 0f)
+        if(redraw)
+            invalidate()
+    }
+
+    private fun resolveBounds(xMinData : Float, xMaxData : Float, yMinData : Float, yMaxData : Float) {
+        if(xRange[0] == autoLimit)
+            rawPlotBounds.left = resolveBound(TYPE_MIN, xMinData, xMaxData, xTicks)
+        if(xRange[1] == autoLimit)
+            rawPlotBounds.right = resolveBound(TYPE_MAX, xMinData, xMaxData, xTicks)
+        if(yRange[0] == autoLimit)
+            rawPlotBounds.top = resolveBound(TYPE_MIN, yMinData, yMaxData, yTicks)
+        if(yRange[1] == autoLimit)
+            rawPlotBounds.bottom = resolveBound(TYPE_MAX, yMinData, yMaxData, yTicks)
+    }
+
+    private fun resolveBound(type : Int, minValue : Float, maxValue : Float, ticks : FloatArray?) : Float{
+
+        if(maxValue != minValue) {
+            return if(type == TYPE_MIN) minValue else maxValue
+        }
+
+        if(ticks != null && ticks.size >=2) {
+            return if(type == TYPE_MIN) ticks[0] else ticks.last()
+        }
+
+        // Remember: for this if minValue is equal to maxValue, thus, here we could also have usd maxValue
+        if(minValue == 0f)
+            return if(type == TYPE_MIN) -1f else 1f
+
+        return if(type == TYPE_MIN) 0.9f * minValue else 1.1f * maxValue
+    }
+
+    // fun setXTickTextFormat(format : ((Float) -> String)?) {
+    //     xTickTextFormatter = format
+    // }
+
+    // fun setYTickTextFormat(format : ((Float) -> String)?) {
+    //     yTickTextFormatter = format
+    // }
 }
 

@@ -74,14 +74,14 @@ class ProcessingResultBuffer<T>(val size : Int, init : () -> T ) {
             throw RuntimeException("ProcessingResultBuffer:unlockWrite: Element already ready to unlock")
         readyToUnlockWriteFlag[idx] = true
 
-        var nUnlocked = 0
+        var numUnlocked = 0
         for(i in 0 until numLockWrite) {
             if (!readyToUnlockWriteFlag[numWriteFinished % size])
                 break
             ++numWriteFinished
-            ++nUnlocked
+            ++numUnlocked
         }
-        numLockWrite -= nUnlocked
-        return nUnlocked
+        numLockWrite -= numUnlocked
+        return numUnlocked
     }
 }

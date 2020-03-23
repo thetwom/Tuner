@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity() {
     //val overlapFraction = 4
     private val overlapFraction = 2
 
+    private val tuningFrequencies = TuningFrequencies()
     private var volumeMeter: VolumeMeter? = null
 
     private var spectrumPlot: PlotView? = null
@@ -59,6 +60,20 @@ class MainActivity : AppCompatActivity() {
 
     private var pitchPlot: PlotView? = null
     private val pitchHistory = FloatArray(200) { 0.0f }
+
+    private var currentTargetPitchIndex = 1
+    private val currentPitchPlotRange = floatArrayOf(
+        tuningFrequencies.getNoteFrequency(currentTargetPitchIndex) * tuningFrequencies.halfToneRatio.pow(-1.5f),
+        tuningFrequencies.getNoteFrequency(currentTargetPitchIndex) * tuningFrequencies.halfToneRatio.pow(1.5f)
+    )
+    private val currentStablePitchRange = floatArrayOf(
+        tuningFrequencies.getNoteFrequency(currentTargetPitchIndex) * tuningFrequencies.halfToneRatio.pow(-0.7f),
+        tuningFrequencies.getNoteFrequency(currentTargetPitchIndex) * tuningFrequencies.halfToneRatio.pow(0.7f)
+    )
+
+    private var nextPitchIndex = 0
+    private var nextPitchIndexCount = 0
+    private val countToChangeTargetPitch = 3
 
     class UiHandler(private val activity: WeakReference<MainActivity>) : Handler() {
 
@@ -109,18 +124,27 @@ class MainActivity : AppCompatActivity() {
         spectrumPlot = findViewById(R.id.spectrum_plot)
         //spectrumPlot?.xRange(0f, 880f)
         //spectrumPlot?.setXTicks(floatArrayOf(0f,200f,400f,600f,800f), true)
-        spectrumPlot?.xRange(0f, 1760f, false)
-        spectrumPlot?.setXTicks(floatArrayOf(0f,200f, 400f, 600f, 800f, 1000f,1200f, 1400f, 1600f), true)
+        spectrumPlot?.xRange(0f, 1760f, PlotView.NO_REDRAW)
+        spectrumPlot?.setXTicks(floatArrayOf(0f,200f, 400f, 600f, 800f, 1000f,1200f, 1400f, 1600f), true) { i -> getString(R.string.hertz, i) }
         spectrumPlot?.setXMarkTextFormat { i -> getString(R.string.hertz, i) }
-        spectrumPlot?.setXTickTextFormat { i -> getString(R.string.hertz, i) }
+        // spectrumPlot?.setXTickTextFormat { i -> getString(R.string.hertz, i) }
         frequencyText = findViewById(R.id.frequency_text)
 
         for(i in 0 until processingBufferSize/2)
             frequencies[i] = RealFFT.getFreq(i, processingBufferSize, 1.0f/ sampleRate)
 
         pitchPlot = findViewById(R.id.pitch_plot)
-        pitchPlot?.xRange(0f, 1.1f*pitchHistory.size.toFloat(), false)
-        pitchPlot?.yRange(0f, 1760f, false)
+        pitchPlot?.xRange(0f, 1.1f*pitchHistory.size.toFloat(), PlotView.NO_REDRAW)
+        //pitchPlot?.yRange(200f, 900f, PlotView.NO_REDRAW)
+        pitchPlot?.yRange(currentPitchPlotRange[0], currentPitchPlotRange[1], PlotView.NO_REDRAW)
+        //pitchPlot?.setYTickTextFormat { i -> getString(R.string.hertz, i) }
+        //pitchPlot?.setYMarkTextFormat { i -> getString(R.string.hertz, i) }
+        pitchPlot?.setYMarkTextFormat { i -> tuningFrequencies.getNoteName(i) }
+        val noteFrequencies = FloatArray(100) {i -> tuningFrequencies.getNoteFrequency(i-50)}
+        pitchPlot?.setYTicks(noteFrequencies, false) { frequency -> tuningFrequencies.getNoteName(frequency) }
+        //pitchPlot?.setYTicks(floatArrayOf(0f,200f, 400f, 600f, 800f, 1000f,1200f, 1400f, 1600f), false) { i -> getString(R.string.hertz, i) }
+        //pitchPlot?.setYMarks(floatArrayOf(440f))
+        pitchPlot?.setYMarks(floatArrayOf(tuningFrequencies.getNoteFrequency(currentTargetPitchIndex)))
         pitchPlot?.plot(pitchHistory)
     }
 
@@ -471,6 +495,52 @@ class MainActivity : AppCompatActivity() {
             frequencyText?.text = "frequency: " + it.frequency + "Hz"
             pitchHistory.copyInto(pitchHistory, 0, 1)
             pitchHistory[pitchHistory.lastIndex] = it.frequency
+
+            Log.v("Tuner", "MainActivity.doPostprocessing: f=" + it.frequency + " p[0]=" + currentStablePitchRange[0] + " p[1]=" + currentStablePitchRange[1])
+            if(it.frequency < currentStablePitchRange[0] || it.frequency > currentStablePitchRange[1]) {
+                val closestPitchIndex = tuningFrequencies.getClosestToneIndex(it.frequency)
+                if (closestPitchIndex != currentTargetPitchIndex) { // this should also be true becouse of the currentStablePitchRange-Check
+                    if (closestPitchIndex == nextPitchIndex) {
+                        ++nextPitchIndexCount
+                        if (nextPitchIndexCount == countToChangeTargetPitch) {
+                            currentTargetPitchIndex = nextPitchIndex
+                            pitchPlot?.setYMarks(
+                                floatArrayOf(
+                                    tuningFrequencies.getNoteFrequency(
+                                        currentTargetPitchIndex
+                                    )
+                                )
+                            )
+                            val pitchTargetFrequency =
+                                tuningFrequencies.getNoteFrequency(currentTargetPitchIndex)
+                            currentPitchPlotRange[0] =
+                                pitchTargetFrequency * tuningFrequencies.halfToneRatio.pow(-1.5f)
+                            currentPitchPlotRange[1] =
+                                pitchTargetFrequency * tuningFrequencies.halfToneRatio.pow(1.5f)
+                            pitchPlot?.yRange(
+                                currentPitchPlotRange[0],
+                                currentPitchPlotRange[1],
+                                600
+                            )
+
+                            currentStablePitchRange[0] =
+                                pitchTargetFrequency * tuningFrequencies.halfToneRatio.pow(-0.7f)
+                            currentStablePitchRange[1] =
+                                pitchTargetFrequency * tuningFrequencies.halfToneRatio.pow(0.7f)
+                            nextPitchIndexCount = 0
+                        }
+                    } else {
+                        nextPitchIndex = closestPitchIndex
+                        nextPitchIndexCount = 1
+                    }
+                } else {
+                    nextPitchIndexCount = 0
+                }
+            }
+            else {
+                nextPitchIndexCount = 0
+            }
+
             pitchPlot?.plot(pitchHistory)
         }
 
