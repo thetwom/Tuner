@@ -48,7 +48,8 @@ class PostprocessorThread(val size : Int, private val uiHandler : Handler) : Han
         val spec1 = preprocessingResults[0]?.spectrum
         val spec2 = preprocessingResults[1]?.spectrum
         if(spec1 != null && spec2 != null) {
-            val freqIdx = preprocessingResults[0]?.idxMaxFreq ?: 0
+            //val freqIdx = preprocessingResults[0]?.idxMaxFreq ?: 0
+            val freqIdx = preprocessingResults[0]?.idxMaxPitch ?: 0
             if (freqIdx > 0) {
                 val freq = freqIdx * MainActivity.sampleRate / spec1.size
                 val phase1 = kotlin.math.atan2(spec1[2 * freqIdx + 1], spec1[2 * freqIdx])

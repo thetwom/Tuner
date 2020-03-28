@@ -1,5 +1,7 @@
 package de.moekadu.tuner
 
+import kotlin.math.roundToInt
+
 fun bitReverse(value : Int, num_bits : Int) : Int {
     var myValue = value
     var rev = 0
@@ -13,13 +15,19 @@ fun bitReverse(value : Int, num_bits : Int) : Int {
     return rev
 }
 
-fun RealFFT.Companion.nFrequencies(size: Int) : Int {
+fun RealFFT.Companion.numFrequencies(size: Int) : Int {
     return size/2
 }
 
-fun RealFFT.Companion.getFreq(idx : Int, size: Int, dt : Float) : Float {
+fun RealFFT.Companion.getFrequency(idx : Int, size: Int, dt : Float) : Float {
     return idx / (dt * size)
 }
+
+fun RealFFT.Companion.closestFrequencyIndex(frequency : Float, size: Int, dt : Float) : Int {
+    return (frequency * dt * size).roundToInt()
+}
+
+
 
 class RealFFT(val size : Int, val windowType : Int = NO_WINDOW) {
     companion object {

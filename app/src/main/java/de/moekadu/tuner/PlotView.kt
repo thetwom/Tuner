@@ -14,6 +14,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 {
     companion object {
         const val NO_REDRAW = Long.MAX_VALUE
+        const val TAKE_ALL = -1
         const val TYPE_MIN = 0
         const val TYPE_MAX = 1
     }
@@ -46,9 +47,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var markTextSize = 10f
 
     private var xMarks : FloatArray? = null
-    private var xMarkTextFormatter : ((Float) -> String)? = null
+    private var numXMarks = 0
+    private var xMarkLabels : Array<String> ?= null
+
     private var yMarks : FloatArray? = null
-    private var yMarkTextFormatter : ((Float) -> String)? = null
+    private var numYMarks = 0
+    private var yMarkLabels : Array<String> ?= null
     private var yTickLabelWidth = 0.0f
 
     private val tickPaint = Paint()
@@ -292,7 +296,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             straightLinePath.rewind()
             point[1] = 0f
 
-            for(xVal in it) {
+            for(i in 0 until numXMarks) {
+                val xVal = it[i]
                 if(xVal >= rawPlotBounds.left && xVal <= rawPlotBounds.right) {
                     point[0] = xVal
                     plotTransformationMatrix.mapPoints(point)
@@ -302,16 +307,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                     markPaint.style = Paint.Style.STROKE
                     canvas?.drawPath(straightLinePath, markPaint)
 
-                    xMarkTextFormatter?.let{ textFormatter ->
-                        markPaint.style = Paint.Style.FILL
-                        markPaint.textAlign = Paint.Align.LEFT
-                        canvas?.drawText(
-                            textFormatter(xVal),
-                            point[0] + markTextSize / 2,
-                            viewPlotBounds.top - markPaint.ascent(),
-                            markPaint
-                        )
-                    }
+                    markPaint.style = Paint.Style.FILL
+                    markPaint.textAlign = Paint.Align.LEFT
+                    canvas?.drawText(
+                        xMarkLabels?.get(i) ?: "",
+                        point[0] + markTextSize / 2,
+                        viewPlotBounds.top - markPaint.ascent(),
+                        markPaint
+                    )
                 }
             }
         }
@@ -322,7 +325,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             straightLinePath.rewind()
             point[0] = 0f
 
-            for(yVal in it) {
+            for(i in 0 until numYMarks) {
+                val yVal = it[i]
                 if(yVal >= rawPlotBounds.top && yVal <= rawPlotBounds.bottom) {
                     point[1] = yVal
                     plotTransformationMatrix.mapPoints(point)
@@ -331,16 +335,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                     markPaint.style = Paint.Style.STROKE
                     canvas?.drawPath(straightLinePath, markPaint)
 
-                    yMarkTextFormatter?. let{ textFormatter ->
-                        markPaint.style = Paint.Style.FILL
-                        markPaint.textAlign = Paint.Align.RIGHT
-                        canvas?.drawText(
-                            textFormatter(yVal),
-                            viewPlotBounds.right-markTextSize/2,
-                            point[1] - markTextSize / 2,
-                            markPaint
-                        )
-                    }
+                    markPaint.style = Paint.Style.FILL
+                    markPaint.textAlign = Paint.Align.RIGHT
+                    canvas?.drawText(
+                        yMarkLabels?.get(i) ?: "",
+                        viewPlotBounds.right-markTextSize/2,
+                        point[1] - markTextSize / 2,
+                        markPaint
+                    )
                 }
             }
         }
@@ -438,42 +440,54 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         canvas?.drawPath(arrowPath, paint)
     }
 
-    fun setXMarks(value : FloatArray?, redraw: Boolean = true) {
+    fun setXMarks(value : FloatArray?, numValues : Int = TAKE_ALL, redraw : Boolean = true, format : ((Float) -> String)? = null) {
         if (value == null) {
-            xMarks = null
+            numXMarks = 0
         }
         else {
-            if (xMarks == null || xMarks?.size != value.size)
-                xMarks = FloatArray(value.size)
+            var resolvedNumValues = numValues
+            if (numValues == TAKE_ALL)
+                resolvedNumValues = value.size
+            val currentCapacity = xMarks?.size ?: 0
+            if (currentCapacity < resolvedNumValues) {
+                xMarks = FloatArray(resolvedNumValues)
+                xMarkLabels = Array(resolvedNumValues) {""}
+            }
             xMarks?.let {
-                value.copyInto(it)
+                value.copyInto(it, 0, 0, resolvedNumValues)
+                numXMarks = resolvedNumValues
+
+                for (i in 0 until resolvedNumValues)
+                    xMarkLabels?.set(i, format?.invoke(value[i]) ?: "")
             }
         }
         if(redraw)
             invalidate()
     }
 
-    fun setYMarks(value : FloatArray?, redraw: Boolean = true) {
+    fun setYMarks(value : FloatArray?, numValues : Int = TAKE_ALL, redraw : Boolean = true, format : ((Float) -> String)? = null) {
         if (value == null) {
-            yMarks = null
+            numYMarks = 0
         }
         else {
-            if (yMarks == null || yMarks?.size != value.size)
-                yMarks = FloatArray(value.size)
+            var resolvedNumValues = numValues
+            if (numValues == TAKE_ALL)
+                resolvedNumValues = value.size
+            val currentCapacity = yMarks?.size ?: 0
+            if (currentCapacity < resolvedNumValues) {
+                yMarks = FloatArray(resolvedNumValues)
+                yMarkLabels = Array(resolvedNumValues) {""}
+            }
             yMarks?.let {
-                value.copyInto(it)
+                value.copyInto(it, 0, 0, resolvedNumValues)
+                numYMarks = resolvedNumValues
+
+                for (i in 0 until resolvedNumValues)
+                    yMarkLabels?.set(i, format?.invoke(value[i]) ?: "")
             }
         }
         if(redraw)
             invalidate()
-    }
-
-    fun setXMarkTextFormat(format : ((Float) -> String)?) {
-        xMarkTextFormatter = format
-    }
-
-    fun setYMarkTextFormat(format : ((Float) -> String)?) {
-        yMarkTextFormatter = format
     }
 
     fun setXTicks(value : FloatArray?, redraw: Boolean = true, format : ((Float) -> String)?) {
