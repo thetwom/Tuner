@@ -41,6 +41,7 @@
         app:tickLineWidth="0.5dp"
         app:yTickLabelWidth="30sp"
         app:markColor="?attr/colorSecondary"
+        app:pointColor="?attr/colorSecondary"
         app:layout_constraintTop_toBottomOf="@id/spectrum_plot"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"

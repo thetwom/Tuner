@@ -26,6 +26,8 @@
         <attr name="tickLineWidth" format="dimension"/>
         <attr name="tickTextSize" format="dimension"/>
         <attr name="yTickLabelWidth" format="dimension"/>
+        <attr name="pointSize" format="dimension"/>
+        <attr name="pointColor" format="color"/>
     </declare-styleable>
 
     <style name="PlotViewStyle">
@@ -38,6 +40,8 @@
         <item name="tickLineWidth">1dp</item>
         <item name="tickTextSize">12sp</item>
         <item name="yTickLabelWidth">0sp</item>
+        <item name="pointSize">3dp</item>
+        <item name="pointColor">?attr/colorPrimary</item>
     </style>
 
     <declare-styleable name="VolumeMeter">

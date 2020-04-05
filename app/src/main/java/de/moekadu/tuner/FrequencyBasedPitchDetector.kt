@@ -1,39 +1,24 @@
 package de.moekadu.tuner
 
-import android.os.Handler
-import android.os.HandlerThread
-import android.os.Message
 import android.util.Log
 import kotlin.math.*
 
-fun getClosestIntArrayIndex(element : Int, array : IntArray, fromIndex : Int = 0, toIndex : Int = array.size) : Int {
-    var closestIndex = array.binarySearch(element, fromIndex, toIndex)
+class FrequencyBasedPitchDetectorPrep(val size : Int, val dt : Float, minimumFrequency : Float, maximumFrequency : Float) {
 
-    if(closestIndex >= 0)
-        return closestIndex
-    else
-        closestIndex = - (closestIndex + 1)
-    //Log.v("Tuner", "BLBB: $closestIndex from $fromIndex to $toIndex")
-    if(closestIndex == 0)
-        return closestIndex
-    else if(closestIndex == toIndex)
-        return toIndex-1
-    else if(element - array[closestIndex-1] < array[closestIndex] - element)
-        return closestIndex-1
-    return closestIndex
-}
+    class Results(size : Int) {
+        val spectrum = FloatArray(size+2)
+        val ampSpec = FloatArray(spectrum.size/2)
+        var idxMaxFreq = 0
+        var idxMaxPitch = 0
+        var numLocalMaxima = 0
+        val localMaxima = IntArray(NUM_MAX_HARMONIC)
+    }
 
-/// Preprocess a time spectrum
-/**
- * @param size Number of audio data points which are processed here
- * @param dt Time step width between to two input data points
- * @param minimumFrequency Minimum allowed frequency which we sould detect
- * @param maximumFrequency Maximum allowd frequency which we should detect
- * @param uiHandler handler of ui thread, where we send oure results
- */
-class PreprocessorThread(val size : Int, val dt : Float, val minimumFrequency : Float, val maximumFrequency : Float,
-                         private val uiHandler : Handler) : HandlerThread("Tuner:PreprocessorThread") {
-    lateinit var handler: Handler
+    companion object {
+        const val NUM_MAX_HARMONIC = 3
+        private const val SLOPE_INCREASING = true
+        private const val SLOPE_DECREASING = false
+    }
 
     private val fft = RealFFT(size, RealFFT.HAMMING_WINDOW)
     private val localMaximaSNR = 10.0f
@@ -45,77 +30,30 @@ class PreprocessorThread(val size : Int, val dt : Float, val minimumFrequency : 
     /// Maximum index in transformed spectrum, which should be considered (endIndex is included in range)
     private val endIndex = RealFFT.closestFrequencyIndex(maximumFrequency, fft.size, dt)
 
-    companion object {
-        const val PREPROCESS_AUDIO = 200001
-        const val PREPROCESSING_FINISHED = 200002
-        const val NUM_MAX_HARMONIC = 3
-        private const val SLOPE_INCREASING = true
-        private const val SLOPE_DECREASING = false
-    }
-
-    class PreprocessingResults(size : Int) {
-        var maxValue = 0.0f
-        val spectrum = FloatArray(size+2)
-        val ampSpec = FloatArray(spectrum.size/2)
-        var idxMaxFreq = 0
-        var idxMaxPitch = 0
-        var numLocalMaxima = 0
-        val localMaxima = IntArray(NUM_MAX_HARMONIC)
-    }
-
-    class ReadBufferAndProcessingResults(val readBuffer: CircularRecordData.ReadBuffer, val preprocessingResults: PreprocessingResults)
-
-    override fun onLooperPrepared() {
-        super.onLooperPrepared()
-
-        handler = object : Handler(looper) {
-            override fun handleMessage(msg: Message) {
-                super.handleMessage(msg)
-
-                if (msg.what == PREPROCESS_AUDIO) {
-                    //                    Log.v("Tuner", "test")
-                    when (val obj = msg.obj) {
-                        is ReadBufferAndProcessingResults -> preprocessData(obj)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun preprocessData(readBufferAndProcessingResults: ReadBufferAndProcessingResults) {
-        val readBuffer = readBufferAndProcessingResults.readBuffer
-        val preprocessingResults = readBufferAndProcessingResults.preprocessingResults
+    fun run(readBuffer : CircularRecordData.ReadBuffer, results : Results) {
 
         require(readBuffer.size == size)
-        require(preprocessingResults.spectrum.size == size+2)
-
-        //------------------------------------------------------------------------------------------
-        // Find maximum value in audio buffer
-        //------------------------------------------------------------------------------------------
-        preprocessingResults.maxValue = 0.0f
-        for(i in 0 until readBuffer.size)
-            preprocessingResults.maxValue = max(preprocessingResults.maxValue, readBuffer[i].absoluteValue)
-        //val processingResults = ProcessingResults(tmpData.max() ?: 0.0f, spectrum)
+        require(results.spectrum.size == size+2)
 
         //------------------------------------------------------------------------------------------
         // Transform data zu frequency domain
         //------------------------------------------------------------------------------------------
-        fft.fft(readBuffer, preprocessingResults.spectrum)
+        fft.fft(readBuffer, results.spectrum)
 
         //------------------------------------------------------------------------------------------
         // Create amplitude spectrum and index where spectrum amplitude is maximal
         //------------------------------------------------------------------------------------------
-        preprocessingResults.idxMaxFreq = 0
+        results.idxMaxFreq = 0
         var maxAmp = 0.0f
-        val ampSpec = preprocessingResults.ampSpec
+        val ampSpec = results.ampSpec
 
-        for(i in 0 until ampSpec.size)
-            ampSpec[i] = preprocessingResults.spectrum[2*i].pow(2) + preprocessingResults.spectrum[2*i+1].pow(2)
+        for(i in ampSpec.indices)
+            ampSpec[i] = results.spectrum[2*i].pow(2) + results.spectrum[2*i+1].pow(2)
 
         for(i in startIndex until endIndex) {
             if(ampSpec[i] > maxAmp){
                 maxAmp = ampSpec[i]
-                preprocessingResults.idxMaxFreq = i
+                results.idxMaxFreq = i
             }
         }
 
@@ -133,7 +71,7 @@ class PreprocessorThread(val size : Int, val dt : Float, val minimumFrequency : 
         // Find all local maxima in our spectrum which have a signal to noise ratio greater than
         //   localMaximaSNR and are greater than the average
         //--------------------------------------------------
-        // Find local minium left of our starting value
+        // Find local minimum left of our starting value
         var leftLocalMinimumIndex = startIndex
         if(ampSpec[startIndex+1] < ampSpec[startIndex]) {
             for(i in startIndex+2 .. endIndex) {
@@ -191,10 +129,10 @@ class PreprocessorThread(val size : Int, val dt : Float, val minimumFrequency : 
                     largestLocalMaximum = localMaxima[i]
             }
 
-            if (largestLocalMaximum != preprocessingResults.idxMaxFreq)
+            if (largestLocalMaximum != results.idxMaxFreq)
                 Log.v(
                     "Tuner",
-                    "PreprocessorThread.preprocessData : largestLocalMaxima($largestLocalMaximum) != idxMaxFreq(" + preprocessingResults.idxMaxFreq + ")"
+                    "PreprocessorThread.preprocessData : largestLocalMaxima($largestLocalMaximum) != idxMaxFreq(" + results.idxMaxFreq + ")"
                 )
 
             Log.v(
@@ -266,12 +204,12 @@ class PreprocessorThread(val size : Int, val dt : Float, val minimumFrequency : 
                     maximaSum = currentMaximaSum
                     maximaSumHarmonic = iHarmonic
                     markedLocalMaxima.copyInto(
-                        preprocessingResults.localMaxima,
+                        results.localMaxima,
                         0,
                         0,
                         numMarkedLocalMaxima
                     )
-                    preprocessingResults.numLocalMaxima = numMarkedLocalMaxima
+                    results.numLocalMaxima = numMarkedLocalMaxima
                     Log.v(
                         "Tuner",
                         "PreprocessorThread.preprocessData : numMarkedLocalMaxima=$numMarkedLocalMaxima, markedLocalMaxima[0]=" + markedLocalMaxima[0]
@@ -300,11 +238,11 @@ class PreprocessorThread(val size : Int, val dt : Float, val minimumFrequency : 
                 } else if (ampSpec[i] <= ampSpec[i + 1])
                     break
             }
-            preprocessingResults.idxMaxPitch = pitchIndex
+            results.idxMaxPitch = pitchIndex
             //Log.v("Tuner", "PreprocessorThread.preprocessData : idxMaxFreq=" + preprocessingResults.idxMaxFreq + " idxMaxPitch=" + preprocessingResults.idxMaxPitch)
             Log.v(
                 "Tuner",
-                "PreprocessorThread.preprocessData : numLocalMaxima=$numLocalMaxima, marked=" + preprocessingResults.numLocalMaxima
+                "PreprocessorThread.preprocessData : numLocalMaxima=$numLocalMaxima, marked=" + results.numLocalMaxima
             )
 
 //        var numLocalMaximaNew = 0
@@ -315,13 +253,9 @@ class PreprocessorThread(val size : Int, val dt : Float, val minimumFrequency : 
 //        }
         }
         else {
-            preprocessingResults.numLocalMaxima = 1
-            preprocessingResults.localMaxima[0] = preprocessingResults.idxMaxFreq
-            preprocessingResults.idxMaxPitch = preprocessingResults.idxMaxFreq
+            results.numLocalMaxima = 1
+            results.localMaxima[0] = results.idxMaxFreq
+            results.idxMaxPitch = results.idxMaxFreq
         }
-
-        val message =
-            uiHandler.obtainMessage(PREPROCESSING_FINISHED, readBufferAndProcessingResults)
-        uiHandler.sendMessage(message)
     }
 }

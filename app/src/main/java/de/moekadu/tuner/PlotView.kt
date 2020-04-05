@@ -55,6 +55,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var yMarkLabels : Array<String> ?= null
     private var yTickLabelWidth = 0.0f
 
+    private var points : FloatArray? = null
+    private var numPoints = 0
+    private var pointSize = 5f
+    private var pointColor = Color.BLACK
+    private val pointPaint = Paint()
+
     private val tickPaint = Paint()
     private var tickColor = Color.BLACK
     private var tickLineWidth = 2f
@@ -85,6 +91,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             tickLineWidth = ta.getDimension(R.styleable.PlotView_tickLineWidth, tickLineWidth)
             tickTextSize = ta.getDimension(R.styleable.PlotView_tickTextSize, tickTextSize)
             yTickLabelWidth = ta.getDimension(R.styleable.PlotView_yTickLabelWidth, yTickLabelWidth)
+            pointSize = ta.getDimension(R.styleable.PlotView_pointSize, pointSize)
+            pointColor = ta.getColor(R.styleable.PlotView_pointColor, pointColor)
             ta.recycle()
         }
         paint.color = plotLineColor
@@ -105,6 +113,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         markPaint.isAntiAlias = true
         markPaint.style = Paint.Style.STROKE
         markPaint.textSize = markTextSize
+
+        pointPaint.color = pointColor
+        pointPaint.isAntiAlias = true
+        pointPaint.style = Paint.Style.FILL
 
         tickPaint.color = tickColor
         tickPaint.strokeWidth = tickLineWidth
@@ -284,6 +296,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         canvas?.clipRect(viewPlotBounds)
         paint.style = Paint.Style.STROKE
         canvas?.drawPath(transformedPlotLine, paint)
+        drawPoints(canvas)
         canvas?.restore()
         canvas?.drawRect(viewPlotBounds, paint)
 
@@ -343,6 +356,20 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                         point[1] - markTextSize / 2,
                         markPaint
                     )
+                }
+            }
+        }
+    }
+
+    private fun drawPoints(canvas: Canvas?) {
+        points?.let {
+            for(i in 0 until numPoints) {
+                point[0] = it[2*i]
+                point[1] = it[2*i+1]
+                if(point[0] >= rawPlotBounds.left && point[0] <= rawPlotBounds.right
+                    && point[1] >= rawPlotBounds.top && point[1] <= rawPlotBounds.bottom) {
+                    plotTransformationMatrix.mapPoints(point)
+                    canvas?.drawCircle(point[0], point[1], pointSize, pointPaint)
                 }
             }
         }
@@ -484,6 +511,23 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
                 for (i in 0 until resolvedNumValues)
                     yMarkLabels?.set(i, format?.invoke(value[i]) ?: "")
+            }
+        }
+        if(redraw)
+            invalidate()
+    }
+
+    fun setPoints(value : FloatArray?, redraw : Boolean = true) {
+        if(value == null) {
+            numPoints = 0
+        }
+        else {
+            numPoints = value.size / 2
+            val currentCapacity = points?.size ?: 0
+            if(currentCapacity < numPoints * 2)
+                points = FloatArray(numPoints * 2)
+            points?.let {
+                value.copyInto(it, 0, 0, numPoints * 2)
             }
         }
         if(redraw)

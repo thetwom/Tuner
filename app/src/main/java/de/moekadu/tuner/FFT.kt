@@ -1,6 +1,6 @@
 package de.moekadu.tuner
 
-import kotlin.math.roundToInt
+import kotlin.math.*
 
 fun bitReverse(value : Int, num_bits : Int) : Int {
     var myValue = value
@@ -15,32 +15,49 @@ fun bitReverse(value : Int, num_bits : Int) : Int {
     return rev
 }
 
+/// Number of frequencies, for which we get a result from the RealFFT.
+/**
+ * @param size Size as passed to the constructor of the RealFFT.
+ * @return Number of frequencies for which we get a RealFFT result.
+ */
 fun RealFFT.Companion.numFrequencies(size: Int) : Int {
-    return size/2
+    return size / 2 + 1
 }
 
+/// Frequency for a specific index computed by the RealFFT.
+/**
+ * @param idx Index for which the frequency should be computed.
+ * @param size Size as passed to the constructor of the RealFFT.
+ * @param dt Time step width between two input samples.
+ * @return Frequency value for the given value.
+ */
 fun RealFFT.Companion.getFrequency(idx : Int, size: Int, dt : Float) : Float {
     return idx / (dt * size)
 }
 
+/// Frequency index for a specific frequency value.
+/**
+ * @param frequency Frequency for which the index is requested.
+ * @param size Size as passed to the constructor of the RealFFT.
+ * @param dt Time step width between two input samples.
+ * @return Closest index which fits to the given frequency.
+ */
 fun RealFFT.Companion.closestFrequencyIndex(frequency : Float, size: Int, dt : Float) : Int {
     return (frequency * dt * size).roundToInt()
 }
-
-
 
 class RealFFT(val size : Int, val windowType : Int = NO_WINDOW) {
     companion object {
         const val NO_WINDOW = 0
         const val HAMMING_WINDOW = 1
-
     }
+
     private val cosTable = FloatArray(size)
     private val sinTable = FloatArray(size)
     private val cosTableH = FloatArray(size)
     private val sinTableH = FloatArray(size)
     private val bitReverseTable = IntArray(size)
-    private val nBits = kotlin.math.round(kotlin.math.log2(size.toFloat())).toInt()
+    private val nBits = log2(size.toFloat()).roundToInt()
 
     private val window = FloatArray(size)
 
@@ -51,39 +68,33 @@ class RealFFT(val size : Int, val windowType : Int = NO_WINDOW) {
         }
         val halfSize = size / 2
 
-        val fac: Float = -2.0f * kotlin.math.PI.toFloat() / size
+        val fac: Float = -2.0f * PI.toFloat() / size
         for (i in 0 until halfSize) {
-            sinTable[i] = kotlin.math.sin(2.0f * i * fac)
-            cosTable[i] = kotlin.math.cos(2.0f * i * fac)
+            sinTable[i] = sin(2.0f * i * fac)
+            cosTable[i] = cos(2.0f * i * fac)
 
-            sinTableH[i] = kotlin.math.sin(i * fac)
-            cosTableH[i] = kotlin.math.cos(i * fac)
+            sinTableH[i] = sin(i * fac)
+            cosTableH[i] = cos(i * fac)
 
             bitReverseTable[i] = bitReverse(i, nBits - 1)
         }
 
         if (windowType == HAMMING_WINDOW) {
             for (i in 0 until size)
-                window[i] =
-                    0.54f - 0.46f * kotlin.math.cos(2.0f * kotlin.math.PI.toFloat() * i.toFloat() / size.toFloat())
+                window[i] = 0.54f - 0.46f * cos(2.0f * PI.toFloat() * i.toFloat() / size.toFloat())
         }
         else if (windowType != NO_WINDOW) {
             throw RuntimeException("Invalid window type")
         }
     }
 
-    fun fft(input: CircularRecordData.ReadBuffer, output: FloatArray) {
-        if (size != input.size) {
-            throw RuntimeException("FFT input is of invalid size")
-        }
-
-        if (size != output.size) {
-            throw RuntimeException("FFT output is of invalid size")
-        }
-
+    fun fft(input: CircularRecordData.ReadBuffer, output: FloatArray, disableWindow : Boolean = false) {
+        require(size == input.size) {"FFT input is of invalid size"}
+        require(size == output.size-2) {"FFT output is of invalid size"}
+      
         val halfSize = size / 2
 
-        if(windowType == NO_WINDOW) {
+        if(windowType == NO_WINDOW || disableWindow) {
             for (i in 0 until halfSize) {
                 val ir2 = 2 * bitReverseTable[i]
                 val i2 = 2 * i
@@ -107,13 +118,8 @@ class RealFFT(val size : Int, val windowType : Int = NO_WINDOW) {
     }
 
     private fun fft(output: FloatArray) {
-
-        if (size != output.size) {
-            throw RuntimeException("FFT output is of invalid size")
-        }
-
+        require(size == output.size-2) {"size of output must be fftsize + 2"}
         val halfSize = size / 2
-
         var numInner = 1
         var wStep = halfSize / 2
 
@@ -151,9 +157,6 @@ class RealFFT(val size : Int, val windowType : Int = NO_WINDOW) {
             wStep /= 2
         }
 
-        output[0] = 2 * output[0]
-        output[1] = 0.0f
-
         var k1re = 0
         var k1im = 1
         var k2re = 2 * halfSize
@@ -180,6 +183,11 @@ class RealFFT(val size : Int, val windowType : Int = NO_WINDOW) {
             output[k2re] = frRe + cos2 * grRe + sin2 * grIm
             output[k2im] = -frIm + sin2 * grRe - cos2 * grIm
         }
+
+        output[size] = output[0] - output[1]
+        output[0] = output[0] + output[1]
+        output[1] = 0.0f
+        output[size+1] = 0.0f
     }
 
 //    fun getFreq(idx : Int, dt : Float) : Float {

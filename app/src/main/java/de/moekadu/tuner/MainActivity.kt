@@ -63,6 +63,7 @@ class MainActivity : AppCompatActivity() {
 
     private var pitchPlot: PlotView? = null
     private val pitchHistory = FloatArray(200) { 0.0f }
+    private val currentPitchPoint = FloatArray(2)
 
     private var currentTargetPitchIndex = 1
     private val currentPitchPlotRange = floatArrayOf(
@@ -550,6 +551,9 @@ class MainActivity : AppCompatActivity() {
                     nextPitchIndexCount = 0
                 }
 
+                currentPitchPoint[0] = (pitchHistory.size - 1).toFloat()
+                currentPitchPoint[1] = pitchHistory.last()
+                pitchPlot?.setPoints(currentPitchPoint)
                 pitchPlot?.plot(pitchHistory)
             }
 
