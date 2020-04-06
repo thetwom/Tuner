@@ -5,7 +5,7 @@ import android.os.HandlerThread
 import android.os.Message
 import kotlin.math.PI
 
-class PostprocessorThread(val size : Int, private val uiHandler : Handler) : HandlerThread("Tuner:PreprocessorThread") {
+class PostprocessorThread(val size : Int, val dt : Float, val processingInterval : Int, private val uiHandler : Handler) : HandlerThread("Tuner:PreprocessorThread") {
     lateinit var handler: Handler
 
     companion object {
@@ -14,8 +14,12 @@ class PostprocessorThread(val size : Int, private val uiHandler : Handler) : Han
     }
 
     class PostprocessingResults {
-        var frequency = 0.0f
+        var frequencyBasedResults : FrequencyBasedPitchDetectorPost.Results? = null
     }
+
+    private val frequencyBasedPitchDetectorPost = FrequencyBasedPitchDetectorPost(dt, processingInterval)
+
+    var frequencyBasedResultsPrep : Array<FrequencyBasedPitchDetectorPrep.Results?>? = null
 
     class PreprocessingDataAndPostprocessingResults(val preprocessingResults: Array<PreprocessorThread.PreprocessingResults?>,
                                                     val postprocessingResults: PostprocessingResults,
@@ -42,29 +46,25 @@ class PostprocessorThread(val size : Int, private val uiHandler : Handler) : Han
         //Log.v("Tuner", "PostprocessorThread:postprocessData")
         val preprocessingResults = preprocessingDataAndPostprocessingResults.preprocessingResults
         val postprocessingResults = preprocessingDataAndPostprocessingResults.postprocessingResults
-        val processingInterval = preprocessingDataAndPostprocessingResults.processingInterval
-        val dt = 1.0f / MainActivity.sampleRate
 
-        val spec1 = preprocessingResults[0]?.spectrum
-        val spec2 = preprocessingResults[1]?.spectrum
-        if(spec1 != null && spec2 != null) {
-            //val freqIdx = preprocessingResults[0]?.idxMaxFreq ?: 0
-            val freqIdx = preprocessingResults[0]?.idxMaxPitch ?: 0
-            if (freqIdx > 0) {
-                val freq = freqIdx * MainActivity.sampleRate / spec1.size
-                val phase1 = kotlin.math.atan2(spec1[2 * freqIdx + 1], spec1[2 * freqIdx])
-                val phase2 = kotlin.math.atan2(spec2[2 * freqIdx + 1], spec2[2 * freqIdx])
-                val phaseErrRaw =
-                    phase2 - phase1 - 2.0f * PI.toFloat() * freq * processingInterval * dt
-                val phaseErr =
-                    phaseErrRaw - 2.0f * PI.toFloat() * kotlin.math.round(phaseErrRaw / (2.0f * PI.toFloat()))
-                postprocessingResults.frequency =
-                    processingInterval * dt * freq.toFloat() / (dt * processingInterval - phaseErr / (2.0f * PI.toFloat() * freq))
-            }
-            else {
-                postprocessingResults.frequency = 0f
+        if (frequencyBasedResultsPrep == null || (frequencyBasedResultsPrep?.size ?: 0) != preprocessingResults.size) {
+            frequencyBasedResultsPrep =
+                Array(preprocessingResults.size) { i -> preprocessingResults[i]?.frequencyBasedResults }
+        }
+        else {
+            for (i in preprocessingResults.indices)
+                frequencyBasedResultsPrep?.set(i, preprocessingResults[i]?.frequencyBasedResults)
+        }
+
+        if(postprocessingResults.frequencyBasedResults == null)
+            postprocessingResults.frequencyBasedResults = FrequencyBasedPitchDetectorPost.Results()
+
+        frequencyBasedResultsPrep?.let { prep ->
+            postprocessingResults.frequencyBasedResults?.let { post ->
+                frequencyBasedPitchDetectorPost.run(prep, post)
             }
         }
+
         val message =
             uiHandler.obtainMessage(POSTPROCESSING_FINISHED, preprocessingDataAndPostprocessingResults)
         uiHandler.sendMessage(message)

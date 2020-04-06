@@ -3,6 +3,24 @@ package de.moekadu.tuner
 import android.util.Log
 import kotlin.math.*
 
+fun getClosestIntArrayIndex(element : Int, array : IntArray, fromIndex : Int = 0, toIndex : Int = array.size) : Int {
+    var closestIndex = array.binarySearch(element, fromIndex, toIndex)
+
+    if(closestIndex >= 0)
+        return closestIndex
+    else
+        closestIndex = - (closestIndex + 1)
+    //Log.v("Tuner", "BLBB: $closestIndex from $fromIndex to $toIndex")
+    if(closestIndex == 0)
+        return closestIndex
+    else if(closestIndex == toIndex)
+        return toIndex-1
+    else if(element - array[closestIndex-1] < array[closestIndex] - element)
+        return closestIndex-1
+    return closestIndex
+}
+
+
 class FrequencyBasedPitchDetectorPrep(val size : Int, val dt : Float, minimumFrequency : Float, maximumFrequency : Float) {
 
     class Results(size : Int) {
@@ -256,6 +274,36 @@ class FrequencyBasedPitchDetectorPrep(val size : Int, val dt : Float, minimumFre
             results.numLocalMaxima = 1
             results.localMaxima[0] = results.idxMaxFreq
             results.idxMaxPitch = results.idxMaxFreq
+        }
+    }
+}
+
+class FrequencyBasedPitchDetectorPost(val dt : Float, val processingInterval : Int) {
+    class Results {
+        var frequency = 0.0f
+    }
+
+    fun run(preprocessingResults: Array<FrequencyBasedPitchDetectorPrep.Results?>,
+                    postprocessingResults: Results) {
+        //Log.v("Tuner", "PostprocessorThread:postprocessData")
+
+        val spec1 = preprocessingResults[0]?.spectrum
+        val spec2 = preprocessingResults[1]?.spectrum
+        if (spec1 != null && spec2 != null) {
+            val freqIdx = preprocessingResults[0]?.idxMaxPitch ?: 0
+            if (freqIdx > 0) {
+                val freq = freqIdx * MainActivity.sampleRate / spec1.size
+                val phase1 = atan2(spec1[2 * freqIdx + 1], spec1[2 * freqIdx])
+                val phase2 = atan2(spec2[2 * freqIdx + 1], spec2[2 * freqIdx])
+                val phaseErrRaw =
+                    phase2 - phase1 - 2.0f * PI.toFloat() * freq * processingInterval * dt
+                val phaseErr =
+                    phaseErrRaw - 2.0f * PI.toFloat() * kotlin.math.round(phaseErrRaw / (2.0f * PI.toFloat()))
+                postprocessingResults.frequency =
+                    processingInterval * dt * freq.toFloat() / (dt * processingInterval - phaseErr / (2.0f * PI.toFloat() * freq))
+            } else {
+                postprocessingResults.frequency = 0f
+            }
         }
     }
 }

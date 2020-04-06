@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
 //    private var volumeMeter: VolumeMeter? = null
 
     private var spectrumPlot: PlotView? = null
-    private val spectrumPlotXMarks = FloatArray(PreprocessorThread.NUM_MAX_HARMONIC)
+    private val spectrumPlotXMarks = FloatArray(FrequencyBasedPitchDetectorPrep.NUM_MAX_HARMONIC)
 
     private var frequencyText: TextView? = null
 
@@ -199,13 +199,13 @@ class MainActivity : AppCompatActivity() {
         if (preprocessor == null) {
             preprocessor = PreprocessorThread(processingBufferSize, 1.0f/ sampleRate, minimumFrequency, maximumFrequency, uiHandler)
             preprocessingResults = ProcessingResultBuffer(3 + numBufferForPostprocessing) {
-                PreprocessorThread.PreprocessingResults(processingBufferSize)
+                PreprocessorThread.PreprocessingResults()
             }
             preprocessor?.start()
         }
 
         if (postprocessor == null) {
-            postprocessor = PostprocessorThread(processingBufferSize, uiHandler)
+            postprocessor = PostprocessorThread(processingBufferSize, 1.0f / sampleRate, getProcessingInterval(), uiHandler)
             postprocessingResults =
                 ProcessingResultBuffer(3) { PostprocessorThread.PostprocessingResults() }
             postprocessor?.start()
@@ -475,7 +475,7 @@ class MainActivity : AppCompatActivity() {
 
         val postResults = postprocessingResults?.lockRead(-1)
 
-        prepArray.last()?.let { result ->
+        prepArray.last()?.frequencyBasedResults?.let { result ->
             //Log.v("Tuner", "Max level: " + result.maxValue)
 //            volumeMeter?.let {
 //                val minAllowedVal = 10.0f.pow(it.minValue)
@@ -497,7 +497,7 @@ class MainActivity : AppCompatActivity() {
             spectrumPlot?.plot(frequencies, result.ampSpec)
         }
 
-        postResults?.let {
+        postResults?.frequencyBasedResults?.let {
             if (it.frequency >= minimumFrequency && it.frequency <= maximumFrequency) {
                 Log.v("Tuner", "freqcorr=" + it.frequency)
                 frequencyText?.text = "frequency: " + it.frequency + "Hz"
