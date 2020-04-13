@@ -3,23 +3,26 @@ package de.moekadu.tuner
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
-import kotlin.math.PI
 
-class PostprocessorThread(val size : Int, val dt : Float, val processingInterval : Int, private val uiHandler : Handler) : HandlerThread("Tuner:PreprocessorThread") {
+class PostprocessorThread(val size : Int, private val dt : Float, private val processingInterval : Int, private val uiHandler : Handler) : HandlerThread("Tuner:PreprocessorThread") {
     lateinit var handler: Handler
 
     companion object {
-        const val POSTPROCESS_AUDIO = 300001
-        const val POSTPROCESSING_FINISHED = 300002
+        const val POSTPROCESS_FREQUENCYBASED = 300001
+        const val POSTPROCESS_AUTOCORRELATIONBASED = 300002
+        const val POSTPROCESSING_FINISHED = 300010
     }
 
     class PostprocessingResults {
         var frequencyBasedResults : FrequencyBasedPitchDetectorPost.Results? = null
+        var autocorrelationBasedResults : AutocorrelationBasedPitchDetectorPost.Results? = null
     }
 
-    private val frequencyBasedPitchDetectorPost = FrequencyBasedPitchDetectorPost(dt, processingInterval)
+    private var frequencyBasedPitchDetector : FrequencyBasedPitchDetectorPost ? = null
+    private var autocorrelationBasedPitchDetector : AutocorrelationBasedPitchDetectorPost ? = null
 
-    var frequencyBasedResultsPrep : Array<FrequencyBasedPitchDetectorPrep.Results?>? = null
+    private var frequencyBasedResultsPrep : Array<FrequencyBasedPitchDetectorPrep.Results?>? = null
+    private var autocorrelationBasedResultsPrep : Array<AutocorrelationBasedPitchDetectorPrep.Results?>? = null
 
     class PreprocessingDataAndPostprocessingResults(val preprocessingResults: Array<PreprocessorThread.PreprocessingResults?>,
                                                     val postprocessingResults: PostprocessingResults,
@@ -32,17 +35,37 @@ class PostprocessorThread(val size : Int, val dt : Float, val processingInterval
             override fun handleMessage(msg: Message) {
                 super.handleMessage(msg)
 
-                if (msg.what == POSTPROCESS_AUDIO) {
-                    //Log.v("Tuner", "PostprocessorThread:onLooperPrepared : postprocess audio")
-                    when (val obj = msg.obj) {
-                        is PreprocessingDataAndPostprocessingResults -> postprocessData(obj)
+                when (val obj = msg.obj) {
+                    is PreprocessingDataAndPostprocessingResults -> {
+                        if (msg.what == POSTPROCESS_FREQUENCYBASED) {
+                            postprocessFrequencyBased(obj)
+                        }
+                        else if (msg.what == POSTPROCESS_AUTOCORRELATIONBASED) {
+                            postprocessAutocorrelationBased(obj)
+                        }
+
+                        val message = uiHandler.obtainMessage(POSTPROCESSING_FINISHED, obj)
+                        uiHandler.sendMessage(message)
                     }
                 }
+
+//                if (msg.what == POSTPROCESS_FREQUENCYBASED) {
+//                    //Log.v("Tuner", "PostprocessorThread:onLooperPrepared : postprocess audio")
+//                    when (val obj = msg.obj) {
+//                        is PreprocessingDataAndPostprocessingResults -> postprocessFrequencyBased(obj)
+//                    }
+//                }
+//                else if (msg.what == POSTPROCESS_AUTOCORRELATIONBASED) {
+//                    //Log.v("Tuner", "PostprocessorThread:onLooperPrepared : postprocess audio")
+//                    when (val obj = msg.obj) {
+//                        is PreprocessingDataAndPostprocessingResults -> postprocessAutocorrelationBased(obj)
+//                    }
+//                }
             }
         }
     }
 
-    private fun postprocessData(preprocessingDataAndPostprocessingResults: PreprocessingDataAndPostprocessingResults) {
+    private fun postprocessFrequencyBased(preprocessingDataAndPostprocessingResults: PreprocessingDataAndPostprocessingResults) {
         //Log.v("Tuner", "PostprocessorThread:postprocessData")
         val preprocessingResults = preprocessingDataAndPostprocessingResults.preprocessingResults
         val postprocessingResults = preprocessingDataAndPostprocessingResults.postprocessingResults
@@ -59,14 +82,48 @@ class PostprocessorThread(val size : Int, val dt : Float, val processingInterval
         if(postprocessingResults.frequencyBasedResults == null)
             postprocessingResults.frequencyBasedResults = FrequencyBasedPitchDetectorPost.Results()
 
+        if(frequencyBasedPitchDetector == null)
+            frequencyBasedPitchDetector =  FrequencyBasedPitchDetectorPost(dt, processingInterval)
+
         frequencyBasedResultsPrep?.let { prep ->
             postprocessingResults.frequencyBasedResults?.let { post ->
-                frequencyBasedPitchDetectorPost.run(prep, post)
+                frequencyBasedPitchDetector?.run(prep, post)
             }
         }
+//
+//        val message =
+//            uiHandler.obtainMessage(POSTPROCESSING_FINISHED, preprocessingDataAndPostprocessingResults)
+//        uiHandler.sendMessage(message)
+    }
 
-        val message =
-            uiHandler.obtainMessage(POSTPROCESSING_FINISHED, preprocessingDataAndPostprocessingResults)
-        uiHandler.sendMessage(message)
+    private fun postprocessAutocorrelationBased(preprocessingDataAndPostprocessingResults: PreprocessingDataAndPostprocessingResults) {
+        //Log.v("Tuner", "PostprocessorThread:postprocessData")
+        val preprocessingResults = preprocessingDataAndPostprocessingResults.preprocessingResults
+        val postprocessingResults = preprocessingDataAndPostprocessingResults.postprocessingResults
+
+        if (autocorrelationBasedResultsPrep == null || (autocorrelationBasedResultsPrep?.size ?: 0) != preprocessingResults.size) {
+            autocorrelationBasedResultsPrep =
+                Array(preprocessingResults.size) { i -> preprocessingResults[i]?.autocorrelationBasedResults }
+        }
+        else {
+            for (i in preprocessingResults.indices)
+                autocorrelationBasedResultsPrep?.set(i, preprocessingResults[i]?.autocorrelationBasedResults)
+        }
+
+        if(postprocessingResults.autocorrelationBasedResults == null)
+            postprocessingResults.autocorrelationBasedResults = AutocorrelationBasedPitchDetectorPost.Results()
+
+        if(autocorrelationBasedPitchDetector == null)
+            autocorrelationBasedPitchDetector = AutocorrelationBasedPitchDetectorPost(dt)
+
+        autocorrelationBasedResultsPrep?.let { prep ->
+            postprocessingResults.autocorrelationBasedResults?.let { post ->
+                autocorrelationBasedPitchDetector?.run(prep, post)
+            }
+        }
+//
+//        val message =
+//            uiHandler.obtainMessage(POSTPROCESSING_FINISHED, preprocessingDataAndPostprocessingResults)
+//        uiHandler.sendMessage(message)
     }
 }

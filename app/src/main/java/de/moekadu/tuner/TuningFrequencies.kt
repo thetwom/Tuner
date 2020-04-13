@@ -32,29 +32,29 @@ class TuningFrequencies {
         var noteIndexWithinOctave = relativeTone0 % noteNames.size
         if (noteIndexWithinOctave < 0) {
             octaveIndex -= 1
-            noteIndexWithinOctave = noteIndexWithinOctave + noteNames.size
+            noteIndexWithinOctave += noteNames.size
         }
 
         var noteName = noteNames[noteIndexWithinOctave]
-        var noteModificator = ""
+        var noteModifier = ""
 
         if (noteName == '-' && preferFlat) {
             noteName = noteNames[(noteIndexWithinOctave + 1) % noteNames.size]
             if (noteIndexWithinOctave + 1 == noteNames.size)
                 octaveIndex += 1
-            noteModificator = "\u266D"
+            noteModifier = "\u266D"
         } else if (noteName == '-') {
             noteName = noteNames[(noteIndexWithinOctave - 1) % noteNames.size]
             if (noteIndexWithinOctave == 0)
                 octaveIndex -= 1
-            noteModificator = "\u266F"
+            noteModifier = "\u266F"
         }
         var octaveText = ""
         if (octaveIndex > 0)
             octaveText = "'".repeat(octaveIndex)
         else if (octaveIndex < 0)
             octaveText = ",".repeat(-octaveIndex)
-        return noteName + noteModificator + octaveText
+        return noteName + noteModifier + octaveText
     }
 
 }

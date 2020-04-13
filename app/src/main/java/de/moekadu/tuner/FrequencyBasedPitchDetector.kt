@@ -11,17 +11,16 @@ fun getClosestIntArrayIndex(element : Int, array : IntArray, fromIndex : Int = 0
     else
         closestIndex = - (closestIndex + 1)
     //Log.v("Tuner", "BLBB: $closestIndex from $fromIndex to $toIndex")
-    if(closestIndex == 0)
-        return closestIndex
-    else if(closestIndex == toIndex)
-        return toIndex-1
-    else if(element - array[closestIndex-1] < array[closestIndex] - element)
-        return closestIndex-1
-    return closestIndex
+    when {
+      closestIndex == 0 -> return closestIndex
+      closestIndex == toIndex -> return toIndex-1
+      element - array[closestIndex-1] < array[closestIndex] - element -> return closestIndex-1
+      else -> return closestIndex
+    }
 }
 
 
-class FrequencyBasedPitchDetectorPrep(val size : Int, val dt : Float, minimumFrequency : Float, maximumFrequency : Float) {
+class FrequencyBasedPitchDetectorPrep(val size : Int, private val dt : Float, minimumFrequency : Float, maximumFrequency : Float) {
 
     class Results(size : Int) {
         val spectrum = FloatArray(size+2)
@@ -34,14 +33,12 @@ class FrequencyBasedPitchDetectorPrep(val size : Int, val dt : Float, minimumFre
 
     companion object {
         const val NUM_MAX_HARMONIC = 3
-        private const val SLOPE_INCREASING = true
-        private const val SLOPE_DECREASING = false
     }
 
     private val fft = RealFFT(size, RealFFT.HAMMING_WINDOW)
     private val localMaximaSNR = 10.0f
-    val localMaxima = IntArray(size/2)
-    val markedLocalMaxima = IntArray(NUM_MAX_HARMONIC)
+    private val localMaxima = IntArray(size/2+1)
+    private val markedLocalMaxima = IntArray(NUM_MAX_HARMONIC)
 
     /// Minimum index in transformed spectrum, which should be considered
     private val startIndex = RealFFT.closestFrequencyIndex(minimumFrequency, fft.size, dt)
@@ -76,68 +73,12 @@ class FrequencyBasedPitchDetectorPrep(val size : Int, val dt : Float, minimumFre
         }
 
         //------------------------------------------------------------------------------------------
-        // Find average value of our spectrum
+        // Find local maxima
         //------------------------------------------------------------------------------------------
-        require(startIndex < ampSpec.size-2)
-        var avgValue = 0.0f
-        for(i in startIndex .. endIndex)
-            avgValue += ampSpec[i] // ampSpec[i].pow(2)
-        //avgValue = sqrt(avgValue / (endIndex-startIndex+1))
-        avgValue /= (endIndex-startIndex+1)
+        val numLocalMaxima = findLocalMaxima(ampSpec, localMaximaSNR, startIndex, endIndex+1, localMaxima)
 
         //------------------------------------------------------------------------------------------
-        // Find all local maxima in our spectrum which have a signal to noise ratio greater than
-        //   localMaximaSNR and are greater than the average
-        //--------------------------------------------------
-        // Find local minimum left of our starting value
-        var leftLocalMinimumIndex = startIndex
-        if(ampSpec[startIndex+1] < ampSpec[startIndex]) {
-            for(i in startIndex+2 .. endIndex) {
-                if(ampSpec[i] > ampSpec[i-1]) {
-                    leftLocalMinimumIndex = i-1
-                    break
-                }
-            }
-        }
-        else {
-            for(i in startIndex downTo 1){
-                if(ampSpec[i-1] > ampSpec[i]) {
-                    leftLocalMinimumIndex = i
-                    break
-                }
-            }
-        }
-        // correct the start index such that we start at left local minimum
-        val startIndexLocalMaxima = max(startIndex, leftLocalMinimumIndex)
-        var slope = SLOPE_INCREASING
-        var localMaximumIndex = 0
-        var numLocalMaxima = 0
-
-        for(i in startIndexLocalMaxima until ampSpec.size-2 ) {
-            // We found a maximum, so store its position
-            if (slope == SLOPE_INCREASING && ampSpec[i + 1] < ampSpec[i]) {
-                localMaximumIndex = i
-                slope = SLOPE_DECREASING
-
-            }
-            // We found a local minimum, that means that we now can evaluate our latest stored local maximum
-            else if (slope == SLOPE_DECREASING && ampSpec[i + 1] > ampSpec[i]) {
-                // Signal to noise ratio is based on the larger local minimum (the minimum left or right to our maximum)
-                val largerMinimum = max(ampSpec[leftLocalMinimumIndex], ampSpec[i])
-                // Here is the condition when we consider a local maximum worth to be stored
-                if (ampSpec[localMaximumIndex] >= largerMinimum * localMaximaSNR && ampSpec[localMaximumIndex] > avgValue) {
-                    localMaxima[numLocalMaxima] = localMaximumIndex
-                    ++numLocalMaxima
-                }
-                leftLocalMinimumIndex = i
-                if (leftLocalMinimumIndex >= endIndex)
-                    break
-                slope = SLOPE_INCREASING
-            }
-        }
-
-        //------------------------------------------------------------------------------------------
-        // We have found all inidices of our local maxima, now we have choose a pitch
+        // We have found all indices of our local maxima, now we have choose a pitch
         //------------------------------------------------------------------------------------------
         if(numLocalMaxima > 0) {
             // Find the index of the largest local maximum, this will always be part of our pitch computation
@@ -278,13 +219,13 @@ class FrequencyBasedPitchDetectorPrep(val size : Int, val dt : Float, minimumFre
     }
 }
 
-class FrequencyBasedPitchDetectorPost(val dt : Float, val processingInterval : Int) {
+class FrequencyBasedPitchDetectorPost(private val dt : Float, private val processingInterval : Int) {
     class Results {
         var frequency = 0.0f
     }
 
     fun run(preprocessingResults: Array<FrequencyBasedPitchDetectorPrep.Results?>,
-                    postprocessingResults: Results) {
+            postprocessingResults: Results) {
         //Log.v("Tuner", "PostprocessorThread:postprocessData")
 
         val spec1 = preprocessingResults[0]?.spectrum
@@ -298,7 +239,7 @@ class FrequencyBasedPitchDetectorPost(val dt : Float, val processingInterval : I
                 val phaseErrRaw =
                     phase2 - phase1 - 2.0f * PI.toFloat() * freq * processingInterval * dt
                 val phaseErr =
-                    phaseErrRaw - 2.0f * PI.toFloat() * kotlin.math.round(phaseErrRaw / (2.0f * PI.toFloat()))
+                    phaseErrRaw - 2.0f * PI.toFloat() * round(phaseErrRaw / (2.0f * PI.toFloat()))
                 postprocessingResults.frequency =
                     processingInterval * dt * freq.toFloat() / (dt * processingInterval - phaseErr / (2.0f * PI.toFloat() * freq))
             } else {

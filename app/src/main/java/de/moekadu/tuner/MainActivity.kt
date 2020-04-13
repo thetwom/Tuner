@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
 
         //const val processingBufferSize = 16384
         const val processingBufferSize = 4096
+
         //const val processingBufferSize = 8192
         const val numBufferForPostprocessing = 2
 
@@ -41,12 +42,10 @@ class MainActivity : AppCompatActivity() {
     private var audioData: CircularRecordData? = null
 
     private var preprocessor: PreprocessorThread? = null
-    private var preprocessingResults: ProcessingResultBuffer<PreprocessorThread.PreprocessingResults>? =
-        null
+    private var preprocessingResults: ProcessingResultBuffer<PreprocessorThread.PreprocessingResults>? = null
 
     private var postprocessor: PostprocessorThread? = null
-    private var postprocessingResults: ProcessingResultBuffer<PostprocessorThread.PostprocessingResults>? =
-        null
+    private var postprocessingResults: ProcessingResultBuffer<PostprocessorThread.PostprocessingResults>? = null
 
     //val overlapFraction = 4
     private val overlapFraction = 2
@@ -60,24 +59,23 @@ class MainActivity : AppCompatActivity() {
     private var frequencyText: TextView? = null
 
     private val frequencies = FloatArray(RealFFT.numFrequencies(processingBufferSize))
+    private val times = FloatArray(processingBufferSize+1)
 
     private var pitchPlot: PlotView? = null
-    private val pitchHistory = FloatArray(200) { 0.0f }
+    private val pitchHistory = PitchHistory(150)
     private val currentPitchPoint = FloatArray(2)
 
-    private var currentTargetPitchIndex = 1
+    private var currentTargetPitchIndex = pitchHistory.currentEstimatedToneIndex
     private val currentPitchPlotRange = floatArrayOf(
         tuningFrequencies.getNoteFrequency(currentTargetPitchIndex) * tuningFrequencies.halfToneRatio.pow(-1.5f),
         tuningFrequencies.getNoteFrequency(currentTargetPitchIndex) * tuningFrequencies.halfToneRatio.pow(1.5f)
     )
-    private val currentStablePitchRange = floatArrayOf(
-        tuningFrequencies.getNoteFrequency(currentTargetPitchIndex) * tuningFrequencies.halfToneRatio.pow(-0.7f),
-        tuningFrequencies.getNoteFrequency(currentTargetPitchIndex) * tuningFrequencies.halfToneRatio.pow(0.7f)
-    )
 
-    private var nextPitchIndex = 0
-    private var nextPitchIndexCount = 0
-    private val countToChangeTargetPitch = 3
+    // the next to variable must both be either frequency based or autocorrelation based
+//    private val pitchDetectorTypePrep = PreprocessorThread.PREPROCESS_FREQUENCYBASED
+//    private val pitchDetectorTypePost = PostprocessorThread.POSTPROCESS_FREQUENCYBASED
+    private val pitchDetectorTypePrep = PreprocessorThread.PREPROCESS_AUTOCORRELATIONBASED
+    private val pitchDetectorTypePost = PostprocessorThread.POSTPROCESS_AUTOCORRELATIONBASED
 
     class UiHandler(private val activity: WeakReference<MainActivity>) : Handler() {
 
@@ -125,29 +123,47 @@ class MainActivity : AppCompatActivity() {
 
 //        volumeMeter = findViewById(R.id.volume_meter)
 
+
         spectrumPlot = findViewById(R.id.spectrum_plot)
-        //spectrumPlot?.xRange(0f, 880f)
-        //spectrumPlot?.setXTicks(floatArrayOf(0f,200f,400f,600f,800f), true)
-        spectrumPlot?.xRange(0f, 1760f, PlotView.NO_REDRAW)
-        spectrumPlot?.setXTicks(floatArrayOf(0f,200f, 400f, 600f, 800f, 1000f,1200f, 1400f, 1600f), true) { i -> getString(R.string.hertz, i) }
-                // spectrumPlot?.setXTickTextFormat { i -> getString(R.string.hertz, i) }
+
+        if(pitchDetectorTypePost == PostprocessorThread.POSTPROCESS_FREQUENCYBASED) {
+            spectrumPlot?.xRange(0f, 1760f, PlotView.NO_REDRAW)
+            spectrumPlot?.setXTicks(floatArrayOf(0f, 200f, 400f, 600f, 800f, 1000f, 1200f, 1400f, 1600f), true) {
+                    i -> getString(R.string.hertz, i)
+            }
+        }
+        else if(pitchDetectorTypePost == PostprocessorThread.POSTPROCESS_AUTOCORRELATIONBASED) {
+            spectrumPlot?.xRange(0f, 1.0f/25f, PlotView.NO_REDRAW)
+            spectrumPlot?.setXTicks(floatArrayOf(1/1600f, 1/200f, 1/50f, 1/30f), false) {
+                    i -> getString(R.string.hertz, 1/i)
+            }
+            spectrumPlot?.setYTicks(floatArrayOf(0f), true) {""}
+        }
+        // spectrumPlot?.setXTickTextFormat { i -> getString(R.string.hertz, i) }
         frequencyText = findViewById(R.id.frequency_text)
 
-        for(i in 0 until processingBufferSize/2)
-            frequencies[i] = RealFFT.getFrequency(i, processingBufferSize, 1.0f/ sampleRate)
+        val dt = 1.0f / sampleRate
+        for (i in frequencies.indices)
+            frequencies[i] = RealFFT.getFrequency(i, processingBufferSize, dt)
+        for (i in times.indices)
+            times[i] = i * dt
 
         pitchPlot = findViewById(R.id.pitch_plot)
-        pitchPlot?.xRange(0f, 1.1f*pitchHistory.size.toFloat(), PlotView.NO_REDRAW)
+        pitchPlot?.xRange(0f, 1.1f * pitchHistory.size.toFloat(), PlotView.NO_REDRAW)
         //pitchPlot?.yRange(200f, 900f, PlotView.NO_REDRAW)
         pitchPlot?.yRange(currentPitchPlotRange[0], currentPitchPlotRange[1], PlotView.NO_REDRAW)
         //pitchPlot?.setYTickTextFormat { i -> getString(R.string.hertz, i) }
         //pitchPlot?.setYMarkTextFormat { i -> getString(R.string.hertz, i) }
-        val noteFrequencies = FloatArray(100) {i -> tuningFrequencies.getNoteFrequency(i-50)}
+        val noteFrequencies = FloatArray(100) { i -> tuningFrequencies.getNoteFrequency(i - 50) }
         pitchPlot?.setYTicks(noteFrequencies, false) { frequency -> tuningFrequencies.getNoteName(frequency) }
         //pitchPlot?.setYTicks(floatArrayOf(0f,200f, 400f, 600f, 800f, 1000f,1200f, 1400f, 1600f), false) { i -> getString(R.string.hertz, i) }
         //pitchPlot?.setYMarks(floatArrayOf(440f))
-        pitchPlot?.setYMarks(floatArrayOf(tuningFrequencies.getNoteFrequency(currentTargetPitchIndex))) { i -> tuningFrequencies.getNoteName(i) }
-        pitchPlot?.plot(pitchHistory)
+        pitchPlot?.setYMarks(floatArrayOf(tuningFrequencies.getNoteFrequency(currentTargetPitchIndex))) { i ->
+            tuningFrequencies.getNoteName(
+                i
+            )
+        }
+        pitchPlot?.plot(pitchHistory.getHistory())
     }
 
     override fun onStart() {
@@ -197,7 +213,13 @@ class MainActivity : AppCompatActivity() {
         Log.v("Tuner", "MainActivity::startAudioRecorder")
 
         if (preprocessor == null) {
-            preprocessor = PreprocessorThread(processingBufferSize, 1.0f/ sampleRate, minimumFrequency, maximumFrequency, uiHandler)
+            preprocessor = PreprocessorThread(
+                processingBufferSize,
+                1.0f / sampleRate,
+                minimumFrequency,
+                maximumFrequency,
+                uiHandler
+            )
             preprocessingResults = ProcessingResultBuffer(3 + numBufferForPostprocessing) {
                 PreprocessorThread.PreprocessingResults()
             }
@@ -205,7 +227,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (postprocessor == null) {
-            postprocessor = PostprocessorThread(processingBufferSize, 1.0f / sampleRate, getProcessingInterval(), uiHandler)
+            postprocessor =
+                PostprocessorThread(processingBufferSize, 1.0f / sampleRate, getProcessingInterval(), uiHandler)
             postprocessingResults =
                 ProcessingResultBuffer(3) { PostprocessorThread.PostprocessingResults() }
             postprocessor?.start()
@@ -269,18 +292,18 @@ class MainActivity : AppCompatActivity() {
                 ).show()
             }
 
-            Log.v("Tuner", "MainActivity::startAudioRecorder: minBufferSize = " + minBufferSize)
+            Log.v("Tuner", "MainActivity::startAudioRecorder: minBufferSize = $minBufferSize")
             Log.v(
                 "Tuner",
-                "MainActivity::startAudioRecorder: circularBufferSize = " + circularBufferSize
+                "MainActivity::startAudioRecorder: circularBufferSize = $circularBufferSize"
             )
             Log.v(
                 "Tuner",
-                "MainActivity::startAudioRecorder: processingInterval = " + processingInterval
+                "MainActivity::startAudioRecorder: processingInterval = $processingInterval"
             )
             Log.v(
                 "Tuner",
-                "MainActivity::startAudioRecorder: audioRecordBufferSize = " + audioRecordBufferSize
+                "MainActivity::startAudioRecorder: audioRecordBufferSize = $audioRecordBufferSize"
             )
 
             localRecord.setRecordPositionUpdateListener(object :
@@ -328,7 +351,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun readAudioData(recorder: AudioRecord?) {
         //Log.v("Tuner", "MainActivity:readAudioData")
-        if(recorder != null) {
+        if (recorder != null) {
             if (recorder.state == AudioRecord.STATE_UNINITIALIZED) {
                 return
             }
@@ -340,31 +363,28 @@ class MainActivity : AppCompatActivity() {
             if (audioData == null) {
                 Log.v("Tuner", "MainActivity::onPeriodicNotification: recordBuffer does not exist")
                 readToDummy = true
-            }
-            else if (writeBuffer == null) {
+            } else if (writeBuffer == null) {
                 Log.v("Tuner", "MainActivity::onPeriodicNotification: cannot acquire write buffer")
                 readToDummy = true
-            }
-            else {
+            } else {
                 val recordAndData = RecordReaderThread.RecordAndData(recorder, writeBuffer)
                 val handler = recordReader?.handler
                 val message = handler?.obtainMessage(RecordReaderThread.READDATA, recordAndData)
-                if (message != null){
+                if (message != null) {
                     handler.sendMessage(message)
-                }
-                else  {
+                } else {
                     audioData?.unlockWrite(writeBuffer)
                 }
             }
 
-            if(readToDummy)
+            if (readToDummy)
                 recorder.read(dummyAudioBuffer, 0, recorder.positionNotificationPeriod, AudioRecord.READ_BLOCKING)
         }
     }
 
     /// Inhere we trigger the processing of the audio data we just read
     private fun doPreprocessing(writeBuffer: CircularRecordData.WriteBuffer) {
-        //Log.v("Tuner", "MainActivity:doPreprocessing")
+        // Log.v("Tuner", "MainActivity:doPreprocessing")
         val startWrite = writeBuffer.startWrite
         val endWrite = startWrite + writeBuffer.size
 
@@ -386,42 +406,37 @@ class MainActivity : AppCompatActivity() {
                         "Tuner",
                         "MainActivity:doPreprocessing: Not able to get read access to recordBuffer"
                     )
-                }
-                else {
+                } else {
                     val results = preprocessingResults?.lockWrite()
                     if (results == null) {
                         Log.v(
                             "Tuner",
-                            "MainActivity:doPreprocessing: Not able to get write access to the processingResults"
+                            "MainActivity:doPreprocessing: Not able to get write access to the preprocessingResults"
                         )
                         audioData?.unlockRead(readBuffer)
-                    }
-                    else {
-                        //Log.v("Tuner", "MainActivity:doPreprocessing: Sending data to preprocessing thread")
+                    } else {
+                        Log.v("Tuner", "MainActivity:doPreprocessing: Sending data to preprocessing thread")
 
                         val sendObject =
                             PreprocessorThread.ReadBufferAndProcessingResults(readBuffer, results)
                         val handler = preprocessor?.handler
-                        val message =
-                            handler?.obtainMessage(PreprocessorThread.PREPROCESS_AUDIO, sendObject)
-                        if(message != null) {
+                        val message = handler?.obtainMessage(pitchDetectorTypePrep, sendObject)
+                        if (message != null) {
                             handler.sendMessage(message)
-                        }
-                        else {
+                        } else {
                             audioData?.unlockRead(readBuffer)
                             preprocessingResults?.unlockWrite(results)
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 Log.v("Tuner", "MainActivity:doPreprocessing: Not enough data yet to preprocess")
             }
         }
     }
 
     private fun doPostprocessing(readBufferAndProcessingResults: PreprocessorThread.ReadBufferAndProcessingResults) {
-        //Log.v("Tuner", "MainActivity:doPostprocessing")
+        Log.v("Tuner", "MainActivity:doPostprocessing")
         audioData?.unlockRead(readBufferAndProcessingResults.readBuffer)
         val numUnlocked =
             preprocessingResults?.unlockWrite(readBufferAndProcessingResults.preprocessingResults)
@@ -449,11 +464,10 @@ class MainActivity : AppCompatActivity() {
             val sendObject =
                 PostprocessorThread.PreprocessingDataAndPostprocessingResults(prepArray, post, getProcessingInterval())
             val handler = postprocessor?.handler
-            val message = handler?.obtainMessage(PostprocessorThread.POSTPROCESS_AUDIO, sendObject)
-            if(message != null) {
+            val message = handler?.obtainMessage(pitchDetectorTypePost, sendObject)
+            if (message != null) {
                 handler.sendMessage(message)
-            }
-            else {
+            } else {
                 for (pA in prepArray)
                     preprocessingResults?.unlockRead(pA)
                 postprocessingResults?.unlockWrite(post)
@@ -462,7 +476,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun doVisualize(preprocessingDataAndPostprocessingResults: PostprocessorThread.PreprocessingDataAndPostprocessingResults) {
-        //Log.v("Tuner", "MainActivity:doVisualize")
+        Log.v("Tuner", "MainActivity:doVisualize")
         val prepArray = preprocessingDataAndPostprocessingResults.preprocessingResults
         val post = preprocessingDataAndPostprocessingResults.postprocessingResults
 
@@ -475,8 +489,9 @@ class MainActivity : AppCompatActivity() {
 
         val postResults = postprocessingResults?.lockRead(-1)
 
-        prepArray.last()?.frequencyBasedResults?.let { result ->
-            //Log.v("Tuner", "Max level: " + result.maxValue)
+        if(pitchDetectorTypePrep == PreprocessorThread.PREPROCESS_FREQUENCYBASED) {
+            prepArray.last()?.frequencyBasedResults?.let { result ->
+                //Log.v("Tuner", "Max level: " + result.maxValue)
 //            volumeMeter?.let {
 //                val minAllowedVal = 10.0f.pow(it.minValue)
 //                val value = kotlin.math.max(minAllowedVal, result.maxValue)
@@ -488,82 +503,77 @@ class MainActivity : AppCompatActivity() {
 //                val pitchFreq = RealFFT.getFrequency(result.idxMaxPitch, result.spectrum.size, 1.0f / sampleRate)
 //                Log.v("Tuner", "freq=" + freq + "   pitch=" + pitchFreq)
 //            }
+                val dt = 1.0f / sampleRate
 
-            for(i in 0 until result.numLocalMaxima)
-                spectrumPlotXMarks[i] = RealFFT.getFrequency(result.localMaxima[i], result.spectrum.size, 1.0f / sampleRate)
-            spectrumPlot?.setXMarks(spectrumPlotXMarks, result.numLocalMaxima, false) { i -> getString(R.string.hertz, i) }
-            //spectrumPlotXMarks[0] = postResults?.frequency ?: 0f
-            //spectrumPlot?.setXMarks(spectrumPlotXMarks, 1, false)
-            spectrumPlot?.plot(frequencies, result.ampSpec)
+                for (i in 0 until result.numLocalMaxima)
+                    spectrumPlotXMarks[i] = RealFFT.getFrequency(result.localMaxima[i], result.spectrum.size, dt)
+                spectrumPlot?.setXMarks(spectrumPlotXMarks, result.numLocalMaxima, false) { i ->
+                    getString(R.string.hertz, i)
+                }
+                //spectrumPlotXMarks[0] = postResults?.frequency ?: 0f
+                //spectrumPlot?.setXMarks(spectrumPlotXMarks, 1, false)
+                spectrumPlot?.plot(frequencies, result.ampSpec)
+            }
+        }
+        else if(pitchDetectorTypePrep == PreprocessorThread.PREPROCESS_AUTOCORRELATIONBASED) {
+            prepArray.last()?.autocorrelationBasedResults?.let{ result ->
+                val dt = 1.0f / sampleRate
+                spectrumPlotXMarks[0] = result.idxMaxPitch * dt
+                spectrumPlot?.setXMarks(spectrumPlotXMarks, 1, false) {i ->
+                    getString(R.string.hertz, 1.0/i)
+                }
+                spectrumPlot?.plot(times, result.correlation)
+            }
         }
 
-        postResults?.frequencyBasedResults?.let {
-            if (it.frequency >= minimumFrequency && it.frequency <= maximumFrequency) {
-                Log.v("Tuner", "freqcorr=" + it.frequency)
-                frequencyText?.text = "frequency: " + it.frequency + "Hz"
-                pitchHistory.copyInto(pitchHistory, 0, 1)
-                pitchHistory[pitchHistory.lastIndex] = it.frequency
+        for (pA in prepArray)
+            preprocessingResults?.unlockRead(pA)
 
-                Log.v(
-                    "Tuner",
-                    "MainActivity.doPostprocessing: f=" + it.frequency + " p[0]=" + currentStablePitchRange[0] + " p[1]=" + currentStablePitchRange[1]
-                )
-                if (it.frequency < currentStablePitchRange[0] || it.frequency > currentStablePitchRange[1]) {
-                    val closestPitchIndex = tuningFrequencies.getClosestToneIndex(it.frequency)
-                    if (closestPitchIndex != currentTargetPitchIndex) { // this should also be true becouse of the currentStablePitchRange-Check
-                        if (closestPitchIndex == nextPitchIndex) {
-                            ++nextPitchIndexCount
-                            if (nextPitchIndexCount == countToChangeTargetPitch) {
-                                currentTargetPitchIndex = nextPitchIndex
-                                pitchPlot?.setYMarks(
-                                    floatArrayOf(
-                                        tuningFrequencies.getNoteFrequency(
-                                            currentTargetPitchIndex
-                                        )
-                                    )
-                                ) { i -> tuningFrequencies.getNoteName(i) }
-                                val pitchTargetFrequency =
-                                    tuningFrequencies.getNoteFrequency(currentTargetPitchIndex)
-                                currentPitchPlotRange[0] =
-                                    pitchTargetFrequency * tuningFrequencies.halfToneRatio.pow(-1.5f)
-                                currentPitchPlotRange[1] =
-                                    pitchTargetFrequency * tuningFrequencies.halfToneRatio.pow(1.5f)
-                                pitchPlot?.yRange(
-                                    currentPitchPlotRange[0],
-                                    currentPitchPlotRange[1],
-                                    600
-                                )
+        var newFrequency = 0f
+        if(pitchDetectorTypePost == PostprocessorThread.POSTPROCESS_FREQUENCYBASED) {
+            postResults?.frequencyBasedResults?.let {
+                newFrequency = it.frequency
+            }
+        }
+        else if(pitchDetectorTypePost == PostprocessorThread.POSTPROCESS_AUTOCORRELATIONBASED) {
+            postResults?.autocorrelationBasedResults?.let {
+                newFrequency = it.frequency
+            }
+        }
 
-                                currentStablePitchRange[0] =
-                                    pitchTargetFrequency * tuningFrequencies.halfToneRatio.pow(-0.7f)
-                                currentStablePitchRange[1] =
-                                    pitchTargetFrequency * tuningFrequencies.halfToneRatio.pow(0.7f)
-                                nextPitchIndexCount = 0
-                            }
-                        } else {
-                            nextPitchIndex = closestPitchIndex
-                            nextPitchIndexCount = 1
-                        }
-                    } else {
-                        nextPitchIndexCount = 0
-                    }
-                } else {
-                    nextPitchIndexCount = 0
-                }
+        postprocessingResults?.unlockRead(postResults)
 
-                currentPitchPoint[0] = (pitchHistory.size - 1).toFloat()
-                currentPitchPoint[1] = pitchHistory.last()
-                pitchPlot?.setPoints(currentPitchPoint)
-                pitchPlot?.plot(pitchHistory)
+        if (newFrequency in minimumFrequency..maximumFrequency) {
+            Log.v("Tuner", "freqcorr=$newFrequency")
+            frequencyText?.text = "frequency: " + newFrequency + "Hz"
+            val newEstimatedPitch = pitchHistory.addValue(newFrequency)
+
+            if (currentTargetPitchIndex != newEstimatedPitch) {
+                currentTargetPitchIndex = newEstimatedPitch
+
+                // highlight new target pitch
+                pitchPlot?.setYMarks(
+                    floatArrayOf(
+                        tuningFrequencies.getNoteFrequency(
+                            currentTargetPitchIndex
+                        )
+                    )
+                ) { i -> tuningFrequencies.getNoteName(i) }
+
+                val pitchTargetFrequency = tuningFrequencies.getNoteFrequency(currentTargetPitchIndex)
+                currentPitchPlotRange[0] = pitchTargetFrequency * tuningFrequencies.halfToneRatio.pow(-1.5f)
+                currentPitchPlotRange[1] = pitchTargetFrequency * tuningFrequencies.halfToneRatio.pow(1.5f)
+                pitchPlot?.yRange(currentPitchPlotRange[0], currentPitchPlotRange[1], 600)
             }
 
-            for (pA in prepArray)
-                preprocessingResults?.unlockRead(pA)
-            postprocessingResults?.unlockRead(postResults)
+            currentPitchPoint[0] = (pitchHistory.size - 1).toFloat()
+            currentPitchPoint[1] = pitchHistory.getCurrentValue()
+            pitchPlot?.setPoints(currentPitchPoint)
+            pitchPlot?.plot(pitchHistory.getHistory())
         }
     }
 
-    private fun getProcessingInterval() : Int {
+    private fun getProcessingInterval(): Int {
         // overlapFraction=1 -> no overlap, overlapFraction=2 -> 50% overlap, overlapFraction=4 -> 25% overlap, ...
         return processingBufferSize / overlapFraction
     }

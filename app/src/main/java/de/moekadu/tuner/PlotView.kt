@@ -541,10 +541,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
         else {
             xTicks = FloatArray(value.size) {i -> value[i]}
-            if (format != null)
-                xTickLabels = Array(value.size) { i -> format(value[i]) }
+            xTickLabels = if (format != null)
+                Array(value.size) { i -> format(value[i]) }
             else
-                xTickLabels = Array(value.size) { i -> value[i].toString() }
+                Array(value.size) { i -> value[i].toString() }
         }
         if(!plotCalled)
             resolveBounds(0f,0f, 0f, 0f)
@@ -559,10 +559,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
         else {
             yTicks = FloatArray(value.size) {i -> value[i]}
-            if (format != null)
-                yTickLabels = Array(value.size) { i -> format(value[i]) }
+            yTickLabels = if (format != null)
+                Array(value.size) { i -> format(value[i]) }
             else
-                yTickLabels = Array(value.size) { i -> value[i].toString() }
+                Array(value.size) { i -> value[i].toString() }
         }
         if(!plotCalled)
             resolveBounds(0f,0f, 0f, 0f)

@@ -46,7 +46,7 @@ fun RealFFT.Companion.closestFrequencyIndex(frequency : Float, size: Int, dt : F
     return (frequency * dt * size).roundToInt()
 }
 
-class RealFFT(val size : Int, val windowType : Int = NO_WINDOW) {
+class RealFFT(val size : Int, private val windowType : Int = NO_WINDOW) {
     companion object {
         const val NO_WINDOW = 0
         const val HAMMING_WINDOW = 1
@@ -56,7 +56,7 @@ class RealFFT(val size : Int, val windowType : Int = NO_WINDOW) {
     private val sinTable = FloatArray(size)
     private val cosTableH = FloatArray(size)
     private val sinTableH = FloatArray(size)
-    private val bitReverseTable = IntArray(size)
+    val bitReverseTable = IntArray(size/2)
     private val nBits = log2(size.toFloat()).roundToInt()
 
     private val window = FloatArray(size)
@@ -64,7 +64,7 @@ class RealFFT(val size : Int, val windowType : Int = NO_WINDOW) {
     init {
         val sizeCheck = 1 shl nBits
         if (size != sizeCheck) {
-            throw RuntimeException("RealFFT size must be a power of 2 but " + size + " given.")
+            throw RuntimeException("RealFFT size must be a power of 2 but $size given.")
         }
         val halfSize = size / 2
 
@@ -98,26 +98,31 @@ class RealFFT(val size : Int, val windowType : Int = NO_WINDOW) {
             for (i in 0 until halfSize) {
                 val ir2 = 2 * bitReverseTable[i]
                 val i2 = 2 * i
-                output[i2] = input[ir2]
-                output[i2 + 1] = input[ir2 + 1]
-                output[ir2] = input[i2]
-                output[ir2 + 1] = input[i2 + 1]
+                if (i2 >= ir2) {
+                    output[i2] = input[ir2]
+                    output[i2 + 1] = input[ir2 + 1]
+                    output[ir2] = input[i2]
+                    output[ir2 + 1] = input[i2 + 1]
+                }
             }
         }
         else {
             for (i in 0 until halfSize) {
                 val ir2 = 2 * bitReverseTable[i]
                 val i2 = 2 * i
-                output[i2] = window[ir2] * input[ir2]
-                output[i2 + 1] = window[ir2 + 1] * input[ir2 + 1]
-                output[ir2] = window[i2] * input[i2]
-                output[ir2 + 1] = window[i2 + 1] * input[i2 + 1]
+                if (i2 >= ir2) {
+                    output[i2] = window[ir2] * input[ir2]
+                    output[i2 + 1] = window[ir2 + 1] * input[ir2 + 1]
+                    output[ir2] = window[i2] * input[i2]
+                    output[ir2 + 1] = window[i2 + 1] * input[i2 + 1]
+                }
             }
         }
-        fft(output)
+        fftBitreversed(output)
     }
 
-    private fun fft(output: FloatArray) {
+    /// Transform already bitreversed data in-place
+    fun fftBitreversed(output: FloatArray) {
         require(size == output.size-2) {"size of output must be fftsize + 2"}
         val halfSize = size / 2
         var numInner = 1
