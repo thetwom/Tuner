@@ -209,15 +209,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         var yMaxData = yValues[startIdx]
 
         val loopStart = max(0, startIdx)
-        val loopEnd = min(yValues.size,endIdx)
+        val loopEnd = min(yValues.size, endIdx)
 
         for(i in loopStart until loopEnd) {
-            rawPlotLine.lineTo((i - startIdx).toFloat(), yValues[i])
+            rawPlotLine.lineTo(i.toFloat(), yValues[i])
             yMinData = min(yMinData, yValues[i])
             yMaxData = max(yMaxData, yValues[i])
         }
 
-        resolveBounds(0f, (endIdx-startIdx).toFloat(), yMinData, yMaxData)
+        resolveBounds(startIdx.toFloat(), endIdx.toFloat(), yMinData, yMaxData)
 
         if(redraw)
             invalidate()
@@ -606,4 +606,3 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     //     yTickTextFormatter = format
     // }
 }
-

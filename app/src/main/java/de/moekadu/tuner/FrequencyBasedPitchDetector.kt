@@ -227,24 +227,17 @@ class FrequencyBasedPitchDetectorPost(private val dt : Float, private val proces
     fun run(preprocessingResults: Array<FrequencyBasedPitchDetectorPrep.Results?>,
             postprocessingResults: Results) {
         //Log.v("Tuner", "PostprocessorThread:postprocessData")
-
+        val freqIdx = preprocessingResults[0]?.idxMaxPitch ?: 0
         val spec1 = preprocessingResults[0]?.spectrum
         val spec2 = preprocessingResults[1]?.spectrum
-        if (spec1 != null && spec2 != null) {
-            val freqIdx = preprocessingResults[0]?.idxMaxPitch ?: 0
-            if (freqIdx > 0) {
-                val freq = freqIdx * MainActivity.sampleRate / spec1.size
-                val phase1 = atan2(spec1[2 * freqIdx + 1], spec1[2 * freqIdx])
-                val phase2 = atan2(spec2[2 * freqIdx + 1], spec2[2 * freqIdx])
-                val phaseErrRaw =
-                    phase2 - phase1 - 2.0f * PI.toFloat() * freq * processingInterval * dt
-                val phaseErr =
-                    phaseErrRaw - 2.0f * PI.toFloat() * round(phaseErrRaw / (2.0f * PI.toFloat()))
-                postprocessingResults.frequency =
-                    processingInterval * dt * freq.toFloat() / (dt * processingInterval - phaseErr / (2.0f * PI.toFloat() * freq))
-            } else {
-                postprocessingResults.frequency = 0f
-            }
+
+        if(freqIdx == 0 || spec1 == null || spec2 ==  null) {
+            postprocessingResults.frequency = 0f
+            return
         }
+
+        // we need the fft input size for computing df, spec1 is the output size, which is two entries larger.
+        val df = 1.0f/ (dt * (spec1.size-2))
+        postprocessingResults.frequency = increaseFrequencyAccuracy(spec1, spec2, freqIdx, df, processingInterval * dt)
     }
 }

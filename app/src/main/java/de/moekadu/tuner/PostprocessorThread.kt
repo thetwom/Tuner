@@ -114,7 +114,7 @@ class PostprocessorThread(val size : Int, private val dt : Float, private val pr
             postprocessingResults.autocorrelationBasedResults = AutocorrelationBasedPitchDetectorPost.Results()
 
         if(autocorrelationBasedPitchDetector == null)
-            autocorrelationBasedPitchDetector = AutocorrelationBasedPitchDetectorPost(dt)
+            autocorrelationBasedPitchDetector = AutocorrelationBasedPitchDetectorPost(dt, processingInterval)
 
         autocorrelationBasedResultsPrep?.let { prep ->
             postprocessingResults.autocorrelationBasedResults?.let { post ->
