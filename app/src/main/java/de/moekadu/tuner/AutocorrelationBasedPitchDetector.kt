@@ -1,13 +1,35 @@
+/*
+ * Copyright 2020 Michael Moessner
+ *
+ * This file is part of Tuner.
+ *
+ * Tuner is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Tuner is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.moekadu.tuner
 
-import android.util.Log
 import kotlin.math.*
 
 class AutocorrelationBasedPitchDetectorPrep(val size : Int, private val dt : Float, private val minimumFrequency : Float, private val maximumFrequency : Float) {
 
-  class Results(size : Int) {
+  class Results(size : Int, dt : Float) {
     val correlation = FloatArray(size+1)
+    val times = FloatArray(correlation.size) {i -> i * dt}
+
     val spectrum = FloatArray(2 * size + 2)
+    val ampSpec = FloatArray(spectrum.size/2)
+    val frequencies = FloatArray(ampSpec.size) {i -> RealFFT.getFrequency(i, 2*size, dt)}
     var idxMaxPitch = 0
     var idxMaxFreq = 0
     //var numLocalMaxima = 0
@@ -27,6 +49,9 @@ class AutocorrelationBasedPitchDetectorPrep(val size : Int, private val dt : Flo
     require(results.correlation.size == size + 1) { "Incorrect size for preprocessing autocorrelation based pitch detection" }
 
     correlation.correlate(readBuffer, results.correlation, false, results.spectrum)
+
+    for(i in results.ampSpec.indices)
+            results.ampSpec[i] = results.spectrum[2*i].pow(2) + results.spectrum[2*i+1].pow(2)
 
     val indexMinimumFrequency = (ceil((1.0f / minimumFrequency) / dt)).toInt()
     val indexMaximumFrequency = (ceil((1.0f / maximumFrequency) / dt)).toInt()

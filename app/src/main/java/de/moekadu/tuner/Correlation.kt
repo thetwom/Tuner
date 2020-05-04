@@ -1,3 +1,22 @@
+/*
+ * Copyright 2020 Michael Moessner
+ *
+ * This file is part of Tuner.
+ *
+ * Tuner is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Tuner is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.moekadu.tuner
 
 import kotlin.math.*
@@ -27,9 +46,9 @@ class Correlation (val size : Int, private val windowType : Int = NO_WINDOW) {
    * @param input Input data which should be correlated (required size: size)
    * @param output Output array where we store the autocorrelation, (required size: size+1)
    * @param disableWindow if true, we disable windowing, even when it is defined in the constructor.
-   * @param spectrum If a non-null array is given, we will store here to spectrum of zero-padded input (input is zeropadded
-   *   to become twice the size, before we start correlating). If it is null, we will use the internal class storage.
-   *   If it is non-null, the size of the spectrum must be 2*size+2.
+   * @param spectrum If a non-null array is given, we will store here to spectrum of zero-padded input (input is
+   *   zero-padded to become twice the size, before we start correlating). If it is null, we will use the internal class
+   *   storage. If it is non-null, the size of the spectrum must be 2*size+2.
    */
   fun correlate(input : CircularRecordData.ReadBuffer, output : FloatArray, disableWindow : Boolean = false, spectrum : FloatArray? = null) {
     require(input.size == size) {"input size must be equal to the size of the correlation size"}

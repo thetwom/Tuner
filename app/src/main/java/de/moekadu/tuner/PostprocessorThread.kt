@@ -1,3 +1,22 @@
+/*
+ * Copyright 2020 Michael Moessner
+ *
+ * This file is part of Tuner.
+ *
+ * Tuner is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Tuner is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.moekadu.tuner
 
 import android.os.Handler
@@ -8,8 +27,8 @@ class PostprocessorThread(val size : Int, private val dt : Float, private val pr
     lateinit var handler: Handler
 
     companion object {
-        const val POSTPROCESS_FREQUENCYBASED = 300001
-        const val POSTPROCESS_AUTOCORRELATIONBASED = 300002
+        const val POSTPROCESS_FREQUENCY_BASED = 300001
+        const val POSTPROCESS_AUTOCORRELATION_BASED = 300002
         const val POSTPROCESSING_FINISHED = 300010
     }
 
@@ -25,8 +44,7 @@ class PostprocessorThread(val size : Int, private val dt : Float, private val pr
     private var autocorrelationBasedResultsPrep : Array<AutocorrelationBasedPitchDetectorPrep.Results?>? = null
 
     class PreprocessingDataAndPostprocessingResults(val preprocessingResults: Array<PreprocessorThread.PreprocessingResults?>,
-                                                    val postprocessingResults: PostprocessingResults,
-                                                    val processingInterval: Int)
+                                                    val postprocessingResults: PostprocessingResults)
 
     override fun onLooperPrepared() {
         super.onLooperPrepared()
@@ -37,10 +55,10 @@ class PostprocessorThread(val size : Int, private val dt : Float, private val pr
 
                 when (val obj = msg.obj) {
                     is PreprocessingDataAndPostprocessingResults -> {
-                        if (msg.what == POSTPROCESS_FREQUENCYBASED) {
+                        if (msg.what == POSTPROCESS_FREQUENCY_BASED) {
                             postprocessFrequencyBased(obj)
                         }
-                        else if (msg.what == POSTPROCESS_AUTOCORRELATIONBASED) {
+                        else if (msg.what == POSTPROCESS_AUTOCORRELATION_BASED) {
                             postprocessAutocorrelationBased(obj)
                         }
 
@@ -49,13 +67,13 @@ class PostprocessorThread(val size : Int, private val dt : Float, private val pr
                     }
                 }
 
-//                if (msg.what == POSTPROCESS_FREQUENCYBASED) {
+//                if (msg.what == POSTPROCESS_FREQUENCY_BASED) {
 //                    //Log.v("Tuner", "PostprocessorThread:onLooperPrepared : postprocess audio")
 //                    when (val obj = msg.obj) {
 //                        is PreprocessingDataAndPostprocessingResults -> postprocessFrequencyBased(obj)
 //                    }
 //                }
-//                else if (msg.what == POSTPROCESS_AUTOCORRELATIONBASED) {
+//                else if (msg.what == POSTPROCESS_AUTOCORRELATION_BASED) {
 //                    //Log.v("Tuner", "PostprocessorThread:onLooperPrepared : postprocess audio")
 //                    when (val obj = msg.obj) {
 //                        is PreprocessingDataAndPostprocessingResults -> postprocessAutocorrelationBased(obj)

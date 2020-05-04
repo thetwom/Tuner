@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  - Copyright 2020 Michael Moessner
+  -
+  - This file is part of Tuner.
+  -
+  - Tuner is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - Tuner is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -6,21 +25,22 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/frequency_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=""
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/pitch_plot" />
+<!--    <TextView-->
+<!--        android:id="@+id/frequency_text"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text=""-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintLeft_toLeftOf="parent"-->
+<!--        app:layout_constraintRight_toRightOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/pitch_plot" />-->
 
     <de.moekadu.tuner.PlotView
         android:id="@+id/spectrum_plot"
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:padding="12dp"
+        app:title="spectrum"
         app:plotLineWidth="2dp"
         app:tickTextSize="9dp"
         app:tickLineWidth="0.5dp"
@@ -32,17 +52,35 @@
         />
 
     <de.moekadu.tuner.PlotView
+        android:id="@+id/correlation_plot"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:padding="12dp"
+        app:title="autocorrelation"
+        app:plotLineWidth="2dp"
+        app:tickTextSize="9dp"
+        app:tickLineWidth="0.5dp"
+        app:yTickLabelWidth="30sp"
+        app:markColor="?attr/colorSecondary"
+        app:layout_constraintTop_toBottomOf="@id/spectrum_plot"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        />
+
+    <de.moekadu.tuner.PlotView
         android:id="@+id/pitch_plot"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="0dp"
         android:padding="12dp"
+        app:title="pitch history"
         app:plotLineWidth="2dp"
         app:tickTextSize="9dp"
         app:tickLineWidth="0.5dp"
         app:yTickLabelWidth="30sp"
         app:markColor="?attr/colorSecondary"
         app:pointColor="?attr/colorSecondary"
-        app:layout_constraintTop_toBottomOf="@id/spectrum_plot"
+        app:layout_constraintTop_toBottomOf="@id/correlation_plot"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         />

@@ -1,3 +1,22 @@
+/*
+ * Copyright 2020 Michael Moessner
+ *
+ * This file is part of Tuner.
+ *
+ * Tuner is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Tuner is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.moekadu.tuner
 
 import android.util.Log
@@ -22,9 +41,10 @@ fun getClosestIntArrayIndex(element : Int, array : IntArray, fromIndex : Int = 0
 
 class FrequencyBasedPitchDetectorPrep(val size : Int, private val dt : Float, minimumFrequency : Float, maximumFrequency : Float) {
 
-    class Results(size : Int) {
+    class Results(size : Int, dt : Float) {
         val spectrum = FloatArray(size+2)
         val ampSpec = FloatArray(spectrum.size/2)
+        val frequencies = FloatArray(ampSpec.size) {i -> RealFFT.getFrequency(i, size, dt)}
         var idxMaxFreq = 0
         var idxMaxPitch = 0
         var numLocalMaxima = 0

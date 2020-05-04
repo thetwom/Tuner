@@ -1,3 +1,22 @@
+/*
+ * Copyright 2020 Michael Moessner
+ *
+ * This file is part of Tuner.
+ *
+ * Tuner is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Tuner is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.moekadu.tuner
 
 import android.Manifest
@@ -10,7 +29,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Message
 import android.util.Log
-import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -56,10 +74,10 @@ class MainActivity : AppCompatActivity() {
     private var spectrumPlot: PlotView? = null
     private val spectrumPlotXMarks = FloatArray(FrequencyBasedPitchDetectorPrep.NUM_MAX_HARMONIC)
 
-    private var frequencyText: TextView? = null
+    private var correlationPlot: PlotView? = null
+    private val correlationPlotXMarks = FloatArray(FrequencyBasedPitchDetectorPrep.NUM_MAX_HARMONIC)
 
-    private val frequencies = FloatArray(RealFFT.numFrequencies(processingBufferSize))
-    private val times = FloatArray(processingBufferSize+1)
+//    private var frequencyText: TextView? = null
 
     private var pitchPlot: PlotView? = null
     private val pitchHistory = PitchHistory(150)
@@ -74,8 +92,8 @@ class MainActivity : AppCompatActivity() {
     // the next to variable must both be either frequency based or autocorrelation based
 //    private val pitchDetectorTypePrep = PreprocessorThread.PREPROCESS_FREQUENCYBASED
 //    private val pitchDetectorTypePost = PostprocessorThread.POSTPROCESS_FREQUENCYBASED
-    private val pitchDetectorTypePrep = PreprocessorThread.PREPROCESS_AUTOCORRELATIONBASED
-    private val pitchDetectorTypePost = PostprocessorThread.POSTPROCESS_AUTOCORRELATIONBASED
+    private val pitchDetectorTypePrep = PreprocessorThread.PREPROCESS_AUTOCORRELATION_BASED
+    private val pitchDetectorTypePost = PostprocessorThread.POSTPROCESS_AUTOCORRELATION_BASED
 
     class UiHandler(private val activity: WeakReference<MainActivity>) : Handler() {
 
@@ -88,7 +106,7 @@ class MainActivity : AppCompatActivity() {
                 val obj = msg.obj
                 //Log.v("Tuner", "MainActivity:UiHandler:handleMessage : message num="+msg.what)
                 when (msg.what) {
-                    RecordReaderThread.FINISHWRITE -> {
+                    RecordReaderThread.FINISH_WRITE -> {
                         //Log.v("Tuner", "MainActivity:UiHandler:handleMessage : write finished")
                         when (obj) {
                             is CircularRecordData.WriteBuffer -> it.doPreprocessing(obj)
@@ -125,28 +143,22 @@ class MainActivity : AppCompatActivity() {
 
 
         spectrumPlot = findViewById(R.id.spectrum_plot)
+        correlationPlot = findViewById(R.id.correlation_plot)
 
-        if(pitchDetectorTypePost == PostprocessorThread.POSTPROCESS_FREQUENCYBASED) {
-            spectrumPlot?.xRange(0f, 1760f, PlotView.NO_REDRAW)
-            spectrumPlot?.setXTicks(floatArrayOf(0f, 200f, 400f, 600f, 800f, 1000f, 1200f, 1400f, 1600f), true) {
-                    i -> getString(R.string.hertz, i)
-            }
+        spectrumPlot?.xRange(0f, 1760f, PlotView.NO_REDRAW)
+        spectrumPlot?.setXTicks(floatArrayOf(0f, 200f, 400f, 600f, 800f, 1000f, 1200f, 1400f, 1600f), true) {
+                i -> getString(R.string.hertz, i)
         }
-        else if(pitchDetectorTypePost == PostprocessorThread.POSTPROCESS_AUTOCORRELATIONBASED) {
-            spectrumPlot?.xRange(0f, 1.0f/25f, PlotView.NO_REDRAW)
-            spectrumPlot?.setXTicks(floatArrayOf(1/1600f, 1/200f, 1/50f, 1/30f), false) {
+
+        if(pitchDetectorTypePost == PostprocessorThread.POSTPROCESS_AUTOCORRELATION_BASED) {
+            correlationPlot?.xRange(0f, 1.0f/25f, PlotView.NO_REDRAW)
+            correlationPlot?.setXTicks(floatArrayOf(1/1600f, 1/200f, 1/80f, 1/50f, 1/38f, 1/30f), false) {
                     i -> getString(R.string.hertz, 1/i)
             }
-            spectrumPlot?.setYTicks(floatArrayOf(0f), true) {""}
+            correlationPlot?.setYTicks(floatArrayOf(0f), true) {""}
         }
         // spectrumPlot?.setXTickTextFormat { i -> getString(R.string.hertz, i) }
-        frequencyText = findViewById(R.id.frequency_text)
-
-        val dt = 1.0f / sampleRate
-        for (i in frequencies.indices)
-            frequencies[i] = RealFFT.getFrequency(i, processingBufferSize, dt)
-        for (i in times.indices)
-            times[i] = i * dt
+//        frequencyText = findViewById(R.id.frequency_text)
 
         pitchPlot = findViewById(R.id.pitch_plot)
         pitchPlot?.xRange(0f, 1.1f * pitchHistory.size.toFloat(), PlotView.NO_REDRAW)
@@ -369,7 +381,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 val recordAndData = RecordReaderThread.RecordAndData(recorder, writeBuffer)
                 val handler = recordReader?.handler
-                val message = handler?.obtainMessage(RecordReaderThread.READDATA, recordAndData)
+                val message = handler?.obtainMessage(RecordReaderThread.READ_DATA, recordAndData)
                 if (message != null) {
                     handler.sendMessage(message)
                 } else {
@@ -462,7 +474,7 @@ class MainActivity : AppCompatActivity() {
             }
             //Log.v("Tuner", "MainActivity:doPostprocessing : sending data to postprocessing thread")
             val sendObject =
-                PostprocessorThread.PreprocessingDataAndPostprocessingResults(prepArray, post, getProcessingInterval())
+                PostprocessorThread.PreprocessingDataAndPostprocessingResults(prepArray, post)
             val handler = postprocessor?.handler
             val message = handler?.obtainMessage(pitchDetectorTypePost, sendObject)
             if (message != null) {
@@ -489,7 +501,7 @@ class MainActivity : AppCompatActivity() {
 
         val postResults = postprocessingResults?.lockRead(-1)
 
-        if(pitchDetectorTypePrep == PreprocessorThread.PREPROCESS_FREQUENCYBASED) {
+        if(pitchDetectorTypePrep == PreprocessorThread.PREPROCESS_FREQUENCY_BASED) {
             prepArray.last()?.frequencyBasedResults?.let { result ->
                 //Log.v("Tuner", "Max level: " + result.maxValue)
 //            volumeMeter?.let {
@@ -506,23 +518,28 @@ class MainActivity : AppCompatActivity() {
                 val dt = 1.0f / sampleRate
 
                 for (i in 0 until result.numLocalMaxima)
-                    spectrumPlotXMarks[i] = RealFFT.getFrequency(result.localMaxima[i], result.spectrum.size, dt)
+                    spectrumPlotXMarks[i] = RealFFT.getFrequency(result.localMaxima[i], result.spectrum.size-2, dt)
                 spectrumPlot?.setXMarks(spectrumPlotXMarks, result.numLocalMaxima, false) { i ->
                     getString(R.string.hertz, i)
                 }
                 //spectrumPlotXMarks[0] = postResults?.frequency ?: 0f
                 //spectrumPlot?.setXMarks(spectrumPlotXMarks, 1, false)
-                spectrumPlot?.plot(frequencies, result.ampSpec)
+                spectrumPlot?.plot(result.frequencies, result.ampSpec)
             }
         }
-        else if(pitchDetectorTypePrep == PreprocessorThread.PREPROCESS_AUTOCORRELATIONBASED) {
+        else if(pitchDetectorTypePrep == PreprocessorThread.PREPROCESS_AUTOCORRELATION_BASED) {
             prepArray.last()?.autocorrelationBasedResults?.let{ result ->
                 val dt = 1.0f / sampleRate
-                spectrumPlotXMarks[0] = result.idxMaxPitch * dt
-                spectrumPlot?.setXMarks(spectrumPlotXMarks, 1, false) {i ->
+                correlationPlotXMarks[0] = result.idxMaxPitch * dt
+                correlationPlot?.setXMarks(correlationPlotXMarks, 1, false) {i ->
                     getString(R.string.hertz, 1.0/i)
                 }
-                spectrumPlot?.plot(times, result.correlation)
+                spectrumPlotXMarks[0] = 1.0f / correlationPlotXMarks[0]
+                spectrumPlot?.setXMarks(spectrumPlotXMarks, 1, false) {i ->
+                    getString(R.string.hertz, i)
+                }
+                correlationPlot?.plot(result.times, result.correlation)
+                spectrumPlot?.plot(result.frequencies, result.ampSpec)
             }
         }
 
@@ -530,12 +547,12 @@ class MainActivity : AppCompatActivity() {
             preprocessingResults?.unlockRead(pA)
 
         var newFrequency = 0f
-        if(pitchDetectorTypePost == PostprocessorThread.POSTPROCESS_FREQUENCYBASED) {
+        if(pitchDetectorTypePost == PostprocessorThread.POSTPROCESS_FREQUENCY_BASED) {
             postResults?.frequencyBasedResults?.let {
                 newFrequency = it.frequency
             }
         }
-        else if(pitchDetectorTypePost == PostprocessorThread.POSTPROCESS_AUTOCORRELATIONBASED) {
+        else if(pitchDetectorTypePost == PostprocessorThread.POSTPROCESS_AUTOCORRELATION_BASED) {
             postResults?.autocorrelationBasedResults?.let {
                 newFrequency = it.frequency
             }
@@ -544,8 +561,8 @@ class MainActivity : AppCompatActivity() {
         postprocessingResults?.unlockRead(postResults)
 
         if (newFrequency in minimumFrequency..maximumFrequency) {
-            Log.v("Tuner", "freqcorr=$newFrequency")
-            frequencyText?.text = "frequency: " + newFrequency + "Hz"
+//            Log.v("Tuner", "freqcorr=$newFrequency")
+//            frequencyText?.text = "frequency: " + newFrequency + "Hz"
             val newEstimatedPitch = pitchHistory.addValue(newFrequency)
 
             if (currentTargetPitchIndex != newEstimatedPitch) {

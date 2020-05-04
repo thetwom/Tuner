@@ -1,3 +1,22 @@
+/*
+ * Copyright 2020 Michael Moessner
+ *
+ * This file is part of Tuner.
+ *
+ * Tuner is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Tuner is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.moekadu.tuner
 
 import android.animation.FloatArrayEvaluator
@@ -66,12 +85,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var tickLineWidth = 2f
     private var tickTextSize = 10f
 
-    private var xTicks : FloatArray ?= null
-    private var xTickLabels : Array<String> ?= null
+    private var xTicks : FloatArray? = null
+    private var xTickLabels : Array<String>? = null
     //private var xTickTextFormatter : ((Float) -> String)? = null
-    private var yTicks : FloatArray ?= null
-    private var yTickLabels : Array<String> ?= null
+    private var yTicks : FloatArray? = null
+    private var yTickLabels : Array<String>? = null
     //private var yTickTextFormatter : ((Float) -> String)? = null
+
+    private var title : String? = null
+    private var titleSize = 10f
 
     private val straightLinePath = Path()
     private val point = FloatArray(2)
@@ -93,11 +115,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             yTickLabelWidth = ta.getDimension(R.styleable.PlotView_yTickLabelWidth, yTickLabelWidth)
             pointSize = ta.getDimension(R.styleable.PlotView_pointSize, pointSize)
             pointColor = ta.getColor(R.styleable.PlotView_pointColor, pointColor)
+            title = ta.getString(R.styleable.PlotView_title)
+            titleSize = ta.getDimension(R.styleable.PlotView_titleSize, titleSize)
             ta.recycle()
         }
         paint.color = plotLineColor
         paint.strokeWidth = plotLineWidth
         paint.isAntiAlias = true
+        paint.textSize = titleSize
 
         rawPlotLine.moveTo(0f, 0f)
         val numValues = 100
@@ -273,10 +298,13 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         var bottom = (height - paddingBottom).toFloat()
         if(xTicks?.size != null)
             bottom -= tickTextSize
+        var top = paddingTop.toFloat()
+        if(title != null)
+            top += 1.2f * titleSize
 
         viewPlotBounds.set(
             paddingLeft + yTickLabelWidth,
-            paddingTop.toFloat(),
+            top,
             (width - paddingRight).toFloat(),
             bottom
         )
@@ -300,6 +328,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         canvas?.restore()
         canvas?.drawRect(viewPlotBounds, paint)
 
+        title?.let {
+            paint.style = Paint.Style.FILL
+            paint.textAlign = Paint.Align.CENTER
+            canvas?.drawText(it,
+                        0.5f * width,
+                        paddingTop + titleSize,
+                        paint)
+        }
 //        canvas?.drawLine(0f, 0f, getWidth().toFloat(), getHeight().toFloat(), paint)
 //        drawArrow(canvas, 0.1f*getWidth(), 0.9f*getHeight(), 0.9f*getWidth(), 0.1f*getHeight(), paint)
     }
@@ -446,26 +482,26 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
     }
 
-    fun drawArrow(canvas: Canvas?, startX : Float, startY : Float, endX : Float, endY : Float, paint : Paint) {
-        val lineLength = sqrt((endX - startX).pow(2) + (endY - startY).pow(2))
-        val dx = (endX-startX) / lineLength
-        val dy = (endY-startY) / lineLength
-        val sW = plotLineWidth
-
-        val arrowLength = 5 * sW
-        val strokeEndX = endX - dx*arrowLength
-        val strokeEndY = endY - dy*arrowLength
-        canvas?.drawLine(startX, startY, strokeEndX, strokeEndY, paint)
-        paint.style = Paint.Style.FILL
-
-        arrowPath.reset()
-        val arrowWidth = 3 * sW
-        arrowPath.moveTo(strokeEndX+0.5f*dy*arrowWidth, strokeEndY-0.5f*dx*arrowWidth)
-        arrowPath.lineTo(endX, endY)
-        arrowPath.lineTo(strokeEndX-0.5f*dy*arrowWidth, strokeEndY+0.5f*dx*arrowWidth)
-        arrowPath.close()
-        canvas?.drawPath(arrowPath, paint)
-    }
+//    fun drawArrow(canvas: Canvas?, startX : Float, startY : Float, endX : Float, endY : Float, paint : Paint) {
+//        val lineLength = sqrt((endX - startX).pow(2) + (endY - startY).pow(2))
+//        val dx = (endX-startX) / lineLength
+//        val dy = (endY-startY) / lineLength
+//        val sW = plotLineWidth
+//
+//        val arrowLength = 5 * sW
+//        val strokeEndX = endX - dx*arrowLength
+//        val strokeEndY = endY - dy*arrowLength
+//        canvas?.drawLine(startX, startY, strokeEndX, strokeEndY, paint)
+//        paint.style = Paint.Style.FILL
+//
+//        arrowPath.reset()
+//        val arrowWidth = 3 * sW
+//        arrowPath.moveTo(strokeEndX+0.5f*dy*arrowWidth, strokeEndY-0.5f*dx*arrowWidth)
+//        arrowPath.lineTo(endX, endY)
+//        arrowPath.lineTo(strokeEndX-0.5f*dy*arrowWidth, strokeEndY+0.5f*dx*arrowWidth)
+//        arrowPath.close()
+//        canvas?.drawPath(arrowPath, paint)
+//    }
 
     fun setXMarks(value : FloatArray?, numValues : Int = TAKE_ALL, redraw : Boolean = true, format : ((Float) -> String)? = null) {
         if (value == null) {

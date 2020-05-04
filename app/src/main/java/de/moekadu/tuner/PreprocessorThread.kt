@@ -1,3 +1,22 @@
+/*
+ * Copyright 2020 Michael Moessner
+ *
+ * This file is part of Tuner.
+ *
+ * Tuner is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Tuner is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.moekadu.tuner
 
 import android.os.Handler
@@ -22,8 +41,8 @@ class PreprocessorThread(val size : Int, private val dt : Float, private val min
     private var autocorrelationBasedPitchDetector : AutocorrelationBasedPitchDetectorPrep? = null
 
     companion object {
-        const val PREPROCESS_FREQUENCYBASED = 200001
-        const val PREPROCESS_AUTOCORRELATIONBASED = 200002
+        const val PREPROCESS_FREQUENCY_BASED = 200001
+        const val PREPROCESS_AUTOCORRELATION_BASED = 200002
         const val PREPROCESSING_FINISHED = 200010
     }
 
@@ -43,10 +62,10 @@ class PreprocessorThread(val size : Int, private val dt : Float, private val min
 
                 when (val obj = msg.obj) {
                     is ReadBufferAndProcessingResults -> {
-                        if (msg.what == PREPROCESS_FREQUENCYBASED) {
+                        if (msg.what == PREPROCESS_FREQUENCY_BASED) {
                             preprocessFrequencyBased(obj)
                         }
-                        else if (msg.what == PREPROCESS_AUTOCORRELATIONBASED) {
+                        else if (msg.what == PREPROCESS_AUTOCORRELATION_BASED) {
                             preprocessAutocorrelationBased(obj)
                         }
 
@@ -55,16 +74,16 @@ class PreprocessorThread(val size : Int, private val dt : Float, private val min
                     }
                 }
 
-//                if (msg.what == PREPROCESS_FREQUENCYBASED) {
+//                if (msg.what == PREPROCESS_FREQUENCY_BASED) {
 //                    //                    Log.v("Tuner", "test")
 //                    when (val obj = msg.obj) {
-//                        is ReadBufferAndProcessingResults -> proprocessFrequencyBased(obj)
+//                        is ReadBufferAndProcessingResults -> preprocessFrequencyBased(obj)
 //                    }
 //                }
-//                else if (msg.what == PREPROCESS_AUTOCORRELATIONBASED) {
+//                else if (msg.what == PREPROCESS_AUTOCORRELATION_BASED) {
 //                    //                    Log.v("Tuner", "test")
 //                    when (val obj = msg.obj) {
-//                        is ReadBufferAndProcessingResults -> proprocessAutocorrelationBased(obj)
+//                        is ReadBufferAndProcessingResults -> preprocessAutocorrelationBased(obj)
 //                    }
 //                }
             }
@@ -79,7 +98,7 @@ class PreprocessorThread(val size : Int, private val dt : Float, private val min
             frequencyBasedPitchDetector = FrequencyBasedPitchDetectorPrep(size, dt, minimumFrequency, maximumFrequency)
 
         if (preprocessingResults.frequencyBasedResults == null)
-            preprocessingResults.frequencyBasedResults = FrequencyBasedPitchDetectorPrep.Results(size)
+            preprocessingResults.frequencyBasedResults = FrequencyBasedPitchDetectorPrep.Results(size, dt)
 
         preprocessingResults.frequencyBasedResults?.let { results ->
             frequencyBasedPitchDetector?.run(readBuffer, results)
@@ -98,7 +117,7 @@ class PreprocessorThread(val size : Int, private val dt : Float, private val min
             autocorrelationBasedPitchDetector = AutocorrelationBasedPitchDetectorPrep(size, dt, minimumFrequency, maximumFrequency)
 
         if (preprocessingResults.autocorrelationBasedResults == null)
-            preprocessingResults.autocorrelationBasedResults = AutocorrelationBasedPitchDetectorPrep.Results(size)
+            preprocessingResults.autocorrelationBasedResults = AutocorrelationBasedPitchDetectorPrep.Results(size, dt)
 
         preprocessingResults.autocorrelationBasedResults?.let { results ->
                 autocorrelationBasedPitchDetector?.run(readBuffer, results)
