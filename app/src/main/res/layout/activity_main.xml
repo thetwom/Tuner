@@ -18,86 +18,29 @@
   - along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <!--    <TextView-->
-    <!--        android:id="@+id/frequency_text"-->
-    <!--        android:layout_width="wrap_content"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:text=""-->
-    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
-    <!--        app:layout_constraintLeft_toLeftOf="parent"-->
-    <!--        app:layout_constraintRight_toRightOf="parent"-->
-    <!--        app:layout_constraintTop_toBottomOf="@id/pitch_plot" />-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        app:layout_constraintTop_toTopOf="parent"
         style="@style/Widget.MaterialComponents.Toolbar.Primary"
         />
-    
-    <de.moekadu.tuner.PlotView
-        android:id="@+id/spectrum_plot"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:padding="12dp"
-        app:layout_constraintBottom_toTopOf="@+id/correlation_plot"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        app:layout_constraintVertical_weight="0.2"
-        app:markColor="?attr/colorSecondary"
-        app:plotLineWidth="2dp"
-        app:tickLineWidth="0.5dp"
-        app:tickTextSize="9dp"
-        app:title="spectrum"
-        app:yTickLabelWidth="30sp"
-        tools:layout_editor_absoluteX="0dp" />
 
-    <de.moekadu.tuner.PlotView
-        android:id="@+id/correlation_plot"
+    <FrameLayout
+        android:id="@+id/main_content"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:padding="12dp"
-        app:layout_constraintBottom_toTopOf="@+id/pitch_plot"
-        app:layout_constraintTop_toBottomOf="@+id/spectrum_plot"
-        app:layout_constraintVertical_weight="0.2"
-        app:markColor="?attr/colorSecondary"
-        app:plotLineWidth="2dp"
-        app:tickLineWidth="0.5dp"
-        app:tickTextSize="9dp"
-        app:title="autocorrelation"
-        app:yTickLabelWidth="30sp"
-        tools:layout_editor_absoluteX="0dp" />
+        android:layout_height="match_parent" />
 
-    <de.moekadu.tuner.PlotView
-        android:id="@+id/pitch_plot"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:padding="12dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/correlation_plot"
-        app:layout_constraintVertical_weight="0.6"
-        app:markColor="?attr/colorSecondary"
-        app:plotLineWidth="2dp"
-        app:pointColor="?attr/colorSecondary"
-        app:tickLineWidth="0.5dp"
-        app:tickTextSize="9dp"
-        app:title="pitch history"
-        app:yTickLabelWidth="30sp"
-        tools:layout_editor_absoluteX="0dp" />
-
-    <!--    <de.moekadu.tuner.VolumeMeter-->
-    <!--        android:id="@+id/volume_meter"-->
-    <!--        android:layout_width="30dp"-->
-    <!--        android:layout_height="match_parent"-->
-    <!--        app:layout_constraintRight_toRightOf="parent"-->
-    <!--        android:padding="12dp"-->
-    <!--        app:min="-3"-->
-    <!--        app:max="1"-->
-    <!--        />-->
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
