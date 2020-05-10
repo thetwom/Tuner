@@ -25,6 +25,14 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:layout_constraintTop_toTopOf="parent"
+        style="@style/Widget.MaterialComponents.Toolbar.Primary"
+        />
+
     <de.moekadu.tuner.PlotView
         android:id="@+id/spectrum_plot"
         android:layout_width="0dp"
@@ -33,7 +41,7 @@
         app:layout_constraintBottom_toTopOf="@id/correlation_plot"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/pitch_plot"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
         app:layout_constraintHorizontal_weight="0.3"
         app:markColor="?attr/colorSecondary"
         app:plotLineWidth="2dp"
@@ -66,7 +74,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toRightOf="@id/spectrum_plot"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
         app:layout_constraintHorizontal_weight="0.35"
         app:markColor="?attr/colorSecondary"
         app:plotLineWidth="2dp"
