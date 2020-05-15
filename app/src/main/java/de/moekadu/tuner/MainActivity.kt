@@ -24,30 +24,38 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.fragment.app.FragmentManager
+import androidx.preference.PreferenceManager
 
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        setSupportActionBar(findViewById(R.id.toolbar))
+      super.onCreate(savedInstanceState)
 
-        val tunerFragment = supportFragmentManager.findFragmentById(R.id.main_content)
-        if (tunerFragment == null) {
-            val newTunerFragment = TunerFragment()
-            supportFragmentManager.beginTransaction().replace(R.id.main_content, newTunerFragment).commit()
-        }
-        else {
-            supportFragmentManager.beginTransaction().replace(R.id.main_content, tunerFragment).commit()
-        }
+      val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+      val nightMode = when(sharedPreferences.getString("appearance", "auto")) {
+        "dark" -> AppCompatDelegate.MODE_NIGHT_YES
+        "light" -> AppCompatDelegate.MODE_NIGHT_NO
+        else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+      }
+      AppCompatDelegate.setDefaultNightMode(nightMode)
 
-//        supportFragmentManager.addOnBackStackChangedListener {
-//
-//        }
+      setContentView(R.layout.activity_main)
+      setSupportActionBar(findViewById(R.id.toolbar))
 
+      if(savedInstanceState == null)
+        supportFragmentManager.beginTransaction().replace(R.id.main_content, TunerFragment()).commit()
 
+      setDisplayHomeButton()
+      supportFragmentManager.addOnBackStackChangedListener { setDisplayHomeButton() }
 
     }
+
+  override fun onSupportNavigateUp(): Boolean {
+    supportFragmentManager.popBackStack()
+    return super.onSupportNavigateUp()
+  }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.toolbar, menu)
@@ -57,7 +65,10 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.action_settings -> {
             // User chose the "Settings" item, show the app settings UI...
-            Toast.makeText(this, "test", Toast.LENGTH_LONG).show()
+          supportFragmentManager.beginTransaction()
+            .replace(R.id.main_content, SettingsFragment())
+                    .addToBackStack("blub")
+                    .commit();
             true
         }
         else -> {
@@ -65,6 +76,11 @@ class MainActivity : AppCompatActivity() {
             // Invoke the superclass to handle it.
             super.onOptionsItemSelected(item)
         }
+    }
+
+      private fun setDisplayHomeButton() {
+        val showDisplayHomeButton = supportFragmentManager.backStackEntryCount > 0
+        supportActionBar?.setDisplayHomeAsUpEnabled(showDisplayHomeButton)
     }
 
 }

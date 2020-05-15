@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <ListPreference
+        app:key="appearance"
+        app:title="@string/appearance"
+        android:entries="@array/appearanceNames"
+        android:entryValues="@array/appearanceList"
+        android:dialogTitle="@string/appearance"
+        android:defaultValue="auto"
+        android:summary="@string/system_appearance"
+        />
+
+
+    <ListPreference
+        android:key="windowing"
+        app:title="@string/windowing_function"
+        android:entries="@array/windowingFunctionNames"
+        android:entryValues="@array/windowingFunctionList"
+        android:defaultValue="no_window"
+        android:summary="@string/no_window"
+        />
+
+</PreferenceScreen>

@@ -32,9 +32,13 @@ import android.util.Log
  * @param minimumFrequency Minimum allowed frequency which we should detect
  * @param maximumFrequency Maximum allowed frequency which we should detect
  * @param uiHandler handler of ui thread, where we send our results
+ * @param windowType windowing function
  */
-class PreprocessorThread(val size : Int, private val dt : Float, private val minimumFrequency : Float, private val maximumFrequency : Float,
-                         private val uiHandler : Handler) : HandlerThread("Tuner:PreprocessorThread") {
+class PreprocessorThread(
+    val size : Int, private val dt : Float,
+    private val minimumFrequency : Float, private val maximumFrequency : Float,
+    private val uiHandler : Handler,
+    private val windowType : Int) : HandlerThread("Tuner:PreprocessorThread") {
     lateinit var handler: Handler
 
     private var frequencyBasedPitchDetector : FrequencyBasedPitchDetectorPrep? = null
@@ -114,7 +118,7 @@ class PreprocessorThread(val size : Int, private val dt : Float, private val min
         val preprocessingResults = readBufferAndProcessingResults.preprocessingResults
 
         if (autocorrelationBasedPitchDetector == null)
-            autocorrelationBasedPitchDetector = AutocorrelationBasedPitchDetectorPrep(size, dt, minimumFrequency, maximumFrequency)
+            autocorrelationBasedPitchDetector = AutocorrelationBasedPitchDetectorPrep(size, dt, minimumFrequency, maximumFrequency, windowType)
 
         if (preprocessingResults.autocorrelationBasedResults == null)
             preprocessingResults.autocorrelationBasedResults = AutocorrelationBasedPitchDetectorPrep.Results(size, dt)

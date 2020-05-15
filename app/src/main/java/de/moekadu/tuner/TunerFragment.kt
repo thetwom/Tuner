@@ -1,6 +1,7 @@
 package de.moekadu.tuner
 
 import android.Manifest
+import android.content.SharedPreferences
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
@@ -15,6 +16,7 @@ import android.widget.Toast
 import androidx.activity.invoke
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.preference.PreferenceManager
 import java.lang.ref.WeakReference
 import kotlin.math.pow
 
@@ -174,50 +176,18 @@ class TunerFragment : Fragment() {
 
   override fun onResume() {
     super.onResume()
-    val act = activity ?: return
 
     askForRecordPermission(Manifest.permission.RECORD_AUDIO)
-   // if (ContextCompat.checkSelfPermission(act, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-   //   requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_AUDIO_RECORD_PERMISSION)
-
-//registerForActivityResult()
-//      ActivityCompat.requestPermissions(
-//        act,
-//        arrayOf(Manifest.permission.RECORD_AUDIO),
-//        REQUEST_AUDIO_RECORD_PERMISSION
-//      )
-  //  }
-  //  else {
-  //    restartTuner()
-   // }
   }
-
-//  // TODO: replace this function since deprecated
-//  override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-//    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-//
-//    when (requestCode) {
-//      REQUEST_AUDIO_RECORD_PERMISSION -> {
-//        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//          restartTuner()
-//        }
-//        else {
-//          Toast.makeText(
-//            activity,
-//            "No audio recording permission is granted",
-//            Toast.LENGTH_LONG
-//          ).show()
-//          Log.v(
-//            "Tuner",
-//            "TunerFragment.onRequestPermissionsResult: No audio recording permission is granted."
-//          )
-//        }
-//      }
-//    }
-//  }
 
   private fun restartTuner() {
     Log.v("Tuner", "Tuner.restartTuner")
+
+    val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+    val windowType = when(preferences.getString("windowing", "no_window")) {
+      "window_hamming" -> RealFFT.HAMMING_WINDOW
+      else -> RealFFT.NO_WINDOW
+    }
 
     stopThreadsAndRecord()
 
@@ -226,7 +196,8 @@ class TunerFragment : Fragment() {
       1.0f / sampleRate,
       minimumFrequency,
       maximumFrequency,
-      uiHandler
+      uiHandler,
+      windowType
     )
     preprocessingResults = ProcessingResultBuffer(3 + numBufferForPostprocessing) {
       PreprocessorThread.PreprocessingResults()

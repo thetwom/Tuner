@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="appearanceList">
+        <item>"auto"</item>
+        <item>"dark"</item>
+        <item>"light"</item>
+    </string-array>
+
+    <string-array name="appearanceNames">
+        <item>@string/system_appearance_short</item>
+        <item>@string/dark_appearance_short</item>
+        <item>@string/light_appearance_short</item>
+    </string-array>
+
+    <string-array name="windowingFunctionList">
+        <item>"no_window"</item>
+        <item>"window_hamming"</item>
+    </string-array>
+
+    <string-array name="windowingFunctionNames">
+        <item>@string/no_window</item>
+        <item>@string/window_hamming</item>
+    </string-array>
+
+</resources>

@@ -21,22 +21,18 @@ package de.moekadu.tuner
 
 import kotlin.math.*
 
-class Correlation (val size : Int, private val windowType : Int = NO_WINDOW) {
-  companion object {
-        const val NO_WINDOW = 0
-        const val HAMMING_WINDOW = 1
-    }
+class Correlation (val size : Int, private val windowType : Int = RealFFT.NO_WINDOW) {
 
   private val fft = RealFFT(2 * size)
   private val inputBitreversed = FloatArray(2 * size + 2)
   private val window = FloatArray(size)
 
   init {
-    if (windowType == HAMMING_WINDOW) {
+    if (windowType == RealFFT.HAMMING_WINDOW) {
       for (i in 0 until size)
         window[i] = 0.54f - 0.46f * cos(2.0f * PI.toFloat() * i.toFloat() / size.toFloat())
     }
-    else if (windowType != NO_WINDOW) {
+    else if (windowType != RealFFT.NO_WINDOW) {
       throw RuntimeException("Invalid window type")
     }
   }
@@ -58,7 +54,7 @@ class Correlation (val size : Int, private val windowType : Int = NO_WINDOW) {
     }
     val spectrumStorage = spectrum ?: inputBitreversed
 
-    if(windowType == NO_WINDOW || disableWindow) {
+    if(windowType == RealFFT.NO_WINDOW || disableWindow) {
       for (i in 0 until size) {
         val ir2 = 2 * fft.bitReverseTable[i]
         val i2 = 2 * i

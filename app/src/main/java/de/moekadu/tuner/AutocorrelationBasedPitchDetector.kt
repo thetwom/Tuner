@@ -21,7 +21,10 @@ package de.moekadu.tuner
 
 import kotlin.math.*
 
-class AutocorrelationBasedPitchDetectorPrep(val size : Int, private val dt : Float, private val minimumFrequency : Float, private val maximumFrequency : Float) {
+class AutocorrelationBasedPitchDetectorPrep(
+  val size : Int, private val dt : Float,
+  private val minimumFrequency : Float, private val maximumFrequency : Float,
+  private val window_type : Int) {
 
   class Results(size : Int, dt : Float) {
     val correlation = FloatArray(size+1)
@@ -40,7 +43,7 @@ class AutocorrelationBasedPitchDetectorPrep(val size : Int, private val dt : Flo
 //    const val NUM_MAX_HARMONIC = 3
 //  }
 
-  private val correlation = Correlation(size)
+  private val correlation = Correlation(size, window_type)
   private val localMaxima = IntArray(size/2+1)
 
   fun run(readBuffer : CircularRecordData.ReadBuffer, results : Results) {

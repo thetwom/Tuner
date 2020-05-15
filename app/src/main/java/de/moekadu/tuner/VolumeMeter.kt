@@ -71,8 +71,8 @@ class VolumeMeter(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             barColor = ta.getColor(R.styleable.VolumeMeter_barColor, Color.BLACK)
             peakMarkerColor = ta.getColor(R.styleable.VolumeMeter_peakMarkerColor, Color.RED)
             peakMarkerSize = ta.getDimension(R.styleable.VolumeMeter_peakMarkerSize, 1.0f)
-            minValue = ta.getFloat(R.styleable.VolumeMeter_min, 0.0f)
-            maxValue = ta.getFloat(R.styleable.VolumeMeter_max, 1.0f)
+            minValue = ta.getFloat(R.styleable.VolumeMeter_volumeMin, 0.0f)
+            maxValue = ta.getFloat(R.styleable.VolumeMeter_volumeMax, 1.0f)
             ta.recycle()
         }
 

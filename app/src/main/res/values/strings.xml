@@ -4,4 +4,17 @@
     <string name="hertz">%.0f&#x200A;Hz</string>
     <string name="note_name_sup"> %c<sup><small>%d</small></sup>%s</string>
     <string name="note_name_sub"> %c<sub><small>%d</small></sub>%s</string>
+
+    <string name="windowing_function">Windowing function</string>
+    <string name="window_hamming">Hamming window</string>
+    <string name="no_window">No windowing function</string>
+
+    <string name="appearance">Appearance</string>
+    <string name="dark_appearance">Dark appearance</string>
+    <string name="light_appearance">Light appearance</string>
+    <string name="system_appearance">Appearance follows system settings</string>
+
+    <string name="dark_appearance_short">Dark</string>
+    <string name="light_appearance_short">Light</string>
+    <string name="system_appearance_short">Auto</string>
 </resources>
