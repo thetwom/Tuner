@@ -52,7 +52,12 @@ class TunerFragment : Fragment() {
   //val overlapFraction = 4
   private val overlapFraction = 2
 
-  private val tuningFrequencies = TuningFrequencies()
+  private var tuningFrequencies = TuningEqualTemperament(440f)
+    set(value) {
+      field = value
+      pitchHistory = PitchHistory(pitchHistorySize, value)
+
+    }
 //    private var volumeMeter: VolumeMeter? = null
 
   private var spectrumPlot: PlotView? = null
@@ -64,13 +69,14 @@ class TunerFragment : Fragment() {
 //    private var frequencyText: TextView? = null
 
   private var pitchPlot: PlotView? = null
-  private val pitchHistory = PitchHistory(150)
+  private var pitchHistorySize = 100
+  private var pitchHistory = PitchHistory(pitchHistorySize, tuningFrequencies)
   private val currentPitchPoint = FloatArray(2)
 
   private var currentTargetPitchIndex = pitchHistory.currentEstimatedToneIndex
   private val currentPitchPlotRange = floatArrayOf(
-    tuningFrequencies.getNoteFrequency(currentTargetPitchIndex) * tuningFrequencies.halfToneRatio.pow(-1.5f),
-    tuningFrequencies.getNoteFrequency(currentTargetPitchIndex) * tuningFrequencies.halfToneRatio.pow(1.5f)
+    tuningFrequencies.getNoteFrequency(currentTargetPitchIndex - 1.5f),
+    tuningFrequencies.getNoteFrequency(currentTargetPitchIndex + 1.5f)
   )
 
   // the next to variable must both be either frequency based or autocorrelation based
@@ -136,6 +142,7 @@ class TunerFragment : Fragment() {
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
     val view = inflater.inflate(R.layout.diagrams,container, false)
 
+    pitchPlot = view.findViewById(R.id.pitch_plot)
     spectrumPlot = view.findViewById(R.id.spectrum_plot)
     correlationPlot = view.findViewById(R.id.correlation_plot)
 
@@ -154,22 +161,7 @@ class TunerFragment : Fragment() {
     // spectrumPlot?.setXTickTextFormat { i -> getString(R.string.hertz, i) }
 //        frequencyText = findViewById(R.id.frequency_text)
 
-    pitchPlot = view.findViewById(R.id.pitch_plot)
-    pitchPlot?.xRange(0f, 1.1f * pitchHistory.size.toFloat(), PlotView.NO_REDRAW)
-    //pitchPlot?.yRange(200f, 900f, PlotView.NO_REDRAW)
-    pitchPlot?.yRange(currentPitchPlotRange[0], currentPitchPlotRange[1], PlotView.NO_REDRAW)
-    //pitchPlot?.setYTickTextFormat { i -> getString(R.string.hertz, i) }
-    //pitchPlot?.setYMarkTextFormat { i -> getString(R.string.hertz, i) }
-    val noteFrequencies = FloatArray(100) { i -> tuningFrequencies.getNoteFrequency(i - 50) }
-    pitchPlot?.setYTicks(noteFrequencies, false) { frequency -> tuningFrequencies.getNoteName(frequency) }
-    //pitchPlot?.setYTicks(floatArrayOf(0f,200f, 400f, 600f, 800f, 1000f,1200f, 1400f, 1600f), false) { i -> getString(R.string.hertz, i) }
-    //pitchPlot?.setYMarks(floatArrayOf(440f))
-    pitchPlot?.setYMarks(floatArrayOf(tuningFrequencies.getNoteFrequency(currentTargetPitchIndex))) { i ->
-      tuningFrequencies.getNoteName(
-        i
-      )
-    }
-    pitchPlot?.plot(pitchHistory.getHistory())
+    setupPitchPlot()
 
     return view
   }
@@ -184,11 +176,15 @@ class TunerFragment : Fragment() {
     Log.v("Tuner", "Tuner.restartTuner")
 
     val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+    val a4Frequency = preferences.getString("a4_frequency", "440")?.toFloat() ?: 440f
+    tuningFrequencies = TuningEqualTemperament(a4Frequency)
+
     val windowType = when(preferences.getString("windowing", "no_window")) {
       "window_hamming" -> RealFFT.HAMMING_WINDOW
       else -> RealFFT.NO_WINDOW
     }
 
+    setupPitchPlot()
     stopThreadsAndRecord()
 
     preprocessor = PreprocessorThread(
@@ -512,9 +508,8 @@ class TunerFragment : Fragment() {
           )
         ) { i -> tuningFrequencies.getNoteName(i) }
 
-        val pitchTargetFrequency = tuningFrequencies.getNoteFrequency(currentTargetPitchIndex)
-        currentPitchPlotRange[0] = pitchTargetFrequency * tuningFrequencies.halfToneRatio.pow(-1.5f)
-        currentPitchPlotRange[1] = pitchTargetFrequency * tuningFrequencies.halfToneRatio.pow(1.5f)
+        currentPitchPlotRange[0] = tuningFrequencies.getNoteFrequency(currentTargetPitchIndex - 1.5f)
+        currentPitchPlotRange[1] = tuningFrequencies.getNoteFrequency(currentTargetPitchIndex + 1.5f)
         pitchPlot?.yRange(currentPitchPlotRange[0], currentPitchPlotRange[1], 600)
       }
 
@@ -546,5 +541,23 @@ class TunerFragment : Fragment() {
     recordReader?.handler?.removeCallbacksAndMessages(null)
     recordReader?.quit()
     recordReader = null
+  }
+
+  private fun setupPitchPlot() {
+    pitchPlot?.xRange(0f, 1.1f * pitchHistory.size.toFloat(), PlotView.NO_REDRAW)
+    //pitchPlot?.yRange(200f, 900f, PlotView.NO_REDRAW)
+    pitchPlot?.yRange(currentPitchPlotRange[0], currentPitchPlotRange[1], PlotView.NO_REDRAW)
+    //pitchPlot?.setYTickTextFormat { i -> getString(R.string.hertz, i) }
+    //pitchPlot?.setYMarkTextFormat { i -> getString(R.string.hertz, i) }
+    val noteFrequencies = FloatArray(100) { i -> tuningFrequencies.getNoteFrequency(i - 50) }
+    pitchPlot?.setYTicks(noteFrequencies, false) { frequency -> tuningFrequencies.getNoteName(frequency) }
+    //pitchPlot?.setYTicks(floatArrayOf(0f,200f, 400f, 600f, 800f, 1000f,1200f, 1400f, 1600f), false) { i -> getString(R.string.hertz, i) }
+    //pitchPlot?.setYMarks(floatArrayOf(440f))
+    pitchPlot?.setYMarks(floatArrayOf(tuningFrequencies.getNoteFrequency(currentTargetPitchIndex))) { i ->
+      tuningFrequencies.getNoteName(
+        i
+      )
+    }
+    pitchPlot?.plot(pitchHistory.getHistory())
   }
 }

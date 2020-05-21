@@ -2,8 +2,11 @@
     <string name="app_name">Tuner</string>
 
     <string name="hertz">%.0f&#x200A;Hz</string>
+    <string name="hertz_str">%s&#x200A;Hz</string>
     <string name="note_name_sup"> %c<sup><small>%d</small></sup>%s</string>
     <string name="note_name_sub"> %c<sub><small>%d</small></sub>%s</string>
+
+    <string name="a4_frequency">Frequency of note A<sup><small>4</small></sup></string>
 
     <string name="windowing_function">Windowing function</string>
     <string name="window_hamming">Hamming window</string>

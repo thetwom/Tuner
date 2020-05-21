@@ -21,10 +21,7 @@ package de.moekadu.tuner
 
 import kotlin.math.*
 
-class PitchHistory(val size : Int) {
-
-    private val tuningFrequencies = TuningFrequencies()
-
+class PitchHistory(val size : Int, private val tuningFrequencies : TuningFrequencies) {
     /// Current estimate of the tone index based on the pitch history
     var currentEstimatedToneIndex = 0
         private set
@@ -34,7 +31,7 @@ class PitchHistory(val size : Int) {
     private var numFaultyValues = 0
     private val maybeFaultyValues = FloatArray(3) { 0.0f }
 
-    private val allowedRatioToBeValid = tuningFrequencies.halfToneRatio.pow(0.5f)
+    private var allowedDeltaNoteToBeValid = 0.5f
 
     /// We need some hysteresis effect, before we changing our current tone estimate
     /**
@@ -60,6 +57,11 @@ class PitchHistory(val size : Int) {
 
     fun addValue(value : Float) : Int {
         val lastValue = pitchArray.last()
+
+        val allowedRatioToBeValid = (
+            tuningFrequencies.getNoteFrequency(currentEstimatedToneIndex+allowedDeltaNoteToBeValid) /
+            tuningFrequencies.getNoteFrequency(currentEstimatedToneIndex)
+            )
 
         if(value < allowedRatioToBeValid * lastValue && value > lastValue / allowedRatioToBeValid) {
             pitchArray.copyInto(pitchArray, 0, 1)
@@ -97,11 +99,8 @@ class PitchHistory(val size : Int) {
     private fun updateCurrentPitch(latestPitchValue : Float) : Boolean {
         if(latestPitchValue < currentRangeBeforeChangingPitch[0] || latestPitchValue > currentRangeBeforeChangingPitch[1]) {
             currentEstimatedToneIndex = tuningFrequencies.getClosestToneIndex(latestPitchValue)
-            val frequencyOfEstimatedTone = tuningFrequencies.getNoteFrequency(currentEstimatedToneIndex)
-            currentRangeBeforeChangingPitch[0] = frequencyOfEstimatedTone *
-                    tuningFrequencies.halfToneRatio.pow(-allowedHalfToneDeviationBeforeChangingTarget)
-            currentRangeBeforeChangingPitch[1] = frequencyOfEstimatedTone *
-                    tuningFrequencies.halfToneRatio.pow(allowedHalfToneDeviationBeforeChangingTarget)
+            currentRangeBeforeChangingPitch[0] = tuningFrequencies.getNoteFrequency(currentEstimatedToneIndex - allowedHalfToneDeviationBeforeChangingTarget)
+            currentRangeBeforeChangingPitch[1] = tuningFrequencies.getNoteFrequency(currentEstimatedToneIndex + allowedHalfToneDeviationBeforeChangingTarget)
             return true
         }
         return false

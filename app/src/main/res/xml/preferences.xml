@@ -12,6 +12,13 @@
         android:summary="@string/system_appearance"
         />
 
+    <EditTextPreference
+        app:key="a4_frequency"
+        app:title="@string/a4_frequency"
+        android:defaultValue="440"
+        android:summary="440 Hz"
+        />
+
 
     <ListPreference
         android:key="windowing"

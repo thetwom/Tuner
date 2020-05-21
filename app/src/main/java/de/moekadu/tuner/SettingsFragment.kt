@@ -20,10 +20,12 @@
 package de.moekadu.tuner
 
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
+import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -42,7 +44,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
-    val appearance = findPreference("appearance") as ListPreference?
+    val appearance = findPreference<ListPreference?>("appearance")
       ?: throw RuntimeException("No appearance preference")
 
     appearance.summaryProvider =
@@ -58,6 +60,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
       val act = activity as MainActivity?
       act?.recreate()
       true
+    }
+
+    val a4Frequency = findPreference<EditTextPreference?>("a4_frequency")
+    a4Frequency?.setOnBindEditTextListener { editText ->
+      editText.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+    }
+    a4Frequency?.summaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
+      getString(R.string.hertz_str, preference?.text ?: "440")
     }
 
     val windowingFunction = findPreference("windowing") as ListPreference?
