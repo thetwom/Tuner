@@ -13,7 +13,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.invoke
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
@@ -169,7 +168,7 @@ class TunerFragment : Fragment() {
   override fun onResume() {
     super.onResume()
 
-    askForRecordPermission(Manifest.permission.RECORD_AUDIO)
+      askForRecordPermission.launch(Manifest.permission.RECORD_AUDIO)
   }
 
   private fun restartTuner() {
