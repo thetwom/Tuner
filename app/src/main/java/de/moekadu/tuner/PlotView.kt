@@ -26,7 +26,6 @@ import android.graphics.*
 import android.os.Bundle
 import android.os.Parcelable
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import kotlinx.parcelize.Parcelize
 import kotlin.math.*

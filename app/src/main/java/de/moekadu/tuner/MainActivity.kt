@@ -27,23 +27,12 @@ import android.view.MenuItem
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.consumeEach
-import kotlin.math.pow
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 class MainActivity : AppCompatActivity() {
-    private var text: TextView? = null
-    private var text2: TextView? = null
-    private var counter = 0
-    var viewModel: TunerViewModel? = null
+    private var viewModel: TunerViewModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -135,7 +124,7 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.main_content, SettingsFragment())
                 .addToBackStack("blub")
-                .commit();
+                .commit()
             true
         }
         else -> {

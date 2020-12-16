@@ -19,10 +19,9 @@
 
 package de.moekadu.tuner
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import kotlin.math.*
+import kotlin.math.min
 
 class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
 
@@ -61,7 +60,7 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
     private val maybeFaultyValues = ArrayList<Float>(maxNumFaultyValues)
 
     /// We only allow values which don't differ from the previous value too much,
-    /** This is the maximum allowed difference in dimensions of note indicces. */
+    /** This is the maximum allowed difference in dimensions of note indices. */
     private var allowedDeltaNoteToBeValid = 0.5f
 
     /// We need some hysteresis effect, before we changing our current tone estimate

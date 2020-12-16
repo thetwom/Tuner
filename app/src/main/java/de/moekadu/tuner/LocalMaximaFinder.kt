@@ -19,8 +19,7 @@
 
 package de.moekadu.tuner
 
-import android.util.Log
-import kotlin.math.*
+import kotlin.math.max
 
 /// Find local maxima based on the slope.
 /**
@@ -28,7 +27,7 @@ import kotlin.math.*
  *  really as a local maximum.
  *  @param values Values where we search for the local maxima
  *  @param signalToNoiseRatio For each local maximum, we also search the neighboring minima.
- *    We only keep the local maximum if (local maximum) / max(neigbhoring minima) > signalToNoiseRatio
+ *    We only keep the local maximum if (local maximum) / max(neighboring minima) > signalToNoiseRatio
  *  @param fromIndex First index in the values array where we start search for maxima
  *  @param toIndex Position after the last index in the values where we search local maxima
  *  @return ArrayList with positions of local maxima in descending order.

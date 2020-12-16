@@ -1,6 +1,24 @@
+/*
+ * Copyright 2020 Michael Moessner
+ *
+ * This file is part of Tuner.
+ *
+ * Tuner is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Tuner is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.moekadu.tuner
 
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -44,7 +62,7 @@ data class PeakRating(val frequency: Float, val rating: Float)
  *   to contribute to the pitch, the harmonicLimit refers to the frequencyPeaks[1] and higher.
  *   These peaks will only increase the probability for a given pitch if they do not exceed
  *   the harmonicLimit.
- * @return Pitch together with a quality for wihch the frequencyPeaks fit best.
+ * @return Pitch together with a quality for which the frequencyPeaks fit best.
  */
 fun calculateMostProbableSpectrumPitch(
     orderedSpectrumPeakIndices: ArrayList<Int>?, ampSqrSpec: FloatArray, frequency: (Int) -> Float,
@@ -94,17 +112,17 @@ fun calculateMostProbableSpectrumPitch(
  *
  * @param orderedCorrelationPeakIndices Indices in the correlation-array where the correlation
  *   has local maxima. The first index has to refer to the highest local maximum, the second index
- *   to the secon hightest local maximum, ...
+ *   to the second highest local maximum, ...
  * @param correlation Autocorrelation array.
  * @param frequency Functions which computes the frequency based on the index in the correlation
  *   array.
- * @param harmonicTolerance Tolerance for treating a frequency as a mulitple of another frequency.
+ * @param harmonicTolerance Tolerance for treating a frequency as a multiple of another frequency.
  *   E.g. Lets say we set the tolerance to 0.05. If we have a frequency ratio of 1250Hz/400Hz=3.125,
  *   this would be closest to the integer number 3, but the difference of 3.125-3 = 0.125 exceeds
  *   our tolerance. Hence 1250Hz is not considered a multiple of 400Hz. If in contrast, we consider
  *   the frequency 1210Hz, the ratio would be 1210Hz/400Hz=3.025, which would be 0.025 off our
  *   closest integer number 3 and we would consider 1210Hz as a valid multiple of 400Hz.
- * @param minimumPeakRatio We only consider local maxima as more probable candites than the highest
+ * @param minimumPeakRatio We only consider local maxima as more probable candidates than the highest
  *   maximum, if it is not below this ratio. E.g. if we set teh ratio t0 0.8 and the the highest
  *   maximum is 10, we would consider a local maximum of 8 still as a valid candidate, but 7 would
  *   be not considered.
@@ -152,7 +170,7 @@ fun chooseResultingFrequency(tunerResults: TunerResults): Float {
         tunerResults.correlationMaximaIndices,
         tunerResults.correlation,
         tunerResults.frequencyFromCorrelation)
-//    Log.v("TestRecordFlow","chooseResultingFrequency: mostPropableValueFromSpec=$mostProbableValueFromSpec, mostProbableValueFromCorrelation=$mostProbableValueFromCorrelation")
+//    Log.v("TestRecordFlow","chooseResultingFrequency: mostProbableValueFromSpec=$mostProbableValueFromSpec, mostProbableValueFromCorrelation=$mostProbableValueFromCorrelation")
     return if (mostProbableValueFromSpec.rating > mostProbableValueFromCorrelation.rating) {
         //Log.v("TestRecordFlow", "Postprocessing: chooseResultingFrequency: using spectrum value")
         mostProbableValueFromSpec.frequency
@@ -163,7 +181,7 @@ fun chooseResultingFrequency(tunerResults: TunerResults): Float {
     }
 }
 
-/// Find the local maximum in an array, starting the serach from an initial index.
+/// Find the local maximum in an array, starting the search from an initial index.
 /**
  * @param values Array where we search for values.
  * @param initialIndex Index in values-array where we start the search

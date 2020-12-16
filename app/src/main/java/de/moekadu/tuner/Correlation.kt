@@ -23,7 +23,7 @@ import kotlin.math.*
 
 class Correlation (val size : Int, val windowType : WindowingFunction = WindowingFunction.Tophat) {
 
-  val fft = RealFFT(2 * size)
+  private val fft = RealFFT(2 * size)
   private val inputBitreversed = FloatArray(2 * size + 2)
   private val window = FloatArray(size)
 

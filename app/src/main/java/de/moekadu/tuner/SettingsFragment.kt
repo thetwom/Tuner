@@ -21,7 +21,6 @@ package de.moekadu.tuner
 
 import android.os.Bundle
 import android.text.InputType
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.View

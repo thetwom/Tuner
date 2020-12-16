@@ -1,3 +1,22 @@
+/*
+ * Copyright 2020 Michael Moessner
+ *
+ * This file is part of Tuner.
+ *
+ * Tuner is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Tuner is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.moekadu.tuner
 
 import kotlin.math.log
@@ -8,9 +27,9 @@ import kotlin.math.roundToInt
 /**
  * @param a4Frequency Frequency for a4
  */
-class TuningEqualTemperament(val a4Frequency : Float = 440f) : TuningFrequencies {
+class TuningEqualTemperament(private val a4Frequency : Float = 440f) : TuningFrequencies {
 
-    /// Tone index (as e.g. used in getNoteFrequncy) for name of noteNames[0]
+    /// Tone index (as e.g. used in getNoteFrequency) for name of noteNames[0]
     private val noteName0ToneIndex = -48
 
     /// Note names in half tones. A '-' refers to sharp/flat note in between the neighboring tones.
@@ -71,7 +90,7 @@ class TuningEqualTemperament(val a4Frequency : Float = 440f) : TuningFrequencies
 
     /// Get note name for a given note index
     /**
-     * @param noteIndex Note index as e.g. returned by getClosestToneIndex. Two succeeding
+     * @param toneIndex Note index as e.g. returned by getClosestToneIndex. Two succeeding
      *   indices give a distance of one half tone.
      * @param preferFlat If the best fitting note is flat or sharp and this parameter is true,
      *   the "flat" version is preferred. Else the sharp version is returned.
