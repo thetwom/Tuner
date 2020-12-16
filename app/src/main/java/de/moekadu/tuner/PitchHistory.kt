@@ -102,6 +102,7 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
      * @param value Latest frequency value
      */
     fun appendValue(value : Float) {
+        require(maxNumFaultyValues < size)
 //        Log.v("TestRecordFlow", "PitchHistory.appendValue: value=$value")
         var pitchArrayUpdated = false
 
@@ -143,8 +144,9 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
             // these values are not faulty but rather indicate a pitch change. So we take these
             // values now.
             if(maybeFaultyValues.size == maxNumFaultyValues) {
-                val numRemove = min(pitchArray.size, size - pitchArray.size + maxNumFaultyValues)
-                pitchArray.subList(0, numRemove).clear()
+                val numFree = size - pitchArray.size
+                if (maxNumFaultyValues > numFree)
+                    pitchArray.subList(0, maxNumFaultyValues - numFree).clear()
                 pitchArray.addAll(maybeFaultyValues)
                 pitchArrayUpdated = true
             }
