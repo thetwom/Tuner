@@ -21,20 +21,14 @@ package de.moekadu.tuner
 
 import kotlin.math.*
 
-class Correlation (val size : Int, private val windowType : Int = RealFFT.NO_WINDOW) {
+class Correlation (val size : Int, val windowType : WindowingFunction = WindowingFunction.Tophat) {
 
-  private val fft = RealFFT(2 * size)
+  val fft = RealFFT(2 * size)
   private val inputBitreversed = FloatArray(2 * size + 2)
   private val window = FloatArray(size)
 
   init {
-    if (windowType == RealFFT.HAMMING_WINDOW) {
-      for (i in 0 until size)
-        window[i] = 0.54f - 0.46f * cos(2.0f * PI.toFloat() * i.toFloat() / size.toFloat())
-    }
-    else if (windowType != RealFFT.NO_WINDOW) {
-      throw RuntimeException("Invalid window type")
-    }
+    getWindow(windowType, size).copyInto(window)
   }
 
   /// Autocorrelation of input.
@@ -46,7 +40,7 @@ class Correlation (val size : Int, private val windowType : Int = RealFFT.NO_WIN
    *   zero-padded to become twice the size, before we start correlating). If it is null, we will use the internal class
    *   storage. If it is non-null, the size of the spectrum must be 2*size+2.
    */
-  fun correlate(input : CircularRecordData.ReadBuffer, output : FloatArray, disableWindow : Boolean = false, spectrum : FloatArray? = null) {
+  fun correlate(input : FloatArray, output : FloatArray, disableWindow : Boolean = false, spectrum : FloatArray? = null) {
     require(input.size == size) {"input size must be equal to the size of the correlation size"}
     require(output.size - 1 == size) {"output  size must be correlation size + 1"}
     if(spectrum != null) {
@@ -54,7 +48,7 @@ class Correlation (val size : Int, private val windowType : Int = RealFFT.NO_WIN
     }
     val spectrumStorage = spectrum ?: inputBitreversed
 
-    if(windowType == RealFFT.NO_WINDOW || disableWindow) {
+    if(windowType == WindowingFunction.Tophat || disableWindow) {
       for (i in 0 until size) {
         val ir2 = 2 * fft.bitReverseTable[i]
         val i2 = 2 * i

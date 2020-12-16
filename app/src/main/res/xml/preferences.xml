@@ -29,4 +29,23 @@
         android:summary="@string/no_window"
         />
 
+    <SeekBarPreference
+        android:key="window_size"
+        android:title="@string/window_size"
+        app:defaultValue="5"
+        app:min="0"
+        android:max="8"
+        app:seekBarIncrement="1"
+        app:updatesContinuously="true"
+        />
+    <SeekBarPreference
+        android:key="overlap"
+        app:title="@string/overlap"
+        app:defaultValue="25"
+        app:min="0"
+        android:max="80"
+        app:seekBarIncrement="1"
+        app:updatesContinuously="true"
+        />
+
 </PreferenceScreen>

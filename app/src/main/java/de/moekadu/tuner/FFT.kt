@@ -65,11 +65,8 @@ fun RealFFT.Companion.closestFrequencyIndex(frequency : Float, size: Int, dt : F
     return (frequency * dt * size).roundToInt()
 }
 
-class RealFFT(val size : Int, private val windowType : Int = NO_WINDOW) {
-    companion object {
-        const val NO_WINDOW = 0
-        const val HAMMING_WINDOW = 1
-    }
+class RealFFT(val size : Int, private val windowType : WindowingFunction = WindowingFunction.Tophat) {
+    companion object {}
 
     private val cosTable = FloatArray(size)
     private val sinTable = FloatArray(size)
@@ -98,22 +95,16 @@ class RealFFT(val size : Int, private val windowType : Int = NO_WINDOW) {
             bitReverseTable[i] = bitReverse(i, nBits - 1)
         }
 
-        if (windowType == HAMMING_WINDOW) {
-            for (i in 0 until size)
-                window[i] = 0.54f - 0.46f * cos(2.0f * PI.toFloat() * i.toFloat() / size.toFloat())
-        }
-        else if (windowType != NO_WINDOW) {
-            throw RuntimeException("Invalid window type")
-        }
+        getWindow(windowType, size).copyInto(window)
     }
 
-    fun fft(input: CircularRecordData.ReadBuffer, output: FloatArray, disableWindow : Boolean = false) {
+    fun fft(input: FloatArray, output: FloatArray, disableWindow : Boolean = false) {
         require(size == input.size) {"FFT input is of invalid size"}
         require(size == output.size-2) {"FFT output is of invalid size"}
       
         val halfSize = size / 2
 
-        if(windowType == NO_WINDOW || disableWindow) {
+        if(windowType == WindowingFunction.Tophat || disableWindow) {
             for (i in 0 until halfSize) {
                 val ir2 = 2 * bitReverseTable[i]
                 val i2 = 2 * i

@@ -19,18 +19,49 @@
 
 package de.moekadu.tuner
 
+import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import kotlin.math.*
 
-class PitchHistory(val size : Int, private val tuningFrequencies : TuningFrequencies) {
+class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
+
+    var size = size
+        set(value) {
+            field = value
+            _sizeAsLiveData.value = value
+        }
+
+    private val _sizeAsLiveData = MutableLiveData<Int>().apply { value = size }
+    val sizeAsLiveData: LiveData<Int>
+        get() = _sizeAsLiveData
+
+    /// TuningFrequencies.
+    var tuningFrequencies = tuningFrequencies
+        set(value)  {
+            field = value
+            // invalidate range which then will force to update the current estimated tone index
+            currentRangeBeforeChangingPitch[0] = 0.0f
+            currentRangeBeforeChangingPitch[1] = -1.0f
+            updateCurrentEstimatedToneIndex()
+        }
     /// Current estimate of the tone index based on the pitch history
-    var currentEstimatedToneIndex = 0
-        private set
+    private val _currentEstimatedToneIndex = MutableLiveData<Int>()
 
-    private val pitchArray = FloatArray(size) { tuningFrequencies.getNoteFrequency(currentEstimatedToneIndex) }
+    /// Here we allow the observers to take track of the current estimated tone index
+    val currentEstimatedToneIndex: LiveData<Int>
+        get() = _currentEstimatedToneIndex
 
-    private var numFaultyValues = 0
-    private val maybeFaultyValues = FloatArray(3) { 0.0f }
+    /// Here we store our pitch history
+    private val pitchArray = ArrayList<Float>(size)
 
+    /// Number of values which would lead to another detected pitch
+    private val maxNumFaultyValues = 3
+    /// Last appended values which would lead to another detected pitch
+    private val maybeFaultyValues = ArrayList<Float>(maxNumFaultyValues)
+
+    /// We only allow values which don't differ from the previous value too much,
+    /** This is the maximum allowed difference in dimensions of note indicces. */
     private var allowedDeltaNoteToBeValid = 0.5f
 
     /// We need some hysteresis effect, before we changing our current tone estimate
@@ -41,68 +72,121 @@ class PitchHistory(val size : Int, private val tuningFrequencies : TuningFrequen
     private val allowedHalfToneDeviationBeforeChangingTarget = 0.8f
 
     /// This describes the frequency range, inside which we won't change our current tone estimate.
-    private val currentRangeBeforeChangingPitch = floatArrayOf(-1.0f, -1.0f)
+    /** first value is min, second value is max value of range. */
+    private val currentRangeBeforeChangingPitch = floatArrayOf(0.0f, -1.0f)
 
-    init {
-        updateCurrentPitch(pitchArray.last())
-    }
+    /// Backing LiveData field for the current frequency
+    private val _history = MutableLiveData<ArrayList<Float> >()
 
-    fun getCurrentValue() : Float {
-        return pitchArray.last()
-    }
+    /// Here we allow the user to observe history changes
+    val history: LiveData<ArrayList<Float> >
+        get() = _history
 
-    fun getHistory() : FloatArray {
-        return pitchArray
-    }
-
-    fun addValue(value : Float) : Int {
-        val lastValue = pitchArray.last()
-
-        val allowedRatioToBeValid = (
-            tuningFrequencies.getNoteFrequency(currentEstimatedToneIndex+allowedDeltaNoteToBeValid) /
-            tuningFrequencies.getNoteFrequency(currentEstimatedToneIndex)
-            )
-
-        if(value < allowedRatioToBeValid * lastValue && value > lastValue / allowedRatioToBeValid) {
-            pitchArray.copyInto(pitchArray, 0, 1)
-            pitchArray[pitchArray.lastIndex] = value
-            updateCurrentPitch(value)
-            return currentEstimatedToneIndex
+    /// Defines the frequency limits which can be used for plots
+    var plotRangeInToneIndices = 3f
+        set(value) {
+            field = value
+            updatePlotRange()
         }
 
-        if(numFaultyValues == 0) {
-            maybeFaultyValues[0] = value
-            ++numFaultyValues
-            return currentEstimatedToneIndex
-        }
+    /// Backing field for minimum and maximum limit of plot range
+    private val frequencyPlotRangeValues = floatArrayOf(400f, 500f)
+    /// Backing LiveData field for plot range
+    private val _frequencyPlotRange = MutableLiveData<FloatArray>()
+    /// LiveData field which contains the current frequency limits, when plotting the current tones
+    val frequencyPlotRange: LiveData<FloatArray>
+        get() = _frequencyPlotRange
 
-        val lastFaultyValue = maybeFaultyValues[numFaultyValues-1]
-        if(value < allowedRatioToBeValid * lastFaultyValue && value > lastFaultyValue / allowedRatioToBeValid) {
-            maybeFaultyValues[numFaultyValues] = value
-            ++numFaultyValues
+    /// Append a new frequency value to our history.
+    /**
+     * @note This will also update the currentEstimatedPitch and the history live data.
+     * @param value Latest frequency value
+     */
+    fun appendValue(value : Float) {
+//        Log.v("TestRecordFlow", "PitchHistory.appendValue: value=$value")
+        var pitchArrayUpdated = false
+
+        if (pitchArray.size == 0) {
+            pitchArray.add(value)
+            pitchArrayUpdated = true
         }
         else {
-            numFaultyValues = 0
-            return currentEstimatedToneIndex
+            val lastValue = pitchArray.last()
+            val toneIndex = tuningFrequencies.getToneIndex(lastValue)
+            val validFrequencyMin = tuningFrequencies.getNoteFrequency(toneIndex - allowedDeltaNoteToBeValid)
+            val validFrequencyMax = tuningFrequencies.getNoteFrequency(toneIndex + allowedDeltaNoteToBeValid)
+
+            if(value < validFrequencyMax && value >= validFrequencyMin) {
+                if (pitchArray.size == size)
+                    pitchArray.removeFirst()
+                pitchArray.add(value)
+                pitchArrayUpdated = true
+            }
         }
 
-        if(numFaultyValues == maybeFaultyValues.size) {
-            pitchArray.copyInto(pitchArray, 0, maybeFaultyValues.size)
-            maybeFaultyValues.copyInto(pitchArray, pitchArray.size-maybeFaultyValues.size, 0)
-            numFaultyValues = 0
-            updateCurrentPitch(pitchArray.last())
+        if (!pitchArrayUpdated) {
+            if (maybeFaultyValues.size == 0) {
+                maybeFaultyValues.add(value)
+            }
+            else {
+                val lastFaultyValue = maybeFaultyValues.last()
+                val toneIndex = tuningFrequencies.getToneIndex(lastFaultyValue)
+                val validFrequencyMin = tuningFrequencies.getNoteFrequency(toneIndex - allowedDeltaNoteToBeValid)
+                val validFrequencyMax = tuningFrequencies.getNoteFrequency(toneIndex + allowedDeltaNoteToBeValid)
+
+                if(value >= validFrequencyMax || value < validFrequencyMin)
+                    maybeFaultyValues.clear()
+
+                maybeFaultyValues.add(value)
+            }
+
+            // we have completely filled our maybeFaultyValues-array. We are convinced now, that
+            // these values are not faulty but rather indicate a pitch change. So we take these
+            // values now.
+            if(maybeFaultyValues.size == maxNumFaultyValues) {
+                val numRemove = min(pitchArray.size, size - pitchArray.size + maxNumFaultyValues)
+                pitchArray.subList(0, numRemove).clear()
+                pitchArray.addAll(maybeFaultyValues)
+                pitchArrayUpdated = true
+            }
         }
-        return currentEstimatedToneIndex
+
+        if (pitchArrayUpdated) {
+            require(pitchArray.size > 0)
+            maybeFaultyValues.clear()
+            _history.value = pitchArray
+            updateCurrentEstimatedToneIndex()
+        }
     }
 
-    /// Returns true, if the current pitch was changed, else false
-    private fun updateCurrentPitch(latestPitchValue : Float) : Boolean {
-        if(latestPitchValue < currentRangeBeforeChangingPitch[0] || latestPitchValue > currentRangeBeforeChangingPitch[1]) {
-            currentEstimatedToneIndex = tuningFrequencies.getClosestToneIndex(latestPitchValue)
-            currentRangeBeforeChangingPitch[0] = tuningFrequencies.getNoteFrequency(currentEstimatedToneIndex - allowedHalfToneDeviationBeforeChangingTarget)
-            currentRangeBeforeChangingPitch[1] = tuningFrequencies.getNoteFrequency(currentEstimatedToneIndex + allowedHalfToneDeviationBeforeChangingTarget)
-            return true
+    /// Update currentEstimatedToneIndex if the last frequency in the history tells us so.
+    private fun updateCurrentEstimatedToneIndex() {
+        val currentFrequency = if (pitchArray.size == 0) return else pitchArray.last()
+
+        if (currentFrequency <= 0f)
+            return
+//        Log.v("TestRecordFlow", "PitchHistory.updateCurrentEstimatedToneIndex: currentFrequency=$currentFrequency")
+        if(currentFrequency < currentRangeBeforeChangingPitch[0] || currentFrequency >= currentRangeBeforeChangingPitch[1]) {
+            val toneIndex = tuningFrequencies.getClosestToneIndex(currentFrequency)
+            currentRangeBeforeChangingPitch[0] = tuningFrequencies.getNoteFrequency(toneIndex - allowedHalfToneDeviationBeforeChangingTarget)
+            currentRangeBeforeChangingPitch[1] = tuningFrequencies.getNoteFrequency(toneIndex + allowedHalfToneDeviationBeforeChangingTarget)
+            _currentEstimatedToneIndex.value = toneIndex
+            updatePlotRange()
         }
-        return false
+    }
+
+    private fun updatePlotRange() {
+        val toneIndex = _currentEstimatedToneIndex.value ?: return
+
+        val lowerBound = tuningFrequencies.getNoteFrequency(toneIndex - 0.5f * plotRangeInToneIndices)
+        val upperBound = tuningFrequencies.getNoteFrequency(toneIndex + 0.5f * plotRangeInToneIndices)
+//        Log.v("TestRecordFlow", "PitchHistory, updatePlotRange: lowerBound=$lowerBound, upperBound=$upperBound")
+        // only update after something changed
+        if (lowerBound != frequencyPlotRangeValues[0] || upperBound != frequencyPlotRangeValues[1]) {
+            frequencyPlotRangeValues[0] = lowerBound
+            frequencyPlotRangeValues[1] = upperBound
+            _frequencyPlotRange.value = frequencyPlotRangeValues
+        }
+//        Log.v("TestRecordFlow", "PitchHistory.updatePlotRange: lowerBound=$lowerBound, upperBound=$upperBound")
     }
 }

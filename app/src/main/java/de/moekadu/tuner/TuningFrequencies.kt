@@ -21,6 +21,7 @@ package de.moekadu.tuner
 
 interface TuningFrequencies {
 
+    fun getToneIndex(frequency : Float)  : Float
     fun getClosestToneIndex(frequency : Float)  : Int
 
     fun getNoteFrequency(noteIndex : Int) : Float

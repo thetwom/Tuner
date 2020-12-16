@@ -16,11 +16,13 @@
     <string-array name="windowingFunctionList">
         <item>"no_window"</item>
         <item>"window_hamming"</item>
+        <item>"window_hann"</item>
     </string-array>
 
     <string-array name="windowingFunctionNames">
         <item>@string/no_window</item>
         <item>@string/window_hamming</item>
+        <item>@string/window_hann</item>
     </string-array>
 
 </resources>

@@ -19,43 +19,110 @@
 
 package de.moekadu.tuner
 
-import androidx.appcompat.app.AppCompatActivity
+import android.Manifest
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.consumeEach
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 class MainActivity : AppCompatActivity() {
+    private var text: TextView? = null
+    private var text2: TextView? = null
+    private var counter = 0
+    var viewModel: TunerViewModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-      super.onCreate(savedInstanceState)
+        super.onCreate(savedInstanceState)
 
-      val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-      val nightMode = when(sharedPreferences.getString("appearance", "auto")) {
-        "dark" -> AppCompatDelegate.MODE_NIGHT_YES
-        "light" -> AppCompatDelegate.MODE_NIGHT_NO
-        else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-      }
-      AppCompatDelegate.setDefaultNightMode(nightMode)
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val nightMode = when (sharedPreferences.getString("appearance", "auto")) {
+            "dark" -> AppCompatDelegate.MODE_NIGHT_YES
+            "light" -> AppCompatDelegate.MODE_NIGHT_NO
+            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        }
 
-      setContentView(R.layout.activity_main)
-      setSupportActionBar(findViewById(R.id.toolbar))
+        AppCompatDelegate.setDefaultNightMode(nightMode)
 
-      if(savedInstanceState == null)
-        supportFragmentManager.beginTransaction().replace(R.id.main_content, TunerFragment()).commit()
+        setContentView(R.layout.activity_main)
+        setSupportActionBar(findViewById(R.id.toolbar))
 
-      setDisplayHomeButton()
-      supportFragmentManager.addOnBackStackChangedListener { setDisplayHomeButton() }
+        if (savedInstanceState == null)
+            supportFragmentManager.beginTransaction().replace(R.id.main_content, TunerFragment())
+                .commit()
+
+        setDisplayHomeButton()
+        supportFragmentManager.addOnBackStackChangedListener { setDisplayHomeButton() }
+
+
+//        viewModel = ViewModelProvider(this).get(TunerViewModel::class.java)
+//
+//        viewModel?.preprocessingResults?.observe(this) {
+//            if (it.specMaximaIndices?.size ?: 0 > 0 && it.correlationMaximaIndices?.size ?: 0 > 0) {
+//                val frequencyIndex = it.specMaximaIndices?.get(0)
+//                val correlationIndex = it.correlationMaximaIndices?.get(0)
+//                if (frequencyIndex != null && correlationIndex != null) {
+//                    val freqSpectrum = it.frequencyFromSpectrum(frequencyIndex)
+//                    val freqCorrelation = it.frequencyFromCorrelation(correlationIndex)
+//                    text?.text = "$counter: $freqSpectrum, $freqCorrelation"
+//                    counter++
+//                }
+//            }
+//        }
+//
+//        viewModel?.postprocessingResults?.observe(this) {
+//            text2?.text = "${it.frequency} Hz"
+//        }
 
     }
 
-  override fun onSupportNavigateUp(): Boolean {
-    supportFragmentManager.popBackStack()
-    return super.onSupportNavigateUp()
-  }
+    override fun onStart() {
+        super.onStart()
+        askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
+    }
+
+    override fun onStop() {
+        // TODO: this should go the the tuner fragment, same for the permission asking
+        viewModel?.stopSampling()
+        super.onStop()
+    }
+    /// Instance for requesting audio recording permission.
+    /**
+     * This will create the sourceJob as soon as the permissions are granted.
+     */
+    private val askForPermissionAndNotifyViewModel = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { result ->
+        if (result) {
+            viewModel?.startSampling()
+        } else {
+            // TODO: use string resource
+            Toast.makeText(this, "No audio recording permission is granted", Toast.LENGTH_LONG)
+                .show()
+            Log.v(
+                "TestRecordFlow",
+                "SoundSource.onRequestPermissionsResult: No audio recording permission is granted."
+            )
+        }
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        supportFragmentManager.popBackStack()
+        return super.onSupportNavigateUp()
+    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.toolbar, menu)
@@ -65,10 +132,10 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.action_settings -> {
             // User chose the "Settings" item, show the app settings UI...
-          supportFragmentManager.beginTransaction()
-            .replace(R.id.main_content, SettingsFragment())
-                    .addToBackStack("blub")
-                    .commit();
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.main_content, SettingsFragment())
+                .addToBackStack("blub")
+                .commit();
             true
         }
         else -> {
@@ -78,9 +145,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-      private fun setDisplayHomeButton() {
+    private fun setDisplayHomeButton() {
         val showDisplayHomeButton = supportFragmentManager.backStackEntryCount > 0
         supportActionBar?.setDisplayHomeAsUpEnabled(showDisplayHomeButton)
     }
-
 }

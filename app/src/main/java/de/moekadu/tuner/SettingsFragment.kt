@@ -21,14 +21,18 @@ package de.moekadu.tuner
 
 import android.os.Bundle
 import android.text.InputType
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
-import androidx.preference.EditTextPreference
-import androidx.preference.ListPreference
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.*
+import kotlin.math.pow
+import kotlin.math.roundToInt
+
+fun indexToWindowSize(index: Int): Int {
+  return 2f.pow(7 + index).roundToInt()
+}
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
@@ -70,9 +74,28 @@ class SettingsFragment : PreferenceFragmentCompat() {
       getString(R.string.hertz_str, preference?.text ?: "440")
     }
 
-    val windowingFunction = findPreference("windowing") as ListPreference?
+    val windowingFunction = findPreference<ListPreference?>("windowing")
     windowingFunction?.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
 
+    val windowSize = findPreference<SeekBarPreference>("window_size") ?: throw RuntimeException("No window_size preference")
+    windowSize.setOnPreferenceChangeListener { preference, newValue ->
+      preference.summary = getWindowSizeSummary(newValue as Int)
+      true
+    }
+    windowSize.summary = getWindowSizeSummary(windowSize.value)
+
+    val overlap = findPreference<SeekBarPreference?>("overlap") ?: throw RuntimeException("No overlap preference")
+    overlap.setOnPreferenceChangeListener { preference, newValue ->
+      preference.summary = getString(R.string.percent, newValue as Int)
+      true
+    }
+    overlap.summary = getString(R.string.percent, overlap.value)
+
     return super.onCreateView(inflater, container, savedInstanceState)
+  }
+
+  private fun getWindowSizeSummary(windowSizeIndex: Int): String {
+    val s = indexToWindowSize(windowSizeIndex)
+    return "$s (" + getString(R.string.minimum_frequency) + getString(R.string.hertz, 44100f / s) + ")"
   }
 }

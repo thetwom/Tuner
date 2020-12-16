@@ -4,8 +4,8 @@
 
   <item
       android:id="@+id/action_settings"
-      android:title="settings"
-      android:icon="@drawable/ic_settings_black_24dp"
+      android:title="@string/settings"
+      android:icon="@drawable/ic_settings_black"
       app:showAsAction="ifRoom"/>
 
 

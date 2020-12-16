@@ -22,11 +22,23 @@ package de.moekadu.tuner
 import android.util.Log
 import kotlin.math.*
 
-/// This function will additionally use the average value as threshold to treat consider a local maximum really as a local maximum
-fun findLocalMaxima(values : FloatArray, signalToNoiseRatio : Float, fromIndex : Int = 0, toIndex : Int = values.size, maxima : IntArray) : Int {
+/// Find local maxima based on the slope.
+/**
+ *  This function will additionally use the average value as threshold to consider a local maximum
+ *  really as a local maximum.
+ *  @param values Values where we search for the local maxima
+ *  @param signalToNoiseRatio For each local maximum, we also search the neighboring minima.
+ *    We only keep the local maximum if (local maximum) / max(neigbhoring minima) > signalToNoiseRatio
+ *  @param fromIndex First index in the values array where we start search for maxima
+ *  @param toIndex Position after the last index in the values where we search local maxima
+ *  @return ArrayList with positions of local maxima in descending order.
+ */
+
+fun findLocalMaxima(values : FloatArray, signalToNoiseRatio : Float, fromIndex : Int = 0, toIndex : Int = values.size) : ArrayList<Int> {
   val SLOPE_INCREASING = true
   val SLOPE_DECREASING = false
-  require(maxima.size >= (toIndex - fromIndex) / 2 + 1 )
+
+  val maxima = ArrayList<Int>()
 
   //------------------------------------------------------------------------------------------
   // Find average value of our spectrum
@@ -59,7 +71,6 @@ fun findLocalMaxima(values : FloatArray, signalToNoiseRatio : Float, fromIndex :
   val startIndexLocalMaxima = max(fromIndex, leftLocalMinimumIndex)
   var slope = SLOPE_INCREASING
   var localMaximumIndex = 0
-  var numLocalMaxima = 0
 
   for(i in startIndexLocalMaxima until values.size-2 ) {
     // We found a maximum, so store its position
@@ -73,8 +84,7 @@ fun findLocalMaxima(values : FloatArray, signalToNoiseRatio : Float, fromIndex :
       val largerMinimum = max(values[leftLocalMinimumIndex], values[i])
       // Here is the condition when we consider a local maximum worth to be stored
       if (values[localMaximumIndex] >= largerMinimum * signalToNoiseRatio && values[localMaximumIndex] > avgValue) {
-        maxima[numLocalMaxima] = localMaximumIndex
-        ++numLocalMaxima
+        maxima.add(localMaximumIndex)
       }
       leftLocalMinimumIndex = i
       if (leftLocalMinimumIndex >= toIndex-1)
@@ -82,15 +92,25 @@ fun findLocalMaxima(values : FloatArray, signalToNoiseRatio : Float, fromIndex :
       slope = SLOPE_INCREASING
     }
   }
-  return numLocalMaxima
+
+  maxima.sortWith(compareByDescending {values[it]})
+  return maxima
 }
 
-fun findLocalMaximaPosNeg(values : FloatArray, fromIndex : Int = 0, toIndex : Int = values.size, maxima : IntArray) : Int {
+/// Find maximum values of positive value sections in the values array
+/**
+ * This function determines the positive sections in the values-array and determines the maximum
+ *   value for each of these positive sections.
+ *   @param values Array with values for which the maxima should be found.
+ *   @param fromIndex First value to be considered inside the values array
+ *   @param toIndex Index after the last value to be considered.
+ *   @return ArrayList with the maxima in descending order
+ */
+fun findMaximaOfPositiveSections(values : FloatArray, fromIndex : Int = 0, toIndex : Int = values.size) : ArrayList<Int> {
   val WAIT_FOR_POSITIVE_VALUES = true
   val FIND_MAXIMUM = false
-  require(maxima.size >= (toIndex - fromIndex) / 2 + 1 )
-
-  var numLocalMaxima = 0
+  // val maxima = ArrayList<Int>((toIndex - fromIndex) / 2 + 1 )
+  val maxima = ArrayList<Int>()
 
   var currentFindAction = if (values[0] >= 0) FIND_MAXIMUM else WAIT_FOR_POSITIVE_VALUES
   var currentExtremum = values[fromIndex]
@@ -102,8 +122,7 @@ fun findLocalMaximaPosNeg(values : FloatArray, fromIndex : Int = 0, toIndex : In
       currentExtremumIndex = i
     }
     else if (currentFindAction == FIND_MAXIMUM && values[i] < 0f) {
-      maxima[numLocalMaxima] = currentExtremumIndex
-      ++numLocalMaxima
+      maxima.add(currentExtremumIndex)
       currentFindAction = WAIT_FOR_POSITIVE_VALUES
     }
     else if (currentFindAction == WAIT_FOR_POSITIVE_VALUES && values[i] >= 0f) {
@@ -113,5 +132,6 @@ fun findLocalMaximaPosNeg(values : FloatArray, fromIndex : Int = 0, toIndex : In
     }
   }
 
-  return numLocalMaxima
+  maxima.sortWith(compareByDescending {values[it]})
+  return maxima
 }

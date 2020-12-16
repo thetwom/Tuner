@@ -23,10 +23,39 @@ import android.animation.FloatArrayEvaluator
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
+import android.os.Bundle
+import android.os.Parcelable
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
+import kotlinx.parcelize.Parcelize
 import kotlin.math.*
+
+interface PlotViewArray {
+    operator fun get(index: Int): Float
+    fun isEmpty(): Boolean
+    fun last(): Float
+    val size: Int
+    fun binarySearch(element: Float, fromIndex: Int = 0, toIndex: Int = size) : Int
+}
+class FloatArrayPlotViewArray(private val a: FloatArray) : PlotViewArray {
+    override fun get(index: Int) = a[index]
+    override fun isEmpty() = a.isEmpty()
+    override fun last() = a.last()
+    override val size: Int = a.size
+    override fun binarySearch(element: Float, fromIndex: Int, toIndex: Int) = a.binarySearch(element, fromIndex, toIndex)
+}
+class ArrayListPlotViewArray(private val a: ArrayList<Float>) : PlotViewArray {
+    override fun get(index: Int) = a[index]
+    override fun isEmpty() = a.isEmpty()
+    override fun last() = a.last()
+    override val size: Int = a.size
+    override fun binarySearch(element: Float, fromIndex: Int, toIndex: Int) = a.binarySearch(element, fromIndex, toIndex)
+}
+
+fun FloatArray.asPlotViewArray(): PlotViewArray = FloatArrayPlotViewArray(this)
+fun ArrayList<Float>.asPlotViewArray(): PlotViewArray = ArrayListPlotViewArray(this)
+
 
 class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr)
@@ -52,8 +81,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private val rawPlotBounds = RectF()
     private val viewPlotBounds = RectF()
 
-    private var xRange = FloatArray(2) { autoLimit }
-    private var yRange = FloatArray(2) { autoLimit }
+    private val xRange = FloatArray(2) { autoLimit }
+    private val yRange = FloatArray(2) { autoLimit }
 
     private val xRangeEvaluator = FloatArrayEvaluator(xRange)
     private val yRangeEvaluator = FloatArrayEvaluator(yRange)
@@ -98,9 +127,30 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private val straightLinePath = Path()
     private val point = FloatArray(2)
 
+    @Parcelize
+    private class SavedState(
+        val xRange: FloatArray,
+        val yRange: FloatArray,
+        val xTicks: FloatArray?,
+        val xTickLabels: Array<String>?,
+        val yTicks: FloatArray?,
+        val yTickLabels: Array<String>?,
+        val rawPlotBounds: RectF,
+        val numXMarks: Int,
+        val xMarks: FloatArray?,
+        val xMarkLabels: Array<String>?,
+        val numYMarks: Int,
+        val yMarks: FloatArray?,
+        val yMarkLabels: Array<String>?,
+        val numPoints: Int,
+        val points: FloatArray?
+    ): Parcelable
+
     constructor(context: Context, attrs: AttributeSet? = null) : this(context, attrs, R.attr.plotViewStyle)
 
     init {
+        isSaveEnabled = true
+
         attrs?.let {
             val ta = context.obtainStyledAttributes(attrs, R.styleable.PlotView, defStyleAttr, R.style.PlotViewStyle)
             //val ta = context.obtainStyledAttributes(it, R.styleable.PlotView)
@@ -156,6 +206,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             invalidate()
         }
         yRangeAnimator.addUpdateListener {
+//            Log.v("TestRecordFlow", "PlotView: yRangeAnimator: Updating yRange: ${yRange[0]}, ${yRange[1]}")
             if(yRange[0] != autoLimit)
                 rawPlotBounds.bottom = yRange[1]
             if(yRange[1] != autoLimit)
@@ -210,6 +261,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun plot(yValues : FloatArray, redraw: Boolean = true) {
+        plot(yValues.asPlotViewArray(), redraw)
+    }
+
+    fun plot(yValues : ArrayList<Float>, redraw: Boolean = true) {
+        plot(yValues.asPlotViewArray(), redraw)
+    }
+
+    private fun plot(yValues : PlotViewArray, redraw: Boolean = true) {
         rawPlotLine.rewind()
         plotCalled = true
 
@@ -218,7 +277,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             return
         }
         else if(yValues.size == 1) {
-            resolveBounds(0f, 0f, yValues[0], yValues[1])
+            resolveBounds(0f, 0f, yValues[0], yValues[0])
             return
         }
 
@@ -249,6 +308,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun plot(xValues : FloatArray, yValues : FloatArray, redraw : Boolean = true) {
+        plot(xValues.asPlotViewArray(), yValues.asPlotViewArray(), redraw)
+    }
+
+    fun plot(xValues : ArrayList<Float>, yValues : ArrayList<Float>, redraw : Boolean = true) {
+        plot(xValues.asPlotViewArray(), yValues.asPlotViewArray(), redraw)
+    }
+
+    private fun plot(xValues : PlotViewArray, yValues : PlotViewArray, redraw : Boolean = true) {
         plotCalled = true
         require(xValues.size == yValues.size) {"Size of x-values and y-values not equal: " + xValues.size + " != " + yValues.size}
         rawPlotLine.rewind()
@@ -338,6 +405,44 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
 //        canvas?.drawLine(0f, 0f, getWidth().toFloat(), getHeight().toFloat(), paint)
 //        drawArrow(canvas, 0.1f*getWidth(), 0.9f*getHeight(), 0.9f*getWidth(), 0.1f*getHeight(), paint)
+    }
+
+    override fun onSaveInstanceState(): Parcelable {
+        val bundle = Bundle()
+        bundle.putParcelable("super state", super.onSaveInstanceState())
+        // TODO: store line
+        val plotState = SavedState(xRange, yRange, xTicks, xTickLabels, yTicks, yTickLabels,
+            rawPlotBounds, numXMarks, xMarks, xMarkLabels, numYMarks, yMarks, yMarkLabels,
+            numPoints, points)
+        bundle.putParcelable("plot state", plotState)
+        return bundle
+    }
+    override fun onRestoreInstanceState(state: Parcelable?) {
+
+        val superState = if (state is Bundle) {
+            state.getParcelable<SavedState>("plot state")?.let { plotState ->
+                plotState.xRange.copyInto(xRange)
+                plotState.yRange.copyInto(yRange)
+                xTicks = plotState.xTicks
+                xTickLabels = plotState.xTickLabels
+                yTicks = plotState.yTicks
+                yTickLabels = plotState.yTickLabels
+                rawPlotBounds.set(plotState.rawPlotBounds)
+                numXMarks = plotState.numXMarks
+                xMarks = plotState.xMarks
+                xMarkLabels = plotState.xMarkLabels
+                numYMarks = plotState.numYMarks
+                yMarks = plotState.yMarks
+                yMarkLabels = plotState.yMarkLabels
+                numPoints = plotState.numPoints
+                points = plotState.points
+            }
+            state.getParcelable("super state")
+        }
+        else {
+            state
+        }
+        super.onRestoreInstanceState(superState)
     }
 
     private fun drawXMarks(canvas: Canvas?) {
