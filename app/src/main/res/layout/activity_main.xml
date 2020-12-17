@@ -30,11 +30,12 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-    <com.google.android.material.appbar.MaterialToolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        style="@style/Widget.MaterialComponents.Toolbar.Primary"
+        android:background="?android:attr/colorBackground"
+        android:elevation="4dp"
         />
 
     <FrameLayout

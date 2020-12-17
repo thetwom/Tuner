@@ -25,9 +25,14 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorSecondary">@color/colorAccent</item>
+        <item name="android:colorBackground">@color/colorBackground</item>
+        <item name="colorBackgroundFloating">@color/colorBackgroundFloating</item>
+
+        <item name="colorControlNormal">@color/colorPrimary</item>
 
         <item name="plotViewStyle">@style/PlotViewStyle</item>
         <item name="volumeMeterStyle">@style/VolumeMeterStyle</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
 
     <declare-styleable name="CustomTheme">
@@ -61,7 +66,7 @@
         <item name="tickLineWidth">1dp</item>
         <item name="tickTextSize">12sp</item>
         <item name="yTickLabelWidth">0sp</item>
-        <item name="pointSize">3dp</item>
+        <item name="pointSize">5dp</item>
         <item name="pointColor">?attr/colorPrimary</item>
         <item name="titleSize">12sp</item>
     </style>
