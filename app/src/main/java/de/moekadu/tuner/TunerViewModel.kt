@@ -92,7 +92,7 @@ class TunerViewModel : ViewModel() {
 //            val freq = 400f + 10*t
 //            //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
 //            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
-//        #####}
+//        }
 
         viewModelScope.launch {
             sampleSource.flow
@@ -118,7 +118,8 @@ class TunerViewModel : ViewModel() {
                 .buffer()
                 .collect {
                     _tunerResults.value = it
-                    pitchHistory.appendValue(it.pitchFrequency)
+                    if (it.pitchFrequency > 0.0f)
+                        pitchHistory.appendValue(it.pitchFrequency)
                 }
         }
 

@@ -85,7 +85,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     private val xRangeEvaluator = FloatArrayEvaluator(xRange)
     private val yRangeEvaluator = FloatArrayEvaluator(yRange)
-    private val xRangeAnimator = ValueAnimator.ofObject(xRangeEvaluator)
+    private val xRangeAnimator = ValueAnimator.ofObject(xRangeEvaluator, floatArrayOf(0f, 100f), floatArrayOf(100f, 200f))
     private val yRangeAnimator = ValueAnimator.ofObject(yRangeEvaluator, floatArrayOf(0f, 100f), floatArrayOf(100f, 200f))
 
     private val markPaint = Paint()
@@ -215,6 +215,9 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun xRange(minValue : Float, maxValue : Float, animationDuration: Long = 0L) {
+        if (minValue == xRange[0] && maxValue == xRange[1])
+            return
+
         if(xRangeAnimator.isStarted)
             xRangeAnimator.end()
         if(animationDuration in 1 until NO_REDRAW) {
@@ -238,6 +241,9 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun yRange(minValue : Float, maxValue : Float, animationDuration: Long = 0L) {
+        if (minValue == yRange[0] && maxValue == yRange[1])
+            return
+
         if(yRangeAnimator.isStarted)
             yRangeAnimator.end()
         if(animationDuration in 1 until NO_REDRAW) {

@@ -30,6 +30,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.preference.PreferenceManager
+import kotlin.math.min
 
 class TunerFragment : Fragment() {
 
@@ -40,6 +41,7 @@ class TunerFragment : Fragment() {
 
     private var pitchPlot: PlotView? = null
 
+    private val minCorrelationFrequency = 25f
     /// Instance for requesting audio recording permission.
     /**
      * This will create the sourceJob as soon as the permissions are granted.
@@ -73,6 +75,9 @@ class TunerFragment : Fragment() {
             correlationPlot?.setXMarks(shiftMax) { i -> getString(R.string.hertz, 1.0 / i) }
             spectrumPlot?.setXMarks(freqMax) { i -> getString(R.string.hertz, i) }
 
+            correlationPlot?.xRange(0f,
+                min(results.correlationTimes.last(), 1f / minCorrelationFrequency),
+                300L)
             correlationPlot?.plot(results.correlationTimes, results.correlation)
             spectrumPlot?.plot(results.ampSpecSqrFrequencies, results.ampSqrSpec)
         }
@@ -122,7 +127,7 @@ class TunerFragment : Fragment() {
             getString(R.string.hertz, i)
         }
 
-        correlationPlot?.xRange(0f, 1.0f / 25f, PlotView.NO_REDRAW)
+        correlationPlot?.xRange(0f, 1f / minCorrelationFrequency, PlotView.NO_REDRAW)
         correlationPlot?.setXTicks(
             floatArrayOf(
                 1 / 1600f,
@@ -146,6 +151,8 @@ class TunerFragment : Fragment() {
 
         // plot the values if available, since the plots currently cant store the plot lines.
         viewModel.tunerResults.value?.let { results ->
+//            Log.v("Tuner", "TunerFragment: results: 0, ${results.correlationTimes.last()}")
+            correlationPlot?.xRange(0f, results.correlationTimes.last(), PlotView.NO_REDRAW)
             correlationPlot?.plot(results.correlationTimes, results.correlation)
             spectrumPlot?.plot(results.ampSpecSqrFrequencies, results.ampSqrSpec)
         }

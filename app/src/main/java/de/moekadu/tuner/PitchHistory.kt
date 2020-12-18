@@ -19,6 +19,7 @@
 
 package de.moekadu.tuner
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import kotlin.math.min
@@ -102,6 +103,7 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
      * @param value Latest frequency value
      */
     fun appendValue(value : Float) {
+//        Log.v("Tuner", "PitchHistory.appendValue: $value")
         require(maxNumFaultyValues < size)
 //        Log.v("TestRecordFlow", "PitchHistory.appendValue: value=$value")
         var pitchArrayUpdated = false
@@ -157,6 +159,7 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
             maybeFaultyValues.clear()
             _history.value = pitchArray
             updateCurrentEstimatedToneIndex()
+            updatePlotRange()
         }
     }
 
@@ -172,15 +175,20 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
             currentRangeBeforeChangingPitch[0] = tuningFrequencies.getNoteFrequency(toneIndex - allowedHalfToneDeviationBeforeChangingTarget)
             currentRangeBeforeChangingPitch[1] = tuningFrequencies.getNoteFrequency(toneIndex + allowedHalfToneDeviationBeforeChangingTarget)
             _currentEstimatedToneIndex.value = toneIndex
-            updatePlotRange()
+            //updatePlotRange()
         }
     }
 
     private fun updatePlotRange() {
-        val toneIndex = _currentEstimatedToneIndex.value ?: return
+//        Log.v("Tuner", "PitchHistory.updatePlotRange")
+        val pitchMin = pitchArray.minOrNull() ?: return
+        val pitchMax = pitchArray.maxOrNull() ?: return
 
-        val lowerBound = tuningFrequencies.getNoteFrequency(toneIndex - 0.5f * plotRangeInToneIndices)
-        val upperBound = tuningFrequencies.getNoteFrequency(toneIndex + 0.5f * plotRangeInToneIndices)
+        val toneIndexMin = tuningFrequencies.getClosestToneIndex(pitchMin)
+        val toneIndexMax = tuningFrequencies.getClosestToneIndex(pitchMax)
+
+        val lowerBound = tuningFrequencies.getNoteFrequency(toneIndexMin - 0.5f * plotRangeInToneIndices)
+        val upperBound = tuningFrequencies.getNoteFrequency(toneIndexMax + 0.5f * plotRangeInToneIndices)
 //        Log.v("TestRecordFlow", "PitchHistory, updatePlotRange: lowerBound=$lowerBound, upperBound=$upperBound")
         // only update after something changed
         if (lowerBound != frequencyPlotRangeValues[0] || upperBound != frequencyPlotRangeValues[1]) {
