@@ -20,6 +20,7 @@
 package de.moekadu.tuner
 
 import android.Manifest
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -42,6 +43,46 @@ class TunerFragment : Fragment() {
     private var pitchPlot: PlotView? = null
 
     private val minCorrelationFrequency = 25f
+
+    private val onPreferenceChangedListener = object : SharedPreferences.OnSharedPreferenceChangeListener {
+        override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+            if (sharedPreferences == null)
+                return
+//            Log.v("Tuner", "TunerFragment.setupPreferenceListener: key=$key")
+            when (key) {
+                "a4_frequency" -> {
+//                    Log.v("Tuner", "TunerFragment.setupPreferenceListener: a4_frequency changed")
+                    viewModel.a4Frequency = sharedPreferences.getString("a4_frequency", "440")?.toFloat() ?: 440f
+                }
+                "windowing" -> {
+                    val value = sharedPreferences.getString(key, null)
+                    viewModel.windowingFunction =
+                        when (value) {
+                            "no_window" -> WindowingFunction.Tophat
+                            "window_hamming" -> WindowingFunction.Hamming
+                            "window_hann" -> WindowingFunction.Hann
+                            else -> throw RuntimeException("Unknown window")
+                        }
+                }
+                "window_size" -> {
+                    viewModel.windowSize = indexToWindowSize(sharedPreferences.getInt(key, 5))
+                }
+                "overlap" -> {
+                    viewModel.overlap = sharedPreferences.getInt(key, 25) / 100f
+                }
+                "pitch_history_duration" -> {
+                    viewModel.pitchHistoryDuration = percentToPitchHistoryDuration(sharedPreferences.getInt(key, 50))
+                }
+                "pitch_history_num_faulty_values" -> {
+                    viewModel.pitchHistory.maxNumFaultyValues = sharedPreferences.getInt(key, 3)
+                }
+                "use_hint" -> {
+                    viewModel.useHint = sharedPreferences.getBoolean(key, true)
+                }
+            }
+        }
+    }
+
     /// Instance for requesting audio recording permission.
     /**
      * This will create the sourceJob as soon as the permissions are granted.
@@ -52,8 +93,7 @@ class TunerFragment : Fragment() {
         if (result) {
             viewModel.startSampling()
         } else {
-            // TODO: use string resource
-            Toast.makeText(activity, "No audio recording permission is granted", Toast.LENGTH_LONG)
+            Toast.makeText(activity, getString(R.string.no_audio_recording_permission), Toast.LENGTH_LONG)
                 .show()
             Log.v(
                 "TestRecordFlow",
@@ -75,9 +115,11 @@ class TunerFragment : Fragment() {
             correlationPlot?.setXMarks(shiftMax) { i -> getString(R.string.hertz, 1.0 / i) }
             spectrumPlot?.setXMarks(freqMax) { i -> getString(R.string.hertz, i) }
 
-            correlationPlot?.xRange(0f,
+            correlationPlot?.xRange(
+                0f,
                 min(results.correlationTimes.last(), 1f / minCorrelationFrequency),
-                300L)
+                300L
+            )
             correlationPlot?.plot(results.correlationTimes, results.correlation)
             spectrumPlot?.plot(results.ampSpecSqrFrequencies, results.ampSqrSpec)
         }
@@ -106,6 +148,15 @@ class TunerFragment : Fragment() {
                 }
             }
         }
+
+        val pref = PreferenceManager.getDefaultSharedPreferences(activity)
+        pref.registerOnSharedPreferenceChangeListener(onPreferenceChangedListener)
+    }
+
+    override fun onDestroy() {
+        val pref = PreferenceManager.getDefaultSharedPreferences(activity)
+        pref.unregisterOnSharedPreferenceChangeListener(onPreferenceChangedListener)
+        super.onDestroy()
     }
 
     override fun onCreateView(
@@ -146,8 +197,7 @@ class TunerFragment : Fragment() {
         // spectrumPlot?.setXTickTextFormat { i -> getString(R.string.hertz, i) }
 //        frequencyText = findViewById(R.id.frequency_text)
 
-        setupPreferencesInViewModel()
-        setupPreferenceListeners()
+        setPreferencesInViewModel()
 
         // plot the values if available, since the plots currently cant store the plot lines.
         viewModel.tunerResults.value?.let { results ->
@@ -176,7 +226,7 @@ class TunerFragment : Fragment() {
         super.onStop()
     }
 
-    private fun setupPreferencesInViewModel() {
+    private fun setPreferencesInViewModel() {
 
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
         viewModel.a4Frequency = sharedPreferences.getString("a4_frequency", "440")?.toFloat() ?: 440f
@@ -188,123 +238,8 @@ class TunerFragment : Fragment() {
         }
         viewModel.windowSize = indexToWindowSize(sharedPreferences.getInt("window_size", 5))
         viewModel.overlap = sharedPreferences.getInt("overlap", 25) / 100f
-    }
-
-    private fun setupPreferenceListeners() {
-        val pref = PreferenceManager.getDefaultSharedPreferences(activity)
-        pref.registerOnSharedPreferenceChangeListener { sharedPreferences, key ->
-//            Log.v("TestRecordFlow", "TunerFragment.setupPreferenceListener: key=$key")
-            when (key) {
-                "a4_frequency" -> {
-                    val f = sharedPreferences.getFloat(key, 440f)
-//                    Log.v("TestRecordFlow", "TunerFragment.setupPreferenceListener: f=$f")
-                    viewModel.a4Frequency = f
-                }
-                "windowing" -> {
-                    viewModel.windowingFunction =
-                        when (sharedPreferences.getString(key, "no_window")) {
-                            "no_window" -> WindowingFunction.Tophat
-                            "window_hamming" -> WindowingFunction.Hamming
-                            "window_hann" -> WindowingFunction.Hann
-                            else -> throw RuntimeException("Unknown window")
-                        }
-                }
-                "window_size" -> {
-                    viewModel.windowSize = indexToWindowSize(sharedPreferences.getInt("window_size", 5))
-                }
-                "overlap" -> {
-                    viewModel.overlap = sharedPreferences.getInt(key, 25) / 100f
-                }
-            }
-        }
+        viewModel.pitchHistoryDuration = percentToPitchHistoryDuration(sharedPreferences.getInt("pitch_history_duration", 50))
+        viewModel.pitchHistory.maxNumFaultyValues = sharedPreferences.getInt("pitch_history_num_faulty_values", 3)
+        viewModel.useHint = sharedPreferences.getBoolean("use_hint", true)
     }
 }
-
-//    private fun initPitchPlot() {
-//        pitchPlot?.xRange(0f, 1.1f * 100f, PlotView.NO_REDRAW)
-//    pitchPlot?.yRange(200f, 900f, PlotView.NO_REDRAW)
-//    //pitchPlot?.setYTickTextFormat { i -> getString(R.string.hertz, i) }
-//    //pitchPlot?.setYMarkTextFormat { i -> getString(R.string.hertz, i) }
-//    val noteFrequencies = FloatArray(100) { i -> tuningFrequencies.getNoteFrequency(i - 50) }
-//    pitchPlot?.setYTicks(noteFrequencies, false) { frequency -> tuningFrequencies.getNoteName(frequency) }
-//    //pitchPlot?.setYTicks(floatArrayOf(0f,200f, 400f, 600f, 800f, 1000f,1200f, 1400f, 1600f), false) { i -> getString(R.string.hertz, i) }
-//    //pitchPlot?.setYMarks(floatArrayOf(440f))
-//    pitchPlot?.setYMarks(floatArrayOf(tuningFrequencies.getNoteFrequency(currentTargetPitchIndex))) { i ->
-//      tuningFrequencies.getNoteName(
-//        i
-//      )
-//    }
-//    pitchPlot?.plot(pitchHistory.getHistory())
-//  }
-
-//
-//  private fun doVisualize(preprocessingDataAndPostprocessingResults: PostprocessorThread.PreprocessingDataAndPostprocessingResults) {
-//    Log.v("Tuner", "TunerFragment.doVisualize")
-//    if(context == null)
-//      return
-//
-//        for (i in 0 until result.numLocalMaxima)
-//          spectrumPlotXMarks[i] = RealFFT.getFrequency(result.localMaxima[i], result.spectrum.size-2, dt)
-//        spectrumPlot?.setXMarks(spectrumPlotXMarks, result.numLocalMaxima, false) { i ->
-//          getString(R.string.hertz, i)
-//        }
-//        //spectrumPlotXMarks[0] = postResults?.frequency ?: 0f
-//        //spectrumPlot?.setXMarks(spectrumPlotXMarks, 1, false)
-//        spectrumPlot?.plot(result.frequencies, result.ampSpec)
-//      }
-//    }
-//    else if(pitchDetectorTypePrep == PreprocessorThread.PREPROCESS_AUTOCORRELATION_BASED) {
-//      prepArray.last()?.autocorrelationBasedResults?.let{ result ->
-//        val dt = 1.0f / sampleRate
-//        correlationPlotXMarks[0] = result.idxMaxPitch * dt
-//        correlationPlot?.setXMarks(correlationPlotXMarks, 1, false) {i ->
-//          getString(R.string.hertz, 1.0/i)
-//        }
-//        spectrumPlotXMarks[0] = 1.0f / correlationPlotXMarks[0]
-//        spectrumPlot?.setXMarks(spectrumPlotXMarks, 1, false) {i ->
-//          getString(R.string.hertz, i)
-//        }
-//        correlationPlot?.plot(result.times, result.correlation)
-//        spectrumPlot?.plot(result.frequencies, result.ampSpec)
-//      }
-//    }
-//
-//
-//        // highlight new target pitch
-//        pitchPlot?.setYMarks(
-//          floatArrayOf(
-//            tuningFrequencies.getNoteFrequency(
-//              currentTargetPitchIndex
-//            )
-//          )
-//        ) { i -> tuningFrequencies.getNoteName(i) }
-//
-//        currentPitchPlotRange[0] = tuningFrequencies.getNoteFrequency(currentTargetPitchIndex - 1.5f)
-//        currentPitchPlotRange[1] = tuningFrequencies.getNoteFrequency(currentTargetPitchIndex + 1.5f)
-//        pitchPlot?.yRange(currentPitchPlotRange[0], currentPitchPlotRange[1], 600)
-//      }
-//
-//      currentPitchPoint[0] = (pitchHistory.size - 1).toFloat()
-//      currentPitchPoint[1] = pitchHistory.getCurrentValue()
-//      pitchPlot?.setPoints(currentPitchPoint)
-//      pitchPlot?.plot(pitchHistory.getHistory())
-//    }
-//  }
-//
-//  private fun setupPitchPlot() {
-//    pitchPlot?.xRange(0f, 1.1f * pitchHistory.size.toFloat(), PlotView.NO_REDRAW)
-//    //pitchPlot?.yRange(200f, 900f, PlotView.NO_REDRAW)
-//    pitchPlot?.yRange(currentPitchPlotRange[0], currentPitchPlotRange[1], PlotView.NO_REDRAW)
-//    //pitchPlot?.setYTickTextFormat { i -> getString(R.string.hertz, i) }
-//    //pitchPlot?.setYMarkTextFormat { i -> getString(R.string.hertz, i) }
-//    val noteFrequencies = FloatArray(100) { i -> tuningFrequencies.getNoteFrequency(i - 50) }
-//    pitchPlot?.setYTicks(noteFrequencies, false) { frequency -> tuningFrequencies.getNoteName(frequency) }
-//    //pitchPlot?.setYTicks(floatArrayOf(0f,200f, 400f, 600f, 800f, 1000f,1200f, 1400f, 1600f), false) { i -> getString(R.string.hertz, i) }
-//    //pitchPlot?.setYMarks(floatArrayOf(440f))
-//    pitchPlot?.setYMarks(floatArrayOf(tuningFrequencies.getNoteFrequency(currentTargetPitchIndex))) { i ->
-//      tuningFrequencies.getNoteName(
-//        i
-//      )
-//    }
-//    pitchPlot?.plot(pitchHistory.getHistory())
-//  }

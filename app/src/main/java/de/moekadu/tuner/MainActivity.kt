@@ -32,6 +32,8 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceManager
 
 class MainActivity : AppCompatActivity() {
+    // TODO: History should compute running average
+    // ... more settings possible?
     private var viewModel: TunerViewModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,57 +57,6 @@ class MainActivity : AppCompatActivity() {
 
         setDisplayHomeButton()
         supportFragmentManager.addOnBackStackChangedListener { setDisplayHomeButton() }
-
-
-//        viewModel = ViewModelProvider(this).get(TunerViewModel::class.java)
-//
-//        viewModel?.preprocessingResults?.observe(this) {
-//            if (it.specMaximaIndices?.size ?: 0 > 0 && it.correlationMaximaIndices?.size ?: 0 > 0) {
-//                val frequencyIndex = it.specMaximaIndices?.get(0)
-//                val correlationIndex = it.correlationMaximaIndices?.get(0)
-//                if (frequencyIndex != null && correlationIndex != null) {
-//                    val freqSpectrum = it.frequencyFromSpectrum(frequencyIndex)
-//                    val freqCorrelation = it.frequencyFromCorrelation(correlationIndex)
-//                    text?.text = "$counter: $freqSpectrum, $freqCorrelation"
-//                    counter++
-//                }
-//            }
-//        }
-//
-//        viewModel?.postprocessingResults?.observe(this) {
-//            text2?.text = "${it.frequency} Hz"
-//        }
-
-    }
-
-    override fun onStart() {
-        super.onStart()
-        askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
-    }
-
-    override fun onStop() {
-        // TODO: this should go the the tuner fragment, same for the permission asking
-        viewModel?.stopSampling()
-        super.onStop()
-    }
-    /// Instance for requesting audio recording permission.
-    /**
-     * This will create the sourceJob as soon as the permissions are granted.
-     */
-    private val askForPermissionAndNotifyViewModel = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { result ->
-        if (result) {
-            viewModel?.startSampling()
-        } else {
-            // TODO: use string resource
-            Toast.makeText(this, "No audio recording permission is granted", Toast.LENGTH_LONG)
-                .show()
-            Log.v(
-                "TestRecordFlow",
-                "SoundSource.onRequestPermissionsResult: No audio recording permission is granted."
-            )
-        }
     }
 
     override fun onSupportNavigateUp(): Boolean {

@@ -22,14 +22,46 @@ package de.moekadu.tuner
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.roundToInt
+
+/// Compute pitch history duration in seconds based on a percent value.
+/**
+ * This uses a exponential scale for setting the duration.
+ * @param percent Percentage value where 0 stands for the minimum duration and 100 for the maximum.
+ * @param durationAtFiftyPercent Duration in seconds at fifty percent.
+ * @return Pitch history duration in seconds.
+ */
+fun percentToPitchHistoryDuration(percent: Int, durationAtFiftyPercent: Float = 3.0f) : Float {
+    return durationAtFiftyPercent * 2.0f.pow(0.05f * (percent - 50))
+}
+
+/// Convert pitch history duration to the number of samples which have to be stored.
+/**
+ * @param duration Duration of pitch history in seconds.
+ * @param sampleRate Sample rate of audio signal in Hertz
+ * @param windowSize Number of samples for one chunk of data which is used for evaluation.
+ * @param overlap Overlap between to succeeding data chunks, where 0 is no overlap and 1 is
+ *   100% overlap (1.0 is of course not allowed).
+ * @return Number of samples, which must be stored in the pitch history, so that the we match
+ *   the given duration.
+ */
+fun pitchHistoryDurationToPitchSamples(duration: Float, sampleRate: Int, windowSize: Int, overlap: Float): Int {
+    return (duration / (windowSize.toFloat() / sampleRate.toFloat() * (1.0f - overlap))).roundToInt()
+}
 
 class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
 
     var size = size
         set(value) {
-            field = value
-            _sizeAsLiveData.value = value
+            if (value != field) {
+                field = value
+                _sizeAsLiveData.value = field
+                if (pitchArray.size > field)
+                    pitchArray.subList(0, pitchArray.size - field).clear()
+            }
         }
 
     private val _sizeAsLiveData = MutableLiveData<Int>().apply { value = size }
@@ -56,7 +88,8 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
     private val pitchArray = ArrayList<Float>(size)
 
     /// Number of values which would lead to another detected pitch
-    private val maxNumFaultyValues = 3
+    var maxNumFaultyValues = 3
+
     /// Last appended values which would lead to another detected pitch
     private val maybeFaultyValues = ArrayList<Float>(maxNumFaultyValues)
 
@@ -104,7 +137,6 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
      */
     fun appendValue(value : Float) {
 //        Log.v("Tuner", "PitchHistory.appendValue: $value")
-        require(maxNumFaultyValues < size)
 //        Log.v("TestRecordFlow", "PitchHistory.appendValue: value=$value")
         var pitchArrayUpdated = false
 
@@ -119,8 +151,8 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
             val validFrequencyMax = tuningFrequencies.getNoteFrequency(toneIndex + allowedDeltaNoteToBeValid)
 
             if(value < validFrequencyMax && value >= validFrequencyMin) {
-                if (pitchArray.size == size)
-                    pitchArray.removeFirst()
+                if (pitchArray.size >= size)
+                    pitchArray.subList(0, pitchArray.size - size + 1).clear()
                 pitchArray.add(value)
                 pitchArrayUpdated = true
             }
@@ -145,11 +177,14 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
             // we have completely filled our maybeFaultyValues-array. We are convinced now, that
             // these values are not faulty but rather indicate a pitch change. So we take these
             // values now.
-            if(maybeFaultyValues.size == maxNumFaultyValues) {
-                val numFree = size - pitchArray.size
-                if (maxNumFaultyValues > numFree)
-                    pitchArray.subList(0, maxNumFaultyValues - numFree).clear()
-                pitchArray.addAll(maybeFaultyValues)
+            if(maybeFaultyValues.size >= maxNumFaultyValues) {
+                val freeSpace = size - pitchArray.size
+                if (maxNumFaultyValues > freeSpace) {
+                    val numDelete = min(maxNumFaultyValues - freeSpace, pitchArray.size)
+                    pitchArray.subList(0, numDelete).clear()
+                }
+                val numCopy = min(maxNumFaultyValues, size)
+                pitchArray.addAll(maybeFaultyValues.subList(maybeFaultyValues.size - numCopy, maybeFaultyValues.size))
                 pitchArrayUpdated = true
             }
         }

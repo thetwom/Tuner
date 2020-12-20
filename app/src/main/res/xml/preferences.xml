@@ -47,5 +47,30 @@
         app:seekBarIncrement="1"
         app:updatesContinuously="true"
         />
+    <SeekBarPreference
+        android:key="pitch_history_duration"
+        app:title="@string/pitch_history_duration"
+        app:defaultValue="50"
+        app:min="0"
+        android:max="100"
+        app:seekBarIncrement="1"
+        app:updatesContinuously="true"
+        />
+
+    <SeekBarPreference
+        android:key="pitch_history_num_faulty_values"
+        app:title="@string/pitch_history_num_faulty_values"
+        app:defaultValue="3"
+        app:min="1"
+        android:max="10"
+        app:seekBarIncrement="1"
+        app:updatesContinuously="true"
+        />
+
+    <SwitchPreferenceCompat
+        android:key="use_hint"
+        app:title="@string/use_hint"
+        app:defaultValue="true"
+        />
 
 </PreferenceScreen>

@@ -5,6 +5,7 @@
     <string name="percent">%d&#x200A;%%</string>
     <string name="hertz">%.0f&#x200A;Hz</string>
     <string name="hertz_str">%s&#x200A;Hz</string>
+    <string name="seconds">%.2f&#x200A;s</string>
 
     <string name="a4_frequency">Frequency of note A<sup><small>4</small></sup></string>
 
@@ -25,4 +26,8 @@
     <string name="overlap">Overlap</string>
     <string name="window_size">Window size</string>
     <string name="minimum_frequency">"Minimum frequency: "</string>
+    <string name="no_audio_recording_permission">No audio recording permission is granted.</string>
+    <string name="pitch_history_duration">Duration of pitch history</string>
+    <string name="pitch_history_num_faulty_values">Number of values to accept new pitch</string>
+    <string name="use_hint">Use previous values to improve pitch estimation</string>
 </resources>

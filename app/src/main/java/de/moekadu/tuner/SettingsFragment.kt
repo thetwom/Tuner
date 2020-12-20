@@ -90,11 +90,32 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
     overlap.summary = getString(R.string.percent, overlap.value)
 
+    val pitchHistoryDuration = findPreference<SeekBarPreference>("pitch_history_duration") ?: throw RuntimeException("No pitch history duration preference")
+    pitchHistoryDuration.setOnPreferenceChangeListener { preference, newValue ->
+      preference.summary = getPitchHistoryDurationSummary(newValue as Int)
+      true
+    }
+    pitchHistoryDuration.summary = getPitchHistoryDurationSummary(pitchHistoryDuration.value)
+
+    val pitchHistoryNumFaultyValues = findPreference<SeekBarPreference>("pitch_history_num_faulty_values") ?: throw RuntimeException("No pitch history num fault values preference")
+    pitchHistoryNumFaultyValues.setOnPreferenceChangeListener { preference, newValue ->
+      preference.summary = (newValue as Int).toString()
+      true
+    }
+    pitchHistoryNumFaultyValues.summary = (pitchHistoryNumFaultyValues.value).toString()
+
     return super.onCreateView(inflater, container, savedInstanceState)
   }
 
   private fun getWindowSizeSummary(windowSizeIndex: Int): String {
     val s = indexToWindowSize(windowSizeIndex)
-    return "$s (" + getString(R.string.minimum_frequency) + getString(R.string.hertz, 44100f / s) + ")"
+    // the factor 2 in the next line is used since only one wave inside the window is not enough for
+    // accurate frequency finding.
+    return "$s (" + getString(R.string.minimum_frequency) + getString(R.string.hertz, 2 * 44100f / s) + ")"
+  }
+
+  private fun getPitchHistoryDurationSummary(percent: Int): String {
+    val s = percentToPitchHistoryDuration(percent)
+    return getString(R.string.seconds, s)
   }
 }

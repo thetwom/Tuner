@@ -19,6 +19,7 @@
 
 package de.moekadu.tuner
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -38,11 +39,19 @@ class TunerViewModel : ViewModel() {
     val tunerResults : LiveData<TunerResults>
         get() = _tunerResults
 
-    private var pitchHistorySize = 100
+    var pitchHistoryDuration = 3.0f
         set(value) {
-            field = value
-            pitchHistory.size = value
+            if (value != field) {
+                field = value
+//                Log.v("Tuner", "TunerViewModel.pitchH istoryDuration: new duration = $value, new size = $pitchHistorySize")
+                pitchHistory.size = pitchHistorySize
+            }
         }
+
+    /// Compute number of samples to be stored in pitch history.
+    private val pitchHistorySize
+        get() = pitchHistoryDurationToPitchSamples(
+            pitchHistoryDuration, sampleSource.sampleRate, windowSize, overlap)
 
     var a4Frequency = 440f
         set(value) {
@@ -57,6 +66,7 @@ class TunerViewModel : ViewModel() {
             if (field != value) {
                 field = value
                 sampleSource.windowSize = value
+                pitchHistory.size = pitchHistorySize
             }
         }
 
@@ -65,6 +75,7 @@ class TunerViewModel : ViewModel() {
             if (field != value) {
                 field = value
                 sampleSource.overlap = value
+                pitchHistory.size = pitchHistorySize
             }
         }
     private var tuningFrequencyValues = TuningEqualTemperament(a4Frequency)
@@ -84,6 +95,8 @@ class TunerViewModel : ViewModel() {
     private val pitchChooserAndAccuracyIncreaser = PitchChooserAndAccuracyIncreaser()
 
     var windowingFunction = WindowingFunction.Hamming
+
+    var useHint = true
 
     init {
         //Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
@@ -112,7 +125,7 @@ class TunerViewModel : ViewModel() {
                 }
                 .buffer()
                 .transform {
-                    it.pitchFrequency = pitchChooserAndAccuracyIncreaser.run(it)
+                    it.pitchFrequency = pitchChooserAndAccuracyIncreaser.run(it, if (useHint) pitchHistory.history.value?.lastOrNull() else null)
                     emit(it)
                 }
                 .buffer()
