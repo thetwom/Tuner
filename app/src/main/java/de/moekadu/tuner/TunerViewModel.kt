@@ -135,8 +135,6 @@ class TunerViewModel : ViewModel() {
                         pitchHistory.appendValue(it.pitchFrequency)
                 }
         }
-
-
     }
 
     fun startSampling() {

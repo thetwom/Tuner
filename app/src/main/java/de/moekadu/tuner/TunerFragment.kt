@@ -79,6 +79,10 @@ class TunerFragment : Fragment() {
                 "use_hint" -> {
                     viewModel.useHint = sharedPreferences.getBoolean(key, true)
                 }
+                "num_moving_average" -> {
+                    viewModel.pitchHistory.numMovingAverage = sharedPreferences.getInt(key, 5)
+                }
+
             }
         }
     }
@@ -129,12 +133,14 @@ class TunerFragment : Fragment() {
             pitchPlot?.xRange(0f, 1.1f * it.toFloat(), PlotView.NO_REDRAW)
         }
 
-        viewModel.pitchHistory.frequencyPlotRange.observe(this) {
+        //viewModel.pitchHistory.frequencyPlotRange.observe(this) {
+        viewModel.pitchHistory.frequencyPlotRangeAveraged.observe(this) {
 //            Log.v("TestRecordFlow", "TunerFragment.plotRange: ${it[0]} -- ${it[1]}")
             pitchPlot?.yRange(it[0], it[1], 600)
         }
 
-        viewModel.pitchHistory.history.observe(this) {
+        //viewModel.pitchHistory.history.observe(this) {
+        viewModel.pitchHistory.historyAveraged.observe(this) {
             if (it.size > 0) {
                 pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), it.last()), false)
                 pitchPlot?.plot(it)
@@ -240,6 +246,7 @@ class TunerFragment : Fragment() {
         viewModel.overlap = sharedPreferences.getInt("overlap", 25) / 100f
         viewModel.pitchHistoryDuration = percentToPitchHistoryDuration(sharedPreferences.getInt("pitch_history_duration", 50))
         viewModel.pitchHistory.maxNumFaultyValues = sharedPreferences.getInt("pitch_history_num_faulty_values", 3)
+        viewModel.pitchHistory.numMovingAverage = sharedPreferences.getInt("num_moving_average", 5)
         viewModel.useHint = sharedPreferences.getBoolean("use_hint", true)
     }
 }

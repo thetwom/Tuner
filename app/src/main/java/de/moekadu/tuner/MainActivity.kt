@@ -32,7 +32,10 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceManager
 
 class MainActivity : AppCompatActivity() {
-    // TODO: History should compute running average
+    // TODO: Allow setting minimum and maximum allowed note
+    // TODO: For low frequencies, we should maybe better use directly the correlation and do no accuracy increasing
+    // TODO: When collection faulty values for pitch change, we should allow exceptions
+    
     // ... more settings possible?
     private var viewModel: TunerViewModel? = null
 

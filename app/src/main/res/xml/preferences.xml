@@ -19,6 +19,15 @@
         android:summary="440 Hz"
         />
 
+    <SeekBarPreference
+        android:key="num_moving_average"
+        android:title="@string/num_moving_average"
+        app:min="1"
+        android:max="15"
+        app:defaultValue="5"
+        app:seekBarIncrement="1"
+        app:updatesContinuously="true"
+        />
 
     <ListPreference
         android:key="windowing"

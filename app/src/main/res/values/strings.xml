@@ -30,4 +30,5 @@
     <string name="pitch_history_duration">Duration of pitch history</string>
     <string name="pitch_history_num_faulty_values">Number of values to accept new pitch</string>
     <string name="use_hint">Use previous values to improve pitch estimation</string>
+    <string name="num_moving_average">Moving average samples</string>
 </resources>

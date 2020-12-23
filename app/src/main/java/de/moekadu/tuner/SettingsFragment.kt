@@ -73,6 +73,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
       getString(R.string.hertz_str, preference?.text ?: "440")
     }
 
+    val numMovingAverage = findPreference<SeekBarPreference>("num_moving_average") ?: throw RuntimeException("No num_moving_average preference")
+    numMovingAverage.setOnPreferenceChangeListener { preference, newValue ->
+      preference.summary = "${newValue as Int}"
+      true
+    }
+    numMovingAverage.summary = "${numMovingAverage.value}"
+
     val windowingFunction = findPreference<ListPreference?>("windowing")
     windowingFunction?.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
 

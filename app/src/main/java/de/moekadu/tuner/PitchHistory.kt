@@ -19,10 +19,8 @@
 
 package de.moekadu.tuner
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -61,6 +59,8 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
                 _sizeAsLiveData.value = field
                 if (pitchArray.size > field)
                     pitchArray.subList(0, pitchArray.size - field).clear()
+                if (pitchArrayMovingAverage.size > field)
+                    pitchArrayMovingAverage.subList(0, pitchArrayMovingAverage.size - field).clear()
             }
         }
 
@@ -86,6 +86,17 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
 
     /// Here we store our pitch history
     private val pitchArray = ArrayList<Float>(size)
+
+    /// Pitch array storing a moving average value
+    private val pitchArrayMovingAverage = ArrayList<Float>(size)
+
+    /// Number of samples used for a moving average computation
+    var numMovingAverage = 5
+
+    /** We only compute the moving average with values after a pitch change. Here we count
+     * how many samples we can currently use for the average computation.
+     */
+    private var numberOfValuesWhichCanBeUsedForAveraging = 0
 
     /// Number of values which would lead to another detected pitch
     var maxNumFaultyValues = 3
@@ -115,6 +126,13 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
     val history: LiveData<ArrayList<Float> >
         get() = _history
 
+    /// Backing LiveData field for the current frequency of averaged data
+    private val _historyAveraged = MutableLiveData<ArrayList<Float> >()
+
+    /// Here we allow the user to observe history changes of averaged data
+    val historyAveraged: LiveData<ArrayList<Float> >
+        get() = _historyAveraged
+
     /// Defines the frequency limits which can be used for plots
     var plotRangeInToneIndices = 3f
         set(value) {
@@ -130,6 +148,14 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
     val frequencyPlotRange: LiveData<FloatArray>
         get() = _frequencyPlotRange
 
+    /// Backing field for minimum and maximum limit of plot range of averaged data
+    private val frequencyPlotRangeAveragedValues = floatArrayOf(400f, 500f)
+    /// Backing LiveData field for plot range of averaged data
+    private val _frequencyPlotRangeAveraged = MutableLiveData<FloatArray>()
+    /// LiveData field which contains the current frequency limits of averaged values, when plotting the current tones
+    val frequencyPlotRangeAveraged: LiveData<FloatArray>
+        get() = _frequencyPlotRangeAveraged
+
     /// Append a new frequency value to our history.
     /**
      * @note This will also update the currentEstimatedPitch and the history live data.
@@ -141,7 +167,7 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
         var pitchArrayUpdated = false
 
         if (pitchArray.size == 0) {
-            pitchArray.add(value)
+            addValueToPitchArrayAndComputeMovingAverage(value)
             pitchArrayUpdated = true
         }
         else {
@@ -151,9 +177,7 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
             val validFrequencyMax = tuningFrequencies.getNoteFrequency(toneIndex + allowedDeltaNoteToBeValid)
 
             if(value < validFrequencyMax && value >= validFrequencyMin) {
-                if (pitchArray.size >= size)
-                    pitchArray.subList(0, pitchArray.size - size + 1).clear()
-                pitchArray.add(value)
+                addValueToPitchArrayAndComputeMovingAverage(value)
                 pitchArrayUpdated = true
             }
         }
@@ -178,13 +202,9 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
             // these values are not faulty but rather indicate a pitch change. So we take these
             // values now.
             if(maybeFaultyValues.size >= maxNumFaultyValues) {
-                val freeSpace = size - pitchArray.size
-                if (maxNumFaultyValues > freeSpace) {
-                    val numDelete = min(maxNumFaultyValues - freeSpace, pitchArray.size)
-                    pitchArray.subList(0, numDelete).clear()
-                }
-                val numCopy = min(maxNumFaultyValues, size)
-                pitchArray.addAll(maybeFaultyValues.subList(maybeFaultyValues.size - numCopy, maybeFaultyValues.size))
+                numberOfValuesWhichCanBeUsedForAveraging = 0
+                for (v in maybeFaultyValues)
+                    addValueToPitchArrayAndComputeMovingAverage(v)
                 pitchArrayUpdated = true
             }
         }
@@ -193,9 +213,26 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
             require(pitchArray.size > 0)
             maybeFaultyValues.clear()
             _history.value = pitchArray
+            _historyAveraged.value = pitchArrayMovingAverage
             updateCurrentEstimatedToneIndex()
             updatePlotRange()
         }
+    }
+
+    private fun addValueToPitchArrayAndComputeMovingAverage(value: Float) {
+        if (pitchArray.size >= size)
+            pitchArray.subList(0, pitchArray.size - size + 1).clear()
+        if (pitchArrayMovingAverage.size >= size)
+            pitchArrayMovingAverage.subList(0, pitchArrayMovingAverage.size - size + 1).clear()
+
+        pitchArray.add(value)
+        ++numberOfValuesWhichCanBeUsedForAveraging
+
+        var newAverage = 0.0f
+        val numAverage = min(numMovingAverage, min(numberOfValuesWhichCanBeUsedForAveraging, pitchArray.size))
+        for (i in 1 .. numAverage)
+            newAverage += pitchArray[pitchArray.size - i]
+        pitchArrayMovingAverage.add(newAverage / numAverage)
     }
 
     /// Update currentEstimatedToneIndex if the last frequency in the history tells us so.
@@ -215,22 +252,27 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
     }
 
     private fun updatePlotRange() {
-//        Log.v("Tuner", "PitchHistory.updatePlotRange")
-        val pitchMin = pitchArray.minOrNull() ?: return
-        val pitchMax = pitchArray.maxOrNull() ?: return
+        updatePlotRange(frequencyPlotRangeValues, _frequencyPlotRange, pitchArray)
+        updatePlotRange(frequencyPlotRangeAveragedValues, _frequencyPlotRangeAveraged, pitchArrayMovingAverage)
+    }
 
-        val toneIndexMin = tuningFrequencies.getClosestToneIndex(pitchMin)
-        val toneIndexMax = tuningFrequencies.getClosestToneIndex(pitchMax)
+    private fun updatePlotRange(plotRange: FloatArray, plotRangeLiveData: MutableLiveData<FloatArray>,
+                                plotValues: ArrayList<Float>) {
+        val plotMin = plotValues.minOrNull() ?: return
+        val plotMax = plotValues.maxOrNull() ?: return
+
+        val toneIndexMin = tuningFrequencies.getClosestToneIndex(plotMin)
+        val toneIndexMax = tuningFrequencies.getClosestToneIndex(plotMax)
 
         val lowerBound = tuningFrequencies.getNoteFrequency(toneIndexMin - 0.5f * plotRangeInToneIndices)
         val upperBound = tuningFrequencies.getNoteFrequency(toneIndexMax + 0.5f * plotRangeInToneIndices)
-//        Log.v("TestRecordFlow", "PitchHistory, updatePlotRange: lowerBound=$lowerBound, upperBound=$upperBound")
+
         // only update after something changed
-        if (lowerBound != frequencyPlotRangeValues[0] || upperBound != frequencyPlotRangeValues[1]) {
-            frequencyPlotRangeValues[0] = lowerBound
-            frequencyPlotRangeValues[1] = upperBound
-            _frequencyPlotRange.value = frequencyPlotRangeValues
+        if (lowerBound != plotRange[0] || upperBound != plotRange[1]) {
+            plotRange[0] = lowerBound
+            plotRange[1] = upperBound
+            plotRangeLiveData.value = plotRange
         }
-//        Log.v("TestRecordFlow", "PitchHistory.updatePlotRange: lowerBound=$lowerBound, upperBound=$upperBound")
     }
+
 }
