@@ -104,6 +104,12 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
     /// Last appended values which would lead to another detected pitch
     private val maybeFaultyValues = ArrayList<Float>(maxNumFaultyValues)
 
+    /// We allow one exception inside the faulty values before throwing them away completly
+    private var faultyValueException = 0f
+
+    /// Defines if the faultyValueException is set.
+    private var faultyValueExceptionSet = false
+
     /// We only allow values which don't differ from the previous value too much,
     /** This is the maximum allowed difference in dimensions of note indices. */
     private var allowedDeltaNoteToBeValid = 0.5f
@@ -172,11 +178,7 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
         }
         else {
             val lastValue = pitchArray.last()
-            val toneIndex = tuningFrequencies.getToneIndex(lastValue)
-            val validFrequencyMin = tuningFrequencies.getNoteFrequency(toneIndex - allowedDeltaNoteToBeValid)
-            val validFrequencyMax = tuningFrequencies.getNoteFrequency(toneIndex + allowedDeltaNoteToBeValid)
-
-            if(value < validFrequencyMax && value >= validFrequencyMin) {
+            if (checkIfValueIsWithinAllowedRange(value, lastValue)) {
                 addValueToPitchArrayAndComputeMovingAverage(value)
                 pitchArrayUpdated = true
             }
@@ -188,14 +190,27 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
             }
             else {
                 val lastFaultyValue = maybeFaultyValues.last()
-                val toneIndex = tuningFrequencies.getToneIndex(lastFaultyValue)
-                val validFrequencyMin = tuningFrequencies.getNoteFrequency(toneIndex - allowedDeltaNoteToBeValid)
-                val validFrequencyMax = tuningFrequencies.getNoteFrequency(toneIndex + allowedDeltaNoteToBeValid)
 
-                if(value >= validFrequencyMax || value < validFrequencyMin)
-                    maybeFaultyValues.clear()
+                if (checkIfValueIsWithinAllowedRange(value, lastFaultyValue)) {
+                    maybeFaultyValues.add(value)
+                    faultyValueExceptionSet = false
+                }
+                else {
+                    // we do not directly delete the faulty values, but allow one exception
+                    if (!faultyValueExceptionSet) {
+                        faultyValueException = value
+                        faultyValueExceptionSet = true
+                    }
+                    else {
+                        maybeFaultyValues.clear()
 
-                maybeFaultyValues.add(value)
+                        // is our exception matches our new value, we also keep it,
+                        if (checkIfValueIsWithinAllowedRange(value, faultyValueException))
+                            maybeFaultyValues.add(faultyValueException)
+                        maybeFaultyValues.add(value)
+                        faultyValueExceptionSet = false
+                    }
+                }
             }
 
             // we have completely filled our maybeFaultyValues-array. We are convinced now, that
@@ -212,6 +227,7 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
         if (pitchArrayUpdated) {
             require(pitchArray.size > 0)
             maybeFaultyValues.clear()
+            faultyValueExceptionSet = false
             _history.value = pitchArray
             _historyAveraged.value = pitchArrayMovingAverage
             updateCurrentEstimatedToneIndex()
@@ -275,4 +291,10 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
         }
     }
 
+    private fun checkIfValueIsWithinAllowedRange(value: Float, previousValue: Float) : Boolean {
+        val toneIndex = tuningFrequencies.getToneIndex(previousValue)
+        val validFrequencyMin = tuningFrequencies.getNoteFrequency(toneIndex - allowedDeltaNoteToBeValid)
+        val validFrequencyMax = tuningFrequencies.getNoteFrequency(toneIndex + allowedDeltaNoteToBeValid)
+        return !(value >= validFrequencyMax || value < validFrequencyMin)
+    }
 }
