@@ -161,27 +161,13 @@ fun calculateMostProbableSpectrumPitch(
 fun calculateMostProbableCorrelationPitch(
     orderedCorrelationPeakIndices: ArrayList<Int>?, correlation: FloatArray, frequency: (Int) -> Float,
     hint: Float?, harmonicTolerance: Float = 0.1f, minimumPeakRatio: Float = 0.8f,
-    hintTolerance: Float = 0.025f, hintAdditionalWeight: Float = 0.3f): MostProbablePitchFromCorrelation {
+    hintTolerance: Float = 0.025f, hintAdditionalWeight: Float = 0.1f): MostProbablePitchFromCorrelation {
     var weight = 0.0f
     var mostProbablePitchFrequency = -1.0f
     var correlationIndex: Int? = null
 
     if (orderedCorrelationPeakIndices != null && orderedCorrelationPeakIndices.isNotEmpty()) {
         val peak0 = correlation[orderedCorrelationPeakIndices[0]]
-        var hintedWeight = 0f
-        // check if something matches our hint
-        if (hint != null) {
-            for (index in orderedCorrelationPeakIndices) {
-                val freq = frequency(index)
-                val peakRatio = correlation[index] / peak0
-                if (peakRatio > minimumPeakRatio && freq > 0.0f && abs(1.0f - hint / freq) <= hintTolerance) {
-                    correlationIndex = index
-                    mostProbablePitchFrequency = freq
-                    hintedWeight = peakRatio + hintAdditionalWeight
-                    weight = hintedWeight
-                }
-            }
-        }
 
         // find most probable candidate
         val freq0 = frequency(orderedCorrelationPeakIndices[0])
@@ -194,11 +180,17 @@ fun calculateMostProbableCorrelationPitch(
             if (freq >= freq0
                 && (freqRatio - freqRatioRounded).absoluteValue / freqRatioRounded < harmonicTolerance
                 && peakRatio >= minimumPeakRatio
-                && peakRatio > hintedWeight
                 && freq > mostProbablePitchFrequency) {
                 weight = peakRatio
                 mostProbablePitchFrequency = freq
                 correlationIndex = index
+
+                  // if we match the hint, don't go on looking ...
+                if (hint != null && freq > 0.0f && abs(1.0f - hint / freq) <= hintTolerance) {
+                    weight += hintAdditionalWeight
+                    break
+                }
+
             }
         }
     }
