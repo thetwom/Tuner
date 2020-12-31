@@ -33,7 +33,6 @@ import androidx.preference.PreferenceManager
 
 class MainActivity : AppCompatActivity() {
     // TODO: Allow setting minimum and maximum allowed note
-    // TODO: For low frequencies, we should maybe better use directly the correlation and do no accuracy increasing
     // ... more settings possible?
 
     override fun onCreate(savedInstanceState: Bundle?) {

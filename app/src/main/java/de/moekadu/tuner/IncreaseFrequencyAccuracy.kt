@@ -31,7 +31,7 @@ import kotlin.math.*
  * @param spectrumShift Time in seconds telling how far the time series of the second spectrum comes after the first spectrum
  * @return Corrected frequency for maximum SPL.
  */
-fun increaseFrequencyAccuracy(spectrum1 : FloatArray, spectrum2 : FloatArray, frequencyIndex : Int, df : Float, spectrumShift : Float) : Float {
+fun increaseFrequencyAccuracy(spectrum1: FloatArray, spectrum2: FloatArray, frequencyIndex: Int, df: Float, spectrumShift: Float) : Float {
   require(spectrum1.size == spectrum2.size) {"The two spectra must be of equal size."}
 
   val frequency = frequencyIndex * df
@@ -41,4 +41,29 @@ fun increaseFrequencyAccuracy(spectrum1 : FloatArray, spectrum2 : FloatArray, fr
     phase2 - phase1 - 2.0f * PI.toFloat() * frequency * spectrumShift
   val phaseErr = phaseErrRaw - 2.0f * PI.toFloat() * round(phaseErrRaw / (2.0f * PI.toFloat()))
   return spectrumShift * frequency / (spectrumShift - phaseErr / (2.0f * PI.toFloat() * frequency))
+}
+
+/// Increase time shift accuracy by fitting a second order polynomial over three points.
+/**
+ * @param correlation Array with autocorrelation values.
+ * @param maximumIndex Index of a local maximum within the correlation-array
+ * @param dt Time shift between two neighboring indices.
+ * @return Time shift obtained by finding the maximum of the second order polynomial going through
+ *   the point at the maximumIndex and the left and right neighbors.
+ */
+fun increaseTimeShiftAccuracy(correlation: FloatArray, maximumIndex: Int, dt : Float): Float {
+  require(maximumIndex > 0) // zero shift doesn't make sense for obtaining a frequency
+  if (maximumIndex >= correlation.size - 1)
+    return maximumIndex * dt
+
+  val t0 = (maximumIndex - 1) * dt
+  val t1 = maximumIndex * dt
+  val t2 = (maximumIndex + 1) * dt
+  val c0 = correlation[maximumIndex - 1]
+  val c1 = correlation[maximumIndex]
+  val c2 = correlation[maximumIndex + 1]
+  require(c0 <= c1 && c2 <= c1)
+
+  return (0.5f * ((t1*t1 - t0*t0) * c2 + (t0*t0 - t2*t2) * c1 + (t2*t2 - t1*t1) * c0)
+          / ((t1 - t0) * c2 + (t0 - t2) * c1 + (t2 - t1) * c0))
 }

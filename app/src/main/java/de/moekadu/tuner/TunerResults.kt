@@ -58,5 +58,5 @@ class TunerResults(val size: Int, val sampleRate: Int, val framePosition: Int) {
     var specMaximaIndices: ArrayList<Int>? = null
 
     /// The final pitch frequency.
-    var pitchFrequency = -1f
+    var pitchFrequency: Float? = null
 }

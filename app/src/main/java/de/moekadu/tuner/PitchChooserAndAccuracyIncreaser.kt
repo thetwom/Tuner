@@ -25,7 +25,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.math.*
 
-data class PeakRating(val frequency: Float, val rating: Float)
+data class MostProbablePitchFromSpectrum(val ampSqrSpecIndex: Int?, val rating: Float)
+data class MostProbablePitchFromCorrelation(val correlationIndex: Int?, val rating: Float)
 
 /** Compute most probable pitch frequency for some given frequency peaks of a spectrum.
  *
@@ -72,10 +73,10 @@ data class PeakRating(val frequency: Float, val rating: Float)
 fun calculateMostProbableSpectrumPitch(
     orderedSpectrumPeakIndices: ArrayList<Int>?, ampSqrSpec: FloatArray, frequency: (Int) -> Float,
     hint: Float?, harmonicTolerance: Float = 0.05f, maxHarmonic: Int = 3, harmonicLimit: Int = 5,
-    hintTolerance: Float = 0.025f, hintAdditionalWeight: Float = 0.1f): PeakRating {
+    hintTolerance: Float = 0.025f, hintAdditionalWeight: Float = 0.2f): MostProbablePitchFromSpectrum {
 
     var weightMax = 0.0f
-    var mostProbablePitchFrequency = hint ?: -1f // here we should put in the hint frequency
+    var mostProbablePitchFrequency = hint
 
     if (orderedSpectrumPeakIndices != null && orderedSpectrumPeakIndices.isNotEmpty()) {
 
@@ -107,7 +108,16 @@ fun calculateMostProbableSpectrumPitch(
             }
         }
     }
-    return PeakRating(mostProbablePitchFrequency, weightMax)
+
+    mostProbablePitchFrequency?.let {f ->
+        val df = frequency(1)
+        val fI = (f / df).roundToInt()
+        val ampSqrSpecIndex = findLocalMaximum(ampSqrSpec, fI, fI-1, fI+1) ?: fI
+
+        return MostProbablePitchFromSpectrum(ampSqrSpecIndex, weightMax)
+    }
+
+    return MostProbablePitchFromSpectrum(null, weightMax)
 }
 
 /** Compute most probable pitch frequency based on the autocorrelation peaks.
@@ -141,7 +151,7 @@ fun calculateMostProbableSpectrumPitch(
  * @param hintTolerance Each pitch candidate we compare against the hint. If it matches within the
  *   given tolerance, we increase to probability of the candidate. The tolerance is a relative
  *   tolerance: if abs(1 - hint / candidate) < hintTolerance we increase the probability.
- *   The value should better depends on the half tone ratio. For equal temperament it is 1.059, thus
+ *   The value should better depend on the half tone ratio. For equal temperament it is 1.059, thus
  *   a value of about 0.025 seems reasonable (1.059 - 1.0 = 0.059 so 0.025 is well below)
  * @param hintAdditionalWeight If the hint is within the hintTolerance, we add this to probability.
  *   Note, that a probability of 1.0 is the maximum probability, so this value should be well below
@@ -150,13 +160,30 @@ fun calculateMostProbableSpectrumPitch(
  */
 fun calculateMostProbableCorrelationPitch(
     orderedCorrelationPeakIndices: ArrayList<Int>?, correlation: FloatArray, frequency: (Int) -> Float,
-    hint: Float?, harmonicTolerance: Float = 0.05f, minimumPeakRatio: Float=0.8f,
-    hintTolerance: Float = 0.025f, hintAdditionalWeight: Float = 0.1f): PeakRating {
+    hint: Float?, harmonicTolerance: Float = 0.1f, minimumPeakRatio: Float = 0.8f,
+    hintTolerance: Float = 0.025f, hintAdditionalWeight: Float = 0.3f): MostProbablePitchFromCorrelation {
     var weight = 0.0f
     var mostProbablePitchFrequency = -1.0f
+    var correlationIndex: Int? = null
 
     if (orderedCorrelationPeakIndices != null && orderedCorrelationPeakIndices.isNotEmpty()) {
         val peak0 = correlation[orderedCorrelationPeakIndices[0]]
+        var hintedWeight = 0f
+        // check if something matches our hint
+        if (hint != null) {
+            for (index in orderedCorrelationPeakIndices) {
+                val freq = frequency(index)
+                val peakRatio = correlation[index] / peak0
+                if (peakRatio > minimumPeakRatio && freq > 0.0f && abs(1.0f - hint / freq) <= hintTolerance) {
+                    correlationIndex = index
+                    mostProbablePitchFrequency = freq
+                    hintedWeight = peakRatio + hintAdditionalWeight
+                    weight = hintedWeight
+                }
+            }
+        }
+
+        // find most probable candidate
         val freq0 = frequency(orderedCorrelationPeakIndices[0])
 
         for (index in orderedCorrelationPeakIndices) {
@@ -165,89 +192,186 @@ fun calculateMostProbableCorrelationPitch(
             val freqRatioRounded = freqRatio.roundToInt()
             val peakRatio = correlation[index] / peak0
             if (freq >= freq0
-                && (freqRatio - freqRatioRounded).absoluteValue < harmonicTolerance
+                && (freqRatio - freqRatioRounded).absoluteValue / freqRatioRounded < harmonicTolerance
                 && peakRatio >= minimumPeakRatio
+                && peakRatio > hintedWeight
                 && freq > mostProbablePitchFrequency) {
                 weight = peakRatio
                 mostProbablePitchFrequency = freq
-
-                // if we match the hint, don't go on looking ...
-                if (hint != null && freq > 0.0f && abs(1.0f - hint / freq) <= hintTolerance) {
-                    weight += hintAdditionalWeight
-                    break
-                }
+                correlationIndex = index
             }
         }
     }
 
-    return PeakRating(mostProbablePitchFrequency, weight)
+    return MostProbablePitchFromCorrelation(correlationIndex, weight)
 }
 
-/// Choose a resulting pitch frequency based on spectrum und correlation peaks.
-/**
- * @param tunerResults Latest precomputed results.
- * @param hint Hint for a suitable pitch based on the history. If the current results are
- *   uncertain, this hin can help to choose an appropriate value.
- * @return Highest rated frequency.
- */
-fun chooseResultingFrequency(tunerResults: TunerResults, hint: Float?): Float {
+fun increaseAccuracyForSpectrumBasedFrequency(
+    ampSqrSpecIndex: Int, tunerResults: TunerResults, previousTunerResults: TunerResults?): Float {
+    val frequency = tunerResults.frequencyFromSpectrum(ampSqrSpecIndex)
 
-    val mostProbableValueFromSpec = calculateMostProbableSpectrumPitch(
-        tunerResults.specMaximaIndices,
-        tunerResults.ampSqrSpec,
-        tunerResults.frequencyFromSpectrum,
-        hint)
-    val mostProbableValueFromCorrelation = calculateMostProbableCorrelationPitch(
-        tunerResults.correlationMaximaIndices,
-        tunerResults.correlation,
-        tunerResults.frequencyFromCorrelation,
-        hint)
-//    Log.v("TestRecordFlow","chooseResultingFrequency: mostProbableValueFromSpec=$mostProbableValueFromSpec, mostProbableValueFromCorrelation=$mostProbableValueFromCorrelation")
-    return if (mostProbableValueFromSpec.rating > mostProbableValueFromCorrelation.rating) {
-        //Log.v("TestRecordFlow", "Postprocessing: chooseResultingFrequency: using spectrum value")
-        mostProbableValueFromSpec.frequency
+    var frequencyHighAccuracy = if (previousTunerResults != null) {
+        val dt = tunerResults.dt
+        val spec1 = previousTunerResults.spectrum
+        val spec2 = tunerResults.spectrum
+        val df = tunerResults.frequencyFromSpectrum(1)
+
+        val frequencyHighAccuracyFromSpectrum = increaseFrequencyAccuracy(
+            spec1, spec2, ampSqrSpecIndex, df,
+            dt * (tunerResults.framePosition - previousTunerResults.framePosition)
+        )
+        if (frequencyHighAccuracyFromSpectrum > frequency - df && frequencyHighAccuracyFromSpectrum < frequency + df)
+            frequencyHighAccuracyFromSpectrum
+        else
+            null
     }
     else {
-        //Log.v("TestRecordFlow", "Postprocessing: chooseResultingFrequency: using correlation value")
-        mostProbableValueFromCorrelation.frequency
+        null
+    }
+
+    // if we were not able to increase the accuracy based on the spectrum, try increasing it
+    // using the correlation results
+    if (frequencyHighAccuracy == null) {
+        // find a local maximum in the correlation within tight bounds
+        val frequencyBoundLower = tunerResults.frequencyFromSpectrum(ampSqrSpecIndex - 1)
+        val frequencyBoundUpper = tunerResults.frequencyFromSpectrum(ampSqrSpecIndex + 1)
+        val correlationIndexInitial = (1.0f / frequency / tunerResults.dt).roundToInt()
+        val correlationIndexLower = ceil(1.0f / frequencyBoundUpper / tunerResults.dt).toInt()
+        val correlationIndexUpper = floor(1.0f / frequencyBoundLower / tunerResults.dt).toInt()
+        val correlationMaximum = findLocalMaximum(tunerResults.correlation, correlationIndexInitial,
+            correlationIndexLower, correlationIndexUpper)
+
+        // if we have a local maximum, increase the accuracy by polynomial fitting
+        if (correlationMaximum != null) {
+            val timeShiftHighAccuracy = increaseTimeShiftAccuracy(
+                tunerResults.correlation, correlationMaximum, tunerResults.dt)
+            val frequencyHighAccuracyFromCorrelation = 1.0f / timeShiftHighAccuracy
+            if (frequencyHighAccuracyFromCorrelation > frequencyBoundLower
+                && frequencyHighAccuracyFromCorrelation < frequencyBoundUpper)
+                    frequencyHighAccuracy = frequencyHighAccuracyFromCorrelation
+        }
+    }
+    return frequencyHighAccuracy ?: frequency
+}
+
+fun increaseAccuracyForCorrelationBasedFrequency(
+    correlationIndex: Int, tunerResults: TunerResults, previousTunerResults: TunerResults?): Float {
+
+    val dt = tunerResults.dt
+
+    val timeShiftHighAccuracy = increaseTimeShiftAccuracy(
+        tunerResults.correlation, correlationIndex, dt
+    )
+    var frequencyHighAccuracy = 1.0f / timeShiftHighAccuracy
+
+    // use spectra to increase accuracy if available and if it is within tight ranges.
+    if (previousTunerResults != null) {
+        val dfSpec = tunerResults.frequencyFromSpectrum(1)
+        val frequencyIndexSpecInitial = (frequencyHighAccuracy / dfSpec).roundToInt()
+
+        // compute frequency range within which there has to be a local maximum
+        val timeShiftUpperBound = timeShiftHighAccuracy + dt
+        val frequencyLowerBound = 1.0 / timeShiftUpperBound
+        val frequencyIndexSpecLowerBound = ceil(frequencyLowerBound / dfSpec).toInt()
+
+        val timeShiftLowerBound = timeShiftHighAccuracy - dt
+        val frequencyUpperBound = 1.0 / timeShiftLowerBound
+        val frequencyIndexSpecUpperBound = floor(frequencyUpperBound / dfSpec).toInt()
+
+        val frequencyIndexSpec = findLocalMaximum(
+            tunerResults.ampSqrSpec, frequencyIndexSpecInitial,
+            min(frequencyIndexSpecInitial-1, frequencyIndexSpecLowerBound),
+            max(frequencyIndexSpecInitial+1, frequencyIndexSpecUpperBound)
+        )
+
+        if (frequencyIndexSpec != null) {
+            val spec1 = previousTunerResults.spectrum
+            val spec2 = tunerResults.spectrum
+
+            val frequencyHighAccuracySpec = increaseFrequencyAccuracy(
+                spec1, spec2, frequencyIndexSpec, dfSpec,
+                dt * (tunerResults.framePosition - previousTunerResults.framePosition)
+            )
+
+            if (frequencyHighAccuracySpec > frequencyLowerBound
+                && frequencyHighAccuracySpec < frequencyUpperBound
+                && frequencyHighAccuracySpec > frequencyIndexSpec * (dfSpec - 1)
+                && frequencyHighAccuracySpec < frequencyIndexSpec * (dfSpec + 1)
+            )
+                frequencyHighAccuracy = frequencyHighAccuracySpec
+        }
+    }
+    return frequencyHighAccuracy
+}
+
+/// Check if a given index is a local maximum in a values array.
+/**
+ * A local maximum is defined here that the index must have a left and right neighbor, and that
+ * the value of the neighbors are smaller the value at the index.
+ *
+ * @param index Index which should be checked for local maxima
+ * @param values Value array where we check for the local maximum
+ * @return True if the left and right neighbor are smaller than the value at the given index, else
+ *   false.
+ */
+fun isLocalMaximum(index: Int, values: FloatArray): Boolean {
+    return when {
+        index <= 0 -> false
+        index >= values.size - 1 -> false
+        else -> values[index] > values[index - 1]  && values[index] > values[index + 1]
     }
 }
 
 /// Find the local maximum in an array, starting the search from an initial index.
 /**
- * @param values Array where we search for values.
- * @param initialIndex Index in values-array where we start the search
- * @param searchRange Number of neighboring elements which are considered in the search.
- * @return Local maximum index in values.
+ * @param values Array where we search for the local maximum.
+ * @param initialIndex Index in values-array where we start the search.
+ * @param lowerIndex Lowest index which will be included for the serach
+ * @param upperIndex Upper index which will be included for the serach
+ * @return Local maximum index (lowerIndex <= return value <= upperIndex)
+ *   or null if no local maximum present.
  */
-fun findLocalMaximum(values: FloatArray, initialIndex: Int, searchRange: Int): Int {
+fun findLocalMaximum(values: FloatArray, initialIndex: Int, lowerIndex: Int, upperIndex: Int): Int? {
+    if (isLocalMaximum(initialIndex, values))
+        return initialIndex
+
     // search local maximum at i > initialIndex
-    var maxRight = values[initialIndex]
-    var peakIndexRight = initialIndex
-    for (i in initialIndex + 1 until min(values.size, initialIndex + searchRange + 1)) {
-        if (values[i] > maxRight) {
-            maxRight = values[i]
+    var peakIndexRight: Int? = null
+    for (i in initialIndex + 1 .. min(values.size - 2, upperIndex)) {
+        if (isLocalMaximum(i, values))
+        {
             peakIndexRight = i
-        }
-        else if (values[i] > maxRight) {
             break
         }
     }
 
     // search local maximum at i < initialIndex
-    var maxLeft = values[initialIndex]
-    var peakIndexLeft = initialIndex
-    for (i in initialIndex - 1 downTo max(0, initialIndex - searchRange)) {
-        if (values[i] > maxLeft) {
-            maxLeft = values[i]
+    var peakIndexLeft: Int? = null
+    for (i in initialIndex - 1 downTo max(1, lowerIndex)) {
+        if (isLocalMaximum(i, values))
+        {
             peakIndexLeft = i
-        }
-        else if (values[i] > maxLeft) {
             break
         }
     }
 
-    return if (maxRight > maxLeft) peakIndexRight else peakIndexLeft
+    if (peakIndexLeft != null && peakIndexRight != null) {
+        // return peak index closest to the initial index, else return the index at the higher peak
+        return when {
+            initialIndex - peakIndexLeft < peakIndexRight - initialIndex -> peakIndexLeft
+            initialIndex - peakIndexLeft > peakIndexRight - initialIndex -> peakIndexRight
+            values[peakIndexLeft] > values[peakIndexRight] -> peakIndexLeft
+            else -> peakIndexRight
+        }
+    }
+    else if (peakIndexLeft != null) {
+        return peakIndexLeft
+    }
+    else if (peakIndexRight != null) {
+        return peakIndexRight
+    }
+
+    return null
 }
 
 /// Class which stores chooses a pitch based on precomputed spectra, correlations and maxima
@@ -264,44 +388,42 @@ class PitchChooserAndAccuracyIncreaser {
      *   uncertain, this hin can help to choose an appropriate value.
      * @return Current pitch frequency.
      */
-    suspend fun run(nextTunerResults: TunerResults, hint: Float?): Float {
+    suspend fun run(nextTunerResults: TunerResults, hint: Float?): Float? {
 
-        val pitchFrequency: Float
+        var pitchFrequency: Float? = null
 
-        withContext(Dispatchers.Main) {
+        withContext(Dispatchers.Default) {
 
-            val lastTunerResults = tunerResultsMutex.withLock { _lastTunerResults }
+            var lastTunerResults: TunerResults? = tunerResultsMutex.withLock { _lastTunerResults }
+            // set last tuner results to null if it is not compatible to the current results
+            if (lastTunerResults != null && (
+                        nextTunerResults.framePosition - lastTunerResults.framePosition <= 0
+                                || lastTunerResults.dt != nextTunerResults.dt
+                                || lastTunerResults.sampleRate != nextTunerResults.sampleRate)) {
+                lastTunerResults = null
+            }
 
-            // this is the frequency which we choose base on the latest results, however, the frequency
-            // resolution is not high enough for our needs.
-            val approximateFrequency = chooseResultingFrequency(nextTunerResults, hint)
-//            Log.v("TestRecordFlow", "PitchChooserAndAccuracyIncreaser.run: approximateFrequency=$approximateFrequency")
-            pitchFrequency =
-                if (approximateFrequency < 0) {
-                    0f // no frequency available
-                }
-                else if (lastTunerResults != null
-                    && nextTunerResults.framePosition - lastTunerResults.framePosition > 0
-                    && lastTunerResults.dt == nextTunerResults.dt
-                    && lastTunerResults.sampleRate == nextTunerResults.sampleRate
-                ) {
+            val mostProbableValueFromSpec = calculateMostProbableSpectrumPitch(
+                nextTunerResults.specMaximaIndices,
+                nextTunerResults.ampSqrSpec,
+                nextTunerResults.frequencyFromSpectrum,
+                hint)
+            val mostProbableValueFromCorrelation = calculateMostProbableCorrelationPitch(
+                nextTunerResults.correlationMaximaIndices,
+                nextTunerResults.correlation,
+                nextTunerResults.frequencyFromCorrelation,
+                hint)
 
-                    val dt = nextTunerResults.dt
-                    val spec1 = lastTunerResults.spectrum
-                    val spec2 = nextTunerResults.spectrum
-                    val df = nextTunerResults.frequencyFromSpectrum(1)
-
-                    val freqIndex = (approximateFrequency / df).roundToInt()
-                    val freqIndexLocalMax = findLocalMaximum(nextTunerResults.ampSqrSpec,
-                        freqIndex,2)
-
-                    increaseFrequencyAccuracy(
-                        spec1, spec2, freqIndexLocalMax, df,
-                        dt * (nextTunerResults.framePosition - lastTunerResults.framePosition)
-                    )
-                } else {
-                    approximateFrequency
-                }
+            if (mostProbableValueFromSpec.ampSqrSpecIndex != null
+                && mostProbableValueFromSpec.rating > mostProbableValueFromCorrelation.rating) {
+                pitchFrequency = increaseAccuracyForSpectrumBasedFrequency(mostProbableValueFromSpec.ampSqrSpecIndex,
+                    nextTunerResults, lastTunerResults)
+            }
+            else if (mostProbableValueFromCorrelation.correlationIndex != null
+                && mostProbableValueFromCorrelation.rating >= mostProbableValueFromSpec.rating) {
+                pitchFrequency = increaseAccuracyForCorrelationBasedFrequency(mostProbableValueFromCorrelation.correlationIndex,
+                    nextTunerResults, lastTunerResults)
+            }
 
             tunerResultsMutex.withLock {
                 _lastTunerResults = nextTunerResults

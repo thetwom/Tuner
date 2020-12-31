@@ -114,10 +114,18 @@ class TunerFragment : Fragment() {
         }
 
         viewModel.tunerResults.observe(this) { results ->
-            val freqMax = floatArrayOf(results.pitchFrequency)
-            val shiftMax = floatArrayOf(1.0f / results.pitchFrequency)
-            correlationPlot?.setXMarks(shiftMax) { i -> getString(R.string.hertz, 1.0 / i) }
-            spectrumPlot?.setXMarks(freqMax) { i -> getString(R.string.hertz, i) }
+            if (results.pitchFrequency == null) {
+                correlationPlot?.setXMarks(null)
+                spectrumPlot?.setXMarks(null)
+            }
+            else {
+                results.pitchFrequency?.let { pitchFrequency ->
+                    val freqMax = floatArrayOf(pitchFrequency)
+                    val shiftMax = floatArrayOf(1.0f / pitchFrequency)
+                    correlationPlot?.setXMarks(shiftMax) { i -> getString(R.string.hertz, 1.0 / i) }
+                    spectrumPlot?.setXMarks(freqMax) { i -> getString(R.string.hertz, i) }
+                }
+            }
 
             correlationPlot?.xRange(
                 0f,

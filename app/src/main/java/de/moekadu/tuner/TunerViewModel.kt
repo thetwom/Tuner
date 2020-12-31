@@ -24,10 +24,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.sin
 
 class TunerViewModel : ViewModel() {
@@ -116,11 +118,17 @@ class TunerViewModel : ViewModel() {
                 }
                 .buffer()
                 .transform {
-                    it.correlationMaximaIndices = determineCorrelationMaxima(it.correlation, 25f, 5000f, it.dt)
+                    withContext(Dispatchers.Default) {
+                        it.correlationMaximaIndices =
+                            determineCorrelationMaxima(it.correlation, 25f, 5000f, it.dt)
+                    }
                     emit(it)
                 }
                 .transform {
-                    it.specMaximaIndices = determineSpectrumMaxima(it.ampSqrSpec, 25f, 5000f, it.dt, 10f)
+                    withContext(Dispatchers.Default) {
+                        it.specMaximaIndices =
+                            determineSpectrumMaxima(it.ampSqrSpec, 25f, 5000f, it.dt, 10f)
+                    }
                     emit(it)
                 }
                 .buffer()
@@ -130,9 +138,11 @@ class TunerViewModel : ViewModel() {
                 }
                 .buffer()
                 .collect {
-                    _tunerResults.value = it
-                    if (it.pitchFrequency > 0.0f)
-                        pitchHistory.appendValue(it.pitchFrequency)
+                    it.pitchFrequency?.let {pitchFrequency ->
+                        _tunerResults.value = it
+                        if (pitchFrequency > 0.0f)
+                            pitchHistory.appendValue(pitchFrequency)
+                    }
                 }
         }
     }
