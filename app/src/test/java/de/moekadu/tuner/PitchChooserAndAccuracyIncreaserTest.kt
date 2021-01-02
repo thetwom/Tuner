@@ -53,7 +53,7 @@ class PitchChooserAndAccuracyIncreaserTest {
         val shift = result2.dt * (result2.framePosition - result1.framePosition)
         val frequencyHighAccuracy = increaseFrequencyAccuracy(result1.spectrum, result2.spectrum, maxIndex, df, shift)
         //assertEquals(frequency, result2.frequencyFromSpectrum(maxIndex), 0.001f)
-        assertEquals(frequency, frequencyHighAccuracy, 0.1f)
+        assertEquals(frequency, frequencyHighAccuracy, 0.05f)
         assertTrue(abs(frequency - frequencyHighAccuracy) < abs(frequency - result2.frequencyFromSpectrum(maxIndex)))
     }
 

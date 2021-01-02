@@ -23,6 +23,15 @@ import kotlin.math.*
 
 /// Increase the frequency accuracy of maximum SPL if two spectra captured one after another are given.
 /**
+ * This ensures that the spectrumShift fits to the number of waves + phase:
+ *   spectrumShift = periodicDuration * (numWaves + phaseDifference / (2 * pi))
+ *                 = (numWaves + phaseDifference / (2 * pi)) / (high-accuracy frequency)
+ * If we assumes that the phaseDifference is correct, we can compute the high accuracy frequency
+ * by reformulating this equation:
+ *    high accuracy frequency = (numWaves + phaseDifference / (2*pi))
+  * and the number of waves is also computed with the above formula, but with the low accuracy frequency:
+ *    numWaves = round(spectrumShift * frequency - phaseDifference / (2 * pi))
+ *
  * @param spectrum1 First spectrum, computed from a time series.
  * @param spectrum2 Second spectrum, computed from the same time series as spectrum1 but at a later point in time
  *   as spectrum1. Must have the same size as spectrum1.
@@ -37,10 +46,17 @@ fun increaseFrequencyAccuracy(spectrum1: FloatArray, spectrum2: FloatArray, freq
   val frequency = frequencyIndex * df
   val phase1 = atan2(spectrum1[2 * frequencyIndex + 1], spectrum1[2 * frequencyIndex])
   val phase2 = atan2(spectrum2[2 * frequencyIndex + 1], spectrum2[2 * frequencyIndex])
-  val phaseErrRaw =
-    phase2 - phase1 - 2.0f * PI.toFloat() * frequency * spectrumShift
-  val phaseErr = phaseErrRaw - 2.0f * PI.toFloat() * round(phaseErrRaw / (2.0f * PI.toFloat()))
-  return spectrumShift * frequency / (spectrumShift - phaseErr / (2.0f * PI.toFloat() * frequency))
+  val phaseDiff = when {
+    phase2 - phase1 > PI -> phase2 - phase1 - 2f * PI.toFloat()
+    phase2 - phase1 < -PI -> phase2 - phase1 + 2f * PI.toFloat()
+    else -> phase2 - phase1
+  }
+  val numWaves = (spectrumShift * frequency - phaseDiff / (2f * PI.toFloat())).roundToInt()
+  return (numWaves + phaseDiff / (2f * PI.toFloat())) / spectrumShift
+//  val phaseErrRaw =
+//    phase2 - phase1 - 2.0f * PI.toFloat() * frequency * spectrumShift
+//  val phaseErr = phaseErrRaw - 2.0f * PI.toFloat() * round(phaseErrRaw / (2.0f * PI.toFloat()))
+//  return spectrumShift * frequency / (spectrumShift - phaseErr / (2.0f * PI.toFloat() * frequency))
 }
 
 /// Increase time shift accuracy by fitting a second order polynomial over three points.

@@ -34,14 +34,14 @@
         app:title="@string/windowing_function"
         android:entries="@array/windowingFunctionNames"
         android:entryValues="@array/windowingFunctionList"
-        android:defaultValue="no_window"
-        android:summary="@string/no_window"
+        android:defaultValue="window_hamming"
+        android:summary="@string/window_hamming"
         />
 
     <SeekBarPreference
         android:key="window_size"
         android:title="@string/window_size"
-        app:defaultValue="5"
+        app:defaultValue="6"
         app:min="0"
         android:max="8"
         app:seekBarIncrement="1"
@@ -50,7 +50,7 @@
     <SeekBarPreference
         android:key="overlap"
         app:title="@string/overlap"
-        app:defaultValue="25"
+        app:defaultValue="75"
         app:min="0"
         android:max="80"
         app:seekBarIncrement="1"
@@ -59,7 +59,7 @@
     <SeekBarPreference
         android:key="pitch_history_duration"
         app:title="@string/pitch_history_duration"
-        app:defaultValue="50"
+        app:defaultValue="30"
         app:min="0"
         android:max="100"
         app:seekBarIncrement="1"
@@ -69,9 +69,9 @@
     <SeekBarPreference
         android:key="pitch_history_num_faulty_values"
         app:title="@string/pitch_history_num_faulty_values"
-        app:defaultValue="3"
+        app:defaultValue="7"
         app:min="1"
-        android:max="10"
+        android:max="12"
         app:seekBarIncrement="1"
         app:updatesContinuously="true"
         />
@@ -82,4 +82,13 @@
         app:defaultValue="true"
         />
 
+      <Preference
+        app:key="setdefault"
+        app:title="@string/reset_all_settings"
+        />
+
+    <Preference
+        app:key="about"
+        app:title="@string/about"
+        />
 </PreferenceScreen>

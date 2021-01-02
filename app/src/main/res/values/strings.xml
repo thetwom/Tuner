@@ -31,4 +31,10 @@
     <string name="pitch_history_num_faulty_values">Number of values to accept new pitch</string>
     <string name="use_hint">Use previous values to improve pitch estimation</string>
     <string name="num_moving_average">Moving average samples</string>
+    <string name="about">About</string>
+    <string name="about_message">Tuner app\nVersion: %s\nLicense: GPLv3</string>
+    <string name="reset_all_settings">Reset all settings</string>
+    <string name="reset_settings_prompt">Do you really want to reset all settings?</string>
+    <string name="yes">yes</string>
+    <string name="no">no</string>
 </resources>
