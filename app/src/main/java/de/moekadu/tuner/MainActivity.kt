@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
         val nightMode = when (sharedPreferences.getString("appearance", "auto")) {
             "dark" -> AppCompatDelegate.MODE_NIGHT_YES
