@@ -21,6 +21,9 @@ package de.moekadu.tuner
 
 import kotlin.math.max
 
+private enum class Slope {Increasing, Decreasing}
+private enum class FindAction {WaitForPositiveValues, FindMaximum}
+
 /// Find local maxima based on the slope.
 /**
  *  This function will additionally use the average value as threshold to consider a local maximum
@@ -34,8 +37,6 @@ import kotlin.math.max
  */
 
 fun findLocalMaxima(values : FloatArray, signalToNoiseRatio : Float, fromIndex : Int = 0, toIndex : Int = values.size) : ArrayList<Int> {
-  val SLOPE_INCREASING = true
-  val SLOPE_DECREASING = false
 
   val maxima = ArrayList<Int>()
 
@@ -68,17 +69,17 @@ fun findLocalMaxima(values : FloatArray, signalToNoiseRatio : Float, fromIndex :
   }
   // correct the start index such that we start at left local minimum
   val startIndexLocalMaxima = max(fromIndex, leftLocalMinimumIndex)
-  var slope = SLOPE_INCREASING
+  var slope = Slope.Increasing
   var localMaximumIndex = 0
 
   for(i in startIndexLocalMaxima until values.size-2 ) {
     // We found a maximum, so store its position
-    if (slope == SLOPE_INCREASING && values[i + 1] < values[i]) {
+    if (slope == Slope.Increasing && values[i + 1] < values[i]) {
       localMaximumIndex = i
-      slope = SLOPE_DECREASING
+      slope = Slope.Decreasing
     }
     // We found a local minimum, that means that we now can evaluate our latest stored local maximum
-    else if (slope == SLOPE_DECREASING && values[i + 1] > values[i]) {
+    else if (slope == Slope.Decreasing && values[i + 1] > values[i]) {
       // Signal to noise ratio is based on the larger local minimum (the minimum left or right to our maximum)
       val largerMinimum = max(values[leftLocalMinimumIndex], values[i])
       // Here is the condition when we consider a local maximum worth to be stored
@@ -88,7 +89,7 @@ fun findLocalMaxima(values : FloatArray, signalToNoiseRatio : Float, fromIndex :
       leftLocalMinimumIndex = i
       if (leftLocalMinimumIndex >= toIndex-1)
         break
-      slope = SLOPE_INCREASING
+      slope = Slope.Increasing
     }
   }
 
@@ -106,28 +107,26 @@ fun findLocalMaxima(values : FloatArray, signalToNoiseRatio : Float, fromIndex :
  *   @return ArrayList with the maxima in descending order
  */
 fun findMaximaOfPositiveSections(values : FloatArray, fromIndex : Int = 0, toIndex : Int = values.size) : ArrayList<Int> {
-  val WAIT_FOR_POSITIVE_VALUES = true
-  val FIND_MAXIMUM = false
   // val maxima = ArrayList<Int>((toIndex - fromIndex) / 2 + 1 )
   val maxima = ArrayList<Int>()
 
-  var currentFindAction = if (values[0] >= 0) FIND_MAXIMUM else WAIT_FOR_POSITIVE_VALUES
+  var currentFindAction = if (values[0] >= 0) FindAction.FindMaximum else FindAction.WaitForPositiveValues
   var currentExtremum = values[fromIndex]
   var currentExtremumIndex = fromIndex
 
   for (i in fromIndex+1 until toIndex) {
-    if (currentFindAction == FIND_MAXIMUM && values[i] > currentExtremum) {
+    if (currentFindAction == FindAction.FindMaximum && values[i] > currentExtremum) {
       currentExtremum = values[i]
       currentExtremumIndex = i
     }
-    else if (currentFindAction == FIND_MAXIMUM && values[i] < 0f) {
+    else if (currentFindAction == FindAction.FindMaximum && values[i] < 0f) {
       maxima.add(currentExtremumIndex)
-      currentFindAction = WAIT_FOR_POSITIVE_VALUES
+      currentFindAction = FindAction.WaitForPositiveValues
     }
-    else if (currentFindAction == WAIT_FOR_POSITIVE_VALUES && values[i] >= 0f) {
+    else if (currentFindAction == FindAction.WaitForPositiveValues && values[i] >= 0f) {
       currentExtremum = values[i]
       currentExtremumIndex = i
-      currentFindAction = FIND_MAXIMUM
+      currentFindAction = FindAction.FindMaximum
     }
   }
 

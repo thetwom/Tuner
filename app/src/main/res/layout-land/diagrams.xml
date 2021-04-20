@@ -36,7 +36,7 @@
         app:plotLineWidth="2dp"
         app:tickLineWidth="0.5dp"
         app:tickTextSize="9dp"
-        app:title="spectrum"
+        app:title="@string/spectrum"
         app:yTickLabelWidth="30sp" />
 
     <de.moekadu.tuner.PlotView
@@ -52,7 +52,7 @@
         app:plotLineWidth="2dp"
         app:tickLineWidth="0.5dp"
         app:tickTextSize="9dp"
-        app:title="autocorrelation"
+        app:title="@string/autocorrelation"
         app:yTickLabelWidth="30sp" />
 
     <de.moekadu.tuner.PlotView
@@ -70,7 +70,7 @@
         app:pointColor="?attr/colorSecondary"
         app:tickLineWidth="0.5dp"
         app:tickTextSize="9dp"
-        app:title="pitch history"
+        app:title="@string/pitch_history"
         app:yTickLabelWidth="30sp" />
 
 

@@ -104,7 +104,7 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
     /// Last appended values which would lead to another detected pitch
     private val maybeFaultyValues = ArrayList<Float>(maxNumFaultyValues)
 
-    /// We allow one exception inside the faulty values before throwing them away completly
+    /// We allow one exception inside the faulty values before throwing them away completely
     private var faultyValueException = 0f
 
     /// Defines if the faultyValueException is set.

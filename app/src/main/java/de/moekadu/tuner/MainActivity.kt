@@ -19,14 +19,9 @@
 
 package de.moekadu.tuner
 
-import android.Manifest
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.TextView
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceManager
@@ -74,7 +69,7 @@ class MainActivity : AppCompatActivity() {
             // User chose the "Settings" item, show the app settings UI...
             supportFragmentManager.beginTransaction()
                 .replace(R.id.main_content, SettingsFragment())
-                .addToBackStack("blub")
+                .addToBackStack(null)
                 .commit()
             true
         }

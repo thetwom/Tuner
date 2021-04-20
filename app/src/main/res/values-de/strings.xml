@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tuner</string>
+    <string name="a4_frequency">Frequenz der Note A<sup><small>4</small></sup></string>
+    <string name="windowing_function">Fensterfunktion</string>
+    <string name="window_hamming">Hamming Fenster</string>
+    <string name="window_hann">Hann Fenster</string>
+    <string name="no_window">Keine Fensterfunktion</string>
+    <string name="appearance">Erscheinungsbild</string>
+    <string name="dark_appearance">Dunkles Erscheinungsbild</string>
+    <string name="light_appearance">Helles Erscheinungsbild</string>
+    <string name="system_appearance">Erscheinungsbild folgt Systemeinstellungen</string>
+    <string name="dark_appearance_short">Dunkel</string>
+    <string name="light_appearance_short">Hell</string>
+    <string name="system_appearance_short">Automatisch</string>
+    <string name="settings">Einstellungen</string>
+    <string name="overlap">Überlappung</string>
+    <string name="window_size">Fensterweite</string>
+    <string name="minimum_frequency">Minimale Frequenz:</string>
+    <string name="no_audio_recording_permission">Berechtigung zur Audioaufnahme wurde nicht gewährt.</string>
+    <string name="pitch_history_duration">Dauer des Tonverlaufs</string>
+    <string name="pitch_history_num_faulty_values">Anzahl Werte um neuen Ton zu akzeptieren</string>
+    <string name="use_hint">Verbessere Tonschätzung durch vorherige Werte</string>
+    <string name="num_moving_average">Anzahl Werte für gleitenden Mittelwert</string>
+    <string name="about">Über</string>
+    <string name="about_message">Tuner app Version: %s Lizenz: GPLv3</string>
+    <string name="reset_all_settings">Alle Einstellungen zurücksetzen</string>
+    <string name="reset_settings_prompt">Sollen wirklich alle Einstellungen zurückgesetzt werden?</string>
+    <string name="yes">ja</string>
+    <string name="no">nein</string>
+    <string name="autocorrelation">Autokorrelation</string>
+    <string name="pitch_history">Tonverlauf</string>
+    <string name="spectrum">Spektrum</string>
+</resources>

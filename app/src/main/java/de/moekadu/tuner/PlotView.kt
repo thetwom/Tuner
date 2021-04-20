@@ -531,7 +531,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 startIndex = -(startIndex + 1)
             if(endIndex < 0)
                 endIndex = -(endIndex + 1)
-            // Log.v("Tuner", "PlotView:drawXTicks: startidx = $startIndex, endindex = $endIndex, xTicks.size = "+ it.size)
+            // Log.v("Tuner", "PlotView:drawXTicks: startIndex = $startIndex, endIndex = $endIndex, xTicks.size = "+ it.size)
             for(i in startIndex until endIndex) {
                 val xVal = it[i]
                 point[0] = xVal

@@ -324,8 +324,8 @@ fun isLocalMaximum(index: Int, values: FloatArray): Boolean {
 /**
  * @param values Array where we search for the local maximum.
  * @param initialIndex Index in values-array where we start the search.
- * @param lowerIndex Lowest index which will be included for the serach
- * @param upperIndex Upper index which will be included for the serach
+ * @param lowerIndex Lowest index which will be included for the search
+ * @param upperIndex Upper index which will be included for the search
  * @return Local maximum index (lowerIndex <= return value <= upperIndex)
  *   or null if no local maximum present.
  */
