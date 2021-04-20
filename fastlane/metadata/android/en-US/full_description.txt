@@ -1,0 +1,6 @@
+    Basic tuner app for tuning musical instruments with features like:
+    * Detect pitch based on autocorrelation and FFT spectrum.
+    * Accuracy improvement by evaluating the spectrum phase information and polynomial fitting.
+    * Show how pitch changes over time.
+    * Tuning to equal temperament.
+    * Settings for choosing concert pitch, FFT window size, FFT window type, overlap and more.
