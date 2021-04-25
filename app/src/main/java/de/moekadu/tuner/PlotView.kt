@@ -30,21 +30,37 @@ import android.view.View
 import kotlinx.parcelize.Parcelize
 import kotlin.math.*
 
-interface PlotViewArray {
+/// Interface for an array of floats internally used by the PlotView
+private interface PlotViewArray {
+    /// Get value at specific index
     operator fun get(index: Int): Float
+    /// Check if size is zero
     fun isEmpty(): Boolean
+    /// Return last element or throw
     fun last(): Float
+    /// Size of array
     val size: Int
+    /// Binary search within the array
+    /**
+     * @param element Element to search
+     * @param fromIndex Start search at this index
+     * @param toIndex Stop search at this index (toIndex is excluded)
+     * @return Index of element or inverted insertion point if not in array (-insertion_point-1)
+     */
     fun binarySearch(element: Float, fromIndex: Int = 0, toIndex: Int = size) : Int
 }
-class FloatArrayPlotViewArray(private val a: FloatArray) : PlotViewArray {
+
+/// PlotViewArray containing a FloatArray
+private class FloatArrayPlotViewArray(private val a: FloatArray) : PlotViewArray {
     override fun get(index: Int) = a[index]
     override fun isEmpty() = a.isEmpty()
     override fun last() = a.last()
     override val size: Int = a.size
     override fun binarySearch(element: Float, fromIndex: Int, toIndex: Int) = a.binarySearch(element, fromIndex, toIndex)
 }
-class ArrayListPlotViewArray(private val a: ArrayList<Float>) : PlotViewArray {
+
+/// PlotViewArray containing a ArrayList of floats
+private class ArrayListPlotViewArray(private val a: ArrayList<Float>) : PlotViewArray {
     override fun get(index: Int) = a[index]
     override fun isEmpty() = a.isEmpty()
     override fun last() = a.last()
@@ -52,10 +68,12 @@ class ArrayListPlotViewArray(private val a: ArrayList<Float>) : PlotViewArray {
     override fun binarySearch(element: Float, fromIndex: Int, toIndex: Int) = a.binarySearch(element, fromIndex, toIndex)
 }
 
-fun FloatArray.asPlotViewArray(): PlotViewArray = FloatArrayPlotViewArray(this)
-fun ArrayList<Float>.asPlotViewArray(): PlotViewArray = ArrayListPlotViewArray(this)
+/// Convert FloatArray to PlotViewArray
+private fun FloatArray.asPlotViewArray(): PlotViewArray = FloatArrayPlotViewArray(this)
+/// Convert ArrayList of floats to PlotViewArray
+private fun ArrayList<Float>.asPlotViewArray(): PlotViewArray = ArrayListPlotViewArray(this)
 
-
+/// PlotView class
 class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr)
 {
@@ -64,66 +82,111 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         const val TAKE_ALL = -1
         const val TYPE_MIN = 0
         const val TYPE_MAX = 1
+        const val autoLimit = Float.MAX_VALUE
     }
-    val autoLimit = Float.MAX_VALUE
 
+    /// This is just for making sure, that bounds initialized and tells if "plot" has been called at least once since the creation of the class.
     private var plotCalled = false
 
+    /// Color of plot line.
     private var plotLineColor = Color.BLACK
+    /// Width of plot line.
     private var plotLineWidth = 5f
 
+    /// Paint used for plotting line and title
     private val paint = Paint()
     private val arrowPath = Path()
+    /// Path with plot line of coordinates as given during plot
     private val rawPlotLine = Path()
+    /// Plot line after transforming it to the canvas
     private val transformedPlotLine = Path()
+    /// Transformation matrix for transforming from raw coordinates to canvas coordinates
     private val plotTransformationMatrix = Matrix()
+    /// Plot bounds for coordinates in original space.
     private val rawPlotBounds = RectF()
+    /// Plot bounds in canvas coordinates.
     private val viewPlotBounds = RectF()
 
+    /// x-range to plot (or autoLimit for determining the limits based on the plot data).
     private val xRange = FloatArray(2) { autoLimit }
+    /// y-range to plot (or autoLimit for determining the limits based on the plot data).
     private val yRange = FloatArray(2) { autoLimit }
 
+    /// Evaluator for x-range needed for x-range animation.
     private val xRangeEvaluator = FloatArrayEvaluator(xRange)
+    /// Evaluator for y-range needed for y-range animation.
     private val yRangeEvaluator = FloatArrayEvaluator(yRange)
+    /// Animator for animating between different x-ranges.
     private val xRangeAnimator = ValueAnimator.ofObject(xRangeEvaluator, floatArrayOf(0f, 100f), floatArrayOf(100f, 200f))
+    /// Animator for animating between different y-ranges.
     private val yRangeAnimator = ValueAnimator.ofObject(yRangeEvaluator, floatArrayOf(0f, 100f), floatArrayOf(100f, 200f))
 
+    /// Paint used for drawing x- and y-marks.
     private val markPaint = Paint()
+    /// Color of x- and y-marks.
     private var markColor = Color.BLACK
+    /// Line width of x- and y-marks.
     private var markLineWidth = 2f
+    /// Text size of x- and y-mark labels
     private var markTextSize = 10f
 
+    /// Extra x-marks with labels
     private var xMarks : FloatArray? = null
+    /// Actual number of x-marks (which can be smaller than the x-marks array)
     private var numXMarks = 0
+    /// Labels of the x-marks
     private var xMarkLabels : Array<String> ?= null
 
+    /// Extra y-marks with labels
     private var yMarks : FloatArray? = null
+    /// Actual number of y-marks (which can be smaller than the y-marks array)
     private var numYMarks = 0
+    /// Labels of the y-marks
     private var yMarkLabels : Array<String> ?= null
-    private var yTickLabelWidth = 0.0f
 
+    /** Coordinates for points to be plotted.
+      (as filled circles, even indices are x-coordinates, odd indices are y-coordinates) */
     private var points : FloatArray? = null
+    /// Only the first numPoints in the points-array are plotted.
     private var numPoints = 0
+    /// Circle radius the points.
     private var pointSize = 5f
+    /// Circle color the points.
     private var pointColor = Color.BLACK
+    /// Paint used for drawing points.
     private val pointPaint = Paint()
 
+    /// Paint for drawing ticks an their labels.
     private val tickPaint = Paint()
+    /// Color of ticks and tick labels
     private var tickColor = Color.BLACK
+    /// Line width of ticks
     private var tickLineWidth = 2f
+    /// Text size of ticks
     private var tickTextSize = 10f
 
+    /// Ticks for x-axis (must be sorted)
     private var xTicks : FloatArray? = null
+    /// List with an label for each x-tick or null if there are no labels
     private var xTickLabels : Array<String>? = null
     //private var xTickTextFormatter : ((Float) -> String)? = null
+
+    /// Ticks for x-axis (must be sorted)
     private var yTicks : FloatArray? = null
+    /// List with an label for each x-tick or null if there are no labels
     private var yTickLabels : Array<String>? = null
     //private var yTickTextFormatter : ((Float) -> String)? = null
+    /// Width of y-tick labels (defines the horizontal space required, must me larger zero if y-tick labels are defined)
+    private var yTickLabelWidth = 0.0f
 
+    /// Plot title
     private var title : String? = null
+    /// Font size of title
     private var titleSize = 10f
 
+    /// Temporary which is used for drawing paths.
     private val straightLinePath = Path()
+    /// Temporary which is used for drawing points.
     private val point = FloatArray(2)
 
     @Parcelize
@@ -214,6 +277,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
     }
 
+    /// Set x-range.
+    /**
+     * @param minValue Minimum value of x-range (or PlotView.autoLimit for determining the limit based on the plot data).
+     * @param maxValue Minimum value of x-range (or PlotView.autoLimit for determining the limit based on the plot data).
+     * @param animationDuration Duration for animating to the new range (0L for no animation)
+     */
     fun xRange(minValue : Float, maxValue : Float, animationDuration: Long = 0L) {
         if (minValue == xRange[0] && maxValue == xRange[1])
             return
@@ -240,6 +309,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
     }
 
+    /// Set y-range.
+    /**
+     * @param minValue Minimum value of y-range (or PlotView.autoLimit for determining the limit based on the plot data).
+     * @param maxValue Minimum value of y-range (or PlotView.autoLimit for determining the limit based on the plot data).
+     * @param animationDuration Duration for animating to the new range (0L for no animation)
+     */
     fun yRange(minValue : Float, maxValue : Float, animationDuration: Long = 0L) {
         if (minValue == yRange[0] && maxValue == yRange[1])
             return
@@ -265,14 +340,35 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             invalidate()
     }
 
+    /// Plot equidistant values (Taking a FloatArray).
+    /**
+     * @param yValues Array with equidistant y-values.
+     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
+     *   change something else which also needs to redraw the screen, so you can avoid an
+     *   unnecessary redraw.)
+     */
     fun plot(yValues : FloatArray, redraw: Boolean = true) {
         plot(yValues.asPlotViewArray(), redraw)
     }
 
+    /// Plot equidistant values (Taking an ArrayList<Float>).
+    /**
+     * @param yValues Array with equidistant y-values.
+     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
+     *   change something else which also needs to redraw the screen, so you can avoid an
+     *   unnecessary redraw.)
+     */
     fun plot(yValues : ArrayList<Float>, redraw: Boolean = true) {
         plot(yValues.asPlotViewArray(), redraw)
     }
 
+    /// Plot equidistant values (general version with PlotViewArray).
+    /**
+     * @param yValues Array with equidistant y-values.
+     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
+     *   change something else which also needs to redraw the screen, so you can avoid an
+     *   unnecessary redraw.)
+     */
     private fun plot(yValues : PlotViewArray, redraw: Boolean = true) {
         rawPlotLine.rewind()
         plotCalled = true
@@ -312,14 +408,38 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             invalidate()
     }
 
+    /// Plot values (Taking FloatArrays).
+    /**
+     * @param xValues Array with equidistant x-values.
+     * @param yValues Array with equidistant y-values.
+     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
+     *   change something else which also needs to redraw the screen, so you can avoid an
+     *   unnecessary redraw.)
+     */
     fun plot(xValues : FloatArray, yValues : FloatArray, redraw : Boolean = true) {
         plot(xValues.asPlotViewArray(), yValues.asPlotViewArray(), redraw)
     }
 
+    /// Plot values (Taking ArrayLists<Float>).
+    /**
+     * @param xValues Array with equidistant x-values.
+     * @param yValues Array with equidistant y-values.
+     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
+     *   change something else which also needs to redraw the screen, so you can avoid an
+     *   unnecessary redraw.)
+     */
     fun plot(xValues : ArrayList<Float>, yValues : ArrayList<Float>, redraw : Boolean = true) {
         plot(xValues.asPlotViewArray(), yValues.asPlotViewArray(), redraw)
     }
 
+    /// Plot values (general version take in PlotViewArrays).
+    /**
+     * @param xValues Array with equidistant x-values.
+     * @param yValues Array with equidistant y-values.
+     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
+     *   change something else which also needs to redraw the screen, so you can avoid an
+     *   unnecessary redraw.)
+     */
     private fun plot(xValues : PlotViewArray, yValues : PlotViewArray, redraw : Boolean = true) {
         plotCalled = true
         require(xValues.size == yValues.size) {"Size of x-values and y-values not equal: " + xValues.size + " != " + yValues.size}
@@ -422,6 +542,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         bundle.putParcelable("plot state", plotState)
         return bundle
     }
+
     override fun onRestoreInstanceState(state: Parcelable?) {
 
         val superState = if (state is Bundle) {
@@ -522,18 +643,18 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     private fun drawXTicks(canvas: Canvas?) {
-        xTicks?.let {
+        xTicks?.let { ticks ->
             straightLinePath.rewind()
             point[1] = 0f
-            var startIndex = it.binarySearch(rawPlotBounds.left)
-            var endIndex = it.binarySearch(rawPlotBounds.right)
+            var startIndex = ticks.binarySearch(rawPlotBounds.left)
+            var endIndex = ticks.binarySearch(rawPlotBounds.right)
             if(startIndex < 0)
                 startIndex = -(startIndex + 1)
             if(endIndex < 0)
                 endIndex = -(endIndex + 1)
-            // Log.v("Tuner", "PlotView:drawXTicks: startIndex = $startIndex, endIndex = $endIndex, xTicks.size = "+ it.size)
+            // Log.v("Tuner", "PlotView:drawXTicks: startIndex = $startIndex, endIndex = $endIndex, xTicks.size = "+ ticks.size)
             for(i in startIndex until endIndex) {
-                val xVal = it[i]
+                val xVal = ticks[i]
                 point[0] = xVal
                 // Log.v("Tuner", "PlotView:drawXTicks: xTicks[$i] = $xVal")
                 plotTransformationMatrix.mapPoints(point)
@@ -558,18 +679,18 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     private fun drawYTicks(canvas: Canvas?) {
-        yTicks?.let {
+        yTicks?.let { ticks ->
             straightLinePath.rewind()
             point[0] = 0f
-            var startIndex = it.binarySearch(rawPlotBounds.top)
-            var endIndex = it.binarySearch(rawPlotBounds.bottom)
+            var startIndex = ticks.binarySearch(rawPlotBounds.top)
+            var endIndex = ticks.binarySearch(rawPlotBounds.bottom)
             if(startIndex < 0)
                 startIndex = -(startIndex + 1)
             if(endIndex < 0)
                 endIndex = -(endIndex + 1)
 
             for(i in startIndex until endIndex) {
-                val yVal = it[i]
+                val yVal = ticks[i]
                 point[1] = yVal
                 plotTransformationMatrix.mapPoints(point)
                 straightLinePath.moveTo(viewPlotBounds.left, point[1])
@@ -613,6 +734,17 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 //        canvas?.drawPath(arrowPath, paint)
 //    }
 
+    /// Set x-marks (a line with an optional label).
+    /**
+     * @param value List of values for x-marks.
+     * @param numValues Number of values to be taken values-array (use PlotView.TAKE_ALL, to
+     *   use all values).
+     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
+     *   change something else which also needs to redraw the screen, so you can avoid an
+     *   unnecessary redraw.)
+     * @param format A formatting function which converts the x-mark-values to strings. (null for
+     *   no labels)
+     */
     fun setXMarks(value : FloatArray?, numValues : Int = TAKE_ALL, redraw : Boolean = true, format : ((Float) -> String)? = null) {
         if (value == null) {
             numXMarks = 0
@@ -638,6 +770,17 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             invalidate()
     }
 
+    /// Set y-marks (a line with an optional label).
+    /**
+     * @param value List of values for y-marks.
+     * @param numValues Number of values to be taken values-array (use PlotView.TAKE_ALL, to
+     *   use all values).
+     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
+     *   change something else which also needs to redraw the screen, so you can avoid an
+     *   unnecessary redraw.)
+     * @param format A formatting function which converts the x-mark-values to strings. (null for
+     *   no labels)
+     */
     fun setYMarks(value : FloatArray?, numValues : Int = TAKE_ALL, redraw : Boolean = true, format : ((Float) -> String)? = null) {
         if (value == null) {
             numYMarks = 0
@@ -663,6 +806,13 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             invalidate()
     }
 
+    /// Set points which should be drawn as filled circles.
+    /**
+     * @param value Array with point coordinates (of form x0, y0, x1, y1, ...)
+     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
+     *   change something else which also needs to redraw the screen, so you can avoid an
+     *   unnecessary redraw.)
+     */
     fun setPoints(value : FloatArray?, redraw : Boolean = true) {
         if(value == null) {
             numPoints = 0
@@ -680,6 +830,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             invalidate()
     }
 
+    /// Set x-ticks.
+    /**
+     * @param value Values of x-ticks to be drawn.
+     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
+     *   change something else which also needs to redraw the screen, so you can avoid an
+     *   unnecessary redraw.)
+     * @param format Functions for creating the tick labels from the values. Use null to draw
+     *   no labels.
+     */
     fun setXTicks(value : FloatArray?, redraw: Boolean = true, format : ((Float) -> String)?) {
         if (value == null) {
             xTicks = null
@@ -698,6 +857,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             invalidate()
     }
 
+    /// Set y-ticks.
+    /**
+     * @param value Values of y-ticks to be drawn.
+     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
+     *   change something else which also needs to redraw the screen, so you can avoid an
+     *   unnecessary redraw.)
+     * @param format Functions for creating the tick labels from the values. Use null to draw
+     *   no labels.
+     */
     fun setYTicks(value : FloatArray?, redraw: Boolean = true, format : ((Float) -> String)?) {
         if (value == null) {
             yTicks = null

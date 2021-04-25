@@ -108,60 +108,6 @@ class TunerFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel.tuningFrequencies.observe(this) { tuningFrequencies ->
-            val noteFrequencies = FloatArray(100) { tuningFrequencies.getNoteFrequency(it - 50) }
-            pitchPlot?.setYTicks(noteFrequencies, false) { tuningFrequencies.getNoteName(it) }
-        }
-
-        viewModel.tunerResults.observe(this) { results ->
-            if (results.pitchFrequency == null) {
-                correlationPlot?.setXMarks(null)
-                spectrumPlot?.setXMarks(null)
-            }
-            else {
-                results.pitchFrequency?.let { pitchFrequency ->
-                    val freqMax = floatArrayOf(pitchFrequency)
-                    val shiftMax = floatArrayOf(1.0f / pitchFrequency)
-                    correlationPlot?.setXMarks(shiftMax) { i -> getString(R.string.hertz, 1.0 / i) }
-                    spectrumPlot?.setXMarks(freqMax) { i -> getString(R.string.hertz, i) }
-                }
-            }
-
-            correlationPlot?.xRange(
-                0f,
-                min(results.correlationTimes.last(), 1f / minCorrelationFrequency),
-                300L
-            )
-            correlationPlot?.plot(results.correlationTimes, results.correlation)
-            spectrumPlot?.plot(results.ampSpecSqrFrequencies, results.ampSqrSpec)
-        }
-
-        viewModel.pitchHistory.sizeAsLiveData.observe(this) {
-//            Log.v("TestRecordFlow", "TunerFragment.sizeAsLiveData: $it")
-            pitchPlot?.xRange(0f, 1.1f * it.toFloat(), PlotView.NO_REDRAW)
-        }
-
-        //viewModel.pitchHistory.frequencyPlotRange.observe(this) {
-        viewModel.pitchHistory.frequencyPlotRangeAveraged.observe(this) {
-//            Log.v("TestRecordFlow", "TunerFragment.plotRange: ${it[0]} -- ${it[1]}")
-            pitchPlot?.yRange(it[0], it[1], 600)
-        }
-
-        //viewModel.pitchHistory.history.observe(this) {
-        viewModel.pitchHistory.historyAveraged.observe(this) {
-            if (it.size > 0) {
-                pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), it.last()), false)
-                pitchPlot?.plot(it)
-            }
-        }
-
-        viewModel.pitchHistory.currentEstimatedToneIndex.observe(this) {
-            viewModel.tuningFrequencies.value?.let { tuningFrequencies ->
-                pitchPlot?.setYMarks(floatArrayOf(tuningFrequencies.getNoteFrequency(it))) { i ->
-                    tuningFrequencies.getNoteName(i)
-                }
-            }
-        }
 
         val pref = PreferenceManager.getDefaultSharedPreferences(activity)
         pref.registerOnSharedPreferenceChangeListener(onPreferenceChangedListener)
@@ -212,6 +158,61 @@ class TunerFragment : Fragment() {
 //        frequencyText = findViewById(R.id.frequency_text)
 
         setPreferencesInViewModel()
+
+        viewModel.tuningFrequencies.observe(viewLifecycleOwner) { tuningFrequencies ->
+            val noteFrequencies = FloatArray(100) { tuningFrequencies.getNoteFrequency(it - 50) }
+            pitchPlot?.setYTicks(noteFrequencies, false) { tuningFrequencies.getNoteName(it) }
+        }
+
+        viewModel.tunerResults.observe(viewLifecycleOwner) { results ->
+            if (results.pitchFrequency == null) {
+                correlationPlot?.setXMarks(null)
+                spectrumPlot?.setXMarks(null)
+            }
+            else {
+                results.pitchFrequency?.let { pitchFrequency ->
+                    val freqMax = floatArrayOf(pitchFrequency)
+                    val shiftMax = floatArrayOf(1.0f / pitchFrequency)
+                    correlationPlot?.setXMarks(shiftMax) { i -> getString(R.string.hertz, 1.0 / i) }
+                    spectrumPlot?.setXMarks(freqMax) { i -> getString(R.string.hertz, i) }
+                }
+            }
+
+            correlationPlot?.xRange(
+                0f,
+                min(results.correlationTimes.last(), 1f / minCorrelationFrequency),
+                300L
+            )
+            correlationPlot?.plot(results.correlationTimes, results.correlation)
+            spectrumPlot?.plot(results.ampSpecSqrFrequencies, results.ampSqrSpec)
+        }
+
+        viewModel.pitchHistory.sizeAsLiveData.observe(viewLifecycleOwner) {
+//            Log.v("TestRecordFlow", "TunerFragment.sizeAsLiveData: $it")
+            pitchPlot?.xRange(0f, 1.1f * it.toFloat(), PlotView.NO_REDRAW)
+        }
+
+        //viewModel.pitchHistory.frequencyPlotRange.observe(this) {
+        viewModel.pitchHistory.frequencyPlotRangeAveraged.observe(viewLifecycleOwner) {
+//            Log.v("TestRecordFlow", "TunerFragment.plotRange: ${it[0]} -- ${it[1]}")
+            pitchPlot?.yRange(it[0], it[1], 600)
+        }
+
+        //viewModel.pitchHistory.history.observe(this) {
+        viewModel.pitchHistory.historyAveraged.observe(viewLifecycleOwner) {
+            if (it.size > 0) {
+                pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), it.last()), false)
+                pitchPlot?.plot(it)
+            }
+        }
+
+        viewModel.pitchHistory.currentEstimatedToneIndex.observe(viewLifecycleOwner) {
+            viewModel.tuningFrequencies.value?.let { tuningFrequencies ->
+                pitchPlot?.setYMarks(floatArrayOf(tuningFrequencies.getNoteFrequency(it))) { i ->
+                    tuningFrequencies.getNoteName(i)
+                }
+            }
+        }
 
         // plot the values if available, since the plots currently cant store the plot lines.
         viewModel.tunerResults.value?.let { results ->
