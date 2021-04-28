@@ -19,6 +19,8 @@
 
 package de.moekadu.tuner
 
+import android.text.SpannableString
+import android.text.style.SuperscriptSpan
 import kotlin.math.log
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -82,7 +84,7 @@ class TuningEqualTemperament(private val a4Frequency : Float = 440f) : TuningFre
      * @param frequency Frequency
      * @return Note name which fits best to the frequency.
      */
-    override fun getNoteName(frequency : Float) : String {
+    override fun getNoteName(frequency : Float) : CharSequence {
         val noteIndex = getClosestToneIndex(frequency)
         return getNoteName(noteIndex, false)
     }
@@ -96,7 +98,7 @@ class TuningEqualTemperament(private val a4Frequency : Float = 440f) : TuningFre
      *   the "flat" version is preferred. Else the sharp version is returned.
      * @return Note name.
      */
-    override fun getNoteName(toneIndex : Int, preferFlat : Boolean) : String {
+    override fun getNoteName(toneIndex : Int, preferFlat : Boolean) : CharSequence {
         val relativeTone0 = toneIndex - noteName0ToneIndex
         var octaveIndex = relativeTone0 / noteNames.size
         var noteIndexWithinOctave = relativeTone0 % noteNames.size
@@ -119,11 +121,14 @@ class TuningEqualTemperament(private val a4Frequency : Float = 440f) : TuningFre
                 octaveIndex -= 1
             noteModifier = "\u266F"
         }
-        var octaveText = ""
-        if (octaveIndex > 0)
-            octaveText = "'".repeat(octaveIndex)
-        else if (octaveIndex < 0)
-            octaveText = ",".repeat(-octaveIndex)
-        return noteName + noteModifier + octaveText
+//        var octaveText = ""
+//        if (octaveIndex > 0)
+//            octaveText = "'".repeat(octaveIndex)
+//        else if (octaveIndex < 0)
+//            octaveText = ",".repeat(-octaveIndex)
+        val octaveText = octaveIndex.toString()
+        val result = SpannableString(noteName + noteModifier + octaveText)
+        result.setSpan(SuperscriptSpan(), 1 + noteModifier.length, result.length, 0)
+        return result
     }
 }

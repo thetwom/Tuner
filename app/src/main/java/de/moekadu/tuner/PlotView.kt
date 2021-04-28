@@ -25,6 +25,8 @@ import android.content.Context
 import android.graphics.*
 import android.os.Bundle
 import android.os.Parcelable
+import android.text.StaticLayout
+import android.text.TextPaint
 import android.util.AttributeSet
 import android.view.View
 import kotlinx.parcelize.Parcelize
@@ -83,7 +85,13 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         const val TYPE_MIN = 0
         const val TYPE_MAX = 1
         const val autoLimit = Float.MAX_VALUE
+        const val DrawLine = Float.MAX_VALUE
     }
+
+    enum class MarkAnchor {Center, North, West, East, NorthWest, NorthEast, South, SouthWest, SouthEast}
+
+    @Parcelize
+    data class Mark(val xPosition: Float, val yPosition: Float, val label: CharSequence?, val anchor: MarkAnchor) : Parcelable
 
     /// This is just for making sure, that bounds initialized and tells if "plot" has been called at least once since the creation of the class.
     private var plotCalled = false
@@ -130,19 +138,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     /// Text size of x- and y-mark labels
     private var markTextSize = 10f
 
-    /// Extra x-marks with labels
-    private var xMarks : FloatArray? = null
-    /// Actual number of x-marks (which can be smaller than the x-marks array)
-    private var numXMarks = 0
-    /// Labels of the x-marks
-    private var xMarkLabels : Array<String> ?= null
-
-    /// Extra y-marks with labels
-    private var yMarks : FloatArray? = null
-    /// Actual number of y-marks (which can be smaller than the y-marks array)
-    private var numYMarks = 0
-    /// Labels of the y-marks
-    private var yMarkLabels : Array<String> ?= null
+    /// Marks.
+    private val marks = ArrayList<Mark>()
+    /// StaticLayout for each mark label or null, if the mark has no label
+    private val markLabelLayouts = ArrayList<StaticLayout?>()
+    /// Paint used for drawing mark labels.
+    private val markLabelPaint = TextPaint()
+    /// Text color of mark labels
+    private var markLabelColor = Color.BLACK
 
     /** Coordinates for points to be plotted.
       (as filled circles, even indices are x-coordinates, odd indices are y-coordinates) */
@@ -156,8 +159,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     /// Paint used for drawing points.
     private val pointPaint = Paint()
 
-    /// Paint for drawing ticks an their labels.
+    /// Paint for drawing tick lines.
     private val tickPaint = Paint()
+    /// Paint for drawing tick labels
+    private val tickLabelPaint = TextPaint()
     /// Color of ticks and tick labels
     private var tickColor = Color.BLACK
     /// Line width of ticks
@@ -168,16 +173,20 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     /// Ticks for x-axis (must be sorted)
     private var xTicks : FloatArray? = null
     /// List with an label for each x-tick or null if there are no labels
-    private var xTickLabels : Array<String>? = null
+    private var xTickLabels : Array<CharSequence>? = null
+    /// List with layouts for each label for each x-tick or null if there are no labels
+    private var xTickLabelLayouts : Array<StaticLayout>? = null
     //private var xTickTextFormatter : ((Float) -> String)? = null
 
     /// Ticks for x-axis (must be sorted)
     private var yTicks : FloatArray? = null
-    /// List with an label for each x-tick or null if there are no labels
-    private var yTickLabels : Array<String>? = null
-    //private var yTickTextFormatter : ((Float) -> String)? = null
+    /// List with an label for each y-tick or null if there are no labels
+    private var yTickLabels : Array<CharSequence>? = null
+    /// List with layouts for each label for each y-tick or null if there are no labels
+    private var yTickLabelLayouts : Array<StaticLayout>? = null
     /// Width of y-tick labels (defines the horizontal space required, must me larger zero if y-tick labels are defined)
     private var yTickLabelWidth = 0.0f
+    //private var yTickTextFormatter : ((Float) -> String)? = null
 
     /// Plot title
     private var title : String? = null
@@ -194,16 +203,11 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         val xRange: FloatArray,
         val yRange: FloatArray,
         val xTicks: FloatArray?,
-        val xTickLabels: Array<String>?,
+        val xTickLabels: Array<CharSequence>?,
         val yTicks: FloatArray?,
-        val yTickLabels: Array<String>?,
+        val yTickLabels: Array<CharSequence>?,
+        val marks: ArrayList<Mark>,
         val rawPlotBounds: RectF,
-        val numXMarks: Int,
-        val xMarks: FloatArray?,
-        val xMarkLabels: Array<String>?,
-        val numYMarks: Int,
-        val yMarks: FloatArray?,
-        val yMarkLabels: Array<String>?,
         val numPoints: Int,
         val points: FloatArray?
     ): Parcelable
@@ -221,6 +225,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             markColor = ta.getColor(R.styleable.PlotView_markColor, markColor)
             markLineWidth = ta.getDimension(R.styleable.PlotView_markLineWidth, markLineWidth)
             markTextSize = ta.getDimension(R.styleable.PlotView_markTextSize, markTextSize)
+            markLabelColor = ta.getColor(R.styleable.PlotView_markLabelColor, markLabelColor)
             tickColor = ta.getColor(R.styleable.PlotView_tickColor, tickColor)
             tickLineWidth = ta.getDimension(R.styleable.PlotView_tickLineWidth, tickLineWidth)
             tickTextSize = ta.getDimension(R.styleable.PlotView_tickTextSize, tickTextSize)
@@ -251,6 +256,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         markPaint.style = Paint.Style.STROKE
         markPaint.textSize = markTextSize
 
+        markLabelPaint.color = markLabelColor
+        markLabelPaint.isAntiAlias = true
+        markLabelPaint.textSize = markTextSize
+
         pointPaint.color = pointColor
         pointPaint.isAntiAlias = true
         pointPaint.style = Paint.Style.FILL
@@ -258,7 +267,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         tickPaint.color = tickColor
         tickPaint.strokeWidth = tickLineWidth
         tickPaint.isAntiAlias = true
-        tickPaint.textSize = tickTextSize
+        tickPaint.style = Paint.Style.STROKE
+
+        tickLabelPaint.color = tickColor
+        tickLabelPaint.isAntiAlias = true
+        tickLabelPaint.textSize = tickTextSize
+        tickLabelPaint.style = Paint.Style.FILL
 
         xRangeAnimator.addUpdateListener {
             if(xRange[0] != autoLimit)
@@ -507,9 +521,6 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         drawXTicks(canvas)
         drawYTicks(canvas)
 
-        drawXMarks(canvas)
-        drawYMarks(canvas)
-
         rawPlotLine.transform(plotTransformationMatrix, transformedPlotLine)
 
         canvas?.save()
@@ -519,6 +530,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         drawPoints(canvas)
         canvas?.restore()
         canvas?.drawRect(viewPlotBounds, paint)
+        drawMarks(canvas)
 
         title?.let {
             paint.style = Paint.Style.FILL
@@ -537,8 +549,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         bundle.putParcelable("super state", super.onSaveInstanceState())
         // TODO: store line
         val plotState = SavedState(xRange, yRange, xTicks, xTickLabels, yTicks, yTickLabels,
-            rawPlotBounds, numXMarks, xMarks, xMarkLabels, numYMarks, yMarks, yMarkLabels,
-            numPoints, points)
+            marks, rawPlotBounds, numPoints, points)
         bundle.putParcelable("plot state", plotState)
         return bundle
     }
@@ -553,15 +564,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 xTickLabels = plotState.xTickLabels
                 yTicks = plotState.yTicks
                 yTickLabels = plotState.yTickLabels
+                marks.clear()
+                marks.addAll(plotState.marks)
                 rawPlotBounds.set(plotState.rawPlotBounds)
-                numXMarks = plotState.numXMarks
-                xMarks = plotState.xMarks
-                xMarkLabels = plotState.xMarkLabels
-                numYMarks = plotState.numYMarks
-                yMarks = plotState.yMarks
-                yMarkLabels = plotState.yMarkLabels
                 numPoints = plotState.numPoints
                 points = plotState.points
+
+                buildMarkLabels()
+                xTickLabelLayouts = buildTickLabelLayouts(xTickLabels)
+                yTickLabelLayouts = buildTickLabelLayouts(yTickLabels)
             }
             state.getParcelable("super state")
         }
@@ -569,63 +580,6 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             state
         }
         super.onRestoreInstanceState(superState)
-    }
-
-    private fun drawXMarks(canvas: Canvas?) {
-        xMarks?.let {
-            straightLinePath.rewind()
-            point[1] = 0f
-
-            for(i in 0 until numXMarks) {
-                val xVal = it[i]
-                if(xVal >= rawPlotBounds.left && xVal <= rawPlotBounds.right) {
-                    point[0] = xVal
-                    plotTransformationMatrix.mapPoints(point)
-                    //Log.v("Tuner", "PlotView.drawXMarks: xRaw="+xVal + " xView=" + point[0])
-                    straightLinePath.moveTo(point[0], viewPlotBounds.bottom)
-                    straightLinePath.lineTo(point[0], viewPlotBounds.top)
-                    markPaint.style = Paint.Style.STROKE
-                    canvas?.drawPath(straightLinePath, markPaint)
-
-                    markPaint.style = Paint.Style.FILL
-                    markPaint.textAlign = Paint.Align.LEFT
-                    canvas?.drawText(
-                        xMarkLabels?.get(i) ?: "",
-                        point[0] + markTextSize / 2,
-                        viewPlotBounds.top - markPaint.ascent(),
-                        markPaint
-                    )
-                }
-            }
-        }
-    }
-
-    private fun drawYMarks(canvas: Canvas?) {
-        yMarks?.let {
-            straightLinePath.rewind()
-            point[0] = 0f
-
-            for(i in 0 until numYMarks) {
-                val yVal = it[i]
-                if(yVal >= rawPlotBounds.top && yVal <= rawPlotBounds.bottom) {
-                    point[1] = yVal
-                    plotTransformationMatrix.mapPoints(point)
-                    straightLinePath.moveTo(viewPlotBounds.left, point[1])
-                    straightLinePath.lineTo(viewPlotBounds.right, point[1])
-                    markPaint.style = Paint.Style.STROKE
-                    canvas?.drawPath(straightLinePath, markPaint)
-
-                    markPaint.style = Paint.Style.FILL
-                    markPaint.textAlign = Paint.Align.RIGHT
-                    canvas?.drawText(
-                        yMarkLabels?.get(i) ?: "",
-                        viewPlotBounds.right-markTextSize/2,
-                        point[1] - markTextSize / 2,
-                        markPaint
-                    )
-                }
-            }
-        }
     }
 
     private fun drawPoints(canvas: Canvas?) {
@@ -660,19 +614,11 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 plotTransformationMatrix.mapPoints(point)
                 straightLinePath.moveTo(point[0], viewPlotBounds.bottom)
                 straightLinePath.lineTo(point[0], viewPlotBounds.top)
-                tickPaint.style = Paint.Style.STROKE
                 canvas?.drawPath(straightLinePath, tickPaint)
 
-                xTickLabels?.let { tickLabels ->
-                    tickPaint.style = Paint.Style.FILL
-                    tickPaint.textAlign = Paint.Align.CENTER
+                xTickLabelLayouts?.let { tickLabels ->
                     // Log.v("Tuner", "PlotView:drawXTicks: tickLabels[$i] = " + tickLabels[i])
-                    canvas?.drawText(
-                        tickLabels[i],
-                        point[0],
-                        viewPlotBounds.bottom - tickPaint.ascent(),
-                        tickPaint
-                    )
+                    drawStaticLayout(canvas, tickLabels[i], point[0] , viewPlotBounds.bottom + tickLabels[i].height / 2)
                 }
             }
         }
@@ -695,19 +641,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 plotTransformationMatrix.mapPoints(point)
                 straightLinePath.moveTo(viewPlotBounds.left, point[1])
                 straightLinePath.lineTo(viewPlotBounds.right, point[1])
-                tickPaint.style = Paint.Style.STROKE
                 canvas?.drawPath(straightLinePath, tickPaint)
 
-                yTickLabels?.let { tickLabels ->
+                yTickLabelLayouts?.let { tickLabels ->
                     require(yTickLabelWidth > 0.0f) { "PlotView::drawYTicks: If you define yTick labels you must specify a yTickLabelWidth larger than 0.0f" }
-                    tickPaint.style = Paint.Style.FILL
-                    tickPaint.textAlign = Paint.Align.RIGHT
-                    canvas?.drawText(
-                        tickLabels[i],
-                        viewPlotBounds.left - tickTextSize / 2,
-                        point[1],
-                        tickPaint
-                    )
+                    val textWidth = tickLabels[i].getLineWidth(0) + tickLabels[i].getLineBottom(0) - tickLabels[i].getLineDescent(0)
+                    drawStaticLayout(canvas, tickLabels[i], viewPlotBounds.left - textWidth / 2, point[1])
                 }
             }
         }
@@ -734,76 +673,165 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 //        canvas?.drawPath(arrowPath, paint)
 //    }
 
-    /// Set x-marks (a line with an optional label).
-    /**
-     * @param value List of values for x-marks.
-     * @param numValues Number of values to be taken values-array (use PlotView.TAKE_ALL, to
-     *   use all values).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
-     * @param format A formatting function which converts the x-mark-values to strings. (null for
-     *   no labels)
-     */
-    fun setXMarks(value : FloatArray?, numValues : Int = TAKE_ALL, redraw : Boolean = true, format : ((Float) -> String)? = null) {
-        if (value == null) {
-            numXMarks = 0
-        }
-        else {
-            var resolvedNumValues = numValues
-            if (numValues == TAKE_ALL)
-                resolvedNumValues = value.size
-            val currentCapacity = xMarks?.size ?: 0
-            if (currentCapacity < resolvedNumValues) {
-                xMarks = FloatArray(resolvedNumValues)
-                xMarkLabels = Array(resolvedNumValues) {""}
-            }
-            xMarks?.let {
-                value.copyInto(it, 0, 0, resolvedNumValues)
-                numXMarks = resolvedNumValues
-
-                for (i in 0 until resolvedNumValues)
-                    xMarkLabels?.set(i, format?.invoke(value[i]) ?: "")
-            }
-        }
-        if(redraw)
+    fun unsetMarks(redraw: Boolean = true) {
+        marks.clear()
+        markLabelLayouts.clear()
+        if (redraw)
             invalidate()
     }
 
-    /// Set y-marks (a line with an optional label).
-    /**
-     * @param value List of values for y-marks.
-     * @param numValues Number of values to be taken values-array (use PlotView.TAKE_ALL, to
-     *   use all values).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
-     * @param format A formatting function which converts the x-mark-values to strings. (null for
-     *   no labels)
-     */
-    fun setYMarks(value : FloatArray?, numValues : Int = TAKE_ALL, redraw : Boolean = true, format : ((Float) -> String)? = null) {
-        if (value == null) {
-            numYMarks = 0
-        }
-        else {
-            var resolvedNumValues = numValues
-            if (numValues == TAKE_ALL)
-                resolvedNumValues = value.size
-            val currentCapacity = yMarks?.size ?: 0
-            if (currentCapacity < resolvedNumValues) {
-                yMarks = FloatArray(resolvedNumValues)
-                yMarkLabels = Array(resolvedNumValues) {""}
-            }
-            yMarks?.let {
-                value.copyInto(it, 0, 0, resolvedNumValues)
-                numYMarks = resolvedNumValues
+    fun setMarks(newMarks: ArrayList<Mark>, redraw: Boolean = true) {
+        marks.clear()
+        marks.addAll(newMarks)
+        buildMarkLabels()
 
-                for (i in 0 until resolvedNumValues)
-                    yMarkLabels?.set(i, format?.invoke(value[i]) ?: "")
+        if (redraw)
+            invalidate()
+    }
+
+    fun setMark(xPosition: Float, yPosition: Float, label: CharSequence?, anchor: MarkAnchor = MarkAnchor.Center, redraw: Boolean = true) {
+        val mark = Mark(xPosition, yPosition, label, anchor)
+        marks.clear()
+        marks.add(mark)
+        buildMarkLabels()
+
+        if (redraw)
+            invalidate()
+    }
+
+    fun setXMark(xPosition: Float, label: CharSequence?, anchor: MarkAnchor = MarkAnchor.Center, redraw: Boolean = true) {
+        val mark = Mark(xPosition, DrawLine, label, anchor)
+        marks.clear()
+        marks.add(mark)
+        buildMarkLabels()
+
+        if (redraw)
+            invalidate()
+    }
+
+    fun setYMark(yPosition: Float, label: CharSequence?, anchor: MarkAnchor = MarkAnchor.Center, redraw: Boolean = true) {
+        val mark = Mark(DrawLine, yPosition, label, anchor)
+        marks.clear()
+        markLabelLayouts.clear()
+        marks.add(mark)
+        buildMarkLabels()
+
+        if (redraw)
+            invalidate()
+    }
+
+    private fun buildMarkLabels() {
+        markLabelLayouts.clear()
+        for (mark in marks) {
+            if (mark.label != null) {
+                val desiredWidth = ceil(StaticLayout.getDesiredWidth(mark.label, markLabelPaint)).toInt()
+                val builder = StaticLayout.Builder.obtain(mark.label, 0, mark.label.length, markLabelPaint, desiredWidth)
+                markLabelLayouts.add(builder.build())
             }
         }
-        if(redraw)
-            invalidate()
+    }
+
+    private fun drawMarks(canvas: Canvas?) {
+        if (canvas == null)
+            return
+
+        marks.zip(markLabelLayouts) { mark, label ->
+            // only plot if mark is within bounds
+            if (   (mark.xPosition == DrawLine && mark.yPosition >= rawPlotBounds.top && mark.yPosition <= rawPlotBounds.bottom)
+                || (mark.yPosition == DrawLine && mark.xPosition >= rawPlotBounds.left && mark.xPosition <= rawPlotBounds.right)
+                || (mark.xPosition != DrawLine && mark.yPosition != DrawLine
+                        && mark.yPosition >= rawPlotBounds.top && mark.yPosition <= rawPlotBounds.bottom
+                        && mark.xPosition >= rawPlotBounds.left && mark.xPosition <= rawPlotBounds.right)) {
+
+                // find point in view-coordinates
+                point[0] = if (mark.xPosition == DrawLine) 0f else mark.xPosition
+                point[1] = if (mark.yPosition == DrawLine) 0f else mark.yPosition
+                plotTransformationMatrix.mapPoints(point)
+
+                // horizontal line
+                if (mark.xPosition == DrawLine) {
+                    straightLinePath.rewind()
+                    straightLinePath.moveTo(viewPlotBounds.left, point[1])
+                    straightLinePath.lineTo(viewPlotBounds.right, point[1])
+                    markPaint.style = Paint.Style.STROKE
+                    canvas.drawPath(straightLinePath, markPaint)
+                }
+                // vertical line
+                else if (mark.yPosition == DrawLine) {
+                    straightLinePath.rewind()
+                    straightLinePath.moveTo(point[0], viewPlotBounds.bottom)
+                    straightLinePath.lineTo(point[0], viewPlotBounds.top)
+                    markPaint.style = Paint.Style.STROKE
+                    canvas.drawPath(straightLinePath, markPaint)
+                }
+
+                if (label != null) {
+                    val labelWidth =
+                        label.getLineWidth(0) + (label.getLineBottom(0) - label.getLineDescent(0)) / 2
+                    val labelHeight = label.height.toFloat()
+
+                    // override mark position based on anchor
+                    if (mark.xPosition == DrawLine) {
+                        point[0] = when (mark.anchor) {
+                            MarkAnchor.Center, MarkAnchor.North, MarkAnchor.South -> viewPlotBounds.centerX()
+                            MarkAnchor.West, MarkAnchor.NorthWest, MarkAnchor.SouthWest -> viewPlotBounds.left + labelWidth / 2
+                            MarkAnchor.East, MarkAnchor.NorthEast, MarkAnchor.SouthEast -> viewPlotBounds.right - labelWidth / 2
+                        }
+                        point[1] = when (mark.anchor) {
+                            MarkAnchor.Center, MarkAnchor.West, MarkAnchor.East -> point[1]
+                            MarkAnchor.South, MarkAnchor.SouthWest, MarkAnchor.SouthEast -> point[1] - labelHeight / 2
+                            MarkAnchor.North, MarkAnchor.NorthWest, MarkAnchor.NorthEast -> point[1] + labelHeight / 2
+                        }
+                    } else if (mark.yPosition == DrawLine) {
+                        point[0] = when (mark.anchor) {
+                            MarkAnchor.Center, MarkAnchor.North, MarkAnchor.South -> point[0]
+                            MarkAnchor.West, MarkAnchor.NorthWest, MarkAnchor.SouthWest -> point[0] + labelWidth / 2
+                            MarkAnchor.East, MarkAnchor.NorthEast, MarkAnchor.SouthEast -> point[0] - labelWidth / 2
+                        }
+                        point[1] = when (mark.anchor) {
+                            MarkAnchor.Center, MarkAnchor.West, MarkAnchor.East -> viewPlotBounds.centerY()
+                            MarkAnchor.South, MarkAnchor.SouthWest, MarkAnchor.SouthEast -> viewPlotBounds.bottom - labelHeight / 2
+                            MarkAnchor.North, MarkAnchor.NorthWest, MarkAnchor.NorthEast -> viewPlotBounds.top + labelHeight / 2
+                        }
+                    } else if (mark.xPosition != DrawLine && mark.yPosition != DrawLine) {
+                        point[0] = when (mark.anchor) {
+                            MarkAnchor.Center, MarkAnchor.North, MarkAnchor.South -> point[0]
+                            MarkAnchor.West, MarkAnchor.NorthWest, MarkAnchor.SouthWest -> point[0] + labelWidth / 2
+                            MarkAnchor.East, MarkAnchor.NorthEast, MarkAnchor.SouthEast -> point[0] - labelWidth / 2
+                        }
+                        point[1] = when (mark.anchor) {
+                            MarkAnchor.Center, MarkAnchor.West, MarkAnchor.East -> point[1]
+                            MarkAnchor.South, MarkAnchor.SouthWest, MarkAnchor.SouthEast -> point[1] - labelHeight / 2
+                            MarkAnchor.North, MarkAnchor.NorthWest, MarkAnchor.NorthEast -> point[1] + labelHeight / 2
+                        }
+                    } else {
+                        throw RuntimeException("Invalid mark position")
+                    }
+
+                    markPaint.style = Paint.Style.FILL
+                    canvas.drawRect(
+                        point[0] - labelWidth / 2,
+                        point[1] - labelHeight / 2,
+                        point[0] + labelWidth / 2,
+                        point[1] + labelHeight / 2,
+                        markPaint
+                    )
+                    drawStaticLayout(canvas, label, point[0], point[1])
+                }
+            }
+        }
+    }
+
+    private fun drawStaticLayout(canvas: Canvas?, layout: StaticLayout, xCenter: Float, yCenter: Float) {
+        if (canvas == null)
+            return
+        val textWidth = layout.getLineWidth(0)
+        val textHeight = layout.height.toFloat()
+
+        canvas.save()
+        canvas.translate(xCenter - textWidth / 2, yCenter - textHeight / 2)
+        layout.draw(canvas)
+        canvas.restore()
     }
 
     /// Set points which should be drawn as filled circles.
@@ -839,17 +867,19 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param format Functions for creating the tick labels from the values. Use null to draw
      *   no labels.
      */
-    fun setXTicks(value : FloatArray?, redraw: Boolean = true, format : ((Float) -> String)?) {
+    fun setXTicks(value : FloatArray?, redraw: Boolean = true, format : ((Float) -> CharSequence)?) {
         if (value == null) {
             xTicks = null
             xTickLabels = null
         }
         else {
             xTicks = FloatArray(value.size) {i -> value[i]}
-            xTickLabels = if (format != null)
+            xTickLabels = if (format != null) {
                 Array(value.size) { i -> format(value[i]) }
-            else
-                Array(value.size) { i -> value[i].toString() }
+            } else {
+                null
+            }
+            xTickLabelLayouts = buildTickLabelLayouts(xTickLabels)
         }
         if(!plotCalled)
             resolveBounds(0f,0f, 0f, 0f)
@@ -866,22 +896,39 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param format Functions for creating the tick labels from the values. Use null to draw
      *   no labels.
      */
-    fun setYTicks(value : FloatArray?, redraw: Boolean = true, format : ((Float) -> String)?) {
+    fun setYTicks(value : FloatArray?, redraw: Boolean = true, format : ((Float) -> CharSequence)?) {
         if (value == null) {
             yTicks = null
             yTickLabels = null
         }
         else {
             yTicks = FloatArray(value.size) {i -> value[i]}
-            yTickLabels = if (format != null)
+            yTickLabels = if (format != null) {
                 Array(value.size) { i -> format(value[i]) }
-            else
-                Array(value.size) { i -> value[i].toString() }
+            } else {
+                null
+            }
+            yTickLabelLayouts = buildTickLabelLayouts(yTickLabels)
         }
         if(!plotCalled)
             resolveBounds(0f,0f, 0f, 0f)
         if(redraw)
             invalidate()
+    }
+
+    private fun buildTickLabelLayouts(tickLabels: Array<CharSequence>?) : Array<StaticLayout>? {
+        return if (tickLabels == null) {
+            null
+        } else {
+            Array(tickLabels.size) { i ->
+                val name = tickLabels[i]
+                val desiredWidth =
+                    ceil(StaticLayout.getDesiredWidth(name, tickLabelPaint)).toInt()
+                val builder =
+                    StaticLayout.Builder.obtain(name, 0, name.length, tickLabelPaint, desiredWidth)
+                builder.build()
+            }
+        }
     }
 
     private fun resolveBounds(xMinData : Float, xMaxData : Float, yMinData : Float, yMaxData : Float) {

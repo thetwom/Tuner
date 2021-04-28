@@ -27,7 +27,7 @@ interface TuningFrequencies {
     fun getNoteFrequency(noteIndex : Int) : Float
     fun getNoteFrequency(noteIndex : Float) : Float
 
-    fun getNoteName(frequency : Float) : String
-    fun getNoteName(toneIndex : Int, preferFlat : Boolean) : String
+    fun getNoteName(frequency : Float) : CharSequence
+    fun getNoteName(toneIndex : Int, preferFlat : Boolean) : CharSequence
 
 }

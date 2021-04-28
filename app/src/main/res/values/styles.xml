@@ -46,6 +46,7 @@
         <attr name="markColor" format="color"/>
         <attr name="markLineWidth" format="dimension"/>
         <attr name="markTextSize" format="dimension"/>
+        <attr name="markLabelColor" format="color"/>
         <attr name="tickColor" format="color"/>
         <attr name="tickLineWidth" format="dimension"/>
         <attr name="tickTextSize" format="dimension"/>
@@ -62,6 +63,7 @@
         <item name="markColor">?attr/colorPrimary</item>n
         <item name="markLineWidth">1dp</item>
         <item name="markTextSize">12sp</item>
+        <item name="markLabelColor">?attr/colorOnPrimary</item>
         <item name="tickColor">?attr/colorPrimary</item>
         <item name="tickLineWidth">1dp</item>
         <item name="tickTextSize">12sp</item>

@@ -40,4 +40,5 @@
     <string name="autocorrelation">autocorrelation</string>
     <string name="pitch_history">pitch history</string>
     <string name="spectrum">spectrum</string>
+    <string name="cent">%+d&#x200A;&#162;</string>
 </resources>
