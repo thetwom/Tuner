@@ -24,6 +24,8 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.fragment.app.commit
+import androidx.fragment.app.replace
 import androidx.preference.PreferenceManager
 
 class MainActivity : AppCompatActivity() {
@@ -46,9 +48,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar))
 
-        if (savedInstanceState == null)
-            supportFragmentManager.beginTransaction().replace(R.id.main_content, TunerFragment())
-                .commit()
+        if (savedInstanceState == null) {
+            supportFragmentManager.commit {
+                setReorderingAllowed(true)
+                replace<TunerFragment>(R.id.main_content)
+            }
+        }
 
         setDisplayHomeButton()
         supportFragmentManager.addOnBackStackChangedListener { setDisplayHomeButton() }
@@ -67,10 +72,12 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.action_settings -> {
             // User chose the "Settings" item, show the app settings UI...
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.main_content, SettingsFragment())
-                .addToBackStack(null)
-                .commit()
+            supportFragmentManager.commit {
+                setReorderingAllowed(true)
+                replace<SettingsFragment>(R.id.main_content)
+                addToBackStack(null)
+            }
+
             true
         }
         else -> {

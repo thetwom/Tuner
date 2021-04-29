@@ -22,8 +22,6 @@ package de.moekadu.tuner
 import android.Manifest
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.text.SpannableString
-import android.text.style.SuperscriptSpan
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -168,14 +166,14 @@ class TunerFragment : Fragment() {
 
         viewModel.tunerResults.observe(viewLifecycleOwner) { results ->
             if (results.pitchFrequency == null) {
-                correlationPlot?.unsetMarks()
-                spectrumPlot?.unsetMarks()
+                correlationPlot?.unsetMarks(null)
+                spectrumPlot?.unsetMarks(null)
             }
             else {
                 results.pitchFrequency?.let { pitchFrequency ->
                     val label = getString(R.string.hertz, pitchFrequency)
-                    correlationPlot?.setXMark(1.0f / pitchFrequency, label, PlotView.MarkAnchor.SouthWest)
-                    spectrumPlot?.setXMark(pitchFrequency, label, PlotView.MarkAnchor.SouthWest)
+                    correlationPlot?.setXMark(1.0f / pitchFrequency, label, MARK_ID_FREQUENCY, PlotView.MarkAnchor.SouthWest)
+                    spectrumPlot?.setXMark(pitchFrequency, label, MARK_ID_FREQUENCY, PlotView.MarkAnchor.SouthWest)
                 }
             }
 
@@ -193,13 +191,11 @@ class TunerFragment : Fragment() {
             pitchPlot?.xRange(0f, 1.15f * it.toFloat(), PlotView.NO_REDRAW)
         }
 
-        //viewModel.pitchHistory.frequencyPlotRange.observe(this) {
         viewModel.pitchHistory.frequencyPlotRangeAveraged.observe(viewLifecycleOwner) {
 //            Log.v("TestRecordFlow", "TunerFragment.plotRange: ${it[0]} -- ${it[1]}")
             pitchPlot?.yRange(it[0], it[1], 600)
         }
 
-        //viewModel.pitchHistory.history.observe(this) {
         viewModel.pitchHistory.historyAveraged.observe(viewLifecycleOwner) {
             if (it.size > 0) {
                 pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), it.last()), false)
@@ -218,14 +214,12 @@ class TunerFragment : Fragment() {
                 val nameMinusBound = getString(R.string.cent, -boundCents)
                 val frequencyMinusBound = tuningFrequencies.getNoteFrequency(toneIndex - boundCents / 100f)
 
-                val marks = ArrayList<PlotView.Mark>()
-
-                marks.add(PlotView.Mark(PlotView.DrawLine, frequencyPlusBound, namePlusBound, PlotView.MarkAnchor.SouthWest))
-                marks.add(PlotView.Mark(PlotView.DrawLine, frequencyMinusBound, nameMinusBound, PlotView.MarkAnchor.NorthWest))
-
+                val marks = ArrayList<PlotView.Mark>(2)
+                marks.add(PlotView.Mark(PlotView.DRAW_LINE, frequencyPlusBound, namePlusBound, PlotView.MarkAnchor.SouthWest, 1))
+                marks.add(PlotView.Mark(PlotView.DRAW_LINE, frequencyMinusBound, nameMinusBound, PlotView.MarkAnchor.NorthWest, 1))
+                pitchPlot?.setMarks(marks, MARK_ID_TOLERANCE, PlotView.MarkLabelBackgroundSize.FitLargest, false)
                 val noteName = tuningFrequencies.getNoteName(frequency)
-                marks.add(PlotView.Mark(PlotView.DrawLine, frequency, noteName, PlotView.MarkAnchor.East))
-                pitchPlot?.setMarks(marks)
+                pitchPlot?.setYMark(frequency, noteName, MARK_ID_FREQUENCY, PlotView.MarkAnchor.East, 0, true)
             }
         }
 
@@ -272,5 +266,10 @@ class TunerFragment : Fragment() {
         viewModel.pitchHistory.maxNumFaultyValues = sharedPreferences.getInt("pitch_history_num_faulty_values", 3)
         viewModel.pitchHistory.numMovingAverage = sharedPreferences.getInt("num_moving_average", 5)
         viewModel.useHint = sharedPreferences.getBoolean("use_hint", true)
+    }
+
+    companion object{
+        private const val MARK_ID_TOLERANCE = 9
+        private const val MARK_ID_FREQUENCY = 10
     }
 }
