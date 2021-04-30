@@ -1,0 +1,8 @@
+PRIVACY POLICY
+
+Tuner requests the following permissions:
+
+* RECORD_AUDIO in order to get the microphone signal which
+   is used to analyze and show the pitch of your instrument.
+
+Other than that, Tuner will not collect or use your private data.
