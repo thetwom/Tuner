@@ -65,6 +65,18 @@ class SettingsFragment : PreferenceFragmentCompat() {
       true
     }
 
+    val screenOnPreference = findPreference<SwitchPreferenceCompat?>("screenon")
+      ?: throw RuntimeException("No screenon preference")
+
+    screenOnPreference.setOnPreferenceChangeListener { _, newValue ->
+      val screenOn = newValue as Boolean
+      if (screenOn)
+        activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+      else
+        activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+      true
+    }
+
     val a4Frequency = findPreference<EditTextPreference?>("a4_frequency")
     a4Frequency?.setOnBindEditTextListener { editText ->
       editText.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL

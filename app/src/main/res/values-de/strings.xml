@@ -31,4 +31,5 @@
     <string name="autocorrelation">Autokorrelation</string>
     <string name="pitch_history">Tonverlauf</string>
     <string name="spectrum">Spektrum</string>
+    <string name="keep_screen_on">Bildschirm immer an</string>
 </resources>

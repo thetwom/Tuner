@@ -22,6 +22,7 @@ package de.moekadu.tuner
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.commit
@@ -44,6 +45,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         AppCompatDelegate.setDefaultNightMode(nightMode)
+
+        val screenOn = sharedPreferences.getBoolean("screenon", false)
+        if(screenOn)
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        else
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar))

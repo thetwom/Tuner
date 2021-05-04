@@ -12,6 +12,12 @@
         android:summary="@string/system_appearance"
         />
 
+    <SwitchPreferenceCompat
+        app:key="screenon"
+        app:title="@string/keep_screen_on"
+        app:defaultValue="false"
+        />
+
     <EditTextPreference
         app:key="a4_frequency"
         app:title="@string/a4_frequency"
