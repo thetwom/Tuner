@@ -15,3 +15,4 @@ v1.2.1:
 
 v1.2.2:
 - Add preference to keep screen on
+- Make statusbar always black

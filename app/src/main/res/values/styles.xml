@@ -30,6 +30,7 @@
 
         <item name="colorControlNormal">@color/colorPrimary</item>
 
+        <item name="android:statusBarColor">#000000</item>
         <item name="plotViewStyle">@style/PlotViewStyle</item>
         <item name="volumeMeterStyle">@style/VolumeMeterStyle</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
