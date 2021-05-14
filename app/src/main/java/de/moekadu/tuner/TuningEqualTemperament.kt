@@ -31,11 +31,11 @@ import kotlin.math.roundToInt
  */
 class TuningEqualTemperament(private val a4Frequency : Float = 440f) : TuningFrequencies {
 
-    /// Tone index (as e.g. used in getNoteFrequency) for name of noteNames[0]
-    private val noteName0ToneIndex = -48
+    /// Tone index (as e.g. used in getNoteFrequency) for name of noteNames[0] with octave index 0
+    private val noteName0ToneIndex = -57 // a4 has index 0
 
     /// Note names in half tones. A '-' refers to sharp/flat note in between the neighboring tones.
-    private val noteNames = charArrayOf('A', '-', 'B', 'C', '-', 'D', '-', 'E', 'F', '-', 'G', '-')
+    private val noteNames = charArrayOf('C', '-', 'D', '-', 'E', 'F', '-', 'G', '-', 'A', '-', 'B')
 
     /// Ratio between two neighboring half tones
     private val halfToneRatio = 2.0f.pow(1.0f / noteNames.size)
@@ -69,7 +69,7 @@ class TuningEqualTemperament(private val a4Frequency : Float = 440f) : TuningFre
        return a4Frequency * halfToneRatio.pow(noteIndex)
     }
 
-    /// Get frequency of not with the given index, where the index can also be in between two notes.
+    /// Get frequency of note with the given index, where the index can also be in between two notes.
     /**
      * @param noteIndex Note index as e.g. returned by getClosestToneIndex. Two succeeding
      *   indices give a distance of one half tone.
