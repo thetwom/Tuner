@@ -16,14 +16,14 @@
     <string name="settings">Einstellungen</string>
     <string name="overlap">Überlappung</string>
     <string name="window_size">Fensterweite</string>
-    <string name="minimum_frequency">Minimale Frequenz:</string>
+    <string name="minimum_frequency">"Minimale Frequenz: "</string>
     <string name="no_audio_recording_permission">Berechtigung zur Audioaufnahme wurde nicht gewährt.</string>
     <string name="pitch_history_duration">Dauer des Tonverlaufs</string>
     <string name="pitch_history_num_faulty_values">Anzahl Werte um neuen Ton zu akzeptieren</string>
-    <string name="use_hint">Verbessere Tonschätzung durch vorherige Werte</string>
+    <string name="use_hint">Bessere Tonschätzung durch vorherige Werte</string>
     <string name="num_moving_average">Anzahl Werte für gleitenden Mittelwert</string>
     <string name="about">Über</string>
-    <string name="about_message">Tuner app Version: %s Lizenz: GPLv3</string>
+    <string name="about_message">Tuner app\nVersion: %s\nLizenz: GPLv3</string>
     <string name="reset_all_settings">Alle Einstellungen zurücksetzen</string>
     <string name="reset_settings_prompt">Sollen wirklich alle Einstellungen zurückgesetzt werden?</string>
     <string name="yes">ja</string>
@@ -32,4 +32,5 @@
     <string name="pitch_history">Tonverlauf</string>
     <string name="spectrum">Spektrum</string>
     <string name="keep_screen_on">Bildschirm immer an</string>
+    <string name="samples">Samples</string>
 </resources>

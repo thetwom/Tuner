@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:iconSpaceReserved="false">
 
     <ListPreference
         app:key="appearance"
@@ -33,6 +34,7 @@
         app:defaultValue="5"
         app:seekBarIncrement="1"
         app:updatesContinuously="true"
+        app:singleLineTitle="false"
         />
 
     <ListPreference
@@ -80,12 +82,14 @@
         android:max="12"
         app:seekBarIncrement="1"
         app:updatesContinuously="true"
+        app:singleLineTitle="false"
         />
 
     <SwitchPreferenceCompat
         android:key="use_hint"
         app:title="@string/use_hint"
         app:defaultValue="true"
+        app:singleLineTitle="false"
         />
 
       <Preference

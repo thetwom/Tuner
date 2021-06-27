@@ -1,0 +1,17 @@
+v1.2.0:
+- German translations
+
+v1.2.1:
+- Show 5cent tolerance
+- Number superscripts for notes instead of ' and ,
+
+v1.2.2:
+- Add preference to keep screen on
+- Make statusbar always black
+
+v1.2.3:
+- Correct indices for octaves
+- Improvements in appearance of preferences
+
+v1.2.4:
+- Improvements in appearance of preferences

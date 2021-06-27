@@ -42,4 +42,5 @@
     <string name="spectrum">spectrum</string>
     <string name="cent" translatable="false">%+d&#x200A;&#162;</string>
     <string name="keep_screen_on">Keep screen on</string>
+    <string name="samples">samples</string>
 </resources>

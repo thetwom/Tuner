@@ -164,7 +164,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     val s = indexToWindowSize(windowSizeIndex)
     // the factor 2 in the next line is used since only one wave inside the window is not enough for
     // accurate frequency finding.
-    return "$s (" + getString(R.string.minimum_frequency) + getString(R.string.hertz, 2 * 44100f / s) + ")"
+    return "$s " + getString(R.string.samples) + " (" + getString(R.string.minimum_frequency) + getString(R.string.hertz, 2 * 44100f / s) + ")"
   }
 
   private fun getPitchHistoryDurationSummary(percent: Int): String {
