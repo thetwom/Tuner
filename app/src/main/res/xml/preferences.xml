@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:iconSpaceReserved="false">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <ListPreference
         app:key="appearance"
@@ -10,6 +9,7 @@
         android:entryValues="@array/appearanceList"
         android:dialogTitle="@string/appearance"
         android:defaultValue="auto"
+        app:icon="@drawable/ic_appearance"
         android:summary="@string/system_appearance"
         />
 
@@ -17,6 +17,7 @@
         app:key="screenon"
         app:title="@string/keep_screen_on"
         app:defaultValue="false"
+        app:icon="@drawable/ic_screen_on"
         />
 
     <EditTextPreference
@@ -24,6 +25,7 @@
         app:title="@string/a4_frequency"
         android:defaultValue="440"
         android:summary="440 Hz"
+        app:icon="@drawable/ic_frequency_a"
         />
 
     <SeekBarPreference
@@ -35,15 +37,7 @@
         app:seekBarIncrement="1"
         app:updatesContinuously="true"
         app:singleLineTitle="false"
-        />
-
-    <ListPreference
-        android:key="windowing"
-        app:title="@string/windowing_function"
-        android:entries="@array/windowingFunctionNames"
-        android:entryValues="@array/windowingFunctionList"
-        android:defaultValue="window_hamming"
-        android:summary="@string/window_hamming"
+        app:icon="@drawable/ic_average"
         />
 
     <SeekBarPreference
@@ -54,7 +48,19 @@
         android:max="8"
         app:seekBarIncrement="1"
         app:updatesContinuously="true"
+        app:icon="@drawable/ic_window_size"
         />
+
+    <ListPreference
+        android:key="windowing"
+        app:title="@string/windowing_function"
+        android:entries="@array/windowingFunctionNames"
+        android:entryValues="@array/windowingFunctionList"
+        android:defaultValue="window_hamming"
+        app:icon="@drawable/ic_window_function"
+        android:summary="@string/window_hamming"
+        />
+
     <SeekBarPreference
         android:key="overlap"
         app:title="@string/overlap"
@@ -63,6 +69,7 @@
         android:max="80"
         app:seekBarIncrement="1"
         app:updatesContinuously="true"
+        app:icon="@drawable/ic_window_overlap"
         />
     <SeekBarPreference
         android:key="pitch_history_duration"

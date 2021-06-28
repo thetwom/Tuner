@@ -14,7 +14,7 @@
     <string name="light_appearance_short">Hell</string>
     <string name="system_appearance_short">Automatisch</string>
     <string name="settings">Einstellungen</string>
-    <string name="overlap">Überlappung</string>
+    <string name="overlap">Fensterüberlappung</string>
     <string name="window_size">Fensterweite</string>
     <string name="minimum_frequency">"Minimale Frequenz: "</string>
     <string name="no_audio_recording_permission">Berechtigung zur Audioaufnahme wurde nicht gewährt.</string>
