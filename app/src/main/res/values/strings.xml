@@ -28,9 +28,11 @@
     <string name="minimum_frequency">"Minimum frequency: "</string>
     <string name="no_audio_recording_permission">No audio recording permission is granted.</string>
     <string name="pitch_history_duration">Duration of pitch history</string>
-    <string name="pitch_history_num_faulty_values">Number of values to accept new pitch</string>
+    <string name="pitch_history_num_faulty_values">Jump to new pitch</string>
+    <string name="pitch_history_num_faulty_values_summary">After %d similar frequencies</string>
     <string name="use_hint">Use previous values to improve pitch estimation</string>
-    <string name="num_moving_average">Moving average samples</string>
+    <string name="num_moving_average">Moving average</string>
+    <string name="num_moving_average_summary">Average over %d frequencies</string>
     <string name="about">About</string>
     <string name="about_message">Tuner app\nVersion: %s\nLicense: GPLv3</string>
     <string name="reset_all_settings">Reset all settings</string>

@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.sin
+import kotlin.random.Random
 
 class TunerViewModel : ViewModel() {
 
@@ -106,6 +107,10 @@ class TunerViewModel : ViewModel() {
 //            val freq = 400f + 2*t
 //           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
 //            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
+//        }
+//        sampleSource.testFunction = { t ->
+//            800f * Random.nextFloat()
+//            //1f
 //        }
 
         viewModelScope.launch {
