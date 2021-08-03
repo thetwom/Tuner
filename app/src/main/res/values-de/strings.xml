@@ -20,7 +20,11 @@
     <string name="no_audio_recording_permission">Berechtigung zur Audioaufnahme wurde nicht gewährt.</string>
     <string name="pitch_history_duration">Dauer des Tonverlaufs</string>
     <string name="pitch_history_num_faulty_values">Zu neuem Ton springen</string>
-    <string name="pitch_history_num_faulty_values_summary">Nach %d ähnlichen Frequenzen</string>
+    <plurals name="pitch_history_num_faulty_values_summary">
+        <item quantity="one">Immer direkt zu neuem Ton springen</item>
+        <item quantity="other">Nach %d ähnlichen Ton-Ergenissen</item>
+    </plurals>
+
     <string name="use_hint">Bessere Tonschätzung durch vorherige Werte</string>
     <string name="num_moving_average">Gleitender Mittelwert</string>
     <string name="about">Über</string>
@@ -34,4 +38,8 @@
     <string name="spectrum">Spektrum</string>
     <string name="keep_screen_on">Bildschirm immer an</string>
     <string name="samples">Samples</string>
+    <plurals name="num_moving_average_summary">
+        <item quantity="one">Keine Mittelung</item>
+        <item quantity="other">Mittelung über %d Ton-Ergebnisse</item>
+    </plurals>
 </resources>

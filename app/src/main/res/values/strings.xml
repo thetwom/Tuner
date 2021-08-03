@@ -29,10 +29,16 @@
     <string name="no_audio_recording_permission">No audio recording permission is granted.</string>
     <string name="pitch_history_duration">Duration of pitch history</string>
     <string name="pitch_history_num_faulty_values">Jump to new pitch</string>
-    <string name="pitch_history_num_faulty_values_summary">After %d similar frequencies</string>
+    <plurals name="pitch_history_num_faulty_values_summary">
+        <item quantity="one">Directly jump to new pitch result</item>
+        <item quantity="other">After %d similar pitch results</item>
+    </plurals>
     <string name="use_hint">Use previous values to improve pitch estimation</string>
     <string name="num_moving_average">Moving average</string>
-    <string name="num_moving_average_summary">Average over %d frequencies</string>
+    <plurals name="num_moving_average_summary">
+        <item quantity="one">No averaging</item>
+        <item quantity="other">Average over %d pitch results</item>
+    </plurals>
     <string name="about">About</string>
     <string name="about_message">Tuner app\nVersion: %s\nLicense: GPLv3</string>
     <string name="reset_all_settings">Reset all settings</string>

@@ -162,6 +162,13 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
     val frequencyPlotRangeAveraged: LiveData<FloatArray>
         get() = _frequencyPlotRangeAveraged
 
+    /** Backing live data where store the number of values which have been append to the plot
+     * after the lines were updated. */
+    private val _numValuesSinceLastLineUpdate = MutableLiveData(0L)
+    /** Live data where store the number of values which have been append to the plot
+     * after the lines were updated. */
+    val numValuesSinceLastLineUpdate: LiveData<Long> = _numValuesSinceLastLineUpdate
+
     /// Append a new frequency value to our history.
     /**
      * @note This will also update the currentEstimatedPitch and the history live data.
@@ -232,6 +239,10 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
             _historyAveraged.value = pitchArrayMovingAverage
             updateCurrentEstimatedToneIndex()
             updatePlotRange()
+            if (_numValuesSinceLastLineUpdate.value != null)
+                _numValuesSinceLastLineUpdate.value = 0L
+        } else {
+            _numValuesSinceLastLineUpdate.value = (_numValuesSinceLastLineUpdate.value ?: 0L) + 1L
         }
     }
 

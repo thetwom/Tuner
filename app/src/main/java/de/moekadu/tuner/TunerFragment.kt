@@ -31,6 +31,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.preference.PreferenceManager
+import kotlin.math.floor
+import kotlin.math.max
 import kotlin.math.min
 
 class TunerFragment : Fragment() {
@@ -221,6 +223,12 @@ class TunerFragment : Fragment() {
                 val noteName = tuningFrequencies.getNoteName(frequency)
                 pitchPlot?.setYMark(frequency, noteName, MARK_ID_FREQUENCY, PlotView.MarkAnchor.East, 0, true)
             }
+        }
+
+        viewModel.pitchHistory.numValuesSinceLastLineUpdate.observe(viewLifecycleOwner) { numValuesSinceLastUpdate ->
+            val maxTimeBeforeInactive = 0.3f // seconds
+            val maxNumValuesBeforeInactive = max(1f, floor(maxTimeBeforeInactive / viewModel.pitchHistoryUpdateInterval))
+            pitchPlot?.linesAndPointsInactive = numValuesSinceLastUpdate > maxNumValuesBeforeInactive
         }
 
         // plot the values if available, since the plots currently cant store the plot lines.

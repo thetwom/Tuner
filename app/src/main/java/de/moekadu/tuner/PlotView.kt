@@ -125,6 +125,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     /// Color of plot line.
     private var plotLineColor = Color.BLACK
+    /// Color of plot line when inactive.
+    private var plotLineColorInactive = Color.GRAY
     /// Width of plot line.
     private var plotLineWidth = 5f
 
@@ -185,6 +187,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var pointSize = 5f
     /// Circle color the points.
     private var pointColor = Color.BLACK
+    /// Circle color the points when inactive.
+    private var pointColorInactive = Color.GRAY
     /// Paint used for drawing points.
     private val pointPaint = Paint()
 
@@ -227,6 +231,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     /// Temporary which is used for drawing points.
     private val point = FloatArray(2)
 
+    var linesAndPointsInactive = false
+        set(value) {
+            if (field != value) {
+                field = value
+                invalidate()
+            }
+        }
+
     @Parcelize
     private class SavedState(
         val xRange: FloatArray,
@@ -250,6 +262,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             val ta = context.obtainStyledAttributes(attrs, R.styleable.PlotView, defStyleAttr, R.style.PlotViewStyle)
             //val ta = context.obtainStyledAttributes(it, R.styleable.PlotView)
             plotLineColor = ta.getColor(R.styleable.PlotView_plotLineColor, plotLineColor)
+            plotLineColorInactive = ta.getColor(R.styleable.PlotView_plotLineColorInactive, plotLineColorInactive)
             plotLineWidth = ta.getDimension(R.styleable.PlotView_plotLineWidth, plotLineWidth)
 
             markColor[0] = ta.getColor(R.styleable.PlotView_markColor, markColor[0])
@@ -268,6 +281,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             yTickLabelWidth = ta.getDimension(R.styleable.PlotView_yTickLabelWidth, yTickLabelWidth)
             pointSize = ta.getDimension(R.styleable.PlotView_pointSize, pointSize)
             pointColor = ta.getColor(R.styleable.PlotView_pointColor, pointColor)
+            pointColorInactive = ta.getColor(R.styleable.PlotView_pointColorInactive, pointColorInactive)
             title = ta.getString(R.styleable.PlotView_title)
             titleSize = ta.getDimension(R.styleable.PlotView_titleSize, titleSize)
             ta.recycle()
@@ -354,6 +368,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         canvas?.save()
         canvas?.clipRect(viewPlotBounds)
         paint.style = Paint.Style.STROKE
+        paint.color = if (linesAndPointsInactive) plotLineColorInactive else plotLineColor
         canvas?.drawPath(transformedPlotLine, paint)
         drawPoints(canvas)
         canvas?.restore()
@@ -810,6 +825,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     private fun drawPoints(canvas: Canvas?) {
         points?.let {
+            pointPaint.color = if (linesAndPointsInactive) pointColorInactive else pointColor
             for(i in 0 until numPoints) {
                 point[0] = it[2*i]
                 point[1] = it[2*i+1]

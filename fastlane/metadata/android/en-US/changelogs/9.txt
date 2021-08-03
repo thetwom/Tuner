@@ -1,0 +1,4 @@
+v1.3.0:
+- Use plurals in preference descriptions
+- Extra visual feedback, when no new pitch is found for a certain time
+- Update to target sdk 31

@@ -31,7 +31,6 @@
     <SeekBarPreference
         android:key="num_moving_average"
         android:title="@string/num_moving_average"
-        android:summary="@string/num_moving_average_summary"
         app:min="1"
         android:max="15"
         app:defaultValue="5"
@@ -85,7 +84,6 @@
     <SeekBarPreference
         android:key="pitch_history_num_faulty_values"
         app:title="@string/pitch_history_num_faulty_values"
-        app:summary="@string/pitch_history_num_faulty_values_summary"
         app:min="1"
         android:max="12"
         app:seekBarIncrement="1"

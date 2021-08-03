@@ -55,6 +55,10 @@ class TunerViewModel : ViewModel() {
         get() = pitchHistoryDurationToPitchSamples(
             pitchHistoryDuration, sampleSource.sampleRate, windowSize, overlap)
 
+    /// Duration in seconds between two updates for the pitch history
+    val pitchHistoryUpdateInterval
+        get() = windowSize.toFloat() * (1f - overlap) / sampleSource.sampleRate
+
     var a4Frequency = 440f
         set(value) {
             if (field != value) {

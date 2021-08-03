@@ -87,10 +87,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     val numMovingAverage = findPreference<SeekBarPreference>("num_moving_average") ?: throw RuntimeException("No num_moving_average preference")
     numMovingAverage.setOnPreferenceChangeListener { preference, newValue ->
-      preference.summary = getString(R.string.num_moving_average_summary, newValue as Int)
+      preference.summary = resources.getQuantityString(R.plurals.num_moving_average_summary, newValue as Int, newValue)
       true
     }
-    numMovingAverage.summary = getString(R.string.num_moving_average_summary, numMovingAverage.value)
+    numMovingAverage.summary = resources.getQuantityString(R.plurals.num_moving_average_summary, numMovingAverage.value, numMovingAverage.value)
 
     val windowingFunction = findPreference<ListPreference?>("windowing")
     windowingFunction?.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
@@ -118,10 +118,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     val pitchHistoryNumFaultyValues = findPreference<SeekBarPreference>("pitch_history_num_faulty_values") ?: throw RuntimeException("No pitch history num fault values preference")
     pitchHistoryNumFaultyValues.setOnPreferenceChangeListener { preference, newValue ->
-      preference.summary = getString(R.string.pitch_history_num_faulty_values_summary, newValue as Int)
+      preference.summary = resources.getQuantityString(
+        R.plurals.pitch_history_num_faulty_values_summary, newValue as Int, newValue
+      )
       true
     }
-    pitchHistoryNumFaultyValues.summary = getString(R.string.pitch_history_num_faulty_values_summary, pitchHistoryNumFaultyValues.value)
+    pitchHistoryNumFaultyValues.summary = resources.getQuantityString(
+      R.plurals.pitch_history_num_faulty_values_summary,
+      pitchHistoryNumFaultyValues.value, pitchHistoryNumFaultyValues.value
+    )
 
     val resetSettings = findPreference<Preference>("setdefault") ?: throw RuntimeException("No reset settings preference")
 
