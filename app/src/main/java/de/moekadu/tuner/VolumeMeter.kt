@@ -30,9 +30,12 @@ import android.view.View
 
 class VolumeMeter(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr){
+    enum class Orientation {Vertical, Horizontal}
 
     private var barColor = Color.BLACK
     private var peakMarkerColor = Color.RED
+    private var orientation = Orientation.Horizontal
+
     var minValue = 0.0f
        private set
     private var maxValue = 1.0f
@@ -73,6 +76,10 @@ class VolumeMeter(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             peakMarkerSize = ta.getDimension(R.styleable.VolumeMeter_peakMarkerSize, 1.0f)
             minValue = ta.getFloat(R.styleable.VolumeMeter_volumeMin, 0.0f)
             maxValue = ta.getFloat(R.styleable.VolumeMeter_volumeMax, 1.0f)
+            orientation = if (ta.getInt(R.styleable.VolumeMeter_orientation, 0) == 0)
+                Orientation.Horizontal
+            else
+                Orientation.Vertical
             ta.recycle()
         }
 
@@ -96,22 +103,46 @@ class VolumeMeter(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
 
-        val minPos = (height - paddingBottom).toFloat()
-        val maxPos = paddingTop.toFloat() - peakMarkerSize
+        val minPos = when (orientation) {
+            Orientation.Vertical -> (height - paddingBottom).toFloat()
+            Orientation.Horizontal -> paddingLeft.toFloat()
+        }
+        val maxPos = when (orientation) {
+            Orientation.Vertical -> paddingTop.toFloat() - peakMarkerSize
+            Orientation.Horizontal -> width - paddingRight - peakMarkerSize
+        }
         val volumePos = (maxPos - minPos) / (maxValue - minValue) * (volume - minValue) + minPos
-        val peakVolumePos = (maxPos - minPos) / (maxValue - minValue) * (peakVolume - minValue) + minPos
+        val peakVolumePos =
+            (maxPos - minPos) / (maxValue - minValue) * (peakVolume - minValue) + minPos
 
-        barRect.left = paddingLeft.toFloat()
-        barRect.right = (width - paddingRight).toFloat()
-        barRect.bottom = minPos
-        barRect.top = volumePos
+        when (orientation) {
+            Orientation.Vertical -> {
+                barRect.left = paddingLeft.toFloat()
+                barRect.right = (width - paddingRight).toFloat()
+                barRect.bottom = minPos
+                barRect.top = volumePos
+            }
+            Orientation.Horizontal -> {
+                barRect.left = minPos
+                barRect.right = volumePos
+                barRect.bottom = (height - paddingBottom).toFloat()
+                barRect.top = paddingTop.toFloat()
+            }
+        }
 
         paint.color = barColor
         canvas?.drawRect(barRect, paint)
 
-        barRect.bottom = peakVolumePos
-        barRect.top = barRect.bottom - peakMarkerSize
-
+        when (orientation) {
+            Orientation.Vertical -> {
+                barRect.bottom = peakVolumePos
+                barRect.top = barRect.bottom - peakMarkerSize
+            }
+            Orientation.Horizontal -> {
+                barRect.left = peakVolumePos
+                barRect.right = barRect.left + peakMarkerSize
+            }
+        }
         paint.color = peakMarkerColor
         canvas?.drawRect(barRect, paint)
     }
@@ -123,7 +154,6 @@ class VolumeMeter(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             peakVolume = currentVolume
             invalidate()
             peakMarkerAnimator.start()
-
         }
     }
 

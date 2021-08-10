@@ -29,7 +29,9 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.pow
 import kotlin.math.sin
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 class TunerViewModel : ViewModel() {
@@ -95,6 +97,9 @@ class TunerViewModel : ViewModel() {
     val tuningFrequencies: LiveData<TuningFrequencies>
         get() = _tuningFrequencies
 
+    private val _standardDeviation = MutableLiveData(0f)
+    val standardDeviation: LiveData<Float> get() = _standardDeviation
+
     val pitchHistory = PitchHistory(pitchHistorySize, tuningFrequencyValues)
 
     private val correlationAndSpectrumComputer = CorrelationAndSpectrumComputer()
@@ -122,6 +127,12 @@ class TunerViewModel : ViewModel() {
                 .buffer()
                 .transform {
                     val result = correlationAndSpectrumComputer.run(it, windowingFunction)
+                    result.noise = if (result.correlation.size > 1) 1f - result.correlation[1] / result.correlation[0] else 1f
+
+                    _standardDeviation.value = withContext(Dispatchers.Default) {
+                        val average = it.data.average().toFloat()
+                        sqrt(it.data.fold(0f) {sum, element -> sum + (element - average).pow(2)}/ it.data.size)
+                    }
                     emit(result)
                 }
                 .buffer()
@@ -149,7 +160,7 @@ class TunerViewModel : ViewModel() {
                     it.pitchFrequency?.let {pitchFrequency ->
                         _tunerResults.value = it
                         if (pitchFrequency > 0.0f)
-                            pitchHistory.appendValue(pitchFrequency)
+                            pitchHistory.appendValue(pitchFrequency, it.noise)
                     }
                 }
         }

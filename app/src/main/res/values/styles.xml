@@ -63,6 +63,8 @@
         <attr name="pointColorInactive" format="color"/>
         <attr name="title" format="string"/>
         <attr name="titleSize" format="dimension"/>
+        <attr name="titleColor" format="color"/>
+        <attr name="frameStrokeWidth" format="dimension"/>
     </declare-styleable>
 
     <style name="PlotViewStyle">
@@ -85,6 +87,8 @@
         <item name="pointColor">?attr/colorPrimary</item>
         <item name="pointColorInactive">?attr/colorOnBackground</item>
         <item name="titleSize">12sp</item>
+        <item name="titleColor">?attr/colorPrimary</item>
+        <item name="frameStrokeWidth">2dp</item>
     </style>
 
     <declare-styleable name="VolumeMeter">
@@ -93,6 +97,10 @@
         <attr name="peakMarkerSize" format="dimension"/>
         <attr name="volumeMin" format="float"/>
         <attr name="volumeMax" format="float"/>
+        <attr name="orientation" format="enum">
+            <enum name="horizontal" value="0"/>
+            <enum name="vertical" value="1"/>
+        </attr>
     </declare-styleable>
 
     <style name="VolumeMeterStyle">
@@ -101,5 +109,6 @@
         <item name="peakMarkerSize">2dp</item>
         <item name="volumeMin">0.0</item>
         <item name="volumeMax">1.0</item>
+        <item name="orientation">horizontal</item>
     </style>
 </resources>

@@ -131,8 +131,9 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var plotLineWidth = 5f
 
     /// Paint used for plotting line and title
-    private val paint = Paint()
-//    private val arrowPath = Path()
+    private val plotLinePaint = Paint()
+
+    //    private val arrowPath = Path()
     /// Path with plot line of coordinates as given during plot
     private val rawPlotLine = Path()
     /// Plot line after transforming it to the canvas
@@ -225,6 +226,11 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var title : String? = null
     /// Font size of title
     private var titleSize = 10f
+    private var titleColor = Color.BLACK
+    /// Paint used for plotting title and frame
+    private val titlePaint = Paint()
+    /// Stroke width used for frame
+    private var frameStrokeWidth = 1f
 
     /// Temporary which is used for drawing paths.
     private val straightLinePath = Path()
@@ -284,12 +290,19 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             pointColorInactive = ta.getColor(R.styleable.PlotView_pointColorInactive, pointColorInactive)
             title = ta.getString(R.styleable.PlotView_title)
             titleSize = ta.getDimension(R.styleable.PlotView_titleSize, titleSize)
+            titleColor = ta.getColor(R.styleable.PlotView_titleColor, titleColor)
+            frameStrokeWidth = ta.getDimension(R.styleable.PlotView_frameStrokeWidth, frameStrokeWidth)
             ta.recycle()
         }
-        paint.color = plotLineColor
-        paint.strokeWidth = plotLineWidth
-        paint.isAntiAlias = true
-        paint.textSize = titleSize
+        plotLinePaint.color = plotLineColor
+        plotLinePaint.strokeWidth = plotLineWidth
+        plotLinePaint.style = Paint.Style.STROKE
+        plotLinePaint.isAntiAlias = true
+
+        titlePaint.color = titleColor
+        titlePaint.isAntiAlias = true
+        titlePaint.textSize = titleSize
+        titlePaint.strokeWidth = frameStrokeWidth
 
         rawPlotLine.moveTo(0f, 0f)
         val numValues = 100
@@ -367,21 +380,21 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
         canvas?.save()
         canvas?.clipRect(viewPlotBounds)
-        paint.style = Paint.Style.STROKE
-        paint.color = if (linesAndPointsInactive) plotLineColorInactive else plotLineColor
-        canvas?.drawPath(transformedPlotLine, paint)
+        plotLinePaint.color = if (linesAndPointsInactive) plotLineColorInactive else plotLineColor
+        canvas?.drawPath(transformedPlotLine, plotLinePaint)
         drawPoints(canvas)
         canvas?.restore()
-        canvas?.drawRect(viewPlotBounds, paint)
+        titlePaint.style = Paint.Style.STROKE
+        canvas?.drawRect(viewPlotBounds, titlePaint)
         drawMarks(canvas)
 
         title?.let {
-            paint.style = Paint.Style.FILL
-            paint.textAlign = Paint.Align.CENTER
+            titlePaint.style = Paint.Style.FILL
+            titlePaint.textAlign = Paint.Align.CENTER
             canvas?.drawText(it,
                 0.5f * width,
                 paddingTop + titleSize,
-                paint)
+                titlePaint)
         }
 //        canvas?.drawLine(0f, 0f, getWidth().toFloat(), getHeight().toFloat(), paint)
 //        drawArrow(canvas, 0.1f*getWidth(), 0.9f*getHeight(), 0.9f*getWidth(), 0.1f*getHeight(), paint)
@@ -886,7 +899,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 canvas?.drawPath(straightLinePath, tickPaint)
 
                 yTickLabelLayouts?.let { tickLabels ->
-                    require(yTickLabelWidth > 0.0f) { "PlotView::drawYTicks: If you define yTick labels you must specify a yTickLabelWidth larger than 0.0f" }
+                    //require(yTickLabelWidth > 0.0f) { "PlotView::drawYTicks: If you define yTick labels you must specify a yTickLabelWidth larger than 0.0f" }
                     val textWidth = tickLabels[i].getLineWidth(0) + tickLabels[i].getLineBottom(0) - tickLabels[i].getLineDescent(0)
                     drawStaticLayout(canvas, tickLabels[i], viewPlotBounds.left - textWidth / 2, point[1])
                 }

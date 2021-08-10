@@ -30,7 +30,7 @@
         app:layout_constraintBottom_toTopOf="@id/correlation_plot"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/pitch_plot"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/volume_meter"
         app:layout_constraintHorizontal_weight="0.3"
         app:markColor="?attr/colorSecondary"
         app:markLabelColor="?attr/colorOnSecondary"
@@ -38,7 +38,7 @@
         app:tickLineWidth="0.5dp"
         app:tickTextSize="9dp"
         app:title="@string/spectrum"
-        app:yTickLabelWidth="30sp" />
+        app:yTickLabelWidth="0sp" />
 
     <de.moekadu.tuner.PlotView
         android:id="@+id/correlation_plot"
@@ -55,7 +55,7 @@
         app:tickLineWidth="0.5dp"
         app:tickTextSize="9dp"
         app:title="@string/autocorrelation"
-        app:yTickLabelWidth="30sp" />
+        app:yTickLabelWidth="0sp" />
 
     <de.moekadu.tuner.PlotView
         android:id="@+id/pitch_plot"
@@ -79,8 +79,21 @@
         app:tickLineWidth="0.5dp"
         app:tickTextSize="9dp"
         app:title="@string/pitch_history"
+        app:titleColor="?attr/colorOnBackground"
         app:yTickLabelWidth="30sp" />
 
+    <de.moekadu.tuner.VolumeMeter
+        android:id="@+id/volume_meter"
+        android:layout_width="0dp"
+        android:layout_height="3dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/spectrum_plot"
+        app:layout_constraintLeft_toLeftOf="@id/spectrum_plot"
+        app:layout_constraintRight_toRightOf="@id/spectrum_plot"
+        android:layout_margin="12dp"
+        app:volumeMin="0"
+        app:volumeMax="1"
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

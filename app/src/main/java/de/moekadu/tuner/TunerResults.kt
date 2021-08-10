@@ -59,4 +59,7 @@ class TunerResults(val size: Int, val sampleRate: Int, val framePosition: Int) {
 
     /// The final pitch frequency.
     var pitchFrequency: Float? = null
+
+    /// Relative noise in the signal (1->high noise, 0 -> low noise)
+    var noise = 0f
 }

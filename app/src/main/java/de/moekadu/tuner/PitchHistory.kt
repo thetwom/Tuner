@@ -101,6 +101,9 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
     /// Number of values which would lead to another detected pitch
     var maxNumFaultyValues = 3
 
+    /// Maximum noise value for a value to be accepted (0f->no noise, 1f->signal is only noise)
+    var maxNoise = 0.1f
+
     /// Last appended values which would lead to another detected pitch
     private val maybeFaultyValues = ArrayList<Float>(maxNumFaultyValues)
 
@@ -174,9 +177,14 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
      * @note This will also update the currentEstimatedPitch and the history live data.
      * @param value Latest frequency value
      */
-    fun appendValue(value : Float) {
+    fun appendValue(value: Float, noise: Float) {
 //        Log.v("Tuner", "PitchHistory.appendValue: $value")
 //        Log.v("TestRecordFlow", "PitchHistory.appendValue: value=$value")
+        if (noise > maxNoise) {
+            _numValuesSinceLastLineUpdate.value = (_numValuesSinceLastLineUpdate.value ?: 0L) + 1L
+            return
+        }
+
         var pitchArrayUpdated = false
 
         if (pitchArray.size == 0) {

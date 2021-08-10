@@ -116,6 +116,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
     pitchHistoryDuration.summary = getPitchHistoryDurationSummary(pitchHistoryDuration.value)
 
+    val maxNoise = findPreference<SeekBarPreference>("max_noise") ?: throw RuntimeException("No max noise preference")
+    maxNoise.setOnPreferenceChangeListener { preference, newValue ->
+      preference.summary = getMaxNoiseSummary(newValue as Int)
+      true
+    }
+    maxNoise.summary = getMaxNoiseSummary(maxNoise.value)
+
     val pitchHistoryNumFaultyValues = findPreference<SeekBarPreference>("pitch_history_num_faulty_values") ?: throw RuntimeException("No pitch history num fault values preference")
     pitchHistoryNumFaultyValues.setOnPreferenceChangeListener { preference, newValue ->
       preference.summary = resources.getQuantityString(
@@ -175,5 +182,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
   private fun getPitchHistoryDurationSummary(percent: Int): String {
     val s = percentToPitchHistoryDuration(percent)
     return getString(R.string.seconds, s)
+  }
+
+  private fun getMaxNoiseSummary(percent: Int): String {
+    return getString(R.string.max_noise_summary, percent)
   }
 }

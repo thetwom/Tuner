@@ -32,6 +32,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.preference.PreferenceManager
 import kotlin.math.floor
+import kotlin.math.log10
 import kotlin.math.max
 import kotlin.math.min
 
@@ -41,8 +42,8 @@ class TunerFragment : Fragment() {
 
     private var spectrumPlot: PlotView? = null
     private var correlationPlot: PlotView? = null
-
     private var pitchPlot: PlotView? = null
+    private var volumeMeter: VolumeMeter? = null
 
     private val minCorrelationFrequency = 25f
 
@@ -84,7 +85,9 @@ class TunerFragment : Fragment() {
                 "num_moving_average" -> {
                     viewModel.pitchHistory.numMovingAverage = sharedPreferences.getInt(key, 5)
                 }
-
+                "max_noise" -> {
+                    viewModel.pitchHistory.maxNoise = sharedPreferences.getInt(key, 10) / 100f
+                }
             }
         }
     }
@@ -131,6 +134,7 @@ class TunerFragment : Fragment() {
         pitchPlot = view.findViewById(R.id.pitch_plot)
         spectrumPlot = view.findViewById(R.id.spectrum_plot)
         correlationPlot = view.findViewById(R.id.correlation_plot)
+        volumeMeter = view.findViewById(R.id.volume_meter)
 
         spectrumPlot?.xRange(0f, 1760f, PlotView.NO_REDRAW)
         spectrumPlot?.setXTicks(
@@ -161,6 +165,9 @@ class TunerFragment : Fragment() {
 
         setPreferencesInViewModel()
 
+//        viewModel.standardDeviation.observe(viewLifecycleOwner) { standardDeviation ->
+//            volumeMeter?.volume = log10(max(1e-12f, standardDeviation))
+//        }
         viewModel.tuningFrequencies.observe(viewLifecycleOwner) { tuningFrequencies ->
             val noteFrequencies = FloatArray(100) { tuningFrequencies.getNoteFrequency(it - 50) }
             pitchPlot?.setYTicks(noteFrequencies, false) { tuningFrequencies.getNoteName(it) }
@@ -186,6 +193,7 @@ class TunerFragment : Fragment() {
             )
             correlationPlot?.plot(results.correlationTimes, results.correlation)
             spectrumPlot?.plot(results.ampSpecSqrFrequencies, results.ampSqrSpec)
+            volumeMeter?.volume = results.noise
         }
 
         viewModel.pitchHistory.sizeAsLiveData.observe(viewLifecycleOwner) {
@@ -274,6 +282,7 @@ class TunerFragment : Fragment() {
         viewModel.pitchHistory.maxNumFaultyValues = sharedPreferences.getInt("pitch_history_num_faulty_values", 3)
         viewModel.pitchHistory.numMovingAverage = sharedPreferences.getInt("num_moving_average", 5)
         viewModel.useHint = sharedPreferences.getBoolean("use_hint", true)
+        viewModel.pitchHistory.maxNoise = sharedPreferences.getInt("max_noise", 10) / 100f
     }
 
     companion object{

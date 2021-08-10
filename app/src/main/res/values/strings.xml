@@ -51,4 +51,6 @@
     <string name="cent" translatable="false">%+d&#x200A;&#162;</string>
     <string name="keep_screen_on">Keep screen on</string>
     <string name="samples">samples</string>
+    <string name="max_noise">Maximum allowed background noise</string>
+    <string name="max_noise_summary">Don\'t search pitch when noise is above %d %%.</string>
 </resources>

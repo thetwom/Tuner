@@ -82,6 +82,15 @@
         />
 
     <SeekBarPreference
+        android:key="max_noise"
+        app:title="@string/max_noise"
+        android:defaultValue="10"
+        app:min="0"
+        android:max="100"
+        app:seekBarIncrement="1"
+        app:updatesContinuously="true"
+        />
+    <SeekBarPreference
         android:key="pitch_history_num_faulty_values"
         app:title="@string/pitch_history_num_faulty_values"
         app:min="1"
