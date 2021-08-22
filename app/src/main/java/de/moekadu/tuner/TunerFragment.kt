@@ -129,6 +129,7 @@ class TunerFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+//        Log.v("Tuner", "TunerFragment.onCreateView")
         val view = inflater.inflate(R.layout.diagrams, container, false)
 
         pitchPlot = view.findViewById(R.id.pitch_plot)
@@ -139,8 +140,8 @@ class TunerFragment : Fragment() {
         spectrumPlot?.xRange(0f, 1760f, PlotView.NO_REDRAW)
         spectrumPlot?.setXTicks(
             floatArrayOf(0f, 200f, 400f, 600f, 800f, 1000f, 1200f, 1400f, 1600f),
-            true
-        ) { i ->
+            false
+        ) { _, i ->
             getString(R.string.hertz, i)
         }
 
@@ -154,12 +155,12 @@ class TunerFragment : Fragment() {
                 1 / 38f,
                 1 / 30f
             ), false
-        ) { i ->
+        ) { _, i ->
             getString(R.string.hertz, 1 / i)
         }
-        correlationPlot?.setYTicks(floatArrayOf(0f), true) { "" }
+        correlationPlot?.setYTicks(floatArrayOf(0f), false) { _, _ -> "" }
 
-        pitchPlot?.yRange(400f, 500f)
+        pitchPlot?.yRange(400f, 500f, PlotView.NO_REDRAW)
         // spectrumPlot?.setXTickTextFormat { i -> getString(R.string.hertz, i) }
 //        frequencyText = findViewById(R.id.frequency_text)
 
@@ -170,27 +171,22 @@ class TunerFragment : Fragment() {
 //        }
         viewModel.tuningFrequencies.observe(viewLifecycleOwner) { tuningFrequencies ->
             val noteFrequencies = FloatArray(100) { tuningFrequencies.getNoteFrequency(it - 50) }
-            pitchPlot?.setYTicks(noteFrequencies, false) { tuningFrequencies.getNoteName(it) }
+            pitchPlot?.setYTicks(noteFrequencies, false) { _, f -> tuningFrequencies.getNoteName(f) }
         }
 
         viewModel.tunerResults.observe(viewLifecycleOwner) { results ->
             if (results.pitchFrequency == null) {
-                correlationPlot?.unsetMarks(null)
-                spectrumPlot?.unsetMarks(null)
+                correlationPlot?.removePlotMarks(null, false)
+                spectrumPlot?.removePlotMarks(null, false)
             }
             else {
                 results.pitchFrequency?.let { pitchFrequency ->
                     val label = getString(R.string.hertz, pitchFrequency)
-                    correlationPlot?.setXMark(1.0f / pitchFrequency, label, MARK_ID_FREQUENCY, PlotView.MarkAnchor.SouthWest)
-                    spectrumPlot?.setXMark(pitchFrequency, label, MARK_ID_FREQUENCY, PlotView.MarkAnchor.SouthWest)
+                    correlationPlot?.setXMark(1.0f / pitchFrequency, label, MARK_ID_FREQUENCY, MarkAnchor.SouthWest)
+                    spectrumPlot?.setXMark(pitchFrequency, label, MARK_ID_FREQUENCY, MarkAnchor.SouthWest)
                 }
             }
 
-            correlationPlot?.xRange(
-                0f,
-                min(results.correlationTimes.last(), 1f / minCorrelationFrequency),
-                300L
-            )
             correlationPlot?.plot(results.correlationTimes, results.correlation)
             spectrumPlot?.plot(results.ampSpecSqrFrequencies, results.ampSqrSpec)
             volumeMeter?.volume = results.noise
@@ -208,7 +204,7 @@ class TunerFragment : Fragment() {
 
         viewModel.pitchHistory.historyAveraged.observe(viewLifecycleOwner) {
             if (it.size > 0) {
-                pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), it.last()), false)
+                pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), it.last()), redraw = false)
                 pitchPlot?.plot(it)
             }
         }
@@ -224,31 +220,48 @@ class TunerFragment : Fragment() {
                 val nameMinusBound = getString(R.string.cent, -boundCents)
                 val frequencyMinusBound = tuningFrequencies.getNoteFrequency(toneIndex - boundCents / 100f)
 
-                val marks = ArrayList<PlotView.Mark>(2)
-                marks.add(PlotView.Mark(PlotView.DRAW_LINE, frequencyPlusBound, namePlusBound, PlotView.MarkAnchor.SouthWest, 1))
-                marks.add(PlotView.Mark(PlotView.DRAW_LINE, frequencyMinusBound, nameMinusBound, PlotView.MarkAnchor.NorthWest, 1))
-                pitchPlot?.setMarks(marks, MARK_ID_TOLERANCE, PlotView.MarkLabelBackgroundSize.FitLargest, false)
+                pitchPlot?.setMarks(
+                    null,
+                    floatArrayOf(frequencyMinusBound, frequencyPlusBound),
+                    MARK_ID_TOLERANCE_UPPER,
+                    1,
+                    arrayOf(MarkAnchor.NorthWest, MarkAnchor.SouthWest),
+                    MarkLabelBackgroundSize.FitLargest,
+                    false) { i, _, _ ->
+                        when (i) {
+                            0 -> nameMinusBound
+                            1 -> namePlusBound
+                            else -> ""
+                        }
+                    }
+
                 val noteName = tuningFrequencies.getNoteName(frequency)
-                pitchPlot?.setYMark(frequency, noteName, MARK_ID_FREQUENCY, PlotView.MarkAnchor.East, 0, true)
+                pitchPlot?.setYMark(frequency, noteName, MARK_ID_FREQUENCY, MarkAnchor.East, 0, true)
+//                val marks = ArrayList<PlotView.Mark>(2)
+//                marks.add(PlotView.Mark(PlotView.DRAW_LINE, frequencyPlusBound, namePlusBound, MarkAnchor.SouthWest, 1))
+//                marks.add(PlotView.Mark(PlotView.DRAW_LINE, frequencyMinusBound, nameMinusBound, MarkAnchor.NorthWest, 1))
+//                pitchPlot?.setMarks(marks, MARK_ID_TOLERANCE, PlotView.MarkLabelBackgroundSize.FitLargest, false)
+//                val noteName = tuningFrequencies.getNoteName(frequency)
+//                pitchPlot?.setYMark(frequency, noteName, MARK_ID_FREQUENCY, PlotView.MarkAnchor.East, 0, true)
             }
         }
 
         viewModel.pitchHistory.numValuesSinceLastLineUpdate.observe(viewLifecycleOwner) { numValuesSinceLastUpdate ->
             val maxTimeBeforeInactive = 0.3f // seconds
             val maxNumValuesBeforeInactive = max(1f, floor(maxTimeBeforeInactive / viewModel.pitchHistoryUpdateInterval))
-            pitchPlot?.linesAndPointsInactive = numValuesSinceLastUpdate > maxNumValuesBeforeInactive
+            pitchPlot?.setInactive(numValuesSinceLastUpdate > maxNumValuesBeforeInactive, false)
         }
 
         // plot the values if available, since the plots currently cant store the plot lines.
         viewModel.tunerResults.value?.let { results ->
 //            Log.v("Tuner", "TunerFragment: results: 0, ${results.correlationTimes.last()}")
-            correlationPlot?.xRange(0f, results.correlationTimes.last(), PlotView.NO_REDRAW)
+//            correlationPlot?.xRange(0f, results.correlationTimes.last(), PlotView.NO_REDRAW)
             correlationPlot?.plot(results.correlationTimes, results.correlation)
             spectrumPlot?.plot(results.ampSpecSqrFrequencies, results.ampSqrSpec)
         }
         viewModel.pitchHistory.history.value?.let {
             if (it.size > 0) {
-                pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), it.last()), false)
+                pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), it.last()), redraw = false)
                 pitchPlot?.plot(it)
             }
         }
@@ -286,7 +299,8 @@ class TunerFragment : Fragment() {
     }
 
     companion object{
-        private const val MARK_ID_TOLERANCE = 9
-        private const val MARK_ID_FREQUENCY = 10
+        private const val MARK_ID_TOLERANCE_LOWER = 9L
+        private const val MARK_ID_TOLERANCE_UPPER = 10L
+        private const val MARK_ID_FREQUENCY = 11L
     }
 }

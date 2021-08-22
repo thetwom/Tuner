@@ -10,8 +10,8 @@ android {
         applicationId "de.moekadu.tuner"
         minSdkVersion 23
         targetSdkVersion 31
-        versionCode 8
-        versionName "1.2.4"
+        versionCode 9
+        versionName "1.3.0-beta1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
