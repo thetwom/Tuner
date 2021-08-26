@@ -21,6 +21,7 @@ package de.moekadu.tuner
 
 import android.animation.FloatArrayEvaluator
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.os.Bundle
@@ -28,13 +29,19 @@ import android.os.Parcelable
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
-import android.util.Log
+import android.view.GestureDetector
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
-import kotlinx.parcelize.IgnoredOnParcel
+import androidx.core.view.ViewCompat
+import androidx.dynamicanimation.animation.FlingAnimation
+import androidx.dynamicanimation.animation.FloatValueHolder
 import kotlinx.parcelize.Parcelize
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.*
+
+private const val NO_REDRAW_PRIVATE = Long.MAX_VALUE
 
 private fun RectF.contentEquals(other: RectF): Boolean {
     return this.left == other.left && this.top == other.top && this.right == other.right && this.bottom == other.bottom
@@ -83,11 +90,16 @@ private fun FloatArray.asPlotViewArray(): PlotViewArray = FloatArrayPlotViewArra
 /// Convert ArrayList of floats to PlotViewArray
 private fun ArrayList<Float>.asPlotViewArray(): PlotViewArray = ArrayListPlotViewArray(this)
 
-class PlotRange(val touchAllowScale: Boolean = false, val touchAllowPan: Boolean = false)  {
+class PlotRange(val allowTouchControl: Boolean = true)  {
 
-    val fixedRange = FloatArray(2) {AUTO}
-    val touchBasedRange = FloatArray(2) {OFF}
-    val currentRange = FloatArray(2) {0f}
+    private val fixedRange = FloatArray(2) {AUTO}
+    private val touchBasedRange = FloatArray(2) {OFF}
+    private val touchBasedRangeLimits = floatArrayOf (Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY)
+
+    private val currentRange = FloatArray(2) {0f}
+
+    val isTouchControlled
+        get() = touchBasedRange[0] != OFF && touchBasedRange[1] != OFF
 
     @Parcelize
     class SavedState(
@@ -140,7 +152,7 @@ class PlotRange(val touchAllowScale: Boolean = false, val touchAllowPan: Boolean
     fun setTicksRange(minValue: Float = BOUND_UNDEFINED, maxValue: Float = BOUND_UNDEFINED, suppressInvalidate: Boolean = false) {
         if (ticksRange[0] == minValue && ticksRange[1] == maxValue)
             return
-
+//        Log.v("Tuner", "PlotView.PlotRange.setTicksRange: minValue=$minValue, maxValue=$maxValue")
         ticksRange[0] = minValue
         ticksRange[1] = maxValue
 
@@ -152,17 +164,6 @@ class PlotRange(val touchAllowScale: Boolean = false, val touchAllowPan: Boolean
         if (rangeAnimator.isStarted)
             rangeAnimator.end()
         rangeChangedListener?.onRangeChanged(this, currentRange[0], currentRange[1], suppressInvalidate)
-    }
-
-    fun getSavedState(): SavedState {
-        return SavedState(fixedRange = fixedRange, touchBasedRange = touchBasedRange,
-            dataRange = dataRange, ticksRange = ticksRange)
-    }
-    fun restore(state: SavedState) {
-        setTicksRange(state.ticksRange[0], state.ticksRange[1], true)
-        setDataRange(state.dataRange[0], state.dataRange[1], true)
-        setRange(state.fixedRange[0], state.fixedRange[1], NO_REDRAW)
-        state.touchBasedRange.copyInto(touchBasedRange)
     }
 
     fun setRange(minValue: Float, maxValue: Float, animationDuration: Long) {
@@ -177,13 +178,57 @@ class PlotRange(val touchAllowScale: Boolean = false, val touchAllowPan: Boolean
         if (targetRange.contentEquals(targetRangeOld))
             return
 
-        if (animationDuration == 0L || animationDuration == NO_REDRAW) {
+        if (animationDuration == 0L || animationDuration == NO_REDRAW_PRIVATE) {
+            if (rangeAnimator.isStarted)
+                rangeAnimator.end()
             targetRange.copyInto(currentRange)
-            rangeChangedListener?.onRangeChanged(this, currentRange[0], currentRange[1], animationDuration == NO_REDRAW)
+            rangeChangedListener?.onRangeChanged(this, currentRange[0], currentRange[1], animationDuration == NO_REDRAW_PRIVATE)
         } else if (animationDuration > 0L) {
             animateTo(targetRange, animationDuration)
         }
         //Log.v("Tuner", "PlotView.PlotRange.setRange: currentRange = ${currentRange[0]}, ${currentRange[1]}")
+    }
+
+    fun setTouchLimits(minValue: Float, maxValue: Float, animationDuration: Long) {
+        touchBasedRangeLimits[0] = minValue
+        touchBasedRangeLimits[1] = maxValue
+        // reset the touch based range to make sure its within the limits
+        setTouchRange(touchBasedRange[0], touchBasedRange[1], animationDuration)
+    }
+
+    fun setTouchRange(minValue: Float, maxValue:Float, animationDuration: Long) {
+        if (!allowTouchControl)
+            return
+        val minBackup = touchBasedRange[0]
+        val maxBackup = touchBasedRange[1]
+//        Log.v("Tuner", "PlotView.PlotRange.setTouchRange, minValue=$minValue, maxValue=$maxValue")
+        touchBasedRange[0] = if (minValue == OFF) OFF else max(minValue, touchBasedRangeLimits[0])
+        touchBasedRange[1] = if (maxValue == OFF) OFF else min(maxValue, touchBasedRangeLimits[1])
+
+        if (minBackup == touchBasedRange[0] && maxBackup == touchBasedRange[1])
+            return
+
+        determineTargetRange()
+
+        if (isTouchControlled || animationDuration == 0L || animationDuration == NO_REDRAW_PRIVATE) {
+            if (rangeAnimator.isStarted)
+                rangeAnimator.end()
+            targetRange.copyInto(currentRange)
+            rangeChangedListener?.onRangeChanged(this, currentRange[0], currentRange[1],animationDuration == NO_REDRAW_PRIVATE)
+        } else {
+            animateTo(targetRange, animationDuration)
+        }
+    }
+
+    fun getSavedState(): SavedState {
+        return SavedState(fixedRange = fixedRange, touchBasedRange = touchBasedRange,
+            dataRange = dataRange, ticksRange = ticksRange)
+    }
+    fun restore(state: SavedState) {
+        setTicksRange(state.ticksRange[0], state.ticksRange[1], true)
+        setDataRange(state.dataRange[0], state.dataRange[1], true)
+        setRange(state.fixedRange[0], state.fixedRange[1], NO_REDRAW_PRIVATE)
+        state.touchBasedRange.copyInto(touchBasedRange)
     }
 
     private fun determineTargetRange() {
@@ -231,7 +276,6 @@ class PlotRange(val touchAllowScale: Boolean = false, val touchAllowPan: Boolean
     companion object {
         const val AUTO = Float.MAX_VALUE
         const val OFF = Float.MAX_VALUE
-        const val NO_REDRAW = Long.MAX_VALUE
         const val BOUND_UNDEFINED = Float.MAX_VALUE
     }
 }
@@ -251,7 +295,7 @@ private class PlotTransformation {
     /// Transformation matrix for transforming from canvas coordinates to raw coordinates
     private val matrixViewToRaw = Matrix()
     /// Plot bounds for coordinates in original space.
-    val rawPlotBounds = RectF()
+    val rawPlotBounds = RectF(0f, 0f, 1f, 1f)
 
     /// Plot bounds in canvas coordinates.
     val viewPlotBounds = RectF()
@@ -321,6 +365,10 @@ private class PlotTransformation {
         matrixViewToRaw.mapPoints(raw, 0, view, 0, numValues)
     }
 
+    fun transformViewToRaw(view: RectF, raw: RectF) {
+        matrixViewToRaw.mapRect(raw, view)
+    }
+
     fun registerTransformationChangedListener(transformationChangedListener: TransformationChangedListener) {
         if (!transformationChangedListeners.contains(transformationChangedListener))
             transformationChangedListeners.add(transformationChangedListener)
@@ -337,8 +385,10 @@ private class PlotTransformation {
         matrixRawToView.setRectToRect(rawPlotBounds, viewPlotBounds, Matrix.ScaleToFit.FILL)
         matrixRawToView.postScale(1f, -1f, 0f, viewPlotBounds.centerY())
 
-        matrixViewToRaw.preScale(1f, -1f, 0f, viewPlotBounds.centerY())
-        matrixViewToRaw.setRectToRect(viewPlotBounds, rawPlotBounds, Matrix.ScaleToFit.FILL)
+        matrixRawToView.invert(matrixViewToRaw)
+
+        //matrixViewToRaw.preScale(1f, -1f, 0f, viewPlotBounds.centerY())
+        //matrixViewToRaw.setRectToRect(viewPlotBounds, rawPlotBounds, Matrix.ScaleToFit.FILL)
 
         for (transformationChangedListener in transformationChangedListeners)
             transformationChangedListener.transformationChanged(this, suppressInvalidate)
@@ -668,7 +718,7 @@ private class PlotMarks(transformation: PlotTransformation,
         if (numMarks == 0) {
             boundingBox.set(0f, 0f, 0f, 0f)
         } else {
-            boundingBox.set(Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY)
+            boundingBox.set(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY)
         }
 
         for (i in 0 until numMarks) {
@@ -678,22 +728,25 @@ private class PlotMarks(transformation: PlotTransformation,
             val a = if (i < anchors?.size ?: 0) anchors?.get(i) ?: MarkAnchor.Center else MarkAnchor.Center
             marks.add(Mark(x, y, s, a))
 //            Log.v("Tuner", "PlotMarks.setMarks: Mark: x=$x, y=$y, s=$s, a=$a")
-            if (x == DRAW_LINE) {
-                boundingBox.left = Float.NEGATIVE_INFINITY
-                boundingBox.right = Float.POSITIVE_INFINITY
-            } else {
+            if (x != DRAW_LINE) {
                 boundingBox.left = min(boundingBox.left, x)
                 boundingBox.right = max(boundingBox.right, x)
             }
 
-            if (y == DRAW_LINE) {
-                boundingBox.top = Float.NEGATIVE_INFINITY
-                boundingBox.bottom = Float.POSITIVE_INFINITY
-            } else {
+            if (y != DRAW_LINE) {
                 boundingBox.top = min(boundingBox.top, y)
                 boundingBox.bottom = max(boundingBox.bottom, y)
             }
         }
+
+        if (boundingBox.left == Float.POSITIVE_INFINITY)
+            boundingBox.left = BOUND_UNDEFINED
+        if (boundingBox.top == Float.POSITIVE_INFINITY)
+            boundingBox.top = BOUND_UNDEFINED
+        if (boundingBox.right == Float.NEGATIVE_INFINITY)
+            boundingBox.right = BOUND_UNDEFINED
+        if (boundingBox.bottom == Float.NEGATIVE_INFINITY)
+            boundingBox.bottom = BOUND_UNDEFINED
 
         buildMarkLabels()
         labelWidth = when (backgroundSizeType) {
@@ -867,7 +920,6 @@ private class PlotMarks(transformation: PlotTransformation,
     fun getSavedState(): SavedState {
         val xPositions = if (marks.count { it.xPositionRaw == DRAW_LINE } == marks.size) null else FloatArray(marks.size) {marks[it].xPositionRaw}
         val yPositions = if (marks.count { it.yPositionRaw == DRAW_LINE } == marks.size) null else FloatArray(marks.size) {marks[it].yPositionRaw}
-        val x1 = if (xPositions?.size ?: 0 == 0) null else xPositions?.get(0)
 
         val anchors = Array(marks.size) {marks[it].anchor}
         val labels = Array(marks.size) {marks[it].label}
@@ -924,6 +976,27 @@ private class PlotMarks(transformation: PlotTransformation,
     companion object {
         /// Special setting for defining marks with horizontal or vertical lines.
         const val DRAW_LINE = Float.MAX_VALUE
+        const val BOUND_UNDEFINED = Float.MAX_VALUE
+    }
+}
+
+class PlotRectangleAndPoint {
+    var isEnabled = false
+    private val rect = RectF()
+    private val point = FloatArray(2)
+    private val paint = Paint().apply {
+        color = Color.RED
+        strokeWidth = 2f
+    }
+
+    fun drawToCanvas(canvas: Canvas?) {
+        if (!isEnabled)
+            return
+        paint.style = Paint.Style.STROKE
+        canvas?.drawRect(rect, paint)
+
+        paint.style = Paint.Style.FILL
+        canvas?.drawCircle(point[0], point[1], 5f, paint)
     }
 }
 
@@ -933,7 +1006,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 {
     companion object {
         /// Special option for animationDuration which means that we don't animate and don't invalidate.
-        const val NO_REDRAW = Long.MAX_VALUE
+        const val NO_REDRAW = NO_REDRAW_PRIVATE
     }
 
     private val rawViewTransformation = PlotTransformation().apply {
@@ -943,18 +1016,13 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
     }
 
-    private val xRange = PlotRange().apply {
-        rangeChangedListener = PlotRange.RangeChangedListener { _, minValue, maxValue, suppressInvalidate ->
-//            Log.v("Tuner", "PlotView: xrange changed: minValue=$minValue, maxValue=$maxValue")
-            rawViewTransformation.setRawDataBounds(xMin = minValue, xMax = maxValue, suppressInvalidate = suppressInvalidate)
-        }
-    }
-    private val yRange = PlotRange().apply {
-        rangeChangedListener = PlotRange.RangeChangedListener { _, minValue, maxValue, suppressInvalidate ->
-//            Log.v("Tuner", "PlotView: yrange changed: minValue=$minValue, maxValue=$maxValue")
-            rawViewTransformation.setRawDataBounds(yMin = minValue, yMax = maxValue, suppressInvalidate = suppressInvalidate)
-        }
-    }
+    private val rectangleAndPoint = PlotRectangleAndPoint()
+
+    private lateinit var xRange: PlotRange
+    private lateinit var yRange: PlotRange
+
+    private var allowTouchX = true
+    private var allowTouchY = true
 
     /// Bounding box of all data which are inside the plot
     private val boundingBox = RectF(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY)
@@ -1027,6 +1095,149 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         val markGroups: Map<Long, PlotMarks.SavedState>
     ): Parcelable
 
+    private val gestureListener = object : GestureDetector.SimpleOnGestureListener() {
+        val rectView = RectF()
+        val rectRaw = RectF()
+        val flingAnimation = FlingAnimation(FloatValueHolder()).apply {
+            addUpdateListener { _, value, _ ->
+                val distanceX = flingDirX * (value - lastFlingValue)
+                val distanceY = flingDirY * (value - lastFlingValue)
+//                Log.v("Tuner", "PlotView: gestureListener, flingAnimation: value=$value, lastValue=$lastFlingValue, distanceX=$distanceX, distanceY=$distanceY")
+                lastFlingValue = value
+                scrollDistance(-distanceX, -distanceY)
+            }
+        }
+        var flingDirX = 0f
+        var flingDirY = 0f
+        var lastFlingValue = 0f
+
+        private fun scrollDistance(distanceX: Float,distanceY: Float) {
+            rectView.set(rawViewTransformation.viewPlotBounds)
+            rectView.offset(distanceX, distanceY)
+            rawViewTransformation.transformViewToRaw(rectView, rectRaw)
+            xRange.setTouchRange(rectRaw.left, rectRaw.right, NO_REDRAW)
+            yRange.setTouchRange(rectRaw.top, rectRaw.bottom, NO_REDRAW)
+            ViewCompat.postInvalidateOnAnimation(this@PlotView)
+        }
+
+        override fun onDown(e: MotionEvent?): Boolean {
+//            Log.v("Tuner", "PlotView: gestureListener.OnDown")
+            flingAnimation.cancel()
+            return true
+        }
+        override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
+//            Log.v("Tuner", "PlotView: gestureListener.OnScroll x=$distanceX, y=$distanceY")
+            scrollDistance(distanceX, distanceY)
+            return true
+        }
+
+        override fun onFling(
+            e1: MotionEvent?,
+            e2: MotionEvent?,
+            velocityX: Float,
+            velocityY: Float
+        ): Boolean {
+            val velocityTotal = (velocityX.pow(2) + velocityY.pow(2)).pow(0.5f)
+            if (velocityTotal < 1f)
+                return true
+            flingDirX = velocityX / velocityTotal
+            flingDirY = velocityY / velocityTotal
+            lastFlingValue = 0f
+            flingAnimation.cancel()
+            flingAnimation.setStartValue(0f)
+            flingAnimation.setStartVelocity(velocityTotal)
+            flingAnimation.start()
+            return true
+        }
+
+        override fun onSingleTapUp(e: MotionEvent?): Boolean {
+//            Log.v("Tuner", "PlotView: onSingleTapUp")
+//            if (e == null)
+//                return true
+//            rectangleAndPoint.isEnabled = true
+//            rectangleAndPoint.point[0] = e.x
+//            rectangleAndPoint.point[1] = e.y
+//            rectangleAndPoint.rect.set(rawViewTransformation.viewPlotBounds)
+//            rectangleAndPoint.rect.offset(-e.x, -e.y)
+//            rectangleAndPoint.rect.left = rectangleAndPoint.rect.left / 2f
+//            rectangleAndPoint.rect.top = rectangleAndPoint.rect.top / 2f
+//            rectangleAndPoint.rect.right = rectangleAndPoint.rect.right / 2f
+//            rectangleAndPoint.rect.bottom = rectangleAndPoint.rect.bottom / 2f
+//            rectangleAndPoint.rect.offset(e.x, e.y)
+//            val testRect = RectF()
+//            rawViewTransformation.transformViewToRaw(rectangleAndPoint.rect, testRect)
+//            Log.v("Tuner", "PlotView: onSingleTapUp, view= ${rawViewTransformation.viewPlotBounds}, raw=${rawViewTransformation.rawPlotBounds}")
+//            Log.v("Tuner", "PlotView: onSingleTapUp, rawrect= $testRect")
+//
+//            invalidate()
+//            return true
+
+            performClick()
+            return true
+        }
+    }
+
+    private val scaleGestureListener = object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+        val rectView = RectF()
+        val rectRaw = RectF()
+        var lastSpanX = 0f
+        var lastSpanY = 0f
+
+        override fun onScaleBegin(detector: ScaleGestureDetector?): Boolean {
+            if (detector != null) {
+                lastSpanX = detector.currentSpanX
+                lastSpanY = detector.currentSpanY
+            }
+            return true
+        }
+        override fun onScale(detector: ScaleGestureDetector?): Boolean {
+            if (detector == null)
+                return true
+            val spanX = detector.currentSpanX
+            val spanY = detector.currentSpanY
+            val scaleX = lastSpanX / spanX
+            val scaleY = lastSpanY / spanY
+            val focusX = detector.focusX
+            val focusY = detector.focusY
+
+//            Log.v("Tuner", "PlotView onScale: scaleX=$scaleX, scaleY=$scaleY, spanX=$spanX, spanY=$spanY, focusX=$focusX, focusY=$focusY")
+            rectView.set(rawViewTransformation.viewPlotBounds)
+            rectView.offset(-focusX, -focusY)
+            rectView.set(scaleX * rectView.left, scaleY * rectView.top,
+                scaleX * rectView.right, scaleY * rectView.bottom)
+            rectView.offset(focusX, focusY)
+            rawViewTransformation.transformViewToRaw(rectView, rectRaw)
+            xRange.setTouchRange(rectRaw.left, rectRaw.right, NO_REDRAW)
+            yRange.setTouchRange(rectRaw.top, rectRaw.bottom, NO_REDRAW)
+
+
+//            rectangleAndPoint.isEnabled = true
+//            rectangleAndPoint.point[0] = focusX
+//            rectangleAndPoint.point[1] = focusY
+//            rectangleAndPoint.rect.set(rectView)
+//            rectangleAndPoint.rect.set(rawViewTransformation.viewPlotBounds)
+//            rectangleAndPoint.rect.offset(-focusX, -focusY)
+//            rectangleAndPoint.rect.left = rectangleAndPoint.rect.left / 2f
+//            rectangleAndPoint.rect.top = rectangleAndPoint.rect.top / 2f
+//            rectangleAndPoint.rect.right = rectangleAndPoint.rect.right / 2f
+//            rectangleAndPoint.rect.bottom = rectangleAndPoint.rect.bottom / 2f
+//            rectangleAndPoint.rect.offset(focusX, focusY)
+//            val testRect = RectF()
+//            rawViewTransformation.transformViewToRaw(rectangleAndPoint.rect, testRect)
+
+            ViewCompat.postInvalidateOnAnimation(this@PlotView)
+
+            lastSpanX = spanX
+            lastSpanY = spanY
+            //invalidate()
+
+            return true
+        }
+    }
+
+    private val gestureDetector = GestureDetector(context, gestureListener)
+    private val scaleGestureDetector = ScaleGestureDetector(context, scaleGestureListener)
+
     constructor(context: Context, attrs: AttributeSet? = null) : this(context, attrs, R.attr.plotViewStyle)
 
     init {
@@ -1062,6 +1273,9 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             titleSize = ta.getDimension(R.styleable.PlotView_titleSize, titleSize)
             titleColor = ta.getColor(R.styleable.PlotView_titleColor, titleColor)
             frameStrokeWidth = ta.getDimension(R.styleable.PlotView_frameStrokeWidth, frameStrokeWidth)
+
+            allowTouchX = ta.getBoolean(R.styleable.PlotView_enableTouchX, allowTouchX)
+            allowTouchY = ta.getBoolean(R.styleable.PlotView_enableTouchY, allowTouchY)
             ta.recycle()
         }
 
@@ -1070,11 +1284,30 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         titlePaint.textSize = titleSize
         titlePaint.strokeWidth = frameStrokeWidth
 
+        xRange = PlotRange(allowTouchX).apply {
+            rangeChangedListener = PlotRange.RangeChangedListener { _, minValue, maxValue, suppressInvalidate ->
+//            Log.v("Tuner", "PlotView: xrange changed: minValue=$minValue, maxValue=$maxValue")
+                rawViewTransformation.setRawDataBounds(xMin = minValue, xMax = maxValue, suppressInvalidate = suppressInvalidate)
+            }
+        }
+        yRange = PlotRange(allowTouchY).apply {
+            rangeChangedListener = PlotRange.RangeChangedListener { _, minValue, maxValue, suppressInvalidate ->
+//            Log.v("Tuner", "PlotView: yrange changed: minValue=$minValue, maxValue=$maxValue")
+                rawViewTransformation.setRawDataBounds(yMin = minValue, yMax = maxValue, suppressInvalidate = suppressInvalidate)
+            }
+        }
+
         //rawPlotBounds.set(0f, -0.8f, 2.0f*PI.toFloat(), 0.8f)
         xTicks = PlotMarks(rawViewTransformation, intArrayOf(tickColor), intArrayOf(tickColor),
-            floatArrayOf(tickLineWidth), floatArrayOf(tickTextSize), true, true)
+            floatArrayOf(tickLineWidth), floatArrayOf(tickTextSize),
+            disableLabelBackground = true,
+            placeLabelsOutsideBoundsIfPossible = true
+        )
         yTicks = PlotMarks(rawViewTransformation, intArrayOf(tickColor), intArrayOf(tickColor),
-            floatArrayOf(tickLineWidth), floatArrayOf(tickTextSize), true, true)
+            floatArrayOf(tickLineWidth), floatArrayOf(tickTextSize),
+            disableLabelBackground = true,
+            placeLabelsOutsideBoundsIfPossible = true
+        )
 
         xTicks.plotMarksChangedListener = PlotMarks.PlotMarksChangedListener { ticks, bbChanged, suppressInvalidate ->
             if (ticks.hasMarks && bbChanged)
@@ -1086,10 +1319,13 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 invalidate()
         }
         yTicks.plotMarksChangedListener = PlotMarks.PlotMarksChangedListener { ticks, bbChanged, suppressInvalidate ->
-            if (ticks.hasMarks && bbChanged)
+            if (ticks.hasMarks && bbChanged) {
+//                Log.v("Tuner", "PlotView: yTicks.plotMarksChanges: ${ticks.boundingBox}")
                 yRange.setTicksRange(ticks.boundingBox.top, ticks.boundingBox.bottom, true)
-            else if (!ticks.hasMarks)
+            }
+            else if (!ticks.hasMarks) {
                 yRange.setTicksRange(PlotRange.BOUND_UNDEFINED, PlotRange.BOUND_UNDEFINED, true)
+            }
 
             if (!suppressInvalidate)
                 invalidate()
@@ -1140,10 +1376,45 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 paddingTop + titleSize,
                 titlePaint)
         }
+
+        rectangleAndPoint.drawToCanvas(canvas)
 //        canvas?.drawLine(0f, 0f, getWidth().toFloat(), getHeight().toFloat(), paint)
 //        drawArrow(canvas, 0.1f*getWidth(), 0.9f*getHeight(), 0.9f*getWidth(), 0.1f*getHeight(), paint)
     }
 
+    override fun performClick(): Boolean {
+        if (xRange.isTouchControlled || yRange.isTouchControlled) {
+//                Log.v("Tuner", "PlotView: performClick switch touch control off")
+            xRange.setTouchRange(PlotRange.OFF, PlotRange.OFF, 200L)
+            yRange.setTouchRange(PlotRange.OFF, PlotRange.OFF, 200L)
+        } else {
+            xRange.setTouchRange(
+                rawViewTransformation.rawPlotBounds.left,
+                rawViewTransformation.rawPlotBounds.right,
+                NO_REDRAW
+            )
+            yRange.setTouchRange(
+                rawViewTransformation.rawPlotBounds.top,
+                rawViewTransformation.rawPlotBounds.bottom,
+                NO_REDRAW
+            )
+            ViewCompat.postInvalidateOnAnimation(this@PlotView)
+        }
+        return super.performClick()
+    }
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+//        return gestureDetector.onTouchEvent(event) || scaleGestureDetector.onTouchEvent(event)
+        val s = scaleGestureDetector.onTouchEvent(event)
+        val g = gestureDetector.onTouchEvent(event)
+        return super.onTouchEvent(event) || s || g
+//        return (scaleGestureDetector.onTouchEvent(event)
+//                || gestureDetector.onTouchEvent(event)
+//                || super.onTouchEvent(event))
+//                return (scaleGestureDetector.onTouchEvent(event)
+//                || super.onTouchEvent(event))
+
+    }
     override fun onSaveInstanceState(): Parcelable {
         val bundle = Bundle()
         bundle.putParcelable("super state", super.onSaveInstanceState())
@@ -1320,6 +1591,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         yRange.setRange(minValue, maxValue, animationDuration)
     }
 
+    fun setXTouchLimits(minValue: Float, maxValue: Float, animationDuration: Long = 0L) {
+        xRange.setTouchLimits(minValue, maxValue, animationDuration)
+    }
+
+    fun setYTouchLimits(minValue: Float, maxValue: Float, animationDuration: Long = 0L) {
+        yRange.setTouchLimits(minValue, maxValue, animationDuration)
+    }
+
     /// Plot equidistant values (Taking a FloatArray).
     /**
      * @param yValues Array with equidistant y-values.
@@ -1346,6 +1625,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     /**
      * @param xValues Array with equidistant x-values.
      * @param yValues Array with equidistant y-values.
+     * @param tag Line identifier. If method is called with a same tag as before
+     *   we will overwrite the line.
      * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
      *   change something else which also needs to redraw the screen, so you can avoid an
      *   unnecessary redraw.)
@@ -1358,6 +1639,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     /**
      * @param xValues Array with equidistant x-values.
      * @param yValues Array with equidistant y-values.
+     * @param tag Line identifier. If method is called with a same tag as before
+     *   we will overwrite the line.
      * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
      *   change something else which also needs to redraw the screen, so you can avoid an
      *   unnecessary redraw.)
@@ -1368,14 +1651,20 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     /// Set marks.
     /**
-     * @param marks List of marks.
-     * @param groupIdentifier Identifier for the mark group. If the identifier was used before
+     * @param xPositions List of xPositions for all marks or null to draw lines along the xPosition.
+     * @param yPositions List of yPositions for all marks or null to draw lines along the yPosition.
+     * @param tag Identifier for the mark group. If the identifier was used before
      *   we will overwrite these marks.
-     * @param markLabelBackgroundSize Defines if the background for the labels should all be
+     * @param styleIndex Style index which should be used for the marks.
+     * @param anchors An anchor for each mark label, or null for using the defaults (centered)
+     * @param backgroundSizeType Defines if the background for the labels should all be
      *   the same size or if they should be individually fitted to each label size.
      * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
      *   change something else which also needs to redraw the screen, so you can avoid an
      *   unnecessary redraw.)
+     * @param format Function to define a label for each mark:
+     *     (index, xPosition, yPosition) -> Mark label
+     *    This can return null, if no label is required.
      */
     fun setMarks(xPositions: FloatArray?, yPositions: FloatArray?,
                  tag: Long,
@@ -1393,7 +1682,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param xPosition x-position of mark.
      * @param yPosition y-position of mark.
      * @param label Label of mark or null if the mark should have no label (i.e. if lines are drawn)
-     * @param groupIdentifier Identifier for the mark group. If the identifier was used before
+     * @param tag Identifier for the mark group. If the identifier was used before
      *   we well overwrite these marks.
      * @param anchor Anchor which defines how to align the label relative to the mark position.
      * @param style Mark style to use (0 -> use mark-xml-attributes without prefix,
@@ -1413,7 +1702,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     /**
      * @param xPosition x-position of mark.
      * @param label Label of mark or null if the mark should have no label (i.e. if lines are drawn)
-     * @param groupIdentifier Identifier for the mark group. If the identifier was used before
+     * @param tag Identifier for the mark group. If the identifier was used before
      *   we well overwrite these marks.
      * @param anchor Anchor which defines how to align the label relative to the mark position.
      * @param style Mark style to use (0 -> use mark-xml-attributes without prefix,
@@ -1433,7 +1722,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     /**
      * @param yPosition y-position of mark.
      * @param label Label of mark or null if the mark should have no label (i.e. if lines are drawn)
-     * @param groupIdentifier Identifier for the mark group. If the identifier was used before
+     * @param tag Identifier for the mark group. If the identifier was used before
      *   we well overwrite these marks.
      * @param anchor Anchor which defines how to align the label relative to the mark position.
      * @param style Mark style to use (0 -> use mark-xml-attributes without prefix,
@@ -1452,6 +1741,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     /// Set points which should be drawn as filled circles.
     /**
      * @param value Array with point coordinates (of form x0, y0, x1, y1, ...)
+     * @param tag Identifier of points. If this method is called again with the same tag
+     *   we will overwrite these points.
      * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
      *   change something else which also needs to redraw the screen, so you can avoid an
      *   unnecessary redraw.)
@@ -1499,6 +1790,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      *   no labels.
      */
     fun setYTicks(value : FloatArray?, redraw: Boolean = true, format : ((Int, Float) -> CharSequence)?) {
+//        Log.v("Tuner", "PlotView.setYTicks: numValues = ${value?.size}")
         if (value == null) {
             yTicks.setMarks(null, null, 0, anchors = null, suppressInvalidate = true, format = null)
         }
@@ -1517,6 +1809,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     /// Plot equidistant values (general version with PlotViewArray).
     /**
      * @param yValues Array with equidistant y-values.
+     * @param tag Identifier for the line. If this method is called again with the same tag
+     *   we will overwrite the line.
      * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
      *   change something else which also needs to redraw the screen, so you can avoid an
      *   unnecessary redraw.)
@@ -1532,6 +1826,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     /**
      * @param xValues Array with equidistant x-values.
      * @param yValues Array with equidistant y-values.
+     * @param tag Identifier for the line. If this method is called again with the same tag
+     *   we will overwrite the line.
      * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
      *   change something else which also needs to redraw the screen, so you can avoid an
      *   unnecessary redraw.)

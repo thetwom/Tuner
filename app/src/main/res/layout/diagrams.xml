@@ -76,7 +76,9 @@
         app:tickTextSize="9dp"
         app:title="@string/pitch_history"
         app:titleColor="?attr/colorOnBackground"
-        app:yTickLabelWidth="30sp" />
+        app:yTickLabelWidth="30sp"
+        app:enableTouchX="false"
+        />
 
 <!--        <de.moekadu.tuner.VolumeMeter-->
 <!--            android:id="@+id/volume_meter"-->

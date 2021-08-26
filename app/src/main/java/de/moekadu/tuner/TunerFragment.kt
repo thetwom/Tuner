@@ -139,11 +139,15 @@ class TunerFragment : Fragment() {
 
         spectrumPlot?.xRange(0f, 1760f, PlotView.NO_REDRAW)
         spectrumPlot?.setXTicks(
-            floatArrayOf(0f, 200f, 400f, 600f, 800f, 1000f, 1200f, 1400f, 1600f),
+            floatArrayOf(0f, 200f, 400f, 600f, 800f, 1000f, 1200f, 1400f, 1600f, 1800f, 2000f, 2200f, 2400f,
+                2600f, 2800f, 3000f, 3200f, 3400f, 3600f, 3800f, 4000f, 4500f, 5000f, 5500f, 6000f,
+                6500f, 7000f, 7500f, 8000f, 8500f, 9000f, 9500f, 10000f, 11000f, 12000f, 13000f, 14000f,
+                15000f, 16000f, 17000f, 18000f, 19000f, 20000f, 25000f, 30000f, 35000f, 40000f),
             false
         ) { _, i ->
             getString(R.string.hertz, i)
         }
+        spectrumPlot?.setYTouchLimits(0f, Float.POSITIVE_INFINITY, PlotView.NO_REDRAW)
 
         correlationPlot?.xRange(0f, 1f / minCorrelationFrequency, PlotView.NO_REDRAW)
         correlationPlot?.setXTicks(
@@ -153,7 +157,23 @@ class TunerFragment : Fragment() {
                 1 / 80f,
                 1 / 50f,
                 1 / 38f,
-                1 / 30f
+                1 / 30f,
+                1 / 25f,
+                1 / 20f,
+                1 / 17f,
+                1 / 15f,
+                1 / 13f,
+                1 / 11f,
+                1 / 10f,
+                1 / 9f,
+                1 / 8f,
+                1 / 7f,
+                1 / 6f,
+                1 / 5f,
+                1 / 4f,
+                1 / 3f,
+                1 / 2f,
+                1 / 1f,
             ), false
         ) { _, i ->
             getString(R.string.hertz, 1 / i)
@@ -172,6 +192,7 @@ class TunerFragment : Fragment() {
         viewModel.tuningFrequencies.observe(viewLifecycleOwner) { tuningFrequencies ->
             val noteFrequencies = FloatArray(100) { tuningFrequencies.getNoteFrequency(it - 50) }
             pitchPlot?.setYTicks(noteFrequencies, false) { _, f -> tuningFrequencies.getNoteName(f) }
+            pitchPlot?.setYTouchLimits(noteFrequencies.first(), noteFrequencies.last(), 0L)
         }
 
         viewModel.tunerResults.observe(viewLifecycleOwner) { results ->
@@ -187,8 +208,12 @@ class TunerFragment : Fragment() {
                 }
             }
 
+            correlationPlot?.setXTouchLimits(0f, results.correlationTimes.last(), PlotView.NO_REDRAW)
             correlationPlot?.plot(results.correlationTimes, results.correlation)
+
+            spectrumPlot?.setXTouchLimits(0f, results.ampSpecSqrFrequencies.last(), PlotView.NO_REDRAW)
             spectrumPlot?.plot(results.ampSpecSqrFrequencies, results.ampSqrSpec)
+
             volumeMeter?.volume = results.noise
         }
 

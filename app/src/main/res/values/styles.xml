@@ -65,6 +65,8 @@
         <attr name="titleSize" format="dimension"/>
         <attr name="titleColor" format="color"/>
         <attr name="frameStrokeWidth" format="dimension"/>
+        <attr name="enableTouchX" format="boolean"/>
+        <attr name="enableTouchY" format="boolean"/>
     </declare-styleable>
 
     <style name="PlotViewStyle">
@@ -89,6 +91,8 @@
         <item name="titleSize">12sp</item>
         <item name="titleColor">?attr/colorPrimary</item>
         <item name="frameStrokeWidth">2dp</item>
+        <item name="enableTouchX">true</item>
+        <item name="enableTouchY">true</item>
     </style>
 
     <declare-styleable name="VolumeMeter">
