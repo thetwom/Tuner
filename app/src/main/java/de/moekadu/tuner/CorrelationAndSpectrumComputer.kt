@@ -27,11 +27,16 @@ import kotlin.math.pow
 class CorrelationAndSpectrumComputer {
     private var correlation : Correlation? = null
     private val correlationMutex = Mutex()
+    private val memoryManager= MemoryManagerWorkingData()
 
-    suspend fun run(sampleData: SampleData, windowType: WindowingFunction) : TunerResults {
+    fun recycle(workingData: WorkingData) {
+        memoryManager.recycleMemory(workingData)
+    }
+
+    suspend fun run(sampleData: SampleData, windowType: WindowingFunction) : WorkingData {
         return withContext(Dispatchers.Default) {
 
-            val results = TunerResults(sampleData.size, sampleData.sampleRate, sampleData.framePosition)
+            val results = memoryManager.getMemory(sampleData.size, sampleData.sampleRate, sampleData.framePosition)//WorkingData(sampleData.size, sampleData.sampleRate, sampleData.framePosition)
 
             correlationMutex.withLock {
                 // recreate correlation instance if sample size changed

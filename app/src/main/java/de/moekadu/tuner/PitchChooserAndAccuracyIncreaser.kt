@@ -199,18 +199,18 @@ fun calculateMostProbableCorrelationPitch(
 }
 
 fun increaseAccuracyForSpectrumBasedFrequency(
-    ampSqrSpecIndex: Int, tunerResults: TunerResults, previousTunerResults: TunerResults?): Float {
-    val frequency = tunerResults.frequencyFromSpectrum(ampSqrSpecIndex)
+    ampSqrSpecIndex: Int, workingData: WorkingData, previousWorkingData: WorkingData?): Float {
+    val frequency = workingData.frequencyFromSpectrum(ampSqrSpecIndex)
 
-    var frequencyHighAccuracy = if (previousTunerResults != null) {
-        val dt = tunerResults.dt
-        val spec1 = previousTunerResults.spectrum
-        val spec2 = tunerResults.spectrum
-        val df = tunerResults.frequencyFromSpectrum(1)
+    var frequencyHighAccuracy = if (previousWorkingData != null) {
+        val dt = workingData.dt
+        val spec1 = previousWorkingData.spectrum
+        val spec2 = workingData.spectrum
+        val df = workingData.frequencyFromSpectrum(1)
 
         val frequencyHighAccuracyFromSpectrum = increaseFrequencyAccuracy(
             spec1, spec2, ampSqrSpecIndex, df,
-            dt * (tunerResults.framePosition - previousTunerResults.framePosition)
+            dt * (workingData.framePosition - previousWorkingData.framePosition)
         )
         if (frequencyHighAccuracyFromSpectrum > frequency - df && frequencyHighAccuracyFromSpectrum < frequency + df)
             frequencyHighAccuracyFromSpectrum
@@ -225,18 +225,18 @@ fun increaseAccuracyForSpectrumBasedFrequency(
     // using the correlation results
     if (frequencyHighAccuracy == null) {
         // find a local maximum in the correlation within tight bounds
-        val frequencyBoundLower = tunerResults.frequencyFromSpectrum(ampSqrSpecIndex - 1)
-        val frequencyBoundUpper = tunerResults.frequencyFromSpectrum(ampSqrSpecIndex + 1)
-        val correlationIndexInitial = (1.0f / frequency / tunerResults.dt).roundToInt()
-        val correlationIndexLower = ceil(1.0f / frequencyBoundUpper / tunerResults.dt).toInt()
-        val correlationIndexUpper = floor(1.0f / frequencyBoundLower / tunerResults.dt).toInt()
-        val correlationMaximum = findLocalMaximum(tunerResults.correlation, correlationIndexInitial,
+        val frequencyBoundLower = workingData.frequencyFromSpectrum(ampSqrSpecIndex - 1)
+        val frequencyBoundUpper = workingData.frequencyFromSpectrum(ampSqrSpecIndex + 1)
+        val correlationIndexInitial = (1.0f / frequency / workingData.dt).roundToInt()
+        val correlationIndexLower = ceil(1.0f / frequencyBoundUpper / workingData.dt).toInt()
+        val correlationIndexUpper = floor(1.0f / frequencyBoundLower / workingData.dt).toInt()
+        val correlationMaximum = findLocalMaximum(workingData.correlation, correlationIndexInitial,
             correlationIndexLower, correlationIndexUpper)
 
         // if we have a local maximum, increase the accuracy by polynomial fitting
         if (correlationMaximum != null) {
             val timeShiftHighAccuracy = increaseTimeShiftAccuracy(
-                tunerResults.correlation, correlationMaximum, tunerResults.dt)
+                workingData.correlation, correlationMaximum, workingData.dt)
             val frequencyHighAccuracyFromCorrelation = 1.0f / timeShiftHighAccuracy
             if (frequencyHighAccuracyFromCorrelation > frequencyBoundLower
                 && frequencyHighAccuracyFromCorrelation < frequencyBoundUpper)
@@ -247,18 +247,18 @@ fun increaseAccuracyForSpectrumBasedFrequency(
 }
 
 fun increaseAccuracyForCorrelationBasedFrequency(
-    correlationIndex: Int, tunerResults: TunerResults, previousTunerResults: TunerResults?): Float {
+    correlationIndex: Int, workingData: WorkingData, previousWorkingData: WorkingData?): Float {
 
-    val dt = tunerResults.dt
+    val dt = workingData.dt
 
     val timeShiftHighAccuracy = increaseTimeShiftAccuracy(
-        tunerResults.correlation, correlationIndex, dt
+        workingData.correlation, correlationIndex, dt
     )
     var frequencyHighAccuracy = 1.0f / timeShiftHighAccuracy
 
     // use spectra to increase accuracy if available and if it is within tight ranges.
-    if (previousTunerResults != null) {
-        val dfSpec = tunerResults.frequencyFromSpectrum(1)
+    if (previousWorkingData != null) {
+        val dfSpec = workingData.frequencyFromSpectrum(1)
         val frequencyIndexSpecInitial = (frequencyHighAccuracy / dfSpec).roundToInt()
 
         // compute frequency range within which there has to be a local maximum
@@ -271,18 +271,18 @@ fun increaseAccuracyForCorrelationBasedFrequency(
         val frequencyIndexSpecUpperBound = floor(frequencyUpperBound / dfSpec).toInt()
 
         val frequencyIndexSpec = findLocalMaximum(
-            tunerResults.ampSqrSpec, frequencyIndexSpecInitial,
+            workingData.ampSqrSpec, frequencyIndexSpecInitial,
             min(frequencyIndexSpecInitial-1, frequencyIndexSpecLowerBound),
             max(frequencyIndexSpecInitial+1, frequencyIndexSpecUpperBound)
         )
 
         if (frequencyIndexSpec != null) {
-            val spec1 = previousTunerResults.spectrum
-            val spec2 = tunerResults.spectrum
+            val spec1 = previousWorkingData.spectrum
+            val spec2 = workingData.spectrum
 
             val frequencyHighAccuracySpec = increaseFrequencyAccuracy(
                 spec1, spec2, frequencyIndexSpec, dfSpec,
-                dt * (tunerResults.framePosition - previousTunerResults.framePosition)
+                dt * (workingData.framePosition - previousWorkingData.framePosition)
             )
 
 //            if (frequencyHighAccuracySpec > frequencyLowerBound
@@ -375,56 +375,56 @@ fun findLocalMaximum(values: FloatArray, initialIndex: Int, lowerIndex: Int, upp
 /// Class which stores chooses a pitch based on precomputed spectra, correlations and maxima
 class PitchChooserAndAccuracyIncreaser {
     /// Results from the previous call, this helps to increase the accuracy by evaluation phase data.
-    private var _lastTunerResults: TunerResults? = null
+    private var _lastWorkingData: WorkingData? = null
     /// Mutex for setting the last tuner results.
     private val tunerResultsMutex = Mutex()
 
     /// Choose pitch and increase accuracy
     /**
-     * @param nextTunerResults Latest precomputed results.
+     * @param nextWorkingData Latest precomputed results.
      * @param hint Hint for a suitable pitch based on the history. If the current results are
      *   uncertain, this hin can help to choose an appropriate value.
      * @return Current pitch frequency.
      */
-    suspend fun run(nextTunerResults: TunerResults, hint: Float?): Float? {
+    suspend fun run(nextWorkingData: WorkingData, hint: Float?): Float? {
 
         var pitchFrequency: Float? = null
 
         withContext(Dispatchers.Default) {
 
-            var lastTunerResults: TunerResults? = tunerResultsMutex.withLock { _lastTunerResults }
+            var lastWorkingData: WorkingData? = tunerResultsMutex.withLock { _lastWorkingData }
             // set last tuner results to null if it is not compatible to the current results
-            if (lastTunerResults != null && (
-                        nextTunerResults.framePosition - lastTunerResults.framePosition <= 0
-                                || lastTunerResults.dt != nextTunerResults.dt
-                                || lastTunerResults.sampleRate != nextTunerResults.sampleRate)) {
-                lastTunerResults = null
+            if (lastWorkingData != null && (
+                        nextWorkingData.framePosition - lastWorkingData.framePosition <= 0
+                                || lastWorkingData.dt != nextWorkingData.dt
+                                || lastWorkingData.sampleRate != nextWorkingData.sampleRate)) {
+                lastWorkingData = null
             }
 
             val mostProbableValueFromSpec = calculateMostProbableSpectrumPitch(
-                nextTunerResults.specMaximaIndices,
-                nextTunerResults.ampSqrSpec,
-                nextTunerResults.frequencyFromSpectrum,
+                nextWorkingData.specMaximaIndices,
+                nextWorkingData.ampSqrSpec,
+                nextWorkingData.frequencyFromSpectrum,
                 hint)
             val mostProbableValueFromCorrelation = calculateMostProbableCorrelationPitch(
-                nextTunerResults.correlationMaximaIndices,
-                nextTunerResults.correlation,
-                nextTunerResults.frequencyFromCorrelation,
+                nextWorkingData.correlationMaximaIndices,
+                nextWorkingData.correlation,
+                nextWorkingData.frequencyFromCorrelation,
                 hint)
 
             if (mostProbableValueFromSpec.ampSqrSpecIndex != null
                 && mostProbableValueFromSpec.rating > mostProbableValueFromCorrelation.rating) {
                 pitchFrequency = increaseAccuracyForSpectrumBasedFrequency(mostProbableValueFromSpec.ampSqrSpecIndex,
-                    nextTunerResults, lastTunerResults)
+                    nextWorkingData, lastWorkingData)
             }
             else if (mostProbableValueFromCorrelation.correlationIndex != null
                 && mostProbableValueFromCorrelation.rating >= mostProbableValueFromSpec.rating) {
                 pitchFrequency = increaseAccuracyForCorrelationBasedFrequency(mostProbableValueFromCorrelation.correlationIndex,
-                    nextTunerResults, lastTunerResults)
+                    nextWorkingData, lastWorkingData)
             }
 
             tunerResultsMutex.withLock {
-                _lastTunerResults = nextTunerResults
+                _lastWorkingData = nextWorkingData
             }
         }
 //        Log.v("TestRecordFlow", "PitchChooserAndAccuracyIncreaser.run: pitchFrequency=$pitchFrequency")

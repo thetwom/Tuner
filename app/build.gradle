@@ -36,7 +36,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0-alpha03"
     implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
     implementation 'androidx.preference:preference-ktx:1.1.1'
-    implementation 'com.google.android.material:material:1.5.0-alpha01'
+    implementation 'com.google.android.material:material:1.5.0-alpha02'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'android.arch.core:core-testing:1.1.1'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

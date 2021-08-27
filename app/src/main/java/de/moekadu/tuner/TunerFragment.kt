@@ -32,9 +32,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.preference.PreferenceManager
 import kotlin.math.floor
-import kotlin.math.log10
 import kotlin.math.max
-import kotlin.math.min
 
 class TunerFragment : Fragment() {
 

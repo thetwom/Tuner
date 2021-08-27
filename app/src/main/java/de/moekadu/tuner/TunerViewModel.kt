@@ -30,9 +30,7 @@ import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.pow
-import kotlin.math.sin
 import kotlin.math.sqrt
-import kotlin.random.Random
 
 class TunerViewModel : ViewModel() {
 
@@ -133,6 +131,7 @@ class TunerViewModel : ViewModel() {
                         val average = it.data.average().toFloat()
                         sqrt(it.data.fold(0f) {sum, element -> sum + (element - average).pow(2)}/ it.data.size)
                     }
+                    sampleSource.recycle(it)
                     emit(result)
                 }
                 .buffer()
@@ -158,10 +157,17 @@ class TunerViewModel : ViewModel() {
                 .buffer()
                 .collect {
                     it.pitchFrequency?.let {pitchFrequency ->
-                        _tunerResults.value = it
+                        val resultsFromLiveData = _tunerResults.value
+                        val results = if (resultsFromLiveData != null && resultsFromLiveData.size == it.size && resultsFromLiveData.sampleRate == it.sampleRate)
+                            resultsFromLiveData
+                        else
+                            TunerResults(it.size, it.sampleRate)
+                        results.set(it)
+                        _tunerResults.value = results
                         if (pitchFrequency > 0.0f)
                             pitchHistory.appendValue(pitchFrequency, it.noise)
                     }
+                    correlationAndSpectrumComputer.recycle(it)
                 }
         }
     }

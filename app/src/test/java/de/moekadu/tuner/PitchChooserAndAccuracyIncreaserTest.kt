@@ -8,9 +8,9 @@ import kotlin.math.*
 class PitchChooserAndAccuracyIncreaserTest {
 
     private fun createSampleSignal(frequency: Float, periods: Float, size: Int, offset: Int,
-                                   harmonicAmps: FloatArray = floatArrayOf(1.0f)): TunerResults {
+                                   harmonicAmps: FloatArray = floatArrayOf(1.0f)): WorkingData {
         val sampleRate = ((frequency * size) / periods).roundToInt()
-        val result = TunerResults(size, sampleRate, offset)
+        val result = WorkingData(size, sampleRate, offset)
         val sampleData = FloatArray(size) { i ->
             var s = 0f
             for (n in harmonicAmps.indices)

@@ -25,9 +25,10 @@ import kotlin.math.min
 /// Class which collects sample data.
 /**
  * @param size Sample data buffer size
+ * @param sampleRate Sample rate in Hertz
  * @param framePosition Position of first frame in data
  */
-class SampleData(val size: Int, val framePosition: Int, val sampleRate: Int) {
+class SampleData(val size: Int, val sampleRate: Int, var framePosition: Int) {
     /// Here we store the data.
     val data = FloatArray(size)
 
@@ -40,6 +41,12 @@ class SampleData(val size: Int, val framePosition: Int, val sampleRate: Int) {
     /** @note We only check that some data was written to min and max position of our data object. */
     val isFull
             get() = (maxLevel == size && minLevel == 0)
+
+    fun reset(framePosition: Int) {
+        this.framePosition = framePosition
+        minLevel = Int.MAX_VALUE
+        maxLevel = 0
+    }
 
     /// Add some data to our data object.
     /**

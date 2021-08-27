@@ -19,6 +19,7 @@
 
 package de.moekadu.tuner
 
+import android.annotation.SuppressLint
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
@@ -39,6 +40,8 @@ class SoundSource(private val scope: CoroutineScope) {
 
     /// Job which is generating sound.
     private var sourceJob: Job? = null
+
+    private var memoryManager = MemoryManagerSampleData()
 
     /// Channel used to communicate the sound samples
     private val outputChannel = Channel<SampleData>(Channel.CONFLATED)
@@ -96,10 +99,14 @@ class SoundSource(private val scope: CoroutineScope) {
             }
         }
 
+    fun recycle(sampleData: SampleData) {
+        memoryManager.recycleMemory(sampleData)
+    }
+
     fun restartSampling()
     {
         stopSampling()
-        sourceJob = createAudioRecordJob(sampleRate, overlap, windowSize, outputChannel, scope, testFunction)
+        sourceJob = createAudioRecordJob(sampleRate, overlap, windowSize, outputChannel, memoryManager, scope, testFunction)
     }
 
     fun stopSampling() {
@@ -118,8 +125,9 @@ class SoundSource(private val scope: CoroutineScope) {
  *  following shape: {timeInSeconds -> sampleValueAtGivenTime}
  *    example: {t -> kotlin.math.sin(2f * kotlin.math.PI.toFloat() * 440.0f * t)}
  */
+@SuppressLint("MissingPermission")
 fun createAudioRecordJob(sampleRate: Int, overlap: Float, windowSize: Int, channel: SendChannel<SampleData>,
-                         scope: CoroutineScope, testFunction: ((Float) -> Float)?) : Job {
+                         memoryManager: MemoryManagerSampleData, scope: CoroutineScope, testFunction: ((Float) -> Float)?) : Job {
 
     return scope.launch(Dispatchers.IO) {
 
@@ -182,7 +190,8 @@ fun createAudioRecordJob(sampleRate: Int, overlap: Float, windowSize: Int, chann
                 if (numRead > 0) {
                     // add empty sampleData objects to the data queue
                     while (nextStartingDataFrame <= currentFrame + numRead) {
-                        sampleDataList.add(SampleData(windowSize, nextStartingDataFrame, sampleRate))
+                        //sampleDataList.add(SampleData(windowSize, sampleRate, nextStartingDataFrame))
+                        sampleDataList.add(memoryManager.getMemory(windowSize, sampleRate, nextStartingDataFrame))
                         nextStartingDataFrame += max(1, ((1.0 - overlap) * windowSize).roundToInt())
                     }
                     // Log.v("TestRecordFlow", "SoundSource: sampleDataList.size = ${sampleDataList.size}, nextStartingDataFrame=$nextStartingDataFrame")
