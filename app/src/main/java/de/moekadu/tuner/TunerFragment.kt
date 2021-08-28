@@ -212,7 +212,7 @@ class TunerFragment : Fragment() {
             spectrumPlot?.setXTouchLimits(0f, results.ampSpecSqrFrequencies.last(), PlotView.NO_REDRAW)
             spectrumPlot?.plot(results.ampSpecSqrFrequencies, results.ampSqrSpec)
 
-            volumeMeter?.volume = results.noise
+//            volumeMeter?.volume = results.noise
         }
 
         viewModel.pitchHistory.sizeAsLiveData.observe(viewLifecycleOwner) {

@@ -15,7 +15,7 @@ class MemoryManagerWorkingData {
                 break
         }
         if (memory == null) {
-            Log.v("Tuner", "MemoryManagerWorkingData.getMemory: create new memory")
+//            Log.v("Tuner", "MemoryManagerWorkingData.getMemory: create new memory")
             memory = WorkingData(size, sampleRate, framePosition)
         } else {
             memory.framePosition = framePosition
@@ -39,7 +39,7 @@ class MemoryManagerSampleData {
                 break
         }
         if (memory == null) {
-            Log.v("Tuner", "MemoryManagerSampleData.getMemory: create new memory")
+//            Log.v("Tuner", "MemoryManagerSampleData.getMemory: create new memory")
             memory = SampleData(size, sampleRate, framePosition)
         } else {
             memory.reset(framePosition)

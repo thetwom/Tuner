@@ -95,6 +95,7 @@
         android:layout_margin="12dp"
         app:volumeMin="0"
         app:volumeMax="1"
+        android:visibility="gone"
         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

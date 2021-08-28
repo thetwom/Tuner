@@ -29,10 +29,12 @@ import android.os.Parcelable
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
+import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
@@ -90,7 +92,10 @@ private fun FloatArray.asPlotViewArray(): PlotViewArray = FloatArrayPlotViewArra
 /// Convert ArrayList of floats to PlotViewArray
 private fun ArrayList<Float>.asPlotViewArray(): PlotViewArray = ArrayListPlotViewArray(this)
 
+
 class PlotRange(val allowTouchControl: Boolean = true)  {
+
+    enum class AnimationStrategy {Direct, ExtendShrink}
 
     private val fixedRange = FloatArray(2) {AUTO}
     private val touchBasedRange = FloatArray(2) {OFF}
@@ -166,7 +171,7 @@ class PlotRange(val allowTouchControl: Boolean = true)  {
         rangeChangedListener?.onRangeChanged(this, currentRange[0], currentRange[1], suppressInvalidate)
     }
 
-    fun setRange(minValue: Float, maxValue: Float, animationDuration: Long) {
+    fun setRange(minValue: Float, maxValue: Float, animationStrategy: AnimationStrategy, animationDuration: Long) {
 //        Log.v("Tuner", "PlotView.PlotRange.setRange: minValue=$minValue, maxValue=$maxValue")
         if (minValue == fixedRange[0] && maxValue == fixedRange[1])
             return
@@ -184,19 +189,19 @@ class PlotRange(val allowTouchControl: Boolean = true)  {
             targetRange.copyInto(currentRange)
             rangeChangedListener?.onRangeChanged(this, currentRange[0], currentRange[1], animationDuration == NO_REDRAW_PRIVATE)
         } else if (animationDuration > 0L) {
-            animateTo(targetRange, animationDuration)
+            animateTo(targetRange, animationStrategy, animationDuration)
         }
         //Log.v("Tuner", "PlotView.PlotRange.setRange: currentRange = ${currentRange[0]}, ${currentRange[1]}")
     }
 
-    fun setTouchLimits(minValue: Float, maxValue: Float, animationDuration: Long) {
+    fun setTouchLimits(minValue: Float, maxValue: Float, animationStrategy: AnimationStrategy, animationDuration: Long) {
         touchBasedRangeLimits[0] = minValue
         touchBasedRangeLimits[1] = maxValue
         // reset the touch based range to make sure its within the limits
-        setTouchRange(touchBasedRange[0], touchBasedRange[1], animationDuration)
+        setTouchRange(touchBasedRange[0], touchBasedRange[1], animationStrategy, animationDuration)
     }
 
-    fun setTouchRange(minValue: Float, maxValue:Float, animationDuration: Long) {
+    fun setTouchRange(minValue: Float, maxValue:Float, animationStrategy: AnimationStrategy, animationDuration: Long) {
         if (!allowTouchControl)
             return
         val minBackup = touchBasedRange[0]
@@ -216,7 +221,7 @@ class PlotRange(val allowTouchControl: Boolean = true)  {
             targetRange.copyInto(currentRange)
             rangeChangedListener?.onRangeChanged(this, currentRange[0], currentRange[1],animationDuration == NO_REDRAW_PRIVATE)
         } else {
-            animateTo(targetRange, animationDuration)
+            animateTo(targetRange, animationStrategy, animationDuration)
         }
     }
 
@@ -227,7 +232,7 @@ class PlotRange(val allowTouchControl: Boolean = true)  {
     fun restore(state: SavedState) {
         setTicksRange(state.ticksRange[0], state.ticksRange[1], true)
         setDataRange(state.dataRange[0], state.dataRange[1], true)
-        setRange(state.fixedRange[0], state.fixedRange[1], NO_REDRAW_PRIVATE)
+        setRange(state.fixedRange[0], state.fixedRange[1], AnimationStrategy.Direct, NO_REDRAW_PRIVATE)
         state.touchBasedRange.copyInto(touchBasedRange)
     }
 
@@ -263,12 +268,21 @@ class PlotRange(val allowTouchControl: Boolean = true)  {
 //        Log.v("Tuner", "PlotRange.determineTargetRange: ${targetRange[0]} ${targetRange[1]}")
     }
 
-    private fun animateTo(targetRange: FloatArray, animationDuration: Long) {
+    private fun animateTo(targetRange: FloatArray, strategy: AnimationStrategy, animationDuration: Long) {
         if (rangeAnimator.isStarted)
             rangeAnimator.end()
-        rangeAnimator.setObjectValues(
-            floatArrayOf(currentRange[0], currentRange[1]), floatArrayOf(targetRange[0], targetRange[1])
-        )
+        when (strategy) {
+            AnimationStrategy.Direct -> rangeAnimator.setObjectValues(
+                floatArrayOf(currentRange[0], currentRange[1]),
+                floatArrayOf(targetRange[0], targetRange[1])
+            )
+            AnimationStrategy.ExtendShrink -> rangeAnimator.setObjectValues(
+                floatArrayOf(currentRange[0], currentRange[1]),
+                floatArrayOf(min(currentRange[0], targetRange[0]), max(currentRange[1], targetRange[1])),
+                floatArrayOf(min(currentRange[0], targetRange[0]), max(currentRange[1], targetRange[1])),
+                floatArrayOf(targetRange[0], targetRange[1])
+            )
+        }
         rangeAnimator.duration = animationDuration
         rangeAnimator.start()
     }
@@ -1000,6 +1014,61 @@ class PlotRectangleAndPoint {
     }
 }
 
+class PlotDrawable(context: Context, tint: Int, drawableId: Int) {
+    private val drawable = ContextCompat.getDrawable(context, drawableId)?.mutate()
+
+    private val aspectRatio = (drawable?.intrinsicHeight?.toFloat() ?: 1f) / (drawable?.intrinsicWidth?.toFloat() ?: 1f)
+    private var width = 0f
+    private var height = 0f
+
+    private val paint = Paint().apply {
+        colorFilter = PorterDuffColorFilter(tint, PorterDuff.Mode.SRC_IN)
+    }
+
+    private var bitmap: Bitmap? = null
+
+    fun setSize(width: Float = USE_ASPECT_RATIO, height: Float = USE_ASPECT_RATIO) {
+        require(!(width == USE_ASPECT_RATIO && height == USE_ASPECT_RATIO))
+        val newWidth = if (width == USE_ASPECT_RATIO) height / aspectRatio else width
+        val newHeight = if (height == USE_ASPECT_RATIO) width * aspectRatio else height
+
+        if (newWidth != this.width || newHeight != this.height) {
+//            Log.v("Tuner", "PlotDrawable.setSize: newWidth=$newWidth, newHeight=$newHeight")
+            val newBitmap = Bitmap.createBitmap(newWidth.toInt(), newHeight.toInt(), Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(newBitmap)
+            drawable?.setBounds(0 ,0, canvas.width, canvas.height)
+            drawable?.draw(canvas)
+            this.width = newWidth
+            this.height = newHeight
+            bitmap?.recycle()
+            bitmap = newBitmap
+        }
+    }
+
+    fun drawToCanvas(xPosition: Float, yPosition: Float, anchor: MarkAnchor, canvas: Canvas?) {
+        if (height != 0f && width != 0f) {
+            val x = when (anchor) {
+                MarkAnchor.West, MarkAnchor.SouthWest, MarkAnchor.NorthWest -> xPosition
+                MarkAnchor.Center, MarkAnchor.South, MarkAnchor.North -> xPosition - 0.5f * width
+                MarkAnchor.East, MarkAnchor.SouthEast, MarkAnchor.NorthEast -> xPosition - width
+            }
+
+            val y = when (anchor) {
+                MarkAnchor.North, MarkAnchor.NorthWest, MarkAnchor.NorthEast -> yPosition
+                MarkAnchor.Center, MarkAnchor.West, MarkAnchor.East -> yPosition - 0.5f * height
+                MarkAnchor.South, MarkAnchor.SouthWest, MarkAnchor.SouthEast -> yPosition - height
+            }
+
+            bitmap?.let {
+                canvas?.drawBitmap(it, x, y, paint)
+            }
+        }
+    }
+
+    companion object {
+        const val USE_ASPECT_RATIO = Float.MAX_VALUE
+    }
+}
 /// PlotView class
 class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr)
@@ -1023,6 +1092,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     private var allowTouchX = true
     private var allowTouchY = true
+
+    private lateinit var touchManualControlDrawable: PlotDrawable
 
     /// Bounding box of all data which are inside the plot
     private val boundingBox = RectF(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY)
@@ -1083,8 +1154,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var titleColor = Color.BLACK
     /// Paint used for plotting title and frame
     private val titlePaint = Paint()
+
     /// Stroke width used for frame
     private var frameStrokeWidth = 1f
+    private var frameColor = Color.BLACK
+    private var frameColorOnTouch = Color.RED
+    private val framePaint = Paint()
 
     @Parcelize
     private class SavedState(
@@ -1115,8 +1190,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             rectView.set(rawViewTransformation.viewPlotBounds)
             rectView.offset(distanceX, distanceY)
             rawViewTransformation.transformViewToRaw(rectView, rectRaw)
-            xRange.setTouchRange(rectRaw.left, rectRaw.right, NO_REDRAW)
-            yRange.setTouchRange(rectRaw.top, rectRaw.bottom, NO_REDRAW)
+            xRange.setTouchRange(rectRaw.left, rectRaw.right, PlotRange.AnimationStrategy.Direct, NO_REDRAW)
+            yRange.setTouchRange(rectRaw.top, rectRaw.bottom, PlotRange.AnimationStrategy.Direct, NO_REDRAW)
             ViewCompat.postInvalidateOnAnimation(this@PlotView)
         }
 
@@ -1207,8 +1282,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 scaleX * rectView.right, scaleY * rectView.bottom)
             rectView.offset(focusX, focusY)
             rawViewTransformation.transformViewToRaw(rectView, rectRaw)
-            xRange.setTouchRange(rectRaw.left, rectRaw.right, NO_REDRAW)
-            yRange.setTouchRange(rectRaw.top, rectRaw.bottom, NO_REDRAW)
+            xRange.setTouchRange(rectRaw.left, rectRaw.right, PlotRange.AnimationStrategy.Direct, NO_REDRAW)
+            yRange.setTouchRange(rectRaw.top, rectRaw.bottom, PlotRange.AnimationStrategy.Direct, NO_REDRAW)
 
 
 //            rectangleAndPoint.isEnabled = true
@@ -1243,6 +1318,9 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     init {
         isSaveEnabled = true
 
+        var touchDrawableId = R.drawable.ic_manual
+        var touchManualControlDrawableWidth = 10f
+
         attrs?.let {
             val ta = context.obtainStyledAttributes(attrs, R.styleable.PlotView, defStyleAttr, R.style.PlotViewStyle)
             //val ta = context.obtainStyledAttributes(it, R.styleable.PlotView)
@@ -1272,17 +1350,32 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             title = ta.getString(R.styleable.PlotView_title)
             titleSize = ta.getDimension(R.styleable.PlotView_titleSize, titleSize)
             titleColor = ta.getColor(R.styleable.PlotView_titleColor, titleColor)
+
             frameStrokeWidth = ta.getDimension(R.styleable.PlotView_frameStrokeWidth, frameStrokeWidth)
+            frameColor = ta.getColor(R.styleable.PlotView_frameColor, frameColor)
+            frameColorOnTouch = ta.getColor(R.styleable.PlotView_frameColorOnTouch, frameColorOnTouch)
 
             allowTouchX = ta.getBoolean(R.styleable.PlotView_enableTouchX, allowTouchX)
             allowTouchY = ta.getBoolean(R.styleable.PlotView_enableTouchY, allowTouchY)
+
+            touchDrawableId = ta.getResourceId(R.styleable.PlotView_touchDrawable, touchDrawableId)
+            touchManualControlDrawableWidth = ta.getDimension(R.styleable.PlotView_touchDrawableWidth, touchManualControlDrawableWidth)
             ta.recycle()
         }
 
         titlePaint.color = titleColor
         titlePaint.isAntiAlias = true
         titlePaint.textSize = titleSize
-        titlePaint.strokeWidth = frameStrokeWidth
+        titlePaint.style = Paint.Style.FILL
+        titlePaint.textAlign = Paint.Align.CENTER
+
+        framePaint.color = frameColor
+        framePaint.isAntiAlias = true
+        framePaint.strokeWidth = frameStrokeWidth
+        framePaint.style = Paint.Style.STROKE
+
+        touchManualControlDrawable = PlotDrawable(context, frameColorOnTouch, touchDrawableId)
+        touchManualControlDrawable.setSize(width = touchManualControlDrawableWidth)
 
         xRange = PlotRange(allowTouchX).apply {
             rangeChangedListener = PlotRange.RangeChangedListener { _, minValue, maxValue, suppressInvalidate ->
@@ -1362,21 +1455,30 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             p.drawToCanvas(canvas)
         canvas?.restore()
 
-        titlePaint.style = Paint.Style.STROKE
-        canvas?.drawRect(rawViewTransformation.viewPlotBounds, titlePaint)
+        framePaint.color = if (xRange.isTouchControlled || yRange.isTouchControlled)
+            frameColorOnTouch
+        else
+            frameColor
+        canvas?.drawRect(rawViewTransformation.viewPlotBounds, framePaint)
 
         for (m in markGroups.values)
             m.drawToCanvas(canvas)
 
         title?.let {
-            titlePaint.style = Paint.Style.FILL
-            titlePaint.textAlign = Paint.Align.CENTER
             canvas?.drawText(it,
                 0.5f * width,
                 paddingTop + titleSize,
                 titlePaint)
         }
 
+        if (xRange.isTouchControlled || yRange.isTouchControlled) {
+            touchManualControlDrawable.drawToCanvas(
+                rawViewTransformation.viewPlotBounds.right - 0.5f * frameStrokeWidth + 1,
+                rawViewTransformation.viewPlotBounds.top + 0.5f * frameStrokeWidth - 1,
+                MarkAnchor.NorthEast,
+                canvas
+            )
+        }
         rectangleAndPoint.drawToCanvas(canvas)
 //        canvas?.drawLine(0f, 0f, getWidth().toFloat(), getHeight().toFloat(), paint)
 //        drawArrow(canvas, 0.1f*getWidth(), 0.9f*getHeight(), 0.9f*getWidth(), 0.1f*getHeight(), paint)
@@ -1385,17 +1487,19 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     override fun performClick(): Boolean {
         if (xRange.isTouchControlled || yRange.isTouchControlled) {
 //                Log.v("Tuner", "PlotView: performClick switch touch control off")
-            xRange.setTouchRange(PlotRange.OFF, PlotRange.OFF, 200L)
-            yRange.setTouchRange(PlotRange.OFF, PlotRange.OFF, 200L)
+            xRange.setTouchRange(PlotRange.OFF, PlotRange.OFF, PlotRange.AnimationStrategy.Direct, 200L)
+            yRange.setTouchRange(PlotRange.OFF, PlotRange.OFF, PlotRange.AnimationStrategy.Direct, 200L)
         } else {
             xRange.setTouchRange(
                 rawViewTransformation.rawPlotBounds.left,
                 rawViewTransformation.rawPlotBounds.right,
+                PlotRange.AnimationStrategy.Direct,
                 NO_REDRAW
             )
             yRange.setTouchRange(
                 rawViewTransformation.rawPlotBounds.top,
                 rawViewTransformation.rawPlotBounds.bottom,
+                PlotRange.AnimationStrategy.Direct,
                 NO_REDRAW
             )
             ViewCompat.postInvalidateOnAnimation(this@PlotView)
@@ -1578,7 +1682,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param animationDuration Duration for animating to the new range (0L for no animation)
      */
     fun xRange(minValue : Float, maxValue : Float, animationDuration: Long = 0L) {
-        xRange.setRange(minValue, maxValue, animationDuration)
+        xRange.setRange(minValue, maxValue, PlotRange.AnimationStrategy.ExtendShrink, animationDuration)
     }
 
     /// Set y-range.
@@ -1588,15 +1692,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param animationDuration Duration for animating to the new range (0L for no animation)
      */
     fun yRange(minValue : Float, maxValue : Float, animationDuration: Long = 0L) {
-        yRange.setRange(minValue, maxValue, animationDuration)
+        yRange.setRange(minValue, maxValue, PlotRange.AnimationStrategy.ExtendShrink, animationDuration)
     }
 
     fun setXTouchLimits(minValue: Float, maxValue: Float, animationDuration: Long = 0L) {
-        xRange.setTouchLimits(minValue, maxValue, animationDuration)
+        xRange.setTouchLimits(minValue, maxValue, PlotRange.AnimationStrategy.Direct, animationDuration)
     }
 
     fun setYTouchLimits(minValue: Float, maxValue: Float, animationDuration: Long = 0L) {
-        yRange.setTouchLimits(minValue, maxValue, animationDuration)
+        yRange.setTouchLimits(minValue, maxValue, PlotRange.AnimationStrategy.Direct, animationDuration)
     }
 
     /// Plot equidistant values (Taking a FloatArray).

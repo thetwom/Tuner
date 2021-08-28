@@ -64,9 +64,13 @@
         <attr name="title" format="string"/>
         <attr name="titleSize" format="dimension"/>
         <attr name="titleColor" format="color"/>
+        <attr name="frameColor" format="color"/>
+        <attr name="frameColorOnTouch" format="color"/>
         <attr name="frameStrokeWidth" format="dimension"/>
         <attr name="enableTouchX" format="boolean"/>
         <attr name="enableTouchY" format="boolean"/>
+        <attr name="touchDrawable" format="reference"/>
+        <attr name="touchDrawableWidth" format="dimension"/>
     </declare-styleable>
 
     <style name="PlotViewStyle">
@@ -90,9 +94,13 @@
         <item name="pointColorInactive">?attr/colorOnBackground</item>
         <item name="titleSize">12sp</item>
         <item name="titleColor">?attr/colorPrimary</item>
+        <item name="frameColor">?attr/colorPrimary</item>
+        <item name="frameColorOnTouch">?attr/colorError</item>
         <item name="frameStrokeWidth">2dp</item>
         <item name="enableTouchX">true</item>
         <item name="enableTouchY">true</item>
+        <item name="touchDrawable">@drawable/ic_manual</item>
+        <item name="touchDrawableWidth">25dp</item>
     </style>
 
     <declare-styleable name="VolumeMeter">

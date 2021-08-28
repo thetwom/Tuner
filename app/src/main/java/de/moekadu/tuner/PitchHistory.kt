@@ -146,7 +146,7 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
     var plotRangeInToneIndices = 3f
         set(value) {
             field = value
-            updatePlotRange()
+            updatePlotRange2()
         }
 
     /// Backing field for minimum and maximum limit of plot range
@@ -246,7 +246,7 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
             _history.value = pitchArray
             _historyAveraged.value = pitchArrayMovingAverage
             updateCurrentEstimatedToneIndex()
-            updatePlotRange()
+            updatePlotRange2()
             if (_numValuesSinceLastLineUpdate.value != null)
                 _numValuesSinceLastLineUpdate.value = 0L
         } else {
@@ -289,6 +289,25 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
     private fun updatePlotRange() {
         updatePlotRange(frequencyPlotRangeValues, _frequencyPlotRange, pitchArray)
         updatePlotRange(frequencyPlotRangeAveragedValues, _frequencyPlotRangeAveraged, pitchArrayMovingAverage)
+    }
+
+    private fun updatePlotRange2() {
+        val toneIndex = _currentEstimatedToneIndex.value ?: return
+        val lowerBound = tuningFrequencies.getNoteFrequency(toneIndex - 0.5f * plotRangeInToneIndices)
+        val upperBound = tuningFrequencies.getNoteFrequency(toneIndex + 0.5f * plotRangeInToneIndices)
+
+        // only update after something changed
+        if (lowerBound != frequencyPlotRangeValues[0] || upperBound != frequencyPlotRangeValues[1]) {
+            frequencyPlotRangeValues[0] = lowerBound
+            frequencyPlotRangeValues[1] = upperBound
+            _frequencyPlotRange.value = frequencyPlotRangeValues
+        }
+
+        if (lowerBound != frequencyPlotRangeAveragedValues[0] || upperBound != frequencyPlotRangeAveragedValues[1]) {
+            frequencyPlotRangeAveragedValues[0] = lowerBound
+            frequencyPlotRangeAveragedValues[1] = upperBound
+            _frequencyPlotRangeAveraged.value = frequencyPlotRangeAveragedValues
+        }
     }
 
     private fun updatePlotRange(plotRange: FloatArray, plotRangeLiveData: MutableLiveData<FloatArray>,
