@@ -20,7 +20,6 @@
 package de.moekadu.tuner
 
 import android.Manifest
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -30,7 +29,6 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.preference.PreferenceManager
 import kotlin.math.floor
 import kotlin.math.max
 
@@ -45,50 +43,50 @@ class TunerFragment : Fragment() {
 
     private val minCorrelationFrequency = 25f
 
-    private val onPreferenceChangedListener = object : SharedPreferences.OnSharedPreferenceChangeListener {
-        override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-            if (sharedPreferences == null)
-                return
-//            Log.v("Tuner", "TunerFragment.setupPreferenceListener: key=$key")
-            when (key) {
-                "a4_frequency" -> {
-//                    Log.v("Tuner", "TunerFragment.setupPreferenceListener: a4_frequency changed")
-                    viewModel.a4Frequency = sharedPreferences.getString("a4_frequency", "440")?.toFloat() ?: 440f
-                }
-                "windowing" -> {
-                    val value = sharedPreferences.getString(key, null)
-                    viewModel.windowingFunction =
-                        when (value) {
-                            "no_window" -> WindowingFunction.Tophat
-                            "window_hamming" -> WindowingFunction.Hamming
-                            "window_hann" -> WindowingFunction.Hann
-                            else -> throw RuntimeException("Unknown window")
-                        }
-                }
-                "window_size" -> {
-                    viewModel.windowSize = indexToWindowSize(sharedPreferences.getInt(key, 5))
-                }
-                "overlap" -> {
-                    viewModel.overlap = sharedPreferences.getInt(key, 25) / 100f
-                }
-                "pitch_history_duration" -> {
-                    viewModel.pitchHistoryDuration = percentToPitchHistoryDuration(sharedPreferences.getInt(key, 50))
-                }
-                "pitch_history_num_faulty_values" -> {
-                    viewModel.pitchHistory.maxNumFaultyValues = sharedPreferences.getInt(key, 3)
-                }
-                "use_hint" -> {
-                    viewModel.useHint = sharedPreferences.getBoolean(key, true)
-                }
-                "num_moving_average" -> {
-                    viewModel.pitchHistory.numMovingAverage = sharedPreferences.getInt(key, 5)
-                }
-                "max_noise" -> {
-                    viewModel.pitchHistory.maxNoise = sharedPreferences.getInt(key, 10) / 100f
-                }
-            }
-        }
-    }
+//    private val onPreferenceChangedListener = object : SharedPreferences.OnSharedPreferenceChangeListener {
+//        override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+//            if (sharedPreferences == null)
+//                return
+////            Log.v("Tuner", "TunerFragment.setupPreferenceListener: key=$key")
+//            when (key) {
+//                "a4_frequency" -> {
+////                    Log.v("Tuner", "TunerFragment.setupPreferenceListener: a4_frequency changed")
+//                    viewModel.a4Frequency = sharedPreferences.getString("a4_frequency", "440")?.toFloat() ?: 440f
+//                }
+//                "windowing" -> {
+//                    val value = sharedPreferences.getString(key, null)
+//                    viewModel.windowingFunction =
+//                        when (value) {
+//                            "no_window" -> WindowingFunction.Tophat
+//                            "window_hamming" -> WindowingFunction.Hamming
+//                            "window_hann" -> WindowingFunction.Hann
+//                            else -> throw RuntimeException("Unknown window")
+//                        }
+//                }
+//                "window_size" -> {
+//                    viewModel.windowSize = indexToWindowSize(sharedPreferences.getInt(key, 5))
+//                }
+//                "overlap" -> {
+//                    viewModel.overlap = sharedPreferences.getInt(key, 25) / 100f
+//                }
+//                "pitch_history_duration" -> {
+//                    viewModel.pitchHistoryDuration = percentToPitchHistoryDuration(sharedPreferences.getInt(key, 50))
+//                }
+//                "pitch_history_num_faulty_values" -> {
+//                    viewModel.pitchHistory.maxNumFaultyValues = sharedPreferences.getInt(key, 3)
+//                }
+//                "use_hint" -> {
+//                    viewModel.useHint = sharedPreferences.getBoolean(key, true)
+//                }
+//                "num_moving_average" -> {
+//                    viewModel.pitchHistory.numMovingAverage = sharedPreferences.getInt(key, 5)
+//                }
+//                "max_noise" -> {
+//                    viewModel.pitchHistory.maxNoise = sharedPreferences.getInt(key, 10) / 100f
+//                }
+//            }
+//        }
+//    }
 
     /// Instance for requesting audio recording permission.
     /**
@@ -107,19 +105,6 @@ class TunerFragment : Fragment() {
                 "TunerFragment.askForPermissionAnNotifyViewModel: No audio recording permission is granted."
             )
         }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        val pref = PreferenceManager.getDefaultSharedPreferences(activity)
-        pref.registerOnSharedPreferenceChangeListener(onPreferenceChangedListener)
-    }
-
-    override fun onDestroy() {
-        val pref = PreferenceManager.getDefaultSharedPreferences(activity)
-        pref.unregisterOnSharedPreferenceChangeListener(onPreferenceChangedListener)
-        super.onDestroy()
     }
 
     override fun onCreateView(
@@ -181,8 +166,6 @@ class TunerFragment : Fragment() {
         pitchPlot?.yRange(400f, 500f, PlotView.NO_REDRAW)
         // spectrumPlot?.setXTickTextFormat { i -> getString(R.string.hertz, i) }
 //        frequencyText = findViewById(R.id.frequency_text)
-
-        setPreferencesInViewModel()
 
 //        viewModel.standardDeviation.observe(viewLifecycleOwner) { standardDeviation ->
 //            volumeMeter?.volume = log10(max(1e-12f, standardDeviation))
@@ -246,7 +229,7 @@ class TunerFragment : Fragment() {
                 pitchPlot?.setMarks(
                     null,
                     floatArrayOf(frequencyMinusBound, frequencyPlusBound),
-                    MARK_ID_TOLERANCE_UPPER,
+                    MARK_ID_TOLERANCE,
                     1,
                     arrayOf(MarkAnchor.NorthWest, MarkAnchor.SouthWest),
                     MarkLabelBackgroundSize.FitLargest,
@@ -260,13 +243,7 @@ class TunerFragment : Fragment() {
 
                 val noteName = tuningFrequencies.getNoteName(frequency)
                 pitchPlot?.setYMark(frequency, noteName, MARK_ID_FREQUENCY, MarkAnchor.East, 0, true)
-//                val marks = ArrayList<PlotView.Mark>(2)
-//                marks.add(PlotView.Mark(PlotView.DRAW_LINE, frequencyPlusBound, namePlusBound, MarkAnchor.SouthWest, 1))
-//                marks.add(PlotView.Mark(PlotView.DRAW_LINE, frequencyMinusBound, nameMinusBound, MarkAnchor.NorthWest, 1))
-//                pitchPlot?.setMarks(marks, MARK_ID_TOLERANCE, PlotView.MarkLabelBackgroundSize.FitLargest, false)
-//                val noteName = tuningFrequencies.getNoteName(frequency)
-//                pitchPlot?.setYMark(frequency, noteName, MARK_ID_FREQUENCY, PlotView.MarkAnchor.East, 0, true)
-            }
+           }
         }
 
         viewModel.pitchHistory.numValuesSinceLastLineUpdate.observe(viewLifecycleOwner) { numValuesSinceLastUpdate ->
@@ -302,28 +279,8 @@ class TunerFragment : Fragment() {
         super.onStop()
     }
 
-    private fun setPreferencesInViewModel() {
-
-        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
-        viewModel.a4Frequency = sharedPreferences.getString("a4_frequency", "440")?.toFloat() ?: 440f
-        viewModel.windowingFunction = when (sharedPreferences.getString("windowing", "no_window")) {
-            "no_window" -> WindowingFunction.Tophat
-            "window_hamming" -> WindowingFunction.Hamming
-            "window_hann" -> WindowingFunction.Hann
-            else -> throw RuntimeException("Unknown window")
-        }
-        viewModel.windowSize = indexToWindowSize(sharedPreferences.getInt("window_size", 5))
-        viewModel.overlap = sharedPreferences.getInt("overlap", 25) / 100f
-        viewModel.pitchHistoryDuration = percentToPitchHistoryDuration(sharedPreferences.getInt("pitch_history_duration", 50))
-        viewModel.pitchHistory.maxNumFaultyValues = sharedPreferences.getInt("pitch_history_num_faulty_values", 3)
-        viewModel.pitchHistory.numMovingAverage = sharedPreferences.getInt("num_moving_average", 5)
-        viewModel.useHint = sharedPreferences.getBoolean("use_hint", true)
-        viewModel.pitchHistory.maxNoise = sharedPreferences.getInt("max_noise", 10) / 100f
-    }
-
     companion object{
-        private const val MARK_ID_TOLERANCE_LOWER = 9L
-        private const val MARK_ID_TOLERANCE_UPPER = 10L
+        private const val MARK_ID_TOLERANCE = 10L
         private const val MARK_ID_FREQUENCY = 11L
     }
 }

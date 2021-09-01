@@ -19,10 +19,11 @@
 
 package de.moekadu.tuner
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import android.app.Application
+import android.content.SharedPreferences
+import android.util.Log
+import androidx.lifecycle.*
+import androidx.preference.PreferenceManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.collect
@@ -30,9 +31,10 @@ import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.pow
+import kotlin.math.sin
 import kotlin.math.sqrt
 
-class TunerViewModel : ViewModel() {
+class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
     /// Source which conducts the audio recording.
     private val sampleSource = SoundSource(viewModelScope)
@@ -107,11 +109,58 @@ class TunerViewModel : ViewModel() {
 
     var useHint = true
 
+    private val pref = PreferenceManager.getDefaultSharedPreferences(application)
+    
+    private val onPreferenceChangedListener = object : SharedPreferences.OnSharedPreferenceChangeListener {
+        override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+            if (sharedPreferences == null)
+                return
+//            Log.v("Tuner", "TunerFragment.setupPreferenceListener: key=$key")
+            when (key) {
+                "a4_frequency" -> {
+//                    Log.v("Tuner", "TunerFragment.setupPreferenceListener: a4_frequency changed")
+                    a4Frequency = sharedPreferences.getString("a4_frequency", "440")?.toFloat() ?: 440f
+                }
+                "windowing" -> {
+                    val value = sharedPreferences.getString(key, null)
+                    windowingFunction =
+                        when (value) {
+                            "no_window" -> WindowingFunction.Tophat
+                            "window_hamming" -> WindowingFunction.Hamming
+                            "window_hann" -> WindowingFunction.Hann
+                            else -> throw RuntimeException("Unknown window")
+                        }
+                }
+                "window_size" -> {
+                    windowSize = indexToWindowSize(sharedPreferences.getInt(key, 5))
+                }
+                "overlap" -> {
+                    overlap = sharedPreferences.getInt(key, 25) / 100f
+                }
+                "pitch_history_duration" -> {
+                    pitchHistoryDuration = percentToPitchHistoryDuration(sharedPreferences.getInt(key, 50))
+                }
+                "pitch_history_num_faulty_values" -> {
+                    pitchHistory.maxNumFaultyValues = sharedPreferences.getInt(key, 3)
+                }
+                "use_hint" -> {
+                    useHint = sharedPreferences.getBoolean(key, true)
+                }
+                "num_moving_average" -> {
+                    pitchHistory.numMovingAverage = sharedPreferences.getInt(key, 5)
+                }
+                "max_noise" -> {
+                    pitchHistory.maxNoise = sharedPreferences.getInt(key, 10) / 100f
+                }
+            }
+        }
+    }
+
     init {
         //Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
 
 //        sampleSource.testFunction = { t ->
-//            val freq = 400f + 2*t
+//            val freq = 2000f // + 2*t
 //           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
 //            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
 //        }
@@ -119,6 +168,22 @@ class TunerViewModel : ViewModel() {
 //            800f * Random.nextFloat()
 //            //1f
 //        }
+
+        pref.registerOnSharedPreferenceChangeListener(onPreferenceChangedListener)
+        a4Frequency = pref.getString("a4_frequency", "440")?.toFloat() ?: 440f
+        windowingFunction = when (pref.getString("windowing", "no_window")) {
+            "no_window" -> WindowingFunction.Tophat
+            "window_hamming" -> WindowingFunction.Hamming
+            "window_hann" -> WindowingFunction.Hann
+            else -> throw RuntimeException("Unknown window")
+        }
+        windowSize = indexToWindowSize(pref.getInt("window_size", 5))
+        overlap = pref.getInt("overlap", 25) / 100f
+        pitchHistoryDuration = percentToPitchHistoryDuration(pref.getInt("pitch_history_duration", 50))
+        pitchHistory.maxNumFaultyValues = pref.getInt("pitch_history_num_faulty_values", 3)
+        pitchHistory.numMovingAverage = pref.getInt("num_moving_average", 5)
+        useHint = pref.getBoolean("use_hint", true)
+        pitchHistory.maxNoise = pref.getInt("max_noise", 10) / 100f
 
         viewModelScope.launch {
             sampleSource.flow
@@ -182,6 +247,8 @@ class TunerViewModel : ViewModel() {
 
     override fun onCleared() {
         stopSampling()
+        pref.unregisterOnSharedPreferenceChangeListener(onPreferenceChangedListener)
+
         super.onCleared()
     }
 }

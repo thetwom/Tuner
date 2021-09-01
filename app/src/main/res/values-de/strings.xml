@@ -22,7 +22,7 @@
     <string name="pitch_history_num_faulty_values">Zu neuem Ton springen</string>
     <plurals name="pitch_history_num_faulty_values_summary">
         <item quantity="one">Immer direkt zu neuem Ton springen</item>
-        <item quantity="other">Nach %d ähnlichen Ton-Ergenissen</item>
+        <item quantity="other">Nach %d ähnlichen Ton-Ergebnissen</item>
     </plurals>
 
     <string name="use_hint">Bessere Tonschätzung durch vorherige Werte</string>

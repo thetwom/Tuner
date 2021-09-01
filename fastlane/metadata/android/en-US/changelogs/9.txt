@@ -1,4 +1,8 @@
 v1.3.0:
+- Touch control for plots
+- Quicker animation to focus on new tone
+- Slightly adapted frequency peak finding
+- Don't search for new tones if noise is too high
 - Use plurals in preference descriptions
 - Extra visual feedback, when no new pitch is found for a certain time
 - Update to target sdk 31

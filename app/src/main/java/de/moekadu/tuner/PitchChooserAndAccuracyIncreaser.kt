@@ -262,18 +262,18 @@ fun increaseAccuracyForCorrelationBasedFrequency(
         val frequencyIndexSpecInitial = (frequencyHighAccuracy / dfSpec).roundToInt()
 
         // compute frequency range within which there has to be a local maximum
-        val timeShiftUpperBound = timeShiftHighAccuracy + 1.5f * dt
+        val timeShiftUpperBound = workingData.timeShiftFromCorrelation(correlationIndex + 1) //timeShiftHighAccuracy + 1.5f * dt
         val frequencyLowerBound = 1.0 / timeShiftUpperBound
-        val frequencyIndexSpecLowerBound = ceil(frequencyLowerBound / dfSpec).toInt()
+        val frequencyIndexSpecLowerBound = floor(frequencyLowerBound / dfSpec).toInt()
 
-        val timeShiftLowerBound = timeShiftHighAccuracy - 1.5f * dt
+        val timeShiftLowerBound = workingData.timeShiftFromCorrelation(correlationIndex - 1) //timeShiftHighAccuracy - 1.5f * dt
         val frequencyUpperBound = 1.0 / timeShiftLowerBound
-        val frequencyIndexSpecUpperBound = floor(frequencyUpperBound / dfSpec).toInt()
+        val frequencyIndexSpecUpperBound = ceil(frequencyUpperBound / dfSpec).toInt()
 
         val frequencyIndexSpec = findLocalMaximum(
             workingData.ampSqrSpec, frequencyIndexSpecInitial,
-            min(frequencyIndexSpecInitial-1, frequencyIndexSpecLowerBound),
-            max(frequencyIndexSpecInitial+1, frequencyIndexSpecUpperBound)
+            min(frequencyIndexSpecInitial - 1, frequencyIndexSpecLowerBound),
+            max(frequencyIndexSpecInitial + 1, frequencyIndexSpecUpperBound)
         )
 
         if (frequencyIndexSpec != null) {
@@ -285,18 +285,19 @@ fun increaseAccuracyForCorrelationBasedFrequency(
                 dt * (workingData.framePosition - previousWorkingData.framePosition)
             )
 
-//            if (frequencyHighAccuracySpec > frequencyLowerBound
-//                && frequencyHighAccuracySpec < frequencyUpperBound
-//                && frequencyHighAccuracySpec > frequencyIndexSpec * (dfSpec - 1)
-//                && frequencyHighAccuracySpec < frequencyIndexSpec * (dfSpec + 1)
-//            )
-            // normally we would also compare against frequencyLowerBound an
-            //  frequencyUpperBound, but it seems as the frequency based improvement can
-            //  even yield improved results outside the correlation based bounds.
-            if (frequencyHighAccuracySpec > frequencyIndexSpec * (dfSpec - 1)
+            if (frequencyHighAccuracySpec > frequencyLowerBound
+                && frequencyHighAccuracySpec < frequencyUpperBound
+                && frequencyHighAccuracySpec > frequencyIndexSpec * (dfSpec - 1)
                 && frequencyHighAccuracySpec < frequencyIndexSpec * (dfSpec + 1)
-            )
+            ) {
+                // normally we would also compare against frequencyLowerBound an
+                //  frequencyUpperBound, but it seems as the frequency based improvement can
+                //  even yield improved results outside the correlation based bounds.
+//            if (frequencyHighAccuracySpec > frequencyIndexSpec * (dfSpec - 1)
+//                && frequencyHighAccuracySpec < frequencyIndexSpec * (dfSpec + 1)
+//            ) {
                 frequencyHighAccuracy = frequencyHighAccuracySpec
+            }
         }
     }
     return frequencyHighAccuracy
