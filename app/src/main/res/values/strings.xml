@@ -53,4 +53,5 @@
     <string name="samples">samples</string>
     <string name="max_noise">Maximum allowed background noise</string>
     <string name="max_noise_summary">Don\'t search pitch when noise is above %d %%.</string>
+    <string name="scientific_mode">Scientific mode</string>
 </resources>

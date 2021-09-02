@@ -184,8 +184,12 @@ class TunerFragment : Fragment() {
             else {
                 results.pitchFrequency?.let { pitchFrequency ->
                     val label = getString(R.string.hertz, pitchFrequency)
-                    correlationPlot?.setXMark(1.0f / pitchFrequency, label, MARK_ID_FREQUENCY, MarkAnchor.SouthWest)
-                    spectrumPlot?.setXMark(pitchFrequency, label, MARK_ID_FREQUENCY, MarkAnchor.SouthWest)
+                    correlationPlot?.setXMark(1.0f / pitchFrequency, label,
+                        MARK_ID_FREQUENCY, MarkAnchor.SouthWest,
+                        placeLabelsOutsideBoundsIfPossible = false)
+                    spectrumPlot?.setXMark(pitchFrequency, label, MARK_ID_FREQUENCY,
+                        MarkAnchor.SouthWest,
+                        placeLabelsOutsideBoundsIfPossible = false)
                 }
             }
 
@@ -233,7 +237,8 @@ class TunerFragment : Fragment() {
                     1,
                     arrayOf(MarkAnchor.NorthWest, MarkAnchor.SouthWest),
                     MarkLabelBackgroundSize.FitLargest,
-                    false) { i, _, _ ->
+                    placeLabelsOutsideBoundsIfPossible = false,
+                    redraw = false) { i, _, _ ->
                         when (i) {
                             0 -> nameMinusBound
                             1 -> namePlusBound
@@ -242,7 +247,9 @@ class TunerFragment : Fragment() {
                     }
 
                 val noteName = tuningFrequencies.getNoteName(frequency)
-                pitchPlot?.setYMark(frequency, noteName, MARK_ID_FREQUENCY, MarkAnchor.East, 0, true)
+                pitchPlot?.setYMark(frequency, noteName, MARK_ID_FREQUENCY, MarkAnchor.East,
+                    0, placeLabelsOutsideBoundsIfPossible = false,
+                    redraw = true)
            }
         }
 

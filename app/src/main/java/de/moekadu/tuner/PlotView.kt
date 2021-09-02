@@ -660,8 +660,7 @@ private class PlotMarks(transformation: PlotTransformation,
                         val labelColors: IntArray,
                         val lineWidths: FloatArray,
                         val textSizes: FloatArray,
-                        val disableLabelBackground: Boolean,
-                        val placeLabelsOutsideBoundsIfPossible: Boolean)
+                        val disableLabelBackground: Boolean)
     : PlotTransformable(transformation) {
     fun interface PlotMarksChangedListener {
         fun onPlotMarksChanged(plotMarks: PlotMarks, hasNewBoundingBox: Boolean, suppressInvalidate: Boolean)
@@ -675,7 +674,8 @@ private class PlotMarks(transformation: PlotTransformation,
         val styleIndex: Int = 0,
         val anchors: Array<MarkAnchor>?,
         val backgroundSizeType: MarkLabelBackgroundSize,
-        val labels: Array<CharSequence?>
+        val labels: Array<CharSequence?>,
+        val placeLabelsOutsideBoundsIfPossible: Boolean
     ) : Parcelable
 
     data class Mark(var xPositionRaw: Float, var yPositionRaw: Float, val label: CharSequence?,
@@ -709,13 +709,16 @@ private class PlotMarks(transformation: PlotTransformation,
     val boundingBox = RectF(0f, 0f, 0f, 0f)
     private var styleIndex = 0
     private var backgroundSizeType = MarkLabelBackgroundSize.FitIndividually
+    private var placeLabelsOutsideBoundsIfPossible: Boolean = true
 
     fun setMarks(xPositions: FloatArray?, yPositions: FloatArray?,
                  styleIndex: Int = 0, anchors: Array<MarkAnchor>?,
                  backgroundSizeType: MarkLabelBackgroundSize = MarkLabelBackgroundSize.FitIndividually,
+                 placeLabelsOutsideBoundsIfPossible: Boolean,
                  suppressInvalidate: Boolean,
                  format: ((Int, Float?, Float?) -> CharSequence?)?
     ) {
+        this.placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible
         this.backgroundSizeType = backgroundSizeType
         this.styleIndex = styleIndex
         paint.color = colors[styleIndex]
@@ -937,11 +940,13 @@ private class PlotMarks(transformation: PlotTransformation,
 
         val anchors = Array(marks.size) {marks[it].anchor}
         val labels = Array(marks.size) {marks[it].label}
-        return SavedState(xPositions, yPositions, styleIndex, anchors, backgroundSizeType, labels)
+        return SavedState(xPositions, yPositions, styleIndex, anchors, backgroundSizeType, labels,
+            placeLabelsOutsideBoundsIfPossible)
     }
 
     fun restore(state: SavedState) {
-        setMarks(state.xPositions, state.yPositions, state.styleIndex, state.anchors, state.backgroundSizeType,true) {
+        setMarks(state.xPositions, state.yPositions, state.styleIndex, state.anchors,
+            state.backgroundSizeType, state.placeLabelsOutsideBoundsIfPossible, true) {
             i, _, _ ->
             state.labels[i]
         }
@@ -1140,6 +1145,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var tickTextSize = 10f
     /// Width of y-tick labels (defines the horizontal space required, must me larger zero if y-tick labels are defined)
     private var yTickLabelWidth = 0.0f
+    /// Position of y ticks
+    private var yTickPosition = MarkAnchor.West
 
     /// Object handling the x-ticks
     private var xTicks: PlotMarks
@@ -1346,6 +1353,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             tickLineWidth = ta.getDimension(R.styleable.PlotView_tickLineWidth, tickLineWidth)
             tickTextSize = ta.getDimension(R.styleable.PlotView_tickTextSize, tickTextSize)
             yTickLabelWidth = ta.getDimension(R.styleable.PlotView_yTickLabelWidth, yTickLabelWidth)
+            yTickPosition = if (ta.getInt(R.styleable.PlotView_yTickPosition, 0) == 0)
+                MarkAnchor.West
+            else
+                MarkAnchor.East
 
             title = ta.getString(R.styleable.PlotView_title)
             titleSize = ta.getDimension(R.styleable.PlotView_titleSize, titleSize)
@@ -1393,14 +1404,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         //rawPlotBounds.set(0f, -0.8f, 2.0f*PI.toFloat(), 0.8f)
         xTicks = PlotMarks(rawViewTransformation, intArrayOf(tickColor), intArrayOf(tickColor),
             floatArrayOf(tickLineWidth), floatArrayOf(tickTextSize),
-            disableLabelBackground = true,
-            placeLabelsOutsideBoundsIfPossible = true
-        )
+            disableLabelBackground = true)
         yTicks = PlotMarks(rawViewTransformation, intArrayOf(tickColor), intArrayOf(tickColor),
             floatArrayOf(tickLineWidth), floatArrayOf(tickTextSize),
-            disableLabelBackground = true,
-            placeLabelsOutsideBoundsIfPossible = true
-        )
+            disableLabelBackground = true)
 
         xTicks.plotMarksChangedListener = PlotMarks.PlotMarksChangedListener { ticks, bbChanged, suppressInvalidate ->
             if (ticks.hasMarks && bbChanged)
@@ -1435,13 +1442,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         if(title != null)
             top += 1.2f * titleSize
 
-        rawViewTransformation.setViewBounds(
-            paddingLeft + yTickLabelWidth,
-            top,
-            (width - paddingRight).toFloat(),
-            bottom,
-            true
-        )
+        val left = when (yTickPosition) {
+            MarkAnchor.West -> paddingLeft + yTickLabelWidth
+            else -> paddingLeft.toFloat()
+        }
+        val right = when (yTickPosition) {
+            MarkAnchor.East -> (width - paddingRight).toFloat() - yTickLabelWidth
+            else -> (width - paddingRight).toFloat()
+        }
+        rawViewTransformation.setViewBounds(left, top, right, bottom, true)
 
         xTicks.drawToCanvas(canvas)
         yTicks.drawToCanvas(canvas)
@@ -1594,9 +1603,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
 
         val marks = PlotMarks(rawViewTransformation, markColor, markLabelColor,
-            markLineWidth, markTextSize,
-            disableLabelBackground = false, placeLabelsOutsideBoundsIfPossible = false
-        )
+            markLineWidth, markTextSize, disableLabelBackground = false)
         markGroups[tag] = marks
 
         marks.plotMarksChangedListener = PlotMarks.PlotMarksChangedListener { _, _, suppressInvalidate ->
@@ -1775,10 +1782,13 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                  styleIndex: Int,
                  anchors: Array<MarkAnchor>? = null,
                  backgroundSizeType: MarkLabelBackgroundSize = MarkLabelBackgroundSize.FitIndividually,
+                 placeLabelsOutsideBoundsIfPossible: Boolean = false,
                  redraw: Boolean = true,
                  format: ((Int, Float?, Float?) -> CharSequence?)? = null) {
         val marks = getPlotMarks(tag)
-        marks.setMarks(xPositions, yPositions, styleIndex, anchors, backgroundSizeType, !redraw, format)
+        marks.setMarks(xPositions, yPositions, styleIndex, anchors, backgroundSizeType,
+            placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
+            suppressInvalidate = !redraw, format)
     }
 
     /// Convenience method to set a single mark.
@@ -1796,10 +1806,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      *   unnecessary redraw.)
      */
     fun setMark(xPosition: Float, yPosition: Float, label: CharSequence?, tag: Long,
-                anchor: MarkAnchor = MarkAnchor.Center, style: Int = 0,
-                        redraw: Boolean = true) {
+                anchor: MarkAnchor = MarkAnchor.Center,
+                placeLabelsOutsideBoundsIfPossible: Boolean = false,
+                style: Int = 0,
+                redraw: Boolean = true) {
         setMarks(floatArrayOf(xPosition), floatArrayOf(yPosition), tag, style,
-            arrayOf(anchor), MarkLabelBackgroundSize.FitIndividually, redraw) {_, _, _ -> label}
+            arrayOf(anchor), MarkLabelBackgroundSize.FitIndividually,
+            placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
+            redraw = redraw) {_, _, _ -> label}
     }
 
     /// Convenience method to set a single mark with a vertical line.
@@ -1817,9 +1831,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      */
     fun setXMark(xPosition: Float, label: CharSequence?, tag: Long,
                  anchor: MarkAnchor = MarkAnchor.Center, style: Int = 0,
+                 placeLabelsOutsideBoundsIfPossible: Boolean = false,
                  redraw: Boolean = true) {
         setMarks(floatArrayOf(xPosition), null, tag, style,
-            arrayOf(anchor), MarkLabelBackgroundSize.FitIndividually, redraw) {_, _, _ -> label}
+            arrayOf(anchor), MarkLabelBackgroundSize.FitIndividually,
+            placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
+            redraw = redraw) {_, _, _ -> label}
     }
 
     /// Convenience method to set a single mark with a horizontal line.
@@ -1837,9 +1854,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      */
     fun setYMark(yPosition: Float, label: CharSequence?, tag: Long,
                  anchor: MarkAnchor = MarkAnchor.Center, style: Int = 0,
+                 placeLabelsOutsideBoundsIfPossible: Boolean = false,
                  redraw: Boolean = true) {
         setMarks(null, floatArrayOf(yPosition), tag, style,
-            arrayOf(anchor), MarkLabelBackgroundSize.FitIndividually, redraw) {_, _, _ -> label}
+            arrayOf(anchor), MarkLabelBackgroundSize.FitIndividually,
+            placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
+            redraw = redraw) {_, _, _ -> label}
     }
 
     /// Set points which should be drawn as filled circles.
@@ -1870,12 +1890,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      */
     fun setXTicks(value : FloatArray?, redraw: Boolean = true, format : ((Int, Float) -> CharSequence)?) {
         if (value == null) {
-            xTicks.setMarks(null, null, 0, anchors = null, suppressInvalidate = true, format = null)
+            xTicks.setMarks(null, null, 0, anchors = null,
+                placeLabelsOutsideBoundsIfPossible = true, suppressInvalidate = true, format = null)
         }
         else {
             xTicks.setMarks(value, null, 0,
                 Array(value.size){MarkAnchor.South},
-                MarkLabelBackgroundSize.FitIndividually, true) { i, x, _ ->
+                MarkLabelBackgroundSize.FitIndividually,
+                placeLabelsOutsideBoundsIfPossible = true,
+                true) { i, x, _ ->
                 if (format == null || x == null) null else format(i, x)
             }
         }
@@ -1896,12 +1919,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     fun setYTicks(value : FloatArray?, redraw: Boolean = true, format : ((Int, Float) -> CharSequence)?) {
 //        Log.v("Tuner", "PlotView.setYTicks: numValues = ${value?.size}")
         if (value == null) {
-            yTicks.setMarks(null, null, 0, anchors = null, suppressInvalidate = true, format = null)
+            yTicks.setMarks(null, null, 0, anchors = null,
+                placeLabelsOutsideBoundsIfPossible = true, suppressInvalidate = true, format = null)
         }
         else {
             yTicks.setMarks(null, value, 0,
-                Array(value.size) {MarkAnchor.West},
-                MarkLabelBackgroundSize.FitIndividually, true) { i, _, y ->
+                Array(value.size) {yTickPosition},
+                MarkLabelBackgroundSize.FitIndividually,
+                placeLabelsOutsideBoundsIfPossible = true,
+                true) { i, _, y ->
                 if (format == null || y == null) null else format(i, y)
             }
         }

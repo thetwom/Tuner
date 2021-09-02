@@ -58,6 +58,10 @@
         <attr name="tickLineWidth" format="dimension"/>
         <attr name="tickTextSize" format="dimension"/>
         <attr name="yTickLabelWidth" format="dimension"/>
+        <attr name="yTickPosition" format="enum">
+            <enum name="left" value="0"/>
+            <enum name="right" value="1"/>
+        </attr>
         <attr name="pointSize" format="dimension"/>
         <attr name="pointColor" format="color"/>
         <attr name="pointColorInactive" format="color"/>
@@ -89,6 +93,7 @@
         <item name="tickLineWidth">1dp</item>
         <item name="tickTextSize">12sp</item>
         <item name="yTickLabelWidth">0sp</item>
+        <item name="yTickPosition">left</item>
         <item name="pointSize">5dp</item>
         <item name="pointColor">?attr/colorPrimary</item>
         <item name="pointColorInactive">?attr/colorOnBackground</item>

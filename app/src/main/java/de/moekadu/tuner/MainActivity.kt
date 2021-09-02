@@ -32,6 +32,7 @@ import androidx.preference.PreferenceManager
 class MainActivity : AppCompatActivity() {
     // TODO: Allow setting minimum and maximum allowed note
     // ... more settings possible?
+    private var scientificMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +44,7 @@ class MainActivity : AppCompatActivity() {
             "light" -> AppCompatDelegate.MODE_NIGHT_NO
             else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
         }
-
+        scientificMode = sharedPreferences.getBoolean("scientific_mode", false)
         AppCompatDelegate.setDefaultNightMode(nightMode)
 
         val screenOn = sharedPreferences.getBoolean("screenon", false)
@@ -56,9 +57,16 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(findViewById(R.id.toolbar))
 
         if (savedInstanceState == null) {
-            supportFragmentManager.commit {
-                setReorderingAllowed(true)
-                replace<TunerFragment>(R.id.main_content)
+            if (scientificMode) {
+                supportFragmentManager.commit {
+                    setReorderingAllowed(true)
+                    replace<TunerFragment>(R.id.main_content)
+                }
+            } else {
+                supportFragmentManager.commit {
+                    setReorderingAllowed(true)
+                    replace<TunerFragmentSimple>(R.id.main_content)
+                }
             }
         }
 
@@ -76,6 +84,11 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        val scientificIcon = menu?.findItem(R.id.scientific_mode)
+        scientificIcon?.setIcon(if (scientificMode) R.drawable.ic_developer_on else R.drawable.ic_developer_off)
+        return super.onPrepareOptionsMenu(menu)
+    }
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.action_settings -> {
             // User chose the "Settings" item, show the app settings UI...
@@ -84,7 +97,10 @@ class MainActivity : AppCompatActivity() {
                 replace<SettingsFragment>(R.id.main_content)
                 addToBackStack(null)
             }
-
+            true
+        }
+        R.id.scientific_mode -> {
+            toggleScientificMode()
             true
         }
         else -> {
@@ -97,5 +113,27 @@ class MainActivity : AppCompatActivity() {
     private fun setDisplayHomeButton() {
         val showDisplayHomeButton = supportFragmentManager.backStackEntryCount > 0
         supportActionBar?.setDisplayHomeAsUpEnabled(showDisplayHomeButton)
+    }
+
+    private fun toggleScientificMode() {
+        scientificMode = !scientificMode
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        sharedPreferences.edit().putBoolean("scientific_mode", scientificMode).apply()
+
+        if (supportFragmentManager.backStackEntryCount > 0)
+            supportFragmentManager.popBackStack()
+
+        if (scientificMode) {
+            supportFragmentManager.commit {
+                setReorderingAllowed(true)
+                replace<TunerFragment>(R.id.main_content)
+            }
+        } else {
+            supportFragmentManager.commit {
+                setReorderingAllowed(true)
+                replace<TunerFragmentSimple>(R.id.main_content)
+            }
+        }
+        invalidateOptionsMenu()
     }
 }
