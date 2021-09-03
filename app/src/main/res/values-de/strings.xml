@@ -44,4 +44,5 @@
     </plurals>
     <string name="max_noise">Maximal zulässiges Hintergrundrauschen</string>
     <string name="max_noise_summary">Keine Töne finden, wenn Rauschen über %d %%.</string>
+    <string name="scientific_mode">Wissenschaftlicher Modus</string>
 </resources>

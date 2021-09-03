@@ -442,19 +442,18 @@ private abstract class PlotTransformable(transformation: PlotTransformation) {
     protected abstract fun transform(transform: PlotTransformation?, suppressInvalidate: Boolean)
 }
 
-private class PlotLine(transformation: PlotTransformation, val color: Int = Color.BLACK, val colorInactive: Int = Color.GRAY, val width: Float = 5f)
+private class PlotLine(transformation: PlotTransformation, val colors: IntArray, val widths: FloatArray)
     : PlotTransformable(transformation) {
     fun interface PlotLineChangedListener {
         fun onPlotLineChanged(plotLine: PlotLine, hasNewBoundingBox: Boolean, suppressInvalidate: Boolean)
     }
     var plotLineChangedListener: PlotLineChangedListener? = null
 
-    /// If this is true, we use the inactive color
-    private var isInactive = false
+    private var styleIndex = 0
 
     /// Paint used for plotting line and title
     private val paint = Paint().apply {
-        strokeWidth = width
+        strokeWidth = widths[styleIndex]
         style = Paint.Style.STROKE
         isAntiAlias = true
     }
@@ -469,10 +468,10 @@ private class PlotLine(transformation: PlotTransformation, val color: Int = Colo
     private val oldBoundingBox = RectF(0f, 0f, 0f, 0f)
     val boundingBox = RectF(0f, 0f, 0f, 0f)
 
-    fun setInactive(value: Boolean, suppressInvalidate: Boolean) {
-        if (isInactive == value)
+    fun setStyleIndex(index: Int, suppressInvalidate: Boolean) {
+        if (index == styleIndex)
             return
-        isInactive = value
+        styleIndex = index
         plotLineChangedListener?.onPlotLineChanged(this, false, suppressInvalidate)
     }
 
@@ -534,7 +533,8 @@ private class PlotLine(transformation: PlotTransformation, val color: Int = Colo
         if (transformation != null && !emptyLine
             && transformation?.rawPlotBoundsIntersect(boundingBox) == true) {
 //            Log.v("Tuner", "PlotLine.drawToCanvas")
-            paint.color = if (isInactive) colorInactive else color
+            paint.color = colors[styleIndex]
+            paint.strokeWidth = widths[styleIndex]
             canvas?.drawPath(transformedPlotLine, paint)
         }
     }
@@ -549,7 +549,7 @@ private class PlotLine(transformation: PlotTransformation, val color: Int = Colo
     }
 }
 
-private class PlotPoints(transformation: PlotTransformation, val color: Int = Color.BLACK, val colorInactive: Int = Color.GRAY, val size: Float = 5f)
+private class PlotPoints(transformation: PlotTransformation, val colors: IntArray, val sizes: FloatArray)
     : PlotTransformable(transformation) {
     fun interface PlotPointsChangedListener {
         fun onPlotPointsChanged(plotPoints: PlotPoints, hasNewBoundingBox: Boolean, suppressInvalidate: Boolean)
@@ -565,8 +565,8 @@ private class PlotPoints(transformation: PlotTransformation, val color: Int = Co
     var numPoints = 0
         private set
 
-    /// If this is true, we use the inactive color
-    private var isInactive = false
+
+    private var styleIndex = 0
 
     /// Paint used for drawing points.
     private val paint = Paint().apply {
@@ -577,10 +577,10 @@ private class PlotPoints(transformation: PlotTransformation, val color: Int = Co
     private val oldBoundingBox = RectF(0f, 0f, 0f, 0f)
     val boundingBox = RectF(0f, 0f, 0f, 0f)
 
-    fun setInactive(value: Boolean, suppressInvalidate: Boolean) {
-        if (isInactive == value)
+    fun setStyleIndex(index: Int, suppressInvalidate: Boolean) {
+        if (index == styleIndex)
             return
-        isInactive = value
+        styleIndex = index
         plotPointsChangedListener?.onPlotPointsChanged(this, false, suppressInvalidate)
     }
 
@@ -622,13 +622,13 @@ private class PlotPoints(transformation: PlotTransformation, val color: Int = Co
     fun drawToCanvas(canvas: Canvas?) {
         if (transformation != null && numPoints > 0
             && transformation?.rawPlotBoundsIntersect(boundingBox) == true) {
-            paint.color = if (isInactive) colorInactive else color
+            paint.color = colors[styleIndex]
             for(i in 0 until numPoints) {
                 val x = transformedPoints[2 * i]
                 val y = transformedPoints[2 * i + 1]
 
                 if(transformation?.viewBoundsContain(x, y) == true)
-                    canvas?.drawCircle(x, y, size, paint)
+                    canvas?.drawCircle(x, y, sizes[styleIndex], paint)
             }
         }
     }
@@ -1119,21 +1119,17 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     /// Marks groups.
     private val markGroups = mutableMapOf<Long, PlotMarks>()
 
-    /// Color of plot line.
-    private var plotLineColor = Color.BLACK
-    /// Color of plot line when inactive.
-    private var plotLineColorInactive = Color.GRAY
-    /// Width of plot line.
-    private var plotLineWidth = 5f
+    /// Color list for different styles of plot line.
+    private var plotLineColors = IntArray(3) {Color.BLACK}
+    /// Widths for different styles of plot line.
+    private var plotLineWidths = FloatArray(3) {5f}
     /// Plot lines classes
     private val plotLines = mutableMapOf<Long, PlotLine>()
 
-    /// Circle color the points.
-    private var pointColor = Color.BLACK
-    /// Circle color the points when inactive.
-    private var pointColorInactive = Color.GRAY
-    /// Circle radius the points.
-    private var pointSize = 5f
+    /// Circle colors for different styles of points.
+    private var pointColors = IntArray(3) {Color.BLACK}
+    /// Circle radii for different styles of the points.
+    private var pointSizes = FloatArray(3) {5f}
     /// Point instances
     private val plotPoints = mutableMapOf<Long, PlotPoints>()
 
@@ -1331,13 +1327,19 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         attrs?.let {
             val ta = context.obtainStyledAttributes(attrs, R.styleable.PlotView, defStyleAttr, R.style.PlotViewStyle)
             //val ta = context.obtainStyledAttributes(it, R.styleable.PlotView)
-            plotLineColor = ta.getColor(R.styleable.PlotView_plotLineColor, plotLineColor)
-            plotLineColorInactive = ta.getColor(R.styleable.PlotView_plotLineColorInactive, plotLineColorInactive)
-            plotLineWidth = ta.getDimension(R.styleable.PlotView_plotLineWidth, plotLineWidth)
+            plotLineColors[0] = ta.getColor(R.styleable.PlotView_plotLineColor, plotLineColors[0])
+            plotLineColors[1] = ta.getColor(R.styleable.PlotView_plotLineColor2, plotLineColors[1])
+            plotLineColors[2] = ta.getColor(R.styleable.PlotView_plotLineColor3, plotLineColors[2])
+            plotLineWidths[0] = ta.getDimension(R.styleable.PlotView_plotLineWidth, plotLineWidths[0])
+            plotLineWidths[1] = ta.getDimension(R.styleable.PlotView_plotLineWidth2, plotLineWidths[1])
+            plotLineWidths[2] = ta.getDimension(R.styleable.PlotView_plotLineWidth3, plotLineWidths[2])
 
-            pointSize = ta.getDimension(R.styleable.PlotView_pointSize, pointSize)
-            pointColor = ta.getColor(R.styleable.PlotView_pointColor, pointColor)
-            pointColorInactive = ta.getColor(R.styleable.PlotView_pointColorInactive, pointColorInactive)
+            pointSizes[0] = ta.getDimension(R.styleable.PlotView_pointSize, pointSizes[0])
+            pointSizes[1] = ta.getDimension(R.styleable.PlotView_pointSize2, pointSizes[1])
+            pointSizes[2] = ta.getDimension(R.styleable.PlotView_pointSize3, pointSizes[2])
+            pointColors[0] = ta.getColor(R.styleable.PlotView_pointColor, pointColors[0])
+            pointColors[1] = ta.getColor(R.styleable.PlotView_pointColor2, pointColors[1])
+            pointColors[2] = ta.getColor(R.styleable.PlotView_pointColor3, pointColors[2])
 
             markColor[0] = ta.getColor(R.styleable.PlotView_markColor, markColor[0])
             markLineWidth[0] = ta.getDimension(R.styleable.PlotView_markLineWidth, markLineWidth[0])
@@ -1450,7 +1452,9 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             MarkAnchor.East -> (width - paddingRight).toFloat() - yTickLabelWidth
             else -> (width - paddingRight).toFloat()
         }
-        rawViewTransformation.setViewBounds(left, top, right, bottom, true)
+        rawViewTransformation.setViewBounds(left + frameStrokeWidth,
+            top + frameStrokeWidth, right - frameStrokeWidth, bottom - frameStrokeWidth,
+            suppressInvalidate = true)
 
         xTicks.drawToCanvas(canvas)
         yTicks.drawToCanvas(canvas)
@@ -1468,7 +1472,9 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             frameColorOnTouch
         else
             frameColor
-        canvas?.drawRect(rawViewTransformation.viewPlotBounds, framePaint)
+        //canvas?.drawRect(rawViewTransformation.viewPlotBounds, framePaint)
+        canvas?.drawRect(left + 0.5f * frameStrokeWidth, top + 0.5f * frameStrokeWidth,
+            right - 0.5f * frameStrokeWidth, bottom - 0.5f * frameStrokeWidth, framePaint)
 
         for (m in markGroups.values)
             m.drawToCanvas(canvas)
@@ -1482,8 +1488,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
         if (xRange.isTouchControlled || yRange.isTouchControlled) {
             touchManualControlDrawable.drawToCanvas(
-                rawViewTransformation.viewPlotBounds.right - 0.5f * frameStrokeWidth + 1,
-                rawViewTransformation.viewPlotBounds.top + 0.5f * frameStrokeWidth - 1,
+                rawViewTransformation.viewPlotBounds.right + 1,
+                rawViewTransformation.viewPlotBounds.top - 1,
                 MarkAnchor.NorthEast,
                 canvas
             )
@@ -1567,7 +1573,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             return it
         }
 
-        val line = PlotLine(rawViewTransformation, plotLineColor, plotLineColorInactive, plotLineWidth)
+        val line = PlotLine(rawViewTransformation, plotLineColors, plotLineWidths)
         plotLines[tag] = line
 
         line.plotLineChangedListener = PlotLine.PlotLineChangedListener { _, hasNewBoundingBox, suppressInvalidate ->
@@ -1585,7 +1591,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             return it
         }
 
-        val points = PlotPoints(rawViewTransformation, pointColor, pointColorInactive, pointSize)
+        val points = PlotPoints(rawViewTransformation, pointColors, pointSizes)
         plotPoints[tag] = points
 
         points.plotPointsChangedListener = PlotPoints.PlotPointsChangedListener { _, hasNewBoundingBox, suppressInvalidate ->
@@ -1674,14 +1680,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             invalidate()
     }
 
-    fun setInactive(isInactive: Boolean, suppressInvalidate: Boolean) {
-        for (l in plotLines.values)
-            l.setInactive(isInactive, true)
-        for (p in plotPoints.values)
-            p.setInactive(isInactive, true)
-        if (!suppressInvalidate)
-            invalidate()
+    fun setLineStyle(styleIndex: Int, tag: Long = 0L, suppressInvalidate: Boolean) {
+        plotLines[tag]?.setStyleIndex(styleIndex, suppressInvalidate)
     }
+
+    fun setPointStyle(styleIndex: Int, tag: Long = 0L, suppressInvalidate: Boolean) {
+        plotPoints[tag]?.setStyleIndex(styleIndex, suppressInvalidate)
+    }
+
     /// Set x-range.
     /**
      * @param minValue Minimum value of x-range (or PlotView.autoLimit for determining the limit based on the plot data).

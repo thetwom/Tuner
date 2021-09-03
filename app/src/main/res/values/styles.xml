@@ -44,8 +44,11 @@
     
     <declare-styleable name="PlotView">
         <attr name="plotLineColor" format="color"/>
-        <attr name="plotLineColorInactive" format="color"/>
+        <attr name="plotLineColor2" format="color"/>
+        <attr name="plotLineColor3" format="color"/>
         <attr name="plotLineWidth" format="dimension"/>
+        <attr name="plotLineWidth2" format="dimension"/>
+        <attr name="plotLineWidth3" format="dimension"/>
         <attr name="markColor" format="color"/>
         <attr name="markLineWidth" format="dimension"/>
         <attr name="markTextSize" format="dimension"/>
@@ -63,8 +66,11 @@
             <enum name="right" value="1"/>
         </attr>
         <attr name="pointSize" format="dimension"/>
+        <attr name="pointSize2" format="dimension"/>
+        <attr name="pointSize3" format="dimension"/>
         <attr name="pointColor" format="color"/>
-        <attr name="pointColorInactive" format="color"/>
+        <attr name="pointColor2" format="color"/>
+        <attr name="pointColor3" format="color"/>
         <attr name="title" format="string"/>
         <attr name="titleSize" format="dimension"/>
         <attr name="titleColor" format="color"/>
@@ -79,8 +85,11 @@
 
     <style name="PlotViewStyle">
         <item name="plotLineColor">?attr/colorPrimary</item>
-        <item name="plotLineColorInactive">?attr/colorOnBackground</item>
+        <item name="plotLineColor2">?attr/colorOnBackground</item>
+        <item name="plotLineColor3">?attr/colorSecondary</item>
         <item name="plotLineWidth">3dp</item>
+        <item name="plotLineWidth2">3dp</item>
+        <item name="plotLineWidth3">3dp</item>
         <item name="markColor">?attr/colorPrimary</item>n
         <item name="markLineWidth">1dp</item>
         <item name="markTextSize">12sp</item>
@@ -95,8 +104,11 @@
         <item name="yTickLabelWidth">0sp</item>
         <item name="yTickPosition">left</item>
         <item name="pointSize">5dp</item>
+        <item name="pointSize2">5dp</item>a
+        <item name="pointSize3">5dp</item>a
         <item name="pointColor">?attr/colorPrimary</item>
-        <item name="pointColorInactive">?attr/colorOnBackground</item>
+        <item name="pointColor2">?attr/colorOnBackground</item>
+        <item name="pointColor3">?attr/colorSecondary</item>
         <item name="titleSize">12sp</item>
         <item name="titleColor">?attr/colorPrimary</item>
         <item name="frameColor">?attr/colorPrimary</item>

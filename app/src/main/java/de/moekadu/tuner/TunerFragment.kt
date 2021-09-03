@@ -256,7 +256,8 @@ class TunerFragment : Fragment() {
         viewModel.pitchHistory.numValuesSinceLastLineUpdate.observe(viewLifecycleOwner) { numValuesSinceLastUpdate ->
             val maxTimeBeforeInactive = 0.3f // seconds
             val maxNumValuesBeforeInactive = max(1f, floor(maxTimeBeforeInactive / viewModel.pitchHistoryUpdateInterval))
-            pitchPlot?.setInactive(numValuesSinceLastUpdate > maxNumValuesBeforeInactive, false)
+            pitchPlot?.setLineStyle(if (numValuesSinceLastUpdate > maxNumValuesBeforeInactive) 1 else 0, suppressInvalidate = true)
+            pitchPlot?.setPointStyle(if (numValuesSinceLastUpdate > maxNumValuesBeforeInactive) 1 else 0, suppressInvalidate = false)
         }
 
         // plot the values if available, since the plots currently cant store the plot lines.
