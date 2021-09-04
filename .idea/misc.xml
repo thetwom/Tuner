@@ -6,10 +6,12 @@
         <entry key="app/src/main/res/drawable/ic_average.xml" value="0.30833333333333335" />
         <entry key="app/src/main/res/drawable/ic_developer_off.xml" value="0.30833333333333335" />
         <entry key="app/src/main/res/drawable/ic_developer_on.xml" value="0.30833333333333335" />
+        <entry key="app/src/main/res/drawable/ic_frequency_a.xml" value="0.2861111111111111" />
         <entry key="app/src/main/res/drawable/ic_info.xml" value="0.30833333333333335" />
         <entry key="app/src/main/res/drawable/ic_manual.xml" value="0.31977630910015253" />
         <entry key="app/src/main/res/drawable/ic_manual2.xml" value="0.31977630910015253" />
         <entry key="app/src/main/res/drawable/ic_moving_average.xml" value="0.29635416666666664" />
+        <entry key="app/src/main/res/drawable/ic_tolerance.xml" value="0.3453125" />
         <entry key="app/src/main/res/layout/diagrams_simple.xml" value="0.47239583333333335" />
         <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.315625" />
         <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.315625" />

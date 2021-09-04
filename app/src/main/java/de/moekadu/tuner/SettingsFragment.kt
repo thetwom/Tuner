@@ -33,6 +33,20 @@ fun indexToWindowSize(index: Int): Int {
   return 2f.pow(7 + index).roundToInt()
 }
 
+fun indexToTolerance(index: Int): Int {
+  return when(index) {
+    0 -> 1
+    1 -> 2
+    2 -> 3
+    3 -> 5
+    4 -> 7
+    5 -> 10
+    6 -> 15
+    7 -> 20
+    else -> throw RuntimeException("Invalid index for tolerance")
+  }
+}
+
 class SettingsFragment : PreferenceFragmentCompat() {
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -85,6 +99,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
     a4Frequency?.summaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
       getString(R.string.hertz_str, preference?.text ?: "440")
     }
+
+    val tolerance = findPreference<SeekBarPreference>("tolerance_in_cents") ?: throw RuntimeException("No tolerance preference")
+    tolerance.setOnPreferenceChangeListener { preference, newValue ->
+      preference.summary = getString(R.string.tolerance_summary, indexToTolerance(newValue as Int))
+      true
+    }
+    tolerance.summary = getString(R.string.tolerance_summary,  indexToTolerance(tolerance.value))
 
     val numMovingAverage = findPreference<SeekBarPreference>("num_moving_average") ?: throw RuntimeException("No num_moving_average preference")
     numMovingAverage.setOnPreferenceChangeListener { preference, newValue ->

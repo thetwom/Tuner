@@ -52,6 +52,8 @@
     <string name="keep_screen_on">Keep screen on</string>
     <string name="samples">samples</string>
     <string name="max_noise">Maximum allowed background noise</string>
-    <string name="max_noise_summary">Don\'t search pitch when noise is above %d %%.</string>
+    <string name="max_noise_summary">Ignore input when noise is above %d&#x200A;%%.</string>
     <string name="scientific_mode">Scientific mode</string>
+    <string name="tolerance_in_cents">Tolerance</string>
+    <string name="tolerance_summary" translatable="false">&#177;%d&#x200A;&#162;</string>
 </resources>

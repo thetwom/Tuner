@@ -28,6 +28,17 @@
         app:icon="@drawable/ic_frequency_a"
         />
 
+     <SeekBarPreference
+         android:key="tolerance_in_cents"
+         android:title="@string/tolerance_in_cents"
+         app:min="0"
+         android:max="7"
+         app:defaultValue="3"
+         app:seekBarIncrement="1"
+         app:updatesContinuously="true"
+         app:icon="@drawable/ic_tolerance"
+         />
+
     <SeekBarPreference
         android:key="num_moving_average"
         android:title="@string/num_moving_average"
@@ -95,6 +106,7 @@
         app:title="@string/pitch_history_num_faulty_values"
         app:min="1"
         android:max="12"
+        android:defaultValue="5"
         app:seekBarIncrement="1"
         app:updatesContinuously="true"
         app:singleLineTitle="false"

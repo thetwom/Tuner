@@ -158,6 +158,9 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                 "max_noise" -> {
                     pitchHistory.maxNoise = sharedPreferences.getInt(key, 10) / 100f
                 }
+                "tolerance_in_cents" -> {
+                    changeTargetNoteSettings(tolerance = indexToTolerance(sharedPreferences.getInt(key, 3)))
+                }
             }
         }
     }
@@ -285,6 +288,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         pitchHistory.numMovingAverage = pref.getInt("num_moving_average", 5)
         useHint = pref.getBoolean("use_hint", true)
         pitchHistory.maxNoise = pref.getInt("max_noise", 10) / 100f
+        changeTargetNoteSettings(tolerance = indexToTolerance(pref.getInt("tolerance_in_cents", 3)))
     }
 
     companion object {
