@@ -21,7 +21,6 @@ package de.moekadu.tuner
 
 import android.app.Application
 import android.content.SharedPreferences
-import android.util.Log
 import androidx.lifecycle.*
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.Dispatchers
@@ -86,10 +85,12 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                 pitchHistory.size = pitchHistorySize
             }
         }
+
     private var tuningFrequencyValues = TuningEqualTemperament(a4Frequency)
         set(value) {
             field = value
             pitchHistory.tuningFrequencies = value
+            changeTargetNoteSettings(tuningFrequencies = value)
             _tuningFrequencies.value = value
         }
 
@@ -108,6 +109,11 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     var windowingFunction = WindowingFunction.Hamming
 
     var useHint = true
+
+    private val targetNoteValue = TargetNote()
+    private val _targetNote = MutableLiveData(targetNoteValue)
+    val targetNote: LiveData<TargetNote>
+            get() = _targetNote
 
     private val pref = PreferenceManager.getDefaultSharedPreferences(application)
     
@@ -159,31 +165,20 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     init {
         //Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
 
-        sampleSource.testFunction = { t ->
-            val freq = 400 + 2*t
-           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
-            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
-        }
+//        sampleSource.testFunction = { t ->
+//            val freq = 400 + 2*t
+//           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
+//            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
+//        }
 //        sampleSource.testFunction = { t ->
 //            800f * Random.nextFloat()
 //            //1f
 //        }
 
         pref.registerOnSharedPreferenceChangeListener(onPreferenceChangedListener)
-        a4Frequency = pref.getString("a4_frequency", "440")?.toFloat() ?: 440f
-        windowingFunction = when (pref.getString("windowing", "no_window")) {
-            "no_window" -> WindowingFunction.Tophat
-            "window_hamming" -> WindowingFunction.Hamming
-            "window_hann" -> WindowingFunction.Hann
-            else -> throw RuntimeException("Unknown window")
-        }
-        windowSize = indexToWindowSize(pref.getInt("window_size", 5))
-        overlap = pref.getInt("overlap", 25) / 100f
-        pitchHistoryDuration = percentToPitchHistoryDuration(pref.getInt("pitch_history_duration", 50))
-        pitchHistory.maxNumFaultyValues = pref.getInt("pitch_history_num_faulty_values", 3)
-        pitchHistory.numMovingAverage = pref.getInt("num_moving_average", 5)
-        useHint = pref.getBoolean("use_hint", true)
-        pitchHistory.maxNoise = pref.getInt("max_noise", 10) / 100f
+        loadSettingsFromSharedPreferences()
+
+        changeTargetNoteSettings(tuningFrequencies = tuningFrequencyValues)
 
         viewModelScope.launch {
             sampleSource.flow
@@ -229,8 +224,12 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                             TunerResults(it.size, it.sampleRate)
                         results.set(it)
                         _tunerResults.value = results
-                        if (pitchFrequency > 0.0f)
+                        if (pitchFrequency > 0.0f) {
                             pitchHistory.appendValue(pitchFrequency, it.noise)
+                            pitchHistory.currentEstimatedToneIndex.value?.let {
+                                changeTargetNoteSettings(toneIndex = it)
+                            }
+                        }
                     }
                     correlationAndSpectrumComputer.recycle(it)
                 }
@@ -250,5 +249,47 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         pref.unregisterOnSharedPreferenceChangeListener(onPreferenceChangedListener)
 
         super.onCleared()
+    }
+
+    private fun changeTargetNoteSettings(toneIndex: Int = NO_NEW_TONE_INDEX, tolerance: Int = NO_NEW_TOLERANCE,
+                                         tuningFrequencies: TuningFrequencies? = null) {
+        var changed = false
+        if (toneIndex != NO_NEW_TONE_INDEX && toneIndex != targetNoteValue.toneIndex) {
+            targetNoteValue.toneIndex = toneIndex
+            changed = true
+        }
+        if (tolerance != NO_NEW_TOLERANCE && toneIndex != targetNoteValue.toleranceInCents) {
+            targetNoteValue.toleranceInCents = tolerance
+            changed = true
+        }
+        if (tuningFrequencies != null) {
+            targetNoteValue.tuningFrequencies = tuningFrequencies
+            changed = true
+        }
+        if (changed)
+            _targetNote.value = targetNoteValue
+    }
+
+    private fun loadSettingsFromSharedPreferences() {
+        a4Frequency = pref.getString("a4_frequency", "440")?.toFloat() ?: 440f
+        windowingFunction = when (pref.getString("windowing", "no_window")) {
+            "no_window" -> WindowingFunction.Tophat
+            "window_hamming" -> WindowingFunction.Hamming
+            "window_hann" -> WindowingFunction.Hann
+            else -> throw RuntimeException("Unknown window")
+        }
+        windowSize = indexToWindowSize(pref.getInt("window_size", 5))
+        overlap = pref.getInt("overlap", 25) / 100f
+        pitchHistoryDuration = percentToPitchHistoryDuration(pref.getInt("pitch_history_duration", 50))
+        pitchHistory.maxNumFaultyValues = pref.getInt("pitch_history_num_faulty_values", 3)
+        pitchHistory.numMovingAverage = pref.getInt("num_moving_average", 5)
+        useHint = pref.getBoolean("use_hint", true)
+        pitchHistory.maxNoise = pref.getInt("max_noise", 10) / 100f
+    }
+
+    companion object {
+        const val NO_NEW_TONE_INDEX = Int.MAX_VALUE
+        const val NO_NEW_TOLERANCE = Int.MAX_VALUE
+
     }
 }

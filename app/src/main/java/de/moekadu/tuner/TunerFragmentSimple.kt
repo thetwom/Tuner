@@ -39,6 +39,14 @@ class TunerFragmentSimple : Fragment() {
     private var pitchPlot: PlotView? = null
     private var volumeMeter: VolumeMeter? = null
 
+    private val currentFrequency
+        get() = viewModel.pitchHistory.historyAveraged.value?.lastOrNull()
+    private val currentPointStyle
+        get() = when (viewModel.targetNote.value?.getTuningStatus(currentFrequency)) {
+            TargetNote.TuningStatus.InTune -> 0
+            else -> 2
+        }
+
     /// Instance for requesting audio recording permission.
     /**
      * This will create the sourceJob as soon as the permissions are granted.
@@ -93,57 +101,84 @@ class TunerFragmentSimple : Fragment() {
         viewModel.pitchHistory.historyAveraged.observe(viewLifecycleOwner) {
             if (it.size > 0) {
                 pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), it.last()), redraw = false)
+                pitchPlot?.setPointStyle(currentPointStyle, suppressInvalidate = true)
                 pitchPlot?.plot(it)
             }
         }
 
-        viewModel.pitchHistory.currentEstimatedToneIndex.observe(viewLifecycleOwner) { toneIndex ->
-            viewModel.tuningFrequencies.value?.let { tuningFrequencies ->
-                val boundCents = 5
-                val frequency = tuningFrequencies.getNoteFrequency(toneIndex)
+        viewModel.targetNote.observe(viewLifecycleOwner) { targetNote ->
+            val nameMinusBound = getString(R.string.cent, -targetNote.toleranceInCents)
+            val namePlusBound = getString(R.string.cent, targetNote.toleranceInCents)
 
-                val namePlusBound = getString(R.string.cent, boundCents)
-                val frequencyPlusBound = tuningFrequencies.getNoteFrequency(toneIndex + boundCents / 100f)
+            pitchPlot?.setMarks(
+                null,
+                floatArrayOf(targetNote.frequencyLowerTolerance, targetNote.frequencyUpperTolerance),
+                MARK_ID_TOLERANCE,
+                1,
+                arrayOf(MarkAnchor.NorthWest, MarkAnchor.SouthWest),
+                MarkLabelBackgroundSize.FitLargest,
+                placeLabelsOutsideBoundsIfPossible = false,
+                redraw = false) { i, _, _ ->
+                when (i) {
+                    0 -> nameMinusBound
+                    1 -> namePlusBound
+                    else -> ""
+                }
+            }
 
-                val nameMinusBound = getString(R.string.cent, -boundCents)
-                val frequencyMinusBound = tuningFrequencies.getNoteFrequency(toneIndex - boundCents / 100f)
-
-                pitchPlot?.setMarks(
-                    null,
-                    floatArrayOf(frequencyMinusBound, frequencyPlusBound),
-                    MARK_ID_TOLERANCE,
-                    1,
-                    arrayOf(MarkAnchor.NorthWest, MarkAnchor.SouthWest),
-                    MarkLabelBackgroundSize.FitLargest,
-                    placeLabelsOutsideBoundsIfPossible = false,
-                    redraw = false) { i, _, _ ->
-                        when (i) {
-                            0 -> nameMinusBound
-                            1 -> namePlusBound
-                            else -> ""
-                        }
-                    }
-
-                val noteName = tuningFrequencies.getNoteName(frequency)
-                pitchPlot?.setYMark(frequency, noteName, MARK_ID_FREQUENCY, MarkAnchor.East,
-                    0, placeLabelsOutsideBoundsIfPossible = true,
-                    redraw = true)
-           }
+            pitchPlot?.setYMark(targetNote.frequency, targetNote.name, MARK_ID_FREQUENCY, MarkAnchor.East,
+                0, placeLabelsOutsideBoundsIfPossible = true,
+                redraw = true)
         }
+
+//        viewModel.pitchHistory.currentEstimatedToneIndex.observe(viewLifecycleOwner) { toneIndex ->
+//            viewModel.tuningFrequencies.value?.let { tuningFrequencies ->
+//                val boundCents = 5
+//                val frequency = tuningFrequencies.getNoteFrequency(toneIndex)
+//
+//                val namePlusBound = getString(R.string.cent, boundCents)
+//                val frequencyPlusBound = tuningFrequencies.getNoteFrequency(toneIndex + boundCents / 100f)
+//
+//                val nameMinusBound = getString(R.string.cent, -boundCents)
+//                val frequencyMinusBound = tuningFrequencies.getNoteFrequency(toneIndex - boundCents / 100f)
+//
+//                pitchPlot?.setMarks(
+//                    null,
+//                    floatArrayOf(frequencyMinusBound, frequencyPlusBound),
+//                    MARK_ID_TOLERANCE,
+//                    1,
+//                    arrayOf(MarkAnchor.NorthWest, MarkAnchor.SouthWest),
+//                    MarkLabelBackgroundSize.FitLargest,
+//                    placeLabelsOutsideBoundsIfPossible = false,
+//                    redraw = false) { i, _, _ ->
+//                        when (i) {
+//                            0 -> nameMinusBound
+//                            1 -> namePlusBound
+//                            else -> ""
+//                        }
+//                    }
+//
+//                val noteName = tuningFrequencies.getNoteName(frequency)
+//                pitchPlot?.setYMark(frequency, noteName, MARK_ID_FREQUENCY, MarkAnchor.East,
+//                    0, placeLabelsOutsideBoundsIfPossible = true,
+//                    redraw = true)
+//           }
+//        }
 
         viewModel.pitchHistory.numValuesSinceLastLineUpdate.observe(viewLifecycleOwner) { numValuesSinceLastUpdate ->
             val maxTimeBeforeInactive = 0.3f // seconds
             val maxNumValuesBeforeInactive = max(1f, floor(maxTimeBeforeInactive / viewModel.pitchHistoryUpdateInterval))
-            pitchPlot?.setLineStyle(if (numValuesSinceLastUpdate > maxNumValuesBeforeInactive) 0 else 1, suppressInvalidate = true)
-            pitchPlot?.setPointStyle(if (numValuesSinceLastUpdate > maxNumValuesBeforeInactive) 0 else 1, suppressInvalidate = false)
+            pitchPlot?.setLineStyle(if (numValuesSinceLastUpdate > maxNumValuesBeforeInactive) 1 else 0, suppressInvalidate = true)
+            pitchPlot?.setPointStyle(if (numValuesSinceLastUpdate > maxNumValuesBeforeInactive) 1 else currentPointStyle, suppressInvalidate = false)
         }
 
-        viewModel.pitchHistory.history.value?.let {
-            if (it.size > 0) {
-                pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), it.last()), redraw = false)
-                pitchPlot?.plot(it)
-            }
-        }
+//        viewModel.pitchHistory.history.value?.let {
+//            if (it.size > 0) {
+//                pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), it.last()), redraw = false)
+//                pitchPlot?.setPointStyle(currentPointStyle, suppressInvalidate = true)
+//                pitchPlot?.plot(it)
+//            }
+//        }
 
         return view
     }

@@ -32,6 +32,8 @@ import androidx.preference.PreferenceManager
 class MainActivity : AppCompatActivity() {
     // TODO: Allow setting minimum and maximum allowed note
     // ... more settings possible?
+    // TODO: Allow setting the tolerance in the settings
+
     private var scientificMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
