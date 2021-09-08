@@ -99,7 +99,7 @@ class PlotRange(val allowTouchControl: Boolean = true)  {
 
     private val fixedRange = FloatArray(2) {AUTO}
     private val touchBasedRange = FloatArray(2) {OFF}
-    private val touchBasedRangeLimits = floatArrayOf (Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY)
+    val touchBasedRangeLimits = floatArrayOf (Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY)
 
     private val currentRange = FloatArray(2) {0f}
 
@@ -195,6 +195,7 @@ class PlotRange(val allowTouchControl: Boolean = true)  {
     }
 
     fun setTouchLimits(minValue: Float, maxValue: Float, animationStrategy: AnimationStrategy, animationDuration: Long) {
+//        Log.v("Tuner", "PlotRanges.setTouchLimits: $minValue -- $maxValue")
         touchBasedRangeLimits[0] = minValue
         touchBasedRangeLimits[1] = maxValue
         // reset the touch based range to make sure its within the limits
@@ -210,8 +211,9 @@ class PlotRange(val allowTouchControl: Boolean = true)  {
         touchBasedRange[0] = if (minValue == OFF) OFF else max(minValue, touchBasedRangeLimits[0])
         touchBasedRange[1] = if (maxValue == OFF) OFF else min(maxValue, touchBasedRangeLimits[1])
 
-        if (minBackup == touchBasedRange[0] && maxBackup == touchBasedRange[1])
+        if (minBackup == touchBasedRange[0] && maxBackup == touchBasedRange[1]) {
             return
+        }
 
         determineTargetRange()
 
@@ -1165,6 +1167,7 @@ class PlotDrawable(context: Context, tint: Int, drawableId: Int) {
 class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr)
 {
+    // TODO: don't scale when dragging
     companion object {
         /// Special option for animationDuration which means that we don't animate and don't invalidate.
         const val NO_REDRAW = NO_REDRAW_PRIVATE
@@ -1185,7 +1188,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var allowTouchX = true
     private var allowTouchY = true
 
-    private lateinit var touchManualControlDrawable: PlotDrawable
+    private var touchManualControlDrawable: PlotDrawable
 
     /// Bounding box of all data which are inside the plot
     private val boundingBox = RectF(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY)
@@ -1282,6 +1285,27 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             rectView.set(rawViewTransformation.viewPlotBounds)
             rectView.offset(distanceX, distanceY)
             rawViewTransformation.transformViewToRaw(rectView, rectRaw)
+
+            // don't scroll over the limits
+            if (rectRaw.left < xRange.touchBasedRangeLimits[0]) {
+                val w = rectRaw.width()
+                rectRaw.left = xRange.touchBasedRangeLimits[0]
+                rectRaw.right = rectRaw.left + w
+            } else if (rectRaw.right > xRange.touchBasedRangeLimits[1]) {
+                val w = rectRaw.width()
+                rectRaw.right = xRange.touchBasedRangeLimits[1]
+                rectRaw.left = rectRaw.right - w
+            }
+            if (rectRaw.top < yRange.touchBasedRangeLimits[0]) {
+                val h = rectRaw.height()
+                rectRaw.top = yRange.touchBasedRangeLimits[0]
+                rectRaw.bottom = rectRaw.top + h
+            } else if (rectRaw.bottom > yRange.touchBasedRangeLimits[1]) {
+                val h = rectRaw.height()
+                rectRaw.bottom = yRange.touchBasedRangeLimits[1]
+                rectRaw.top = rectRaw.bottom - h
+            }
+
             xRange.setTouchRange(rectRaw.left, rectRaw.right, PlotRange.AnimationStrategy.Direct, NO_REDRAW)
             yRange.setTouchRange(rectRaw.top, rectRaw.bottom, PlotRange.AnimationStrategy.Direct, NO_REDRAW)
             ViewCompat.postInvalidateOnAnimation(this@PlotView)
@@ -1599,10 +1623,13 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     override fun performClick(): Boolean {
         if (xRange.isTouchControlled || yRange.isTouchControlled) {
-//                Log.v("Tuner", "PlotView: performClick switch touch control off")
+//            Log.v("Tuner", "PlotView: performClick switch touch control off")
             xRange.setTouchRange(PlotRange.OFF, PlotRange.OFF, PlotRange.AnimationStrategy.Direct, 200L)
             yRange.setTouchRange(PlotRange.OFF, PlotRange.OFF, PlotRange.AnimationStrategy.Direct, 200L)
+            // the invalidate is needed for the case, that no animation runs, since the target range is already set
+            ViewCompat.postInvalidateOnAnimation(this@PlotView)
         } else {
+//            Log.v("Tuner", "PlotView: performClick switch touch control on")
             xRange.setTouchRange(
                 rawViewTransformation.rawPlotBounds.left,
                 rawViewTransformation.rawPlotBounds.right,
