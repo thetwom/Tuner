@@ -549,7 +549,9 @@ private class PlotLine(transformation: PlotTransformation, val colors: IntArray,
     }
 }
 
-private class PlotPoints(transformation: PlotTransformation, val colors: IntArray, val sizes: FloatArray)
+enum class PointShapes {Circle, TriangleUp, TriangleDown}
+
+private class PlotPoints(transformation: PlotTransformation, val colors: IntArray, val sizes: FloatArray, val shapes: Array<PointShapes>)
     : PlotTransformable(transformation) {
     fun interface PlotPointsChangedListener {
         fun onPlotPointsChanged(plotPoints: PlotPoints, hasNewBoundingBox: Boolean, suppressInvalidate: Boolean)
@@ -565,8 +567,10 @@ private class PlotPoints(transformation: PlotTransformation, val colors: IntArra
     var numPoints = 0
         private set
 
-
     private var styleIndex = 0
+
+    private var offsetX = 0f
+    private var offsetY = 0f
 
     /// Paint used for drawing points.
     private val paint = Paint().apply {
@@ -574,20 +578,40 @@ private class PlotPoints(transformation: PlotTransformation, val colors: IntArra
         style = Paint.Style.FILL
     }
 
+    private val path = Path()
+    private val pathShifted = Path()
+
     private val oldBoundingBox = RectF(0f, 0f, 0f, 0f)
     val boundingBox = RectF(0f, 0f, 0f, 0f)
+
+    val pointSize
+        get() = sizes[styleIndex]
+
+    private var isVisible = true
 
     fun setStyleIndex(index: Int, suppressInvalidate: Boolean) {
         if (index == styleIndex)
             return
+
         styleIndex = index
-        plotPointsChangedListener?.onPlotPointsChanged(this, false, suppressInvalidate)
+
+        plotPointsChangedListener?.onPlotPointsChanged(this,
+            hasNewBoundingBox = false, suppressInvalidate)
+    }
+
+    fun setOffset(offsetX: Float, offsetY: Float, suppressInvalidate: Boolean) {
+        if (offsetX == this.offsetX && offsetY == this.offsetY)
+            return
+        this.offsetX = offsetX
+        this.offsetY = offsetY
+        plotPointsChangedListener?.onPlotPointsChanged(this,
+            hasNewBoundingBox = false, suppressInvalidate)
     }
 
     fun setPoints(points: FloatArray?, suppressInvalidate: Boolean) {
 //        Log.v("Tuner", "PlotPoints.setPoints, points.size = ${points?.size}")
         val numPointsBackup = numPoints
-        oldBoundingBox.set(boundingBox)
+        var boundingBoxChanged = false
 
         if(points == null || points.size < 2) {
             numPoints = 0
@@ -600,35 +624,51 @@ private class PlotPoints(transformation: PlotTransformation, val colors: IntArra
                 rawPoints = FloatArray(numPoints * 2)
             rawPoints?.let {
                 points.copyInto(it, 0, 0, numPoints * 2)
-
-                boundingBox.set(points[0], points[1], points[0], points[1])
-                for (i in 0 until numPoints) {
-                    val x = points[2 * i]
-                    val y = points[2 * i + 1]
-                    boundingBox.top = min(boundingBox.top, y)
-                    boundingBox.bottom = max(boundingBox.bottom, y)
-                    boundingBox.left = min(boundingBox.left, x)
-                    boundingBox.right = max(boundingBox.right, x)
-                }
+                boundingBoxChanged = computeBoundingBox()
             }
         }
 
         if (numPoints > 0 || numPoints != numPointsBackup) {
 //            Log.v("Tuner", "PlotPoints.setPoints: transforming point")
-            transformAndCallListener(transformation, !boundingBox.contentEquals(oldBoundingBox), suppressInvalidate)
+            transformAndCallListener(transformation, boundingBoxChanged, suppressInvalidate)
         }
     }
 
-    fun drawToCanvas(canvas: Canvas?) {
-        if (transformation != null && numPoints > 0
-            && transformation?.rawPlotBoundsIntersect(boundingBox) == true) {
-            paint.color = colors[styleIndex]
-            for(i in 0 until numPoints) {
-                val x = transformedPoints[2 * i]
-                val y = transformedPoints[2 * i + 1]
+    private fun computeBoundingBox(): Boolean {
+        oldBoundingBox.set(boundingBox)
+        rawPoints?.let { points ->
+            boundingBox.set(points[0], points[1],points[0], points[1])
+            for (i in 0 until numPoints) {
+                val x = points[2 * i]
+                val y = points[2 * i + 1]
+                boundingBox.top = min(boundingBox.top, y)
+                boundingBox.bottom = max(boundingBox.bottom, y)
+                boundingBox.left = min(boundingBox.left, x)
+                boundingBox.right = max(boundingBox.right, x)
+            }
+        }
+        return !boundingBox.contentEquals(oldBoundingBox)
+    }
 
-                if(transformation?.viewBoundsContain(x, y) == true)
-                    canvas?.drawCircle(x, y, sizes[styleIndex], paint)
+    fun setVisible(isVisible: Boolean, suppressInvalidate: Boolean) {
+        if (this.isVisible == isVisible)
+            return
+        this.isVisible = isVisible
+        transformAndCallListener(transformation, hasNewBoundingBox = false, suppressInvalidate)
+    }
+
+    fun drawToCanvas(canvas: Canvas?) {
+        if (canvas == null || !isVisible)
+            return
+//        if (transformation != null && numPoints > 0
+//            && transformation?.rawPlotBoundsIntersect(boundingBox) == true) {
+        // bounding box check would not be reliable due to the potential offsetX/Y
+        if (transformation != null && numPoints > 0) {
+            paint.color = colors[styleIndex]
+            when (shapes[styleIndex]) {
+                PointShapes.Circle -> drawFilledCircles(canvas)
+                PointShapes.TriangleUp -> drawTrianglesUp(canvas)
+                PointShapes.TriangleDown -> drawTrianglesDown(canvas)
             }
         }
     }
@@ -646,6 +686,53 @@ private class PlotPoints(transformation: PlotTransformation, val colors: IntArra
 
     override fun transform(transform: PlotTransformation?, suppressInvalidate: Boolean) {
         transformAndCallListener(transform, false, suppressInvalidate)
+    }
+
+    private fun drawFilledCircles(canvas: Canvas) {
+        paint.style = Paint.Style.FILL
+        for(i in 0 until numPoints) {
+            val x = transformedPoints[2 * i] + offsetX
+            val y = transformedPoints[2 * i + 1] + offsetY
+            // TODO: take point size into account (also for other shapes)
+            if (transformation?.viewBoundsContain(x, y) == true)
+                canvas.drawCircle(x, y, sizes[styleIndex], paint)
+        }
+    }
+
+    private fun drawTrianglesUp(canvas: Canvas) {
+        paint.style = Paint.Style.FILL
+        path.rewind()
+        path.moveTo(-sizes[styleIndex], 0f)
+        path.lineTo(sizes[styleIndex], 0f)
+        path.lineTo(0f, -sizes[styleIndex])
+
+        for(i in 0 until numPoints) {
+            val x = transformedPoints[2 * i] + offsetX
+            val y = transformedPoints[2 * i + 1] + offsetY
+
+            if (transformation?.viewBoundsContain(x, y) == true) {
+                path.offset(x, y, pathShifted)
+                canvas.drawPath(pathShifted, paint)
+            }
+        }
+    }
+
+    private fun drawTrianglesDown(canvas: Canvas) {
+        paint.style = Paint.Style.FILL
+        path.rewind()
+        path.moveTo(-sizes[styleIndex], 0f)
+        path.lineTo(sizes[styleIndex], 0f)
+        path.lineTo(0f, sizes[styleIndex])
+
+        for(i in 0 until numPoints) {
+            val x = transformedPoints[2 * i] + offsetX
+            val y = transformedPoints[2 * i + 1] + offsetY
+
+            if (transformation?.viewBoundsContain(x, y) == true) {
+                path.offset(x, y, pathShifted)
+                canvas.drawPath(pathShifted, paint)
+            }
+        }
     }
 }
 
@@ -1126,10 +1213,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     /// Plot lines classes
     private val plotLines = mutableMapOf<Long, PlotLine>()
 
-    /// Circle colors for different styles of points.
-    private var pointColors = IntArray(3) {Color.BLACK}
-    /// Circle radii for different styles of the points.
-    private var pointSizes = FloatArray(3) {5f}
+    /// Symbol colors for different styles of points.
+    private val pointColors = IntArray(5) {Color.BLACK}
+    /// Symbol size for different styles of the points.
+    val pointSizes = FloatArray(5) {5f}
+    /// Point shape for different styles of the points.
+    private val pointShapes = Array<PointShapes>(5) {PointShapes.Circle}
     /// Point instances
     private val plotPoints = mutableMapOf<Long, PlotPoints>()
 
@@ -1337,9 +1426,18 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             pointSizes[0] = ta.getDimension(R.styleable.PlotView_pointSize, pointSizes[0])
             pointSizes[1] = ta.getDimension(R.styleable.PlotView_pointSize2, pointSizes[1])
             pointSizes[2] = ta.getDimension(R.styleable.PlotView_pointSize3, pointSizes[2])
+            pointSizes[3] = ta.getDimension(R.styleable.PlotView_pointSize4, pointSizes[3])
+            pointSizes[4] = ta.getDimension(R.styleable.PlotView_pointSize5, pointSizes[4])
             pointColors[0] = ta.getColor(R.styleable.PlotView_pointColor, pointColors[0])
             pointColors[1] = ta.getColor(R.styleable.PlotView_pointColor2, pointColors[1])
             pointColors[2] = ta.getColor(R.styleable.PlotView_pointColor3, pointColors[2])
+            pointColors[3] = ta.getColor(R.styleable.PlotView_pointColor4, pointColors[3])
+            pointColors[4] = ta.getColor(R.styleable.PlotView_pointColor5, pointColors[4])
+            pointShapes[0] = enumToShape(ta.getInt(R.styleable.PlotView_pointShape, 0))
+            pointShapes[1] = enumToShape(ta.getInt(R.styleable.PlotView_pointShape2, 0))
+            pointShapes[2] = enumToShape(ta.getInt(R.styleable.PlotView_pointShape3, 0))
+            pointShapes[3] = enumToShape(ta.getInt(R.styleable.PlotView_pointShape4, 0))
+            pointShapes[4] = enumToShape(ta.getInt(R.styleable.PlotView_pointShape5, 0))
 
             markColor[0] = ta.getColor(R.styleable.PlotView_markColor, markColor[0])
             markLineWidth[0] = ta.getDimension(R.styleable.PlotView_markLineWidth, markLineWidth[0])
@@ -1591,7 +1689,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             return it
         }
 
-        val points = PlotPoints(rawViewTransformation, pointColors, pointSizes)
+        val points = PlotPoints(rawViewTransformation, pointColors, pointSizes, pointShapes)
         plotPoints[tag] = points
 
         points.plotPointsChangedListener = PlotPoints.PlotPointsChangedListener { _, hasNewBoundingBox, suppressInvalidate ->
@@ -1686,6 +1784,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     fun setPointStyle(styleIndex: Int, tag: Long = 0L, suppressInvalidate: Boolean) {
         plotPoints[tag]?.setStyleIndex(styleIndex, suppressInvalidate)
+    }
+
+    fun setPointOffset(offsetX: Float, offsetY: Float, tag: Long = 0L, suppressInvalidate: Boolean) {
+        plotPoints[tag]?.setOffset(offsetX, offsetY, suppressInvalidate)
+    }
+
+    fun setPointVisible(isVisible: Boolean, tag: Long = 0L, suppressInvalidate: Boolean) {
+        plotPoints[tag]?.setVisible(isVisible, suppressInvalidate)
     }
 
     /// Set x-range.
@@ -1885,6 +1991,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             invalidate()
     }
 
+    fun getPointSize(tag: Long = 0L): Float {
+        return plotPoints[tag]?.pointSize ?: 0f
+    }
+
     /// Set x-ticks.
     /**
      * @param value Values of x-ticks to be drawn.
@@ -1975,6 +2085,13 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             invalidate()
     }
 
+
+    private fun enumToShape(number: Int) = when(number) {
+        0 -> PointShapes.Circle
+        1 -> PointShapes.TriangleUp
+        2 -> PointShapes.TriangleDown
+        else -> throw RuntimeException("Unkown shape index: $number")
+    }
 //    fun drawArrow(canvas: Canvas?, startX : Float, startY : Float, endX : Float, endY : Float, paint : Paint) {
 //        val lineLength = sqrt((endX - startX).pow(2) + (endY - startY).pow(2))
 //        val dx = (endX-startX) / lineLength

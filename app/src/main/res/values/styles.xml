@@ -68,9 +68,38 @@
         <attr name="pointSize" format="dimension"/>
         <attr name="pointSize2" format="dimension"/>
         <attr name="pointSize3" format="dimension"/>
+        <attr name="pointSize4" format="dimension"/>
+        <attr name="pointSize5" format="dimension"/>
         <attr name="pointColor" format="color"/>
         <attr name="pointColor2" format="color"/>
         <attr name="pointColor3" format="color"/>
+        <attr name="pointColor4" format="color"/>
+        <attr name="pointColor5" format="color"/>
+        <attr name="pointShape" format="enum">
+            <enum name="Circle" value="0"/>
+            <enum name="TriangleUp" value="1"/>
+            <enum name="TriangleDown" value="2"/>
+        </attr>
+        <attr name="pointShape2" format="enum">
+            <enum name="Circle" value="0"/>
+            <enum name="TriangleUp" value="1"/>
+            <enum name="TriangleDown" value="2"/>
+        </attr>
+        <attr name="pointShape3" format="enum">
+            <enum name="Circle" value="0"/>
+            <enum name="TriangleUp" value="1"/>
+            <enum name="TriangleDown" value="2"/>
+        </attr>
+        <attr name="pointShape4" format="enum">
+            <enum name="Circle" value="0"/>
+            <enum name="TriangleUp" value="1"/>
+            <enum name="TriangleDown" value="2"/>
+        </attr>
+        <attr name="pointShape5" format="enum">
+            <enum name="Circle" value="0"/>
+            <enum name="TriangleUp" value="1"/>
+            <enum name="TriangleDown" value="2"/>
+        </attr>
         <attr name="title" format="string"/>
         <attr name="titleSize" format="dimension"/>
         <attr name="titleColor" format="color"/>
@@ -104,11 +133,20 @@
         <item name="yTickLabelWidth">0sp</item>
         <item name="yTickPosition">left</item>
         <item name="pointSize">5dp</item>
-        <item name="pointSize2">5dp</item>a
-        <item name="pointSize3">5dp</item>a
+        <item name="pointSize2">5dp</item>
+        <item name="pointSize3">5dp</item>
+        <item name="pointSize4">5dp</item>
+        <item name="pointSize5">5dp</item>
+        <item name="pointShape">Circle</item>
+        <item name="pointShape2">Circle</item>
+        <item name="pointShape3">Circle</item>
+        <item name="pointShape4">Circle</item>
+        <item name="pointShape5">Circle</item>
         <item name="pointColor">?attr/colorPrimary</item>
         <item name="pointColor2">?attr/colorOnBackground</item>
         <item name="pointColor3">?attr/colorSecondary</item>
+        <item name="pointColor4">?attr/colorSecondary</item>
+        <item name="pointColor5">?attr/colorSecondary</item>
         <item name="titleSize">12sp</item>
         <item name="titleColor">?attr/colorPrimary</item>
         <item name="frameColor">?attr/colorPrimary</item>

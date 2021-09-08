@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
     // TODO: Allow setting minimum and maximum allowed note
     // ... more settings possible?
     // TODO: show up/down arrows for tune
-    
+
     private var scientificMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {

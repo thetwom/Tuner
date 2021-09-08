@@ -36,7 +36,9 @@
         app:tickLineWidth="0.5dp"
         app:tickTextSize="9dp"
         app:title="@string/spectrum"
-        app:yTickLabelWidth="30sp" />
+        app:yTickLabelWidth="30sp"
+         app:yTickPosition="right"
+         />
 
     <de.moekadu.tuner.PlotView
         android:id="@+id/correlation_plot"
@@ -52,7 +54,9 @@
         app:tickLineWidth="0.5dp"
         app:tickTextSize="9dp"
         app:title="@string/autocorrelation"
-        app:yTickLabelWidth="30sp" />
+        app:yTickLabelWidth="30sp"
+        app:yTickPosition="right"
+        />
 
     <de.moekadu.tuner.PlotView
         android:id="@+id/pitch_plot"
@@ -74,14 +78,21 @@
         app:pointSize="5dp"
         app:pointSize2="3dp"
         app:pointSize3="5dp"
+        app:pointSize4="5dp"
+        app:pointSize5="5dp"
         app:pointColor="?attr/colorSecondary"
         app:pointColor2="?attr/colorPrimaryFaint"
         app:pointColor3="?attr/colorError"
+        app:pointColor4="?attr/colorPrimaryFaint"
+        app:pointColor5="?attr/colorPrimaryFaint"
+        app:pointShape4="TriangleDown"
+        app:pointShape5="TriangleUp"
         app:tickLineWidth="0.5dp"
         app:tickTextSize="9dp"
         app:title="@string/pitch_history"
         app:titleColor="?attr/colorOnBackground"
         app:yTickLabelWidth="30sp"
+        app:yTickPosition="right"
         app:enableTouchX="false"
         />
 
@@ -101,7 +112,7 @@
                 android:layout_height="3dp"
                 app:layout_constraintTop_toTopOf="parent"
                 android:layout_margin="12dp"
-                android:paddingLeft="30sp"
+                android:paddingRight="30sp"
                 app:volumeMin="0"
                 app:volumeMax="1"
                 android:visibility="gone"
