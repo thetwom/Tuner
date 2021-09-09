@@ -40,7 +40,7 @@ class TunerFragment : Fragment() {
     private var correlationPlot: PlotView? = null
     private var pitchPlot: PlotView? = null
     private var volumeMeter: VolumeMeter? = null
-    
+
     private var isPitchInactive = false
     private var tuningStatus = TargetNote.TuningStatus.Unknown
 

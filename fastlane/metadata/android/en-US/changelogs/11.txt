@@ -1,0 +1,4 @@
+v1.4.0:
+- Add simple mode
+- Colored feedback for being in tune
+- Add setting for tolerance for being in tune
