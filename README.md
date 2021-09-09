@@ -9,8 +9,8 @@ This is a basic tuner app.
      alt="Get it on Google Play"
      height="80">](https://play.google.com/store/apps/details?id=de.moekadu.tuner)
 
-|![screenshot-0](https://github.com/thetwom/Tuner/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/00.png) |![screenshot-1](https://github.com/thetwom/Tuner/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/01.png)  
-|---|---|
+|![screenshot-0](https://github.com/thetwom/Tuner/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/00.png) |![screenshot-1](https://github.com/thetwom/Tuner/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/01.png) |![screenshot-3](https://github.com/thetwom/Tuner/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/02.png) |![screenshot-4](https://github.com/thetwom/Tuner/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/03.png)  
+|---|---|---|---|
 
 # Features
 
