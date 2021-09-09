@@ -1167,7 +1167,6 @@ class PlotDrawable(context: Context, tint: Int, drawableId: Int) {
 class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr)
 {
-    // TODO: don't scale when dragging
     companion object {
         /// Special option for animationDuration which means that we don't animate and don't invalidate.
         const val NO_REDRAW = NO_REDRAW_PRIVATE
@@ -1217,11 +1216,11 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private val plotLines = mutableMapOf<Long, PlotLine>()
 
     /// Symbol colors for different styles of points.
-    private val pointColors = IntArray(5) {Color.BLACK}
+    private val pointColors = IntArray(7) {Color.BLACK}
     /// Symbol size for different styles of the points.
-    val pointSizes = FloatArray(5) {5f}
+    val pointSizes = FloatArray(7) {5f}
     /// Point shape for different styles of the points.
-    private val pointShapes = Array<PointShapes>(5) {PointShapes.Circle}
+    private val pointShapes = Array<PointShapes>(7) {PointShapes.Circle}
     /// Point instances
     private val plotPoints = mutableMapOf<Long, PlotPoints>()
 
@@ -1452,16 +1451,22 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             pointSizes[2] = ta.getDimension(R.styleable.PlotView_pointSize3, pointSizes[2])
             pointSizes[3] = ta.getDimension(R.styleable.PlotView_pointSize4, pointSizes[3])
             pointSizes[4] = ta.getDimension(R.styleable.PlotView_pointSize5, pointSizes[4])
+            pointSizes[5] = ta.getDimension(R.styleable.PlotView_pointSize6, pointSizes[5])
+            pointSizes[6] = ta.getDimension(R.styleable.PlotView_pointSize7, pointSizes[6])
             pointColors[0] = ta.getColor(R.styleable.PlotView_pointColor, pointColors[0])
             pointColors[1] = ta.getColor(R.styleable.PlotView_pointColor2, pointColors[1])
             pointColors[2] = ta.getColor(R.styleable.PlotView_pointColor3, pointColors[2])
             pointColors[3] = ta.getColor(R.styleable.PlotView_pointColor4, pointColors[3])
             pointColors[4] = ta.getColor(R.styleable.PlotView_pointColor5, pointColors[4])
+            pointColors[5] = ta.getColor(R.styleable.PlotView_pointColor6, pointColors[5])
+            pointColors[6] = ta.getColor(R.styleable.PlotView_pointColor7, pointColors[6])
             pointShapes[0] = enumToShape(ta.getInt(R.styleable.PlotView_pointShape, 0))
             pointShapes[1] = enumToShape(ta.getInt(R.styleable.PlotView_pointShape2, 0))
             pointShapes[2] = enumToShape(ta.getInt(R.styleable.PlotView_pointShape3, 0))
             pointShapes[3] = enumToShape(ta.getInt(R.styleable.PlotView_pointShape4, 0))
             pointShapes[4] = enumToShape(ta.getInt(R.styleable.PlotView_pointShape5, 0))
+            pointShapes[5] = enumToShape(ta.getInt(R.styleable.PlotView_pointShape6, 0))
+            pointShapes[6] = enumToShape(ta.getInt(R.styleable.PlotView_pointShape7, 0))
 
             markColor[0] = ta.getColor(R.styleable.PlotView_markColor, markColor[0])
             markLineWidth[0] = ta.getDimension(R.styleable.PlotView_markLineWidth, markLineWidth[0])

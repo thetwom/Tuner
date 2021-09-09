@@ -39,13 +39,8 @@ class TunerFragmentSimple : Fragment() {
     private var pitchPlot: PlotView? = null
     private var volumeMeter: VolumeMeter? = null
 
-    private val currentFrequency
-        get() = viewModel.pitchHistory.historyAveraged.value?.lastOrNull()
-    private val currentPointStyle
-        get() = when (viewModel.targetNote.value?.getTuningStatus(currentFrequency)) {
-            TargetNote.TuningStatus.InTune -> 0
-            else -> 2
-        }
+    private var isPitchInactive = false
+    private var tuningStatus = TargetNote.TuningStatus.Unknown
 
     /// Instance for requesting audio recording permission.
     /**
@@ -100,9 +95,12 @@ class TunerFragmentSimple : Fragment() {
 
         viewModel.pitchHistory.historyAveraged.observe(viewLifecycleOwner) {
             if (it.size > 0) {
-                setTuningArrow(redraw = false)
-                pitchPlot?.setPointStyle(currentPointStyle, suppressInvalidate = false)
-                pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), it.last()), redraw = false)
+                val frequency = it.last()
+                tuningStatus = viewModel.targetNote.value?.getTuningStatus(frequency) ?: TargetNote.TuningStatus.Unknown
+
+                setStyles(isPitchInactive, tuningStatus, false)
+                pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), frequency), redraw = false)
+                pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), frequency), tag = 1L, redraw = false)
                 pitchPlot?.plot(it)
             }
         }
@@ -110,7 +108,10 @@ class TunerFragmentSimple : Fragment() {
         viewModel.targetNote.observe(viewLifecycleOwner) { targetNote ->
             val nameMinusBound = getString(R.string.cent, -targetNote.toleranceInCents)
             val namePlusBound = getString(R.string.cent, targetNote.toleranceInCents)
-            setTuningArrow(redraw = false)
+            viewModel.pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
+                tuningStatus = targetNote.getTuningStatus(frequency)
+            }
+            setStyles(isPitchInactive, tuningStatus, false)
 
             pitchPlot?.setMarks(
                 null,
@@ -136,10 +137,8 @@ class TunerFragmentSimple : Fragment() {
         viewModel.pitchHistory.numValuesSinceLastLineUpdate.observe(viewLifecycleOwner) { numValuesSinceLastUpdate ->
             val maxTimeBeforeInactive = 0.3f // seconds
             val maxNumValuesBeforeInactive = max(1f, floor(maxTimeBeforeInactive / viewModel.pitchHistoryUpdateInterval))
-//            if (numValuesSinceLastUpdate > maxNumValuesBeforeInactive)
-//                pitchPlot?.setPointVisible(false, 1L, suppressInvalidate = true)
-            pitchPlot?.setLineStyle(if (numValuesSinceLastUpdate > maxNumValuesBeforeInactive) 1 else 0, suppressInvalidate = true)
-            pitchPlot?.setPointStyle(if (numValuesSinceLastUpdate > maxNumValuesBeforeInactive) 1 else currentPointStyle, suppressInvalidate = false)
+            isPitchInactive = (numValuesSinceLastUpdate > maxNumValuesBeforeInactive)
+            setStyles(isPitchInactive, tuningStatus, redraw = true)
         }
 
 //        viewModel.pitchHistory.history.value?.let {
@@ -163,31 +162,51 @@ class TunerFragmentSimple : Fragment() {
         super.onStop()
     }
 
-    private fun setTuningArrow(redraw: Boolean) {
-        val pointSize = pitchPlot?.pointSizes?.get(0) ?: return
-        val frequency = viewModel.pitchHistory.historyAveraged.value?.lastOrNull() ?: return
-        val historyIndex = viewModel.pitchHistory.historyAveraged.value?.size?.toFloat() ?: return
-        val tuningStatus = viewModel.targetNote.value?.getTuningStatus(frequency)
-            ?: TargetNote.TuningStatus.Unknown
-        // Log.v("Tuner", "TunerFragmentSimple.setTuningStatus: tuningStatus=$tuningStatus, freq=$frequency, pointSize=$pointSize")
+    private fun setStyles(isPitchInactive: Boolean, tuningStatus: TargetNote.TuningStatus, redraw: Boolean) {
 
-        when (tuningStatus) {
-            TargetNote.TuningStatus.TooHigh -> {
-                pitchPlot?.setPointVisible(true, 1L, true)
-                pitchPlot?.setPointStyle(3, 1L, true)
-                pitchPlot?.setPointOffset(0f, 1.5f * pointSize, 1L, true)
-                pitchPlot?.setPoints(floatArrayOf(historyIndex - 1, frequency), 1L, redraw = redraw)
+        if (isPitchInactive) {
+            pitchPlot?.setLineStyle(1, suppressInvalidate = true)
+            pitchPlot?.setPointStyle(1, suppressInvalidate = true)
+            val pointSize = pitchPlot?.pointSizes?.get(1) ?: 1f
+
+            when (tuningStatus) {
+                TargetNote.TuningStatus.TooLow -> {
+                    pitchPlot?.setPointStyle(6, tag = 1L, suppressInvalidate = true)
+                    pitchPlot?.setPointVisible(true, tag = 1L, suppressInvalidate = true)
+                    pitchPlot?.setPointOffset(0f, -1.5f * pointSize, 1L, suppressInvalidate = true)
+                }
+                TargetNote.TuningStatus.TooHigh -> {
+                    pitchPlot?.setPointStyle(5, tag = 1L, suppressInvalidate = true)
+                    pitchPlot?.setPointVisible(true, tag = 1L, suppressInvalidate = true)
+                    pitchPlot?.setPointOffset(0f, 1.5f * pointSize, 1L, suppressInvalidate = true)
+                }
+                else -> pitchPlot?.setPointVisible(false, tag = 1L, suppressInvalidate = true)
             }
-            TargetNote.TuningStatus.TooLow -> {
-                pitchPlot?.setPointVisible(true, 1L, true)
-                pitchPlot?.setPointStyle(4, 1L, true)
-                pitchPlot?.setPointOffset(0f, -1.5f * pointSize, 1L, true)
-                pitchPlot?.setPoints(floatArrayOf(historyIndex - 1, frequency), 1L, redraw = redraw)
-            }
-            else -> {
-                pitchPlot?.setPointVisible(false, 1L, !redraw)
+        } else {
+            pitchPlot?.setLineStyle(0, suppressInvalidate = true)
+            val pointSize = pitchPlot?.pointSizes?.get(0) ?: 1f
+
+            when (tuningStatus) {
+                TargetNote.TuningStatus.TooLow -> {
+                    pitchPlot?.setPointStyle(2, suppressInvalidate = true)
+                    pitchPlot?.setPointVisible(true, tag = 1L, suppressInvalidate = true)
+                    pitchPlot?.setPointStyle(4, tag = 1L, suppressInvalidate = true)
+                    pitchPlot?.setPointOffset(0f, -1.5f * pointSize, 1L, suppressInvalidate = true)
+                }
+                TargetNote.TuningStatus.TooHigh -> {
+                    pitchPlot?.setPointStyle(2, suppressInvalidate = true)
+                    pitchPlot?.setPointVisible(true, tag = 1L, suppressInvalidate = true)
+                    pitchPlot?.setPointStyle(3, tag = 1L, suppressInvalidate = true)
+                    pitchPlot?.setPointOffset(0f, 1.5f * pointSize, 1L, suppressInvalidate = true)
+                }
+                else -> {
+                    pitchPlot?.setPointStyle(0, suppressInvalidate = true)
+                    pitchPlot?.setPointVisible(false, tag = 1L, suppressInvalidate = true)
+                }
             }
         }
+        if (redraw)
+            pitchPlot?.invalidate()
     }
 
     companion object{

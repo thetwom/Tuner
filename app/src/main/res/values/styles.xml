@@ -70,11 +70,15 @@
         <attr name="pointSize3" format="dimension"/>
         <attr name="pointSize4" format="dimension"/>
         <attr name="pointSize5" format="dimension"/>
+        <attr name="pointSize6" format="dimension"/>
+        <attr name="pointSize7" format="dimension"/>
         <attr name="pointColor" format="color"/>
         <attr name="pointColor2" format="color"/>
         <attr name="pointColor3" format="color"/>
         <attr name="pointColor4" format="color"/>
         <attr name="pointColor5" format="color"/>
+        <attr name="pointColor6" format="color"/>
+        <attr name="pointColor7" format="color"/>
         <attr name="pointShape" format="enum">
             <enum name="Circle" value="0"/>
             <enum name="TriangleUp" value="1"/>
@@ -96,6 +100,16 @@
             <enum name="TriangleDown" value="2"/>
         </attr>
         <attr name="pointShape5" format="enum">
+            <enum name="Circle" value="0"/>
+            <enum name="TriangleUp" value="1"/>
+            <enum name="TriangleDown" value="2"/>
+        </attr>
+        <attr name="pointShape6" format="enum">
+            <enum name="Circle" value="0"/>
+            <enum name="TriangleUp" value="1"/>
+            <enum name="TriangleDown" value="2"/>
+        </attr>
+        <attr name="pointShape7" format="enum">
             <enum name="Circle" value="0"/>
             <enum name="TriangleUp" value="1"/>
             <enum name="TriangleDown" value="2"/>
@@ -142,11 +156,15 @@
         <item name="pointShape3">Circle</item>
         <item name="pointShape4">Circle</item>
         <item name="pointShape5">Circle</item>
+        <item name="pointShape6">Circle</item>
+        <item name="pointShape7">Circle</item>
         <item name="pointColor">?attr/colorPrimary</item>
         <item name="pointColor2">?attr/colorOnBackground</item>
         <item name="pointColor3">?attr/colorSecondary</item>
         <item name="pointColor4">?attr/colorSecondary</item>
         <item name="pointColor5">?attr/colorSecondary</item>
+        <item name="pointColor6">?attr/colorSecondary</item>
+        <item name="pointColor7">?attr/colorSecondary</item>
         <item name="titleSize">12sp</item>
         <item name="titleColor">?attr/colorPrimary</item>
         <item name="frameColor">?attr/colorPrimary</item>
