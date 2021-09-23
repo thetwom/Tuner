@@ -33,12 +33,14 @@
 
         <item name="android:statusBarColor">#000000</item>
         <item name="plotViewStyle">@style/PlotViewStyle</item>
+        <item name="stringViewStyle">@style/StringViewStyle</item>
         <item name="volumeMeterStyle">@style/VolumeMeterStyle</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
 
     <declare-styleable name="CustomTheme">
         <attr name="plotViewStyle" format="reference"/>
+        <attr name="stringViewStyle" format="reference"/>
         <attr name="volumeMeterStyle" format="reference"/>
     </declare-styleable>
     
@@ -172,6 +174,40 @@
         <item name="frameStrokeWidth">2dp</item>
         <item name="enableTouchX">true</item>
         <item name="enableTouchY">true</item>
+        <item name="touchDrawable">@drawable/ic_manual</item>
+        <item name="touchDrawableWidth">25dp</item>
+    </style>
+
+    <declare-styleable name="StringView">
+        <attr name="labelTextSize" format="dimension"/>
+        <attr name="labelPadding" format="dimension"/>
+        <attr name="labelSpacing" format="dimension"/>
+        <attr name="labelTextColor" format="color"/>
+        <attr name="labelTextColorHighlight" format="color"/>
+        <attr name="stringColor" format="color"/>
+        <attr name="stringColorHighlight" format="color"/>
+        <attr name="stringLineWidth" format="dimension"/>
+        <attr name="stringLineWidthHighlight" format="dimension"/>
+        <attr name="frameColor"/>
+        <attr name="frameColorOnTouch"/>
+        <attr name="frameStrokeWidth"/>
+        <attr name="touchDrawable"/>
+        <attr name="touchDrawableWidth"/>
+    </declare-styleable>
+
+    <style name="StringViewStyle">
+        <item name="labelTextSize">10sp</item>
+        <item name="labelPadding">2dp</item>
+        <item name="labelSpacing">2dp</item>
+        <item name="labelTextColor">?attr/colorOnPrimary</item>
+        <item name="labelTextColorHighlight">?attr/colorOnSecondary</item>
+        <item name="stringColor">?attr/colorPrimary</item>
+        <item name="stringColorHighlight">?attr/colorSecondary</item>
+        <item name="stringLineWidth">3dp</item>
+        <item name="stringLineWidthHighlight">4dp</item>
+        <item name="frameColor">?attr/colorPrimary</item>
+        <item name="frameColorOnTouch">?attr/colorError</item>
+        <item name="frameStrokeWidth">2dp</item>
         <item name="touchDrawable">@drawable/ic_manual</item>
         <item name="touchDrawableWidth">25dp</item>
     </style>

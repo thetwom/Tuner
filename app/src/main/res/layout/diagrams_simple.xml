@@ -22,13 +22,31 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent" android:layout_height="match_parent">
 
+    <de.moekadu.tuner.StringView
+        android:id="@+id/string_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/volume_meter"
+        app:layout_constraintHeight_max="wrap"
+        app:layout_constraintHeight_percent="0.4"
+        android:layout_marginRight="60sp"
+        android:paddingTop="12dp"
+        android:paddingBottom="0dp"
+        android:paddingRight="12dp"
+        android:paddingLeft="12dp"
+        app:labelTextSize="20sp"
+        app:labelPadding="2dp"
+        app:labelSpacing="4dp"
+        app:stringLineWidth="1dp"
+        />
+
     <de.moekadu.tuner.PlotView
         android:id="@+id/pitch_plot"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:padding="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/string_view"
         app:markColor="?attr/colorSecondary"
         app:markLabelColor="?attr/colorOnSecondary"
         app:markTextSize="25sp"

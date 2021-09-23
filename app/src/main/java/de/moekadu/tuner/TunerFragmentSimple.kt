@@ -38,6 +38,7 @@ class TunerFragmentSimple : Fragment() {
 
     private var pitchPlot: PlotView? = null
     private var volumeMeter: VolumeMeter? = null
+    private var stringView: StringView? = null
 
     private var isPitchInactive = false
     private var tuningStatus = TargetNote.TuningStatus.Unknown
@@ -71,9 +72,18 @@ class TunerFragmentSimple : Fragment() {
 
         pitchPlot = view.findViewById(R.id.pitch_plot)
         volumeMeter = view.findViewById(R.id.volume_meter)
+        stringView = view.findViewById(R.id.string_view)
 
         pitchPlot?.yRange(400f, 500f, PlotView.NO_REDRAW)
 
+        stringView?.stringClickedListener = StringView.StringClickedListener { toneIndex ->
+            if (toneIndex != StringView.NO_ACTIVE_TONE_INDEX)
+                stringView?.activeToneIndex = toneIndex
+        }
+        //val stringNames = arrayOf<CharSequence>("A", "BBBBB", "CC", "D", "E", "F", "Q", "R")
+//        stringView?.setStrings(intArrayOf(1,2,3,4,5,6,3,4,3,4)) {
+//            stringNames[it]
+//        }
 //        viewModel.standardDeviation.observe(viewLifecycleOwner) { standardDeviation ->
 //            volumeMeter?.volume = log10(max(1e-12f, standardDeviation))
 //        }
@@ -81,6 +91,9 @@ class TunerFragmentSimple : Fragment() {
             val noteFrequencies = FloatArray(100) { tuningFrequencies.getNoteFrequency(it - 50) }
             pitchPlot?.setYTicks(noteFrequencies, false) { _, f -> tuningFrequencies.getNoteName(f) }
             pitchPlot?.setYTouchLimits(noteFrequencies.first(), noteFrequencies.last(), 0L)
+            stringView?.setStrings(IntArray(100) {it - 50}.reversedArray()) {
+                noteIndex -> tuningFrequencies.getNoteName(noteIndex, preferFlat = false)
+            }
         }
 
         viewModel.pitchHistory.sizeAsLiveData.observe(viewLifecycleOwner) {
@@ -132,6 +145,9 @@ class TunerFragmentSimple : Fragment() {
             pitchPlot?.setYMark(targetNote.frequency, targetNote.name, MARK_ID_FREQUENCY, MarkAnchor.East,
                 0, placeLabelsOutsideBoundsIfPossible = true,
                 redraw = true)
+
+            stringView?.activeToneIndex = targetNote.toneIndex
+            //stringView?.scrollToString(targetNote.toneIndex, 300L)
         }
 
         viewModel.pitchHistory.numValuesSinceLastLineUpdate.observe(viewLifecycleOwner) { numValuesSinceLastUpdate ->
