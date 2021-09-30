@@ -28,13 +28,13 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import kotlin.math.floor
 import kotlin.math.max
 
 class TunerFragment : Fragment() {
-    /// TODO: when this view model starts, set target note detection to automatic!!!
-    private val viewModel: TunerViewModel by viewModels() // ? = null
+    private val viewModel: TunerViewModel by activityViewModels() // ? = null
 
     private var spectrumPlot: PlotView? = null
     private var correlationPlot: PlotView? = null
@@ -239,13 +239,13 @@ class TunerFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
+        viewModel.setTargetNote()
     }
 
     override fun onStop() {
         viewModel.stopSampling()
         super.onStop()
     }
-
 
     private fun setStyles(isPitchInactive: Boolean, tuningStatus: TargetNote.TuningStatus, redraw: Boolean) {
         if (isPitchInactive) {

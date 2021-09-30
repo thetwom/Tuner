@@ -21,6 +21,7 @@ package de.moekadu.tuner
 
 import android.app.Application
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.lifecycle.*
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.Dispatchers
@@ -178,13 +179,13 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     init {
-        //Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
+        Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
 
-//        sampleSource.testFunction = { t ->
-//            val freq = 400 + 2*t
-//           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
-//            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
-//        }
+        sampleSource.testFunction = { t ->
+            val freq = 400 + 2*t
+           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
+            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
+        }
 //        sampleSource.testFunction = { t ->
 //            800f * Random.nextFloat()
 //            //1f
@@ -255,14 +256,17 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun startSampling() {
+        Log.v("Tuner", "TunerViewModel.startSampling")
         sampleSource.restartSampling()
     }
 
     fun stopSampling() {
+        Log.v("Tuner", "TunerViewModel.stopSampling")
         sampleSource.stopSampling()
     }
 
     fun setTargetNote(toneIndex: Int = AUTOMATIC_TARGET_NOTE_DETECTION) {
+        Log.v("Tuner", "TunerViewModel.setTargetNote: toneIndex=$toneIndex")
         val oldTargetNote = targetNoteValue.toneIndex
         if (toneIndex == AUTOMATIC_TARGET_NOTE_DETECTION) {
             userDefinedTargetNoteIndex = AUTOMATIC_TARGET_NOTE_DETECTION
@@ -293,6 +297,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     override fun onCleared() {
+        Log.v("Tuner", "TunerViewModel.onCleared")
         stopSampling()
         pref.unregisterOnSharedPreferenceChangeListener(onPreferenceChangedListener)
 
