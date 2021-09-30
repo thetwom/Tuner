@@ -29,9 +29,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.pow
-import kotlin.math.sin
-import kotlin.math.sqrt
+import kotlin.math.*
 
 class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -115,6 +113,20 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     val targetNote: LiveData<TargetNote>
             get() = _targetNote
 
+    private var userDefinedTargetNoteIndex = AUTOMATIC_TARGET_NOTE_DETECTION
+        set(value) {
+            field = value
+            _isTargetNoteUserDefined.value = (field != AUTOMATIC_TARGET_NOTE_DETECTION)
+        }
+    private val _isTargetNoteUserDefined = MutableLiveData(false)
+    val isTargetNoteUserDefined: LiveData<Boolean>
+        get() = _isTargetNoteUserDefined
+
+    private val frequencyPlotRangeValues = floatArrayOf(400f, 500f)
+    private val _frequencyPlotRange = MutableLiveData(frequencyPlotRangeValues)
+    val frequencyPlotRange: LiveData<FloatArray>
+        get() = _frequencyPlotRange
+
     private val pref = PreferenceManager.getDefaultSharedPreferences(application)
     
     private val onPreferenceChangedListener = object : SharedPreferences.OnSharedPreferenceChangeListener {
@@ -168,11 +180,11 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     init {
         //Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
 
-        sampleSource.testFunction = { t ->
-            val freq = 400 + 2*t
-           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
-            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
-        }
+//        sampleSource.testFunction = { t ->
+//            val freq = 400 + 2*t
+//           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
+//            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
+//        }
 //        sampleSource.testFunction = { t ->
 //            800f * Random.nextFloat()
 //            //1f
@@ -229,8 +241,11 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                         _tunerResults.value = results
                         if (pitchFrequency > 0.0f) {
                             pitchHistory.appendValue(pitchFrequency, it.noise)
-                            pitchHistory.currentEstimatedToneIndex.value?.let {
-                                changeTargetNoteSettings(toneIndex = it)
+                            if (userDefinedTargetNoteIndex == AUTOMATIC_TARGET_NOTE_DETECTION)
+                                changeTargetNoteSettings(toneIndex = pitchHistory.currentEstimatedToneIndex)
+
+                            pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
+                                updateFrequencyPlotRange(targetNoteValue.toneIndex, frequency)
                             }
                         }
                     }
@@ -245,6 +260,36 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
     fun stopSampling() {
         sampleSource.stopSampling()
+    }
+
+    fun setTargetNote(toneIndex: Int = AUTOMATIC_TARGET_NOTE_DETECTION) {
+        val oldTargetNote = targetNoteValue.toneIndex
+        if (toneIndex == AUTOMATIC_TARGET_NOTE_DETECTION) {
+            userDefinedTargetNoteIndex = AUTOMATIC_TARGET_NOTE_DETECTION
+            changeTargetNoteSettings(toneIndex = pitchHistory.currentEstimatedToneIndex)
+        } else {
+            userDefinedTargetNoteIndex = toneIndex
+            changeTargetNoteSettings(toneIndex = toneIndex)
+        }
+
+        if (targetNoteValue.toneIndex != oldTargetNote) {
+            pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
+                updateFrequencyPlotRange(targetNoteValue.toneIndex, frequency)
+            }
+        }
+    }
+
+    private fun updateFrequencyPlotRange(targetNoteIndex: Int, currentFrequency: Float) {
+        val minOld = frequencyPlotRangeValues[0]
+        val maxOld = frequencyPlotRangeValues[1]
+
+        val frequencyToneIndex = tuningFrequencyValues.getClosestToneIndex(currentFrequency)
+        val minIndex = min(frequencyToneIndex - 0.55f, targetNoteIndex - 1.55f)
+        val maxIndex = max(frequencyToneIndex + 0.55f, targetNoteIndex + 1.55f)
+        frequencyPlotRangeValues[0] = tuningFrequencyValues.getNoteFrequency(minIndex)
+        frequencyPlotRangeValues[1] = tuningFrequencyValues.getNoteFrequency(maxIndex)
+        if (frequencyPlotRangeValues[0] != minOld || frequencyPlotRangeValues[1] != maxOld)
+            _frequencyPlotRange.value = frequencyPlotRangeValues
     }
 
     override fun onCleared() {
@@ -294,6 +339,6 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         const val NO_NEW_TONE_INDEX = Int.MAX_VALUE
         const val NO_NEW_TOLERANCE = Int.MAX_VALUE
-
+        const val AUTOMATIC_TARGET_NOTE_DETECTION = Int.MAX_VALUE
     }
 }

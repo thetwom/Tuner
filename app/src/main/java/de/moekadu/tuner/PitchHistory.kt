@@ -77,12 +77,10 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
             currentRangeBeforeChangingPitch[1] = -1.0f
             updateCurrentEstimatedToneIndex()
         }
-    /// Current estimate of the tone index based on the pitch history
-    private val _currentEstimatedToneIndex = MutableLiveData<Int>()
 
-    /// Here we allow the observers to take track of the current estimated tone index
-    val currentEstimatedToneIndex: LiveData<Int>
-        get() = _currentEstimatedToneIndex
+    /// Current tone estimated tone index based on pitch history
+    var currentEstimatedToneIndex = 0
+        private set
 
     /// Here we store our pitch history
     private val pitchArray = ArrayList<Float>(size)
@@ -142,28 +140,28 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
     val historyAveraged: LiveData<ArrayList<Float> >
         get() = _historyAveraged
 
-    /// Defines the frequency limits which can be used for plots
-    var plotRangeInToneIndices = 3f
-        set(value) {
-            field = value
-            updatePlotRange2()
-        }
+//    /// Defines the frequency limits which can be used for plots
+//    var plotRangeInToneIndices = 3f
+//        set(value) {
+//            field = value
+//            updatePlotRange2()
+//        }
 
-    /// Backing field for minimum and maximum limit of plot range
-    private val frequencyPlotRangeValues = floatArrayOf(400f, 500f)
-    /// Backing LiveData field for plot range
-    private val _frequencyPlotRange = MutableLiveData<FloatArray>()
-    /// LiveData field which contains the current frequency limits, when plotting the current tones
-    val frequencyPlotRange: LiveData<FloatArray>
-        get() = _frequencyPlotRange
+//    /// Backing field for minimum and maximum limit of plot range
+//    private val frequencyPlotRangeValues = floatArrayOf(400f, 500f)
+//    /// Backing LiveData field for plot range
+//    private val _frequencyPlotRange = MutableLiveData<FloatArray>()
+//    /// LiveData field which contains the current frequency limits, when plotting the current tones
+//    val frequencyPlotRange: LiveData<FloatArray>
+//        get() = _frequencyPlotRange
 
-    /// Backing field for minimum and maximum limit of plot range of averaged data
-    private val frequencyPlotRangeAveragedValues = floatArrayOf(400f, 500f)
-    /// Backing LiveData field for plot range of averaged data
-    private val _frequencyPlotRangeAveraged = MutableLiveData<FloatArray>()
-    /// LiveData field which contains the current frequency limits of averaged values, when plotting the current tones
-    val frequencyPlotRangeAveraged: LiveData<FloatArray>
-        get() = _frequencyPlotRangeAveraged
+//    /// Backing field for minimum and maximum limit of plot range of averaged data
+//    private val frequencyPlotRangeAveragedValues = floatArrayOf(400f, 500f)
+//    /// Backing LiveData field for plot range of averaged data
+//    private val _frequencyPlotRangeAveraged = MutableLiveData<FloatArray>()
+//    /// LiveData field which contains the current frequency limits of averaged values, when plotting the current tones
+//    val frequencyPlotRangeAveraged: LiveData<FloatArray>
+//        get() = _frequencyPlotRangeAveraged
 
     /** Backing live data where store the number of values which have been append to the plot
      * after the lines were updated. */
@@ -246,7 +244,7 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
             _history.value = pitchArray
             _historyAveraged.value = pitchArrayMovingAverage
             updateCurrentEstimatedToneIndex()
-            updatePlotRange2()
+            // updatePlotRange2()
             if (_numValuesSinceLastLineUpdate.value != null)
                 _numValuesSinceLastLineUpdate.value = 0L
         } else {
@@ -281,53 +279,52 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
             val toneIndex = tuningFrequencies.getClosestToneIndex(currentFrequency)
             currentRangeBeforeChangingPitch[0] = tuningFrequencies.getNoteFrequency(toneIndex - allowedHalfToneDeviationBeforeChangingTarget)
             currentRangeBeforeChangingPitch[1] = tuningFrequencies.getNoteFrequency(toneIndex + allowedHalfToneDeviationBeforeChangingTarget)
-            _currentEstimatedToneIndex.value = toneIndex
+            currentEstimatedToneIndex = toneIndex
             //updatePlotRange()
         }
     }
 
-    private fun updatePlotRange() {
-        updatePlotRange(frequencyPlotRangeValues, _frequencyPlotRange, pitchArray)
-        updatePlotRange(frequencyPlotRangeAveragedValues, _frequencyPlotRangeAveraged, pitchArrayMovingAverage)
-    }
-
-    private fun updatePlotRange2() {
-        val toneIndex = _currentEstimatedToneIndex.value ?: return
-        val lowerBound = tuningFrequencies.getNoteFrequency(toneIndex - 0.5f * plotRangeInToneIndices)
-        val upperBound = tuningFrequencies.getNoteFrequency(toneIndex + 0.5f * plotRangeInToneIndices)
-
-        // only update after something changed
-        if (lowerBound != frequencyPlotRangeValues[0] || upperBound != frequencyPlotRangeValues[1]) {
-            frequencyPlotRangeValues[0] = lowerBound
-            frequencyPlotRangeValues[1] = upperBound
-            _frequencyPlotRange.value = frequencyPlotRangeValues
-        }
-
-        if (lowerBound != frequencyPlotRangeAveragedValues[0] || upperBound != frequencyPlotRangeAveragedValues[1]) {
-            frequencyPlotRangeAveragedValues[0] = lowerBound
-            frequencyPlotRangeAveragedValues[1] = upperBound
-            _frequencyPlotRangeAveraged.value = frequencyPlotRangeAveragedValues
-        }
-    }
-
-    private fun updatePlotRange(plotRange: FloatArray, plotRangeLiveData: MutableLiveData<FloatArray>,
-                                plotValues: ArrayList<Float>) {
-        val plotMin = plotValues.minOrNull() ?: return
-        val plotMax = plotValues.maxOrNull() ?: return
-
-        val toneIndexMin = tuningFrequencies.getClosestToneIndex(plotMin)
-        val toneIndexMax = tuningFrequencies.getClosestToneIndex(plotMax)
-
-        val lowerBound = tuningFrequencies.getNoteFrequency(toneIndexMin - 0.5f * plotRangeInToneIndices)
-        val upperBound = tuningFrequencies.getNoteFrequency(toneIndexMax + 0.5f * plotRangeInToneIndices)
-
-        // only update after something changed
-        if (lowerBound != plotRange[0] || upperBound != plotRange[1]) {
-            plotRange[0] = lowerBound
-            plotRange[1] = upperBound
-            plotRangeLiveData.value = plotRange
-        }
-    }
+//    private fun updatePlotRange() {
+//        updatePlotRange(frequencyPlotRangeValues, _frequencyPlotRange, pitchArray)
+//        updatePlotRange(frequencyPlotRangeAveragedValues, _frequencyPlotRangeAveraged, pitchArrayMovingAverage)
+//    }
+//
+//    private fun updatePlotRange2() {
+//        val lowerBound = tuningFrequencies.getNoteFrequency(currentEstimatedToneIndex - 0.5f * plotRangeInToneIndices)
+//        val upperBound = tuningFrequencies.getNoteFrequency(currentEstimatedToneIndex + 0.5f * plotRangeInToneIndices)
+//
+//        // only update after something changed
+//        if (lowerBound != frequencyPlotRangeValues[0] || upperBound != frequencyPlotRangeValues[1]) {
+//            frequencyPlotRangeValues[0] = lowerBound
+//            frequencyPlotRangeValues[1] = upperBound
+//            _frequencyPlotRange.value = frequencyPlotRangeValues
+//        }
+//
+//        if (lowerBound != frequencyPlotRangeAveragedValues[0] || upperBound != frequencyPlotRangeAveragedValues[1]) {
+//            frequencyPlotRangeAveragedValues[0] = lowerBound
+//            frequencyPlotRangeAveragedValues[1] = upperBound
+//            _frequencyPlotRangeAveraged.value = frequencyPlotRangeAveragedValues
+//        }
+//    }
+//
+//    private fun updatePlotRange(plotRange: FloatArray, plotRangeLiveData: MutableLiveData<FloatArray>,
+//                                plotValues: ArrayList<Float>) {
+//        val plotMin = plotValues.minOrNull() ?: return
+//        val plotMax = plotValues.maxOrNull() ?: return
+//
+//        val toneIndexMin = tuningFrequencies.getClosestToneIndex(plotMin)
+//        val toneIndexMax = tuningFrequencies.getClosestToneIndex(plotMax)
+//
+//        val lowerBound = tuningFrequencies.getNoteFrequency(toneIndexMin - 0.5f * plotRangeInToneIndices)
+//        val upperBound = tuningFrequencies.getNoteFrequency(toneIndexMax + 0.5f * plotRangeInToneIndices)
+//
+//        // only update after something changed
+//        if (lowerBound != plotRange[0] || upperBound != plotRange[1]) {
+//            plotRange[0] = lowerBound
+//            plotRange[1] = upperBound
+//            plotRangeLiveData.value = plotRange
+//        }
+//    }
 
     private fun checkIfValueIsWithinAllowedRange(value: Float, previousValue: Float) : Boolean {
         val toneIndex = tuningFrequencies.getToneIndex(previousValue)

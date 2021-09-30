@@ -1376,6 +1376,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
         var touchDrawableId = R.drawable.ic_manual
         var touchManualControlDrawableWidth = 10f
+        var touchDrawableBackgroundTint = Color.WHITE
 
         attrs?.let {
             val ta = context.obtainStyledAttributes(attrs, R.styleable.PlotView, defStyleAttr, R.style.PlotViewStyle)
@@ -1441,6 +1442,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
             touchDrawableId = ta.getResourceId(R.styleable.PlotView_touchDrawable, touchDrawableId)
             touchManualControlDrawableWidth = ta.getDimension(R.styleable.PlotView_touchDrawableWidth, touchManualControlDrawableWidth)
+            touchDrawableBackgroundTint = ta.getColor(R.styleable.PlotView_touchDrawableBackgroundTint, touchDrawableBackgroundTint)
             ta.recycle()
         }
 
@@ -1455,7 +1457,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         framePaint.strokeWidth = frameStrokeWidth
         framePaint.style = Paint.Style.STROKE
 
-        touchManualControlDrawable = TouchControlDrawable(context, frameColorOnTouch, touchDrawableId)
+        touchManualControlDrawable = TouchControlDrawable(context, frameColorOnTouch, touchDrawableBackgroundTint, touchDrawableId)
         touchManualControlDrawable.setSize(width = touchManualControlDrawableWidth)
 
         xRange = PlotRange(allowTouchX).apply {

@@ -77,8 +77,17 @@ class TunerFragmentSimple : Fragment() {
         pitchPlot?.yRange(400f, 500f, PlotView.NO_REDRAW)
 
         stringView?.stringClickedListener = StringView.StringClickedListener { toneIndex ->
-            if (toneIndex != StringView.NO_ACTIVE_TONE_INDEX)
-                stringView?.activeToneIndex = toneIndex
+            if (toneIndex == stringView?.activeToneIndex && viewModel.isTargetNoteUserDefined.value == true) {
+                viewModel.setTargetNote(TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
+                stringView?.setAutomaticControl()
+            } else if (toneIndex == StringView.NO_ACTIVE_TONE_INDEX) {
+                stringView?.setAutomaticControl()
+                //viewModel.setTargetNote(TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
+            } else {
+                viewModel.setTargetNote(toneIndex)
+            }
+//            if (toneIndex != StringView.NO_ACTIVE_TONE_INDEX)
+//                stringView?.activeToneIndex = toneIndex
         }
         //val stringNames = arrayOf<CharSequence>("A", "BBBBB", "CC", "D", "E", "F", "Q", "R")
 //        stringView?.setStrings(intArrayOf(1,2,3,4,5,6,3,4,3,4)) {
@@ -87,6 +96,10 @@ class TunerFragmentSimple : Fragment() {
 //        viewModel.standardDeviation.observe(viewLifecycleOwner) { standardDeviation ->
 //            volumeMeter?.volume = log10(max(1e-12f, standardDeviation))
 //        }
+        viewModel.isTargetNoteUserDefined.observe(viewLifecycleOwner) { isTargetNoteUserDefined ->
+            stringView?.showAnchor = isTargetNoteUserDefined
+        }
+
         viewModel.tuningFrequencies.observe(viewLifecycleOwner) { tuningFrequencies ->
             val noteFrequencies = FloatArray(100) { tuningFrequencies.getNoteFrequency(it - 50) }
             pitchPlot?.setYTicks(noteFrequencies, false) { _, f -> tuningFrequencies.getNoteName(f) }
@@ -101,7 +114,12 @@ class TunerFragmentSimple : Fragment() {
             pitchPlot?.xRange(0f, 1.08f * it.toFloat(), PlotView.NO_REDRAW)
         }
 
-        viewModel.pitchHistory.frequencyPlotRangeAveraged.observe(viewLifecycleOwner) {
+//        viewModel.pitchHistory.frequencyPlotRangeAveraged.observe(viewLifecycleOwner) {
+////            Log.v("TestRecordFlow", "TunerFragment.plotRange: ${it[0]} -- ${it[1]}")
+//            pitchPlot?.yRange(it[0], it[1], 600)
+//        }
+
+        viewModel.frequencyPlotRange.observe(viewLifecycleOwner) {
 //            Log.v("TestRecordFlow", "TunerFragment.plotRange: ${it[0]} -- ${it[1]}")
             pitchPlot?.yRange(it[0], it[1], 600)
         }

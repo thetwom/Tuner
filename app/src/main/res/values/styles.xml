@@ -126,6 +126,7 @@
         <attr name="enableTouchY" format="boolean"/>
         <attr name="touchDrawable" format="reference"/>
         <attr name="touchDrawableWidth" format="dimension"/>
+        <attr name="touchDrawableBackgroundTint" format="color"/>
     </declare-styleable>
 
     <style name="PlotViewStyle">
@@ -176,6 +177,7 @@
         <item name="enableTouchY">true</item>
         <item name="touchDrawable">@drawable/ic_manual</item>
         <item name="touchDrawableWidth">25dp</item>
+        <item name="touchDrawableBackgroundTint">?attr/colorOnError</item>
     </style>
 
     <declare-styleable name="StringView">
@@ -193,6 +195,11 @@
         <attr name="frameStrokeWidth"/>
         <attr name="touchDrawable"/>
         <attr name="touchDrawableWidth"/>
+        <attr name="touchDrawableBackgroundTint"/>
+        <attr name="anchorDrawable" format="reference"/>
+        <attr name="anchorDrawableWidth" format="dimension"/>
+        <attr name="anchorDrawableBackgroundTint" format="color"/>
+
     </declare-styleable>
 
     <style name="StringViewStyle">
@@ -210,6 +217,10 @@
         <item name="frameStrokeWidth">2dp</item>
         <item name="touchDrawable">@drawable/ic_manual</item>
         <item name="touchDrawableWidth">25dp</item>
+        <item name="touchDrawableBackgroundTint">?attr/colorOnError</item>
+        <item name="anchorDrawable">@drawable/ic_anchor_inv</item>
+        <item name="anchorDrawableWidth">25dp</item>
+        <item name="anchorDrawableBackgroundTint">?attr/colorOnSecondary</item>
     </style>
 
     <declare-styleable name="VolumeMeter">
@@ -222,6 +233,7 @@
             <enum name="horizontal" value="0"/>
             <enum name="vertical" value="1"/>
         </attr>
+
     </declare-styleable>
 
     <style name="VolumeMeterStyle">

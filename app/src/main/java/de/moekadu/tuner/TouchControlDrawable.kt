@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.*
 import androidx.core.content.ContextCompat
 
-class TouchControlDrawable(context: Context, tint: Int, drawableId: Int) {
+class TouchControlDrawable(context: Context, tint: Int, backgroundTint: Int?, drawableId: Int) {
     private val drawable = ContextCompat.getDrawable(context, drawableId)?.mutate()
 
     private val aspectRatio = (drawable?.intrinsicHeight?.toFloat() ?: 1f) / (drawable?.intrinsicWidth?.toFloat() ?: 1f)
@@ -14,6 +14,12 @@ class TouchControlDrawable(context: Context, tint: Int, drawableId: Int) {
     private val paint = Paint().apply {
         colorFilter = PorterDuffColorFilter(tint, PorterDuff.Mode.SRC_IN)
     }
+
+    private val backgroundPaint = Paint().apply {
+        style = Paint.Style.FILL
+        color = backgroundTint ?: Color.BLACK
+    }
+    private val drawBackground = backgroundTint != null
 
     private var bitmap: Bitmap? = null
 
@@ -50,6 +56,8 @@ class TouchControlDrawable(context: Context, tint: Int, drawableId: Int) {
             }
 
             bitmap?.let {
+                if (drawBackground)
+                    canvas?.drawRect(x+1, y+1, x+width-1, y+height-1, backgroundPaint)
                 canvas?.drawBitmap(it, x, y, paint)
             }
         }

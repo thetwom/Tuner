@@ -39,7 +39,8 @@ class TargetNote {
     var frequencyLowerTolerance = 0f
         private set
 
-    /// Return the tuning status of a given frequency.
+    /// Return the tuning status of a
+    // given frequency.
     /**
      * @param currentFrequency Current frequency which should be rated.
      * @return Tuning status of the given frequency.

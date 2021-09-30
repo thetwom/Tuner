@@ -33,7 +33,7 @@ import kotlin.math.floor
 import kotlin.math.max
 
 class TunerFragment : Fragment() {
-
+    /// TODO: when this view model starts, set target note detection to automatic!!!
     private val viewModel: TunerViewModel by viewModels() // ? = null
 
     private var spectrumPlot: PlotView? = null
@@ -165,7 +165,8 @@ class TunerFragment : Fragment() {
             pitchPlot?.xRange(0f, 1.08f * it.toFloat(), PlotView.NO_REDRAW)
         }
 
-        viewModel.pitchHistory.frequencyPlotRangeAveraged.observe(viewLifecycleOwner) {
+        //viewModel.pitchHistory.frequencyPlotRangeAveraged.observe(viewLifecycleOwner) {
+        viewModel.frequencyPlotRange.observe(viewLifecycleOwner) {
 //            Log.v("TestRecordFlow", "TunerFragment.plotRange: ${it[0]} -- ${it[1]}")
             pitchPlot?.yRange(it[0], it[1], 600)
         }

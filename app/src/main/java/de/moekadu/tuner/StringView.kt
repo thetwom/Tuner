@@ -197,10 +197,24 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var automaticScrollToHighlight = true
 
     private var touchManualControlDrawable: TouchControlDrawable
+    private var anchorDrawable: TouchControlDrawable
+    var showAnchor = false
+        set(value) {
+            if (field != value) {
+                field = value
+                invalidate()
+            }
+        }
+
 
     init {
         var touchDrawableId = R.drawable.ic_manual
         var touchManualControlDrawableWidth = 10f
+        var touchDrawableBackgoundTint = Color.WHITE
+
+        var anchorDrawableId = R.drawable.ic_anchor_inv
+        var anchorDrawableWidth = 10f
+        var anchorDrawableBackgoundTint = Color.WHITE
 
         attrs?.let {
             val ta = context.obtainStyledAttributes(
@@ -234,11 +248,19 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
             touchDrawableId = ta.getResourceId(R.styleable.StringView_touchDrawable, touchDrawableId)
             touchManualControlDrawableWidth = ta.getDimension(R.styleable.StringView_touchDrawableWidth, touchManualControlDrawableWidth)
+            touchDrawableBackgoundTint = ta.getColor(R.styleable.StringView_touchDrawableBackgroundTint, touchDrawableBackgoundTint)
+
+            anchorDrawableId = ta.getResourceId(R.styleable.StringView_anchorDrawable, anchorDrawableId)
+            anchorDrawableWidth = ta.getDimension(R.styleable.StringView_anchorDrawableWidth, anchorDrawableWidth)
+            anchorDrawableBackgoundTint = ta.getColor(R.styleable.StringView_anchorDrawableBackgroundTint, anchorDrawableBackgoundTint)
             ta.recycle()
         }
 
-        touchManualControlDrawable = TouchControlDrawable(context, frameColorOnTouch, touchDrawableId)
+        touchManualControlDrawable = TouchControlDrawable(context, frameColorOnTouch, touchDrawableBackgoundTint, touchDrawableId)
         touchManualControlDrawable.setSize(width = touchManualControlDrawableWidth)
+
+        anchorDrawable = TouchControlDrawable(context, stringPaintHighlight.color, anchorDrawableBackgoundTint, anchorDrawableId)
+        anchorDrawable.setSize(width = anchorDrawableWidth)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -273,20 +295,35 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             return
         canvas.drawRect(paddingLeft.toFloat(), paddingTop.toFloat(),
             width - paddingRight.toFloat(), height - paddingBottom.toFloat(), framePaint)
-        canvas.clipRect(paddingLeft, paddingTop, width - paddingRight, height - paddingBottom)
+        //canvas.save()
+        //canvas.clipRect(paddingLeft, paddingTop, width - paddingRight, height - paddingBottom)
+        canvas.clipRect(0, paddingTop, width, height - paddingBottom)
+        var anchorYPos = NO_ANCHOR
 
         for (i in stringStartIndex .. stringEndIndex) {
             val xPos = getStringDrawingPositionX(i)
             val yPos = getStringDrawingPositionY(i)
             drawString(xPos, yPos, strings[i], strings[i].toneIndex == activeToneIndex, canvas)
+
+            if (strings[i].toneIndex == activeToneIndex)
+                anchorYPos = yPos
         }
 
         if (!automaticScrollToHighlight) {
             touchManualControlDrawable.drawToCanvas(
-                width - paddingRight.toFloat() + 1,
-                paddingTop.toFloat() - 1,
+                width - paddingRight.toFloat() - 0.5f * framePaint.strokeWidth + 1,
+                paddingTop.toFloat() + 0.5f * framePaint.strokeWidth - 1,
                 MarkAnchor.NorthEast,
                 canvas
+            )
+        }
+
+        //canvas.restore()
+        if (showAnchor && anchorYPos != NO_ANCHOR) {
+            anchorDrawable.drawToCanvas(
+                width - paddingRight.toFloat() - 0.5f * framePaint.strokeWidth,
+                anchorYPos,
+                MarkAnchor.West, canvas
             )
         }
     }
@@ -337,6 +374,9 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun setManualControl() {
+        // no manual control if no scrolling is possible
+        if (computeOffsetMax() == computeOffsetMin())
+            return
         automaticScrollToHighlight = false
         framePaint.color = frameColorOnTouch
         invalidate()
@@ -425,5 +465,6 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     companion object {
         const val NO_ACTIVE_TONE_INDEX = Int.MAX_VALUE
+        const val NO_ANCHOR = Float.MAX_VALUE
     }
 }
