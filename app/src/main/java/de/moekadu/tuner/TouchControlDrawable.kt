@@ -8,8 +8,10 @@ class TouchControlDrawable(context: Context, tint: Int, backgroundTint: Int?, dr
     private val drawable = ContextCompat.getDrawable(context, drawableId)?.mutate()
 
     private val aspectRatio = (drawable?.intrinsicHeight?.toFloat() ?: 1f) / (drawable?.intrinsicWidth?.toFloat() ?: 1f)
-    private var width = 0f
-    private var height = 0f
+    var width = 0f
+        private set
+    var height = 0f
+        private set
 
     private val paint = Paint().apply {
         colorFilter = PorterDuffColorFilter(tint, PorterDuff.Mode.SRC_IN)

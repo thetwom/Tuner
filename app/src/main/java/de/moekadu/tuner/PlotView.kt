@@ -792,9 +792,13 @@ private class PlotMarks(transformation: PlotTransformation,
 
     private val oldBoundingBox = RectF(0f, 0f, 0f, 0f)
     val boundingBox = RectF(0f, 0f, 0f, 0f)
+
+    private var maxLabelWidth = 0f
+    private var maxLabelHeight = 0f
     private var styleIndex = 0
     private var backgroundSizeType = MarkLabelBackgroundSize.FitIndividually
-    private var placeLabelsOutsideBoundsIfPossible: Boolean = true
+    var placeLabelsOutsideBoundsIfPossible: Boolean = true
+        private set
 
     fun setMarks(xPositions: FloatArray?, yPositions: FloatArray?,
                  styleIndex: Int = 0, anchors: Array<MarkAnchor>?,
@@ -851,24 +855,24 @@ private class PlotMarks(transformation: PlotTransformation,
             boundingBox.bottom = BOUND_UNDEFINED
 
         buildMarkLabels()
+        maxLabelWidth = marks.maxOf { computeLabelBackgroundWidth(it.layout) }
+        maxLabelHeight = marks.maxOf { it.layout?.height?.toFloat() ?: 0f }
+
         labelWidth = when (backgroundSizeType) {
-            MarkLabelBackgroundSize.FitLargest ->
-                marks.maxOf { computeLabelBackgroundWidth(it.layout) }
-            MarkLabelBackgroundSize.FitIndividually ->
-                null
+            MarkLabelBackgroundSize.FitLargest -> maxLabelWidth
+            MarkLabelBackgroundSize.FitIndividually -> null
         }
         labelHeight = when (backgroundSizeType) {
-            MarkLabelBackgroundSize.FitLargest ->
-                marks.maxOf { it.layout?.height?.toFloat() ?: 0f }
-            MarkLabelBackgroundSize.FitIndividually ->
-                null
+            MarkLabelBackgroundSize.FitLargest -> maxLabelHeight
+            MarkLabelBackgroundSize.FitIndividually -> null
         }
 
         if (numMarks > 0 || numMarks != numMarksBefore)
             transformAndCallListener(transformation, !boundingBox.contentEquals(oldBoundingBox), suppressInvalidate)
 
         if (xPositions == null && yPositions != null) {
-            marks.sortBy { it.yPositionRaw }
+            // descending sort since later on we do a binary search by yPositionTransformed, which is inverse
+            marks.sortByDescending { it.yPositionRaw }
             hasOnlyXLineMarks = true
             hasOnlyYLineMarks = false
         } else if (xPositions != null && yPositions == null) {
@@ -884,7 +888,7 @@ private class PlotMarks(transformation: PlotTransformation,
     }
 
     fun drawToCanvas(canvas: Canvas?) {
-        val rawBounds = transformation?.rawPlotBounds ?: return
+//        val rawBounds = transformation?.rawPlotBounds ?: return
         val viewBounds = transformation?.viewPlotBounds ?: return
 
         if (marks.size == 0)
@@ -894,11 +898,15 @@ private class PlotMarks(transformation: PlotTransformation,
         var endIndex = marks.size
 
         if (hasOnlyYLineMarks) {
-            startIndex = marks.binarySearchBy(rawBounds.left) {it.xPositionRaw}
-            endIndex = marks.binarySearchBy(rawBounds.right) {it.xPositionRaw}
+            if (marks.size > 1)
+                require(marks[1].xPositionTransformed > marks[0].xPositionTransformed)
+            startIndex = marks.binarySearchBy(viewBounds.left - maxLabelWidth) {it.xPositionTransformed}
+            endIndex = marks.binarySearchBy(viewBounds.right + maxLabelWidth) {it.xPositionTransformed}
         } else if (hasOnlyXLineMarks) {
-            startIndex = marks.binarySearchBy(rawBounds.top) {it.yPositionRaw}
-            endIndex = marks.binarySearchBy(rawBounds.bottom) {it.yPositionRaw}
+            if (marks.size > 1)
+                require(marks[1].yPositionTransformed > marks[0].yPositionTransformed)
+            startIndex = marks.binarySearchBy(viewBounds.top - maxLabelHeight) {it.yPositionTransformed}
+            endIndex = marks.binarySearchBy(viewBounds.bottom + maxLabelHeight) {it.yPositionTransformed}
         }
 
         if(startIndex < 0)
@@ -909,84 +917,86 @@ private class PlotMarks(transformation: PlotTransformation,
         for (i in startIndex until endIndex) {
             val mark = marks[i]
             // only plot if mark is within bounds
-            if (isMarkInBoundingBox(mark)) {
-                var x = mark.xPositionTransformed
-                var y = mark.yPositionTransformed
-                // horizontal line
+            var x = mark.xPositionTransformed
+            var y = mark.yPositionTransformed
+            // horizontal line
+            if (x == DRAW_LINE && y > viewBounds.top && y < viewBounds.bottom) {
+                path.rewind()
+                path.moveTo(viewBounds.left, y)
+                path.lineTo(viewBounds.right, y)
+                paint.style = Paint.Style.STROKE
+                canvas?.drawPath(path, paint)
+            }
+            // vertical line
+            else if (y == DRAW_LINE && x > viewBounds.left && x < viewBounds.right) {
+                path.rewind()
+                path.moveTo(x, viewBounds.bottom)
+                path.lineTo(x, viewBounds.top)
+                paint.style = Paint.Style.STROKE
+                canvas?.drawPath(path, paint)
+            }
+
+            mark.layout?.let { layout ->
+                val backgroundWidth = labelWidth ?: computeLabelBackgroundWidth(mark.layout)
+                val backgroundHeight = labelHeight ?: layout.height.toFloat()
+
+                // override mark position based on anchor
                 if (x == DRAW_LINE) {
-                    path.rewind()
-                    path.moveTo(viewBounds.left, y)
-                    path.lineTo(viewBounds.right, y)
-                    paint.style = Paint.Style.STROKE
-                    canvas?.drawPath(path, paint)
-                }
-                // vertical line
-                else if (y == DRAW_LINE) {
-                    path.rewind()
-                    path.moveTo(x, viewBounds.bottom)
-                    path.lineTo(x, viewBounds.top)
-                    paint.style = Paint.Style.STROKE
-                    canvas?.drawPath(path, paint)
-                }
-
-                mark.layout?.let { layout ->
-                    val backgroundWidth = labelWidth ?: computeLabelBackgroundWidth(mark.layout)
-                    val backgroundHeight = labelHeight ?: layout.height.toFloat()
-
-                    // override mark position based on anchor
-                    if (x == DRAW_LINE) {
-                        x = if (placeLabelsOutsideBoundsIfPossible) {
-                            when (mark.anchor) {
-                                MarkAnchor.Center, MarkAnchor.North, MarkAnchor.South -> viewBounds.centerX()
-                                MarkAnchor.West, MarkAnchor.NorthWest, MarkAnchor.SouthWest -> viewBounds.left - backgroundWidth / 2
-                                MarkAnchor.East, MarkAnchor.NorthEast, MarkAnchor.SouthEast -> viewBounds.right + backgroundWidth / 2
-                            }
-                        } else {
-                            when (mark.anchor) {
-                                MarkAnchor.Center, MarkAnchor.North, MarkAnchor.South -> viewBounds.centerX()
-                                MarkAnchor.West, MarkAnchor.NorthWest, MarkAnchor.SouthWest -> viewBounds.left + backgroundWidth / 2
-                                MarkAnchor.East, MarkAnchor.NorthEast, MarkAnchor.SouthEast -> viewBounds.right - backgroundWidth / 2
-                            }
-                        }
-                        y = when (mark.anchor) {
-                            MarkAnchor.Center, MarkAnchor.West, MarkAnchor.East -> y
-                            MarkAnchor.South, MarkAnchor.SouthWest, MarkAnchor.SouthEast -> y - backgroundHeight / 2
-                            MarkAnchor.North, MarkAnchor.NorthWest, MarkAnchor.NorthEast -> y + backgroundHeight / 2
-                        }
-                    } else if (y == DRAW_LINE) {
-                        x = when (mark.anchor) {
-                            MarkAnchor.Center, MarkAnchor.North, MarkAnchor.South -> x
-                            MarkAnchor.West, MarkAnchor.NorthWest, MarkAnchor.SouthWest -> x + backgroundWidth / 2
-                            MarkAnchor.East, MarkAnchor.NorthEast, MarkAnchor.SouthEast -> x - backgroundWidth / 2
-                        }
-                        y = if (placeLabelsOutsideBoundsIfPossible) {
-                            when (mark.anchor) {
-                                MarkAnchor.Center, MarkAnchor.West, MarkAnchor.East -> viewBounds.centerY()
-                                MarkAnchor.South, MarkAnchor.SouthWest, MarkAnchor.SouthEast -> viewBounds.bottom + backgroundHeight / 2
-                                MarkAnchor.North, MarkAnchor.NorthWest, MarkAnchor.NorthEast -> viewBounds.top - backgroundHeight / 2
-                            }
-                        } else {
-                             when (mark.anchor) {
-                                MarkAnchor.Center, MarkAnchor.West, MarkAnchor.East -> viewBounds.centerY()
-                                MarkAnchor.South, MarkAnchor.SouthWest, MarkAnchor.SouthEast -> viewBounds.bottom - backgroundHeight / 2
-                                MarkAnchor.North, MarkAnchor.NorthWest, MarkAnchor.NorthEast -> viewBounds.top + backgroundHeight / 2
-                            }
-                        }
-                    } else if (x != DRAW_LINE && y != DRAW_LINE) {
-                        x = when (mark.anchor) {
-                            MarkAnchor.Center, MarkAnchor.North, MarkAnchor.South -> x
-                            MarkAnchor.West, MarkAnchor.NorthWest, MarkAnchor.SouthWest -> x + backgroundWidth / 2
-                            MarkAnchor.East, MarkAnchor.NorthEast, MarkAnchor.SouthEast -> x - backgroundWidth / 2
-                        }
-                        y = when (mark.anchor) {
-                            MarkAnchor.Center, MarkAnchor.West, MarkAnchor.East -> y
-                            MarkAnchor.South, MarkAnchor.SouthWest, MarkAnchor.SouthEast -> y - backgroundHeight / 2
-                            MarkAnchor.North, MarkAnchor.NorthWest, MarkAnchor.NorthEast -> y + backgroundHeight / 2
+                    x = if (placeLabelsOutsideBoundsIfPossible) {
+                        when (mark.anchor) {
+                            MarkAnchor.Center, MarkAnchor.North, MarkAnchor.South -> viewBounds.centerX()
+                            MarkAnchor.West, MarkAnchor.NorthWest, MarkAnchor.SouthWest -> viewBounds.left - backgroundWidth / 2
+                            MarkAnchor.East, MarkAnchor.NorthEast, MarkAnchor.SouthEast -> viewBounds.right + backgroundWidth / 2
                         }
                     } else {
-                        throw RuntimeException("Invalid mark position")
+                        when (mark.anchor) {
+                            MarkAnchor.Center, MarkAnchor.North, MarkAnchor.South -> viewBounds.centerX()
+                            MarkAnchor.West, MarkAnchor.NorthWest, MarkAnchor.SouthWest -> viewBounds.left + backgroundWidth / 2
+                            MarkAnchor.East, MarkAnchor.NorthEast, MarkAnchor.SouthEast -> viewBounds.right - backgroundWidth / 2
+                        }
                     }
+                    y = when (mark.anchor) {
+                        MarkAnchor.Center, MarkAnchor.West, MarkAnchor.East -> y
+                        MarkAnchor.South, MarkAnchor.SouthWest, MarkAnchor.SouthEast -> y - backgroundHeight / 2
+                        MarkAnchor.North, MarkAnchor.NorthWest, MarkAnchor.NorthEast -> y + backgroundHeight / 2
+                    }
+                } else if (y == DRAW_LINE) {
+                    x = when (mark.anchor) {
+                        MarkAnchor.Center, MarkAnchor.North, MarkAnchor.South -> x
+                        MarkAnchor.West, MarkAnchor.NorthWest, MarkAnchor.SouthWest -> x + backgroundWidth / 2
+                        MarkAnchor.East, MarkAnchor.NorthEast, MarkAnchor.SouthEast -> x - backgroundWidth / 2
+                    }
+                    y = if (placeLabelsOutsideBoundsIfPossible) {
+                        when (mark.anchor) {
+                            MarkAnchor.Center, MarkAnchor.West, MarkAnchor.East -> viewBounds.centerY()
+                            MarkAnchor.South, MarkAnchor.SouthWest, MarkAnchor.SouthEast -> viewBounds.bottom + backgroundHeight / 2
+                            MarkAnchor.North, MarkAnchor.NorthWest, MarkAnchor.NorthEast -> viewBounds.top - backgroundHeight / 2
+                        }
+                    } else {
+                        when (mark.anchor) {
+                            MarkAnchor.Center, MarkAnchor.West, MarkAnchor.East -> viewBounds.centerY()
+                            MarkAnchor.South, MarkAnchor.SouthWest, MarkAnchor.SouthEast -> viewBounds.bottom - backgroundHeight / 2
+                            MarkAnchor.North, MarkAnchor.NorthWest, MarkAnchor.NorthEast -> viewBounds.top + backgroundHeight / 2
+                        }
+                    }
+                } else if (x != DRAW_LINE && y != DRAW_LINE) {
+                    x = when (mark.anchor) {
+                        MarkAnchor.Center, MarkAnchor.North, MarkAnchor.South -> x
+                        MarkAnchor.West, MarkAnchor.NorthWest, MarkAnchor.SouthWest -> x + backgroundWidth / 2
+                        MarkAnchor.East, MarkAnchor.NorthEast, MarkAnchor.SouthEast -> x - backgroundWidth / 2
+                    }
+                    y = when (mark.anchor) {
+                        MarkAnchor.Center, MarkAnchor.West, MarkAnchor.East -> y
+                        MarkAnchor.South, MarkAnchor.SouthWest, MarkAnchor.SouthEast -> y - backgroundHeight / 2
+                        MarkAnchor.North, MarkAnchor.NorthWest, MarkAnchor.NorthEast -> y + backgroundHeight / 2
+                    }
+                } else {
+                    throw RuntimeException("Invalid mark position")
+                }
 
+//                if (x + 0.5f * backgroundWidth > markLeft && x - 0.5f * backgroundWidth < markRight
+//                    && y + 0.5f * backgroundHeight > markTop && y - 0.5f * backgroundHeight < markBottom) {
+                if (isMarkInBoundingBox(mark, x, y, backgroundWidth, backgroundHeight)) {
                     if (!disableLabelBackground) {
                         paint.style = Paint.Style.FILL
                         canvas?.drawRect(
@@ -1037,13 +1047,26 @@ private class PlotMarks(transformation: PlotTransformation,
         }
     }
 
-    private fun isMarkInBoundingBox(mark: Mark): Boolean {
-        val bb = transformation?.rawPlotBounds ?: return false
-        val x = mark.xPositionRaw
-        val y = mark.yPositionRaw
-        return (x == DRAW_LINE && y <= bb.bottom && y >= bb.top) ||
-                (y == DRAW_LINE && x >= bb.left && x <= bb.right) ||
-                (x != DRAW_LINE && y != DRAW_LINE && y >= bb.top && y <= bb.bottom && x >= bb.left && x <= bb.right)
+    private fun isMarkInBoundingBox(mark: Mark, markCenterX: Float, markCenterY: Float, markWidth: Float, markHeight: Float): Boolean {
+        val bb = transformation?.viewPlotBounds ?: return false
+        val xMin: Float
+        val xMax: Float
+        val yMin: Float
+        val yMax: Float
+        if (placeLabelsOutsideBoundsIfPossible) {
+            xMin = mark.xPositionTransformed
+            xMax = mark.xPositionTransformed
+            yMin = mark.yPositionTransformed
+            yMax = mark.yPositionTransformed
+        } else {
+            xMin = markCenterX - 0.5f * markWidth
+            xMax = markCenterX + 0.5f * markWidth
+            yMin = markCenterY - 0.5f * markHeight
+            yMax = markCenterY + 0.5f * markHeight
+        }
+        return (mark.xPositionRaw == DRAW_LINE && yMin <= bb.bottom && yMax >= bb.top) ||
+                (mark.yPositionRaw == DRAW_LINE && xMax >= bb.left && xMin <= bb.right) ||
+                (mark.xPositionRaw != DRAW_LINE && mark.yPositionRaw != DRAW_LINE && yMax >= bb.top && yMin <= bb.bottom && xMax >= bb.left && xMin <= bb.right)
     }
 
     private fun drawStaticLayout(canvas: Canvas?, layout: StaticLayout, xCenter: Float, yCenter: Float) {
@@ -1536,6 +1559,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
         for (p in plotPoints.values)
             p.drawToCanvas(canvas)
+
+        markGroups.filterValues { !it.placeLabelsOutsideBoundsIfPossible }.forEach {
+            it.value.drawToCanvas(canvas)
+        }
         canvas?.restore()
 
         framePaint.color = if (xRange.isTouchControlled || yRange.isTouchControlled)
@@ -1546,14 +1573,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         canvas?.drawRect(left + 0.5f * frameStrokeWidth, top + 0.5f * frameStrokeWidth,
             right - 0.5f * frameStrokeWidth, bottom - 0.5f * frameStrokeWidth, framePaint)
 
-        for (m in markGroups.values)
-            m.drawToCanvas(canvas)
-
         title?.let {
             canvas?.drawText(it,
                 0.5f * width,
                 paddingTop + titleSize,
                 titlePaint)
+        }
+
+        markGroups.filterValues { it.placeLabelsOutsideBoundsIfPossible }.forEach {
+            it.value.drawToCanvas(canvas)
         }
 
         if (xRange.isTouchControlled || yRange.isTouchControlled) {

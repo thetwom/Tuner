@@ -90,12 +90,15 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         set(value) {
             if (value != field) {
                 field = value
+                updateActiveStringIndex(value)
                 if (field != NO_ACTIVE_TONE_INDEX && automaticScrollToHighlight)
                     scrollToString(value, 200L)
                 else
                     invalidate()
             }
         }
+
+    private var activeStringIndex: Int = NO_ACTIVE_TONE_INDEX
 
     private var yOffset = 0f
 
@@ -319,7 +322,18 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
 
         //canvas.restore()
-        if (showAnchor && anchorYPos != NO_ANCHOR) {
+        if (showAnchor) {
+            val minYPos = paddingTop + 0.5f * anchorDrawable.height - 0.5f * framePaint.strokeWidth
+            val maxYPos = height - paddingBottom - 0.5f * anchorDrawable.height + 0.5f * framePaint.strokeWidth
+
+            if (anchorYPos == NO_ANCHOR){
+                anchorYPos = if (activeStringIndex < stringStartIndex)
+                    minYPos
+                else
+                    maxYPos
+            }
+            anchorYPos = min(anchorYPos, maxYPos)
+            anchorYPos = max(anchorYPos, minYPos)
             anchorDrawable.drawToCanvas(
                 width - paddingRight.toFloat() - 0.5f * framePaint.strokeWidth,
                 anchorYPos,
@@ -342,6 +356,8 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
         this.labelWidth = labelWidth.toFloat() + 2 * labelBackgroundPadding
         this.labelHeight = labelHeight.toFloat() + 2 * labelBackgroundPadding
+
+        updateActiveStringIndex(activeToneIndex)
 
         requestLayout()
         // TODO: in theory we should call updateStringPositionVariables( .... )
@@ -388,6 +404,13 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         if (activeToneIndex != NO_ACTIVE_TONE_INDEX)
             scrollToString(activeToneIndex, 200L)
         invalidate()
+    }
+
+    private fun updateActiveStringIndex(toneIndex: Int) {
+        activeStringIndex = if (toneIndex == NO_ACTIVE_TONE_INDEX)
+            -1
+        else
+            strings.indexOfFirst { it.toneIndex == toneIndex }
     }
 
     private fun scrollDistance(distance: Float) {
