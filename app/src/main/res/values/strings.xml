@@ -56,4 +56,7 @@
     <string name="scientific_mode">Scientific mode</string>
     <string name="tolerance_in_cents">Tolerance</string>
     <string name="tolerance_summary" translatable="false">&#177;%d&#x200A;&#162;</string>
+    <string name="expert">Expert</string>
+    <string name="basic">Basic</string>
+    <string name="others">Others</string>
 </resources>

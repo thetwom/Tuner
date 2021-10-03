@@ -2,6 +2,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory android:title="@string/basic">
     <ListPreference
         app:key="appearance"
         app:title="@string/appearance"
@@ -39,7 +40,19 @@
          app:icon="@drawable/ic_tolerance"
          />
 
-    <SeekBarPreference
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/expert">
+
+        <SwitchPreferenceCompat
+            app:key="scientific"
+            app:title="@string/scientific_mode"
+            app:defaultValue="false"
+            android:icon="@drawable/ic_baseline_developer_board"
+            />
+
+
+        <SeekBarPreference
         android:key="num_moving_average"
         android:title="@string/num_moving_average"
         app:min="1"
@@ -119,6 +132,9 @@
         app:singleLineTitle="false"
         />
 
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/others">
       <Preference
         app:key="setdefault"
         app:title="@string/reset_all_settings"
@@ -130,4 +146,5 @@
         app:title="@string/about"
         app:icon="@drawable/ic_info"
         />
+    </PreferenceCategory>
 </PreferenceScreen>

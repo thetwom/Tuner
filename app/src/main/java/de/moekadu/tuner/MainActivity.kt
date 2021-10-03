@@ -32,9 +32,9 @@ import androidx.preference.PreferenceManager
 class MainActivity : AppCompatActivity() {
     // TODO: Allow setting minimum and maximum allowed note
     // ... more settings possible?
-    // TODO: show up/down arrows for tune
 
-    private var scientificMode = false
+    enum class TunerMode {Simple, Scientific, Unknown}
+    private var scientificMode = TunerMode.Unknown
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
             "light" -> AppCompatDelegate.MODE_NIGHT_NO
             else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
         }
-        scientificMode = sharedPreferences.getBoolean("scientific_mode", false)
+
         AppCompatDelegate.setDefaultNightMode(nightMode)
 
         val screenOn = sharedPreferences.getBoolean("screenon", false)
@@ -58,22 +58,14 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar))
 
-        if (savedInstanceState == null) {
-            if (scientificMode) {
-                supportFragmentManager.commit {
-                    setReorderingAllowed(true)
-                    replace<TunerFragment>(R.id.main_content)
-                }
-            } else {
-                supportFragmentManager.commit {
-                    setReorderingAllowed(true)
-                    replace<TunerFragmentSimple>(R.id.main_content)
-                }
-            }
-        }
-
+        loadSimpleOrScientificFragment()
         setDisplayHomeButton()
-        supportFragmentManager.addOnBackStackChangedListener { setDisplayHomeButton() }
+        
+        supportFragmentManager.addOnBackStackChangedListener {
+            setDisplayHomeButton()
+            if (supportFragmentManager.backStackEntryCount == 0)
+                loadSimpleOrScientificFragment()
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -86,11 +78,6 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        val scientificIcon = menu?.findItem(R.id.scientific_mode)
-        scientificIcon?.setIcon(if (scientificMode) R.drawable.ic_developer_on else R.drawable.ic_developer_off)
-        return super.onPrepareOptionsMenu(menu)
-    }
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.action_settings -> {
             // User chose the "Settings" item, show the app settings UI...
@@ -99,10 +86,6 @@ class MainActivity : AppCompatActivity() {
                 replace<SettingsFragment>(R.id.main_content)
                 addToBackStack(null)
             }
-            true
-        }
-        R.id.scientific_mode -> {
-            toggleScientificMode()
             true
         }
         else -> {
@@ -117,25 +100,32 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(showDisplayHomeButton)
     }
 
-    private fun toggleScientificMode() {
-        scientificMode = !scientificMode
+    private fun loadSimpleOrScientificFragment() {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        sharedPreferences.edit().putBoolean("scientific_mode", scientificMode).apply()
+        val scientificModeFromPref = if (sharedPreferences.getBoolean("scientific", false))
+            TunerMode.Scientific
+        else
+            TunerMode.Simple
 
-        if (supportFragmentManager.backStackEntryCount > 0)
-            supportFragmentManager.popBackStack()
+        if (scientificModeFromPref != scientificMode) {
+            when (scientificModeFromPref) {
+                TunerMode.Scientific -> {
+                    supportFragmentManager.commit {
+                        setReorderingAllowed(true)
+                        replace<TunerFragment>(R.id.main_content)
+                    }
+                }
+                TunerMode.Simple -> {
+                    supportFragmentManager.commit {
+                        setReorderingAllowed(true)
+                        replace<TunerFragmentSimple>(R.id.main_content)
+                    }
+                }
+                TunerMode.Unknown -> {
 
-        if (scientificMode) {
-            supportFragmentManager.commit {
-                setReorderingAllowed(true)
-                replace<TunerFragment>(R.id.main_content)
+                }
             }
-        } else {
-            supportFragmentManager.commit {
-                setReorderingAllowed(true)
-                replace<TunerFragmentSimple>(R.id.main_content)
-            }
+            scientificMode = scientificModeFromPref
         }
-        invalidateOptionsMenu()
     }
 }

@@ -855,8 +855,8 @@ private class PlotMarks(transformation: PlotTransformation,
             boundingBox.bottom = BOUND_UNDEFINED
 
         buildMarkLabels()
-        maxLabelWidth = marks.maxOf { computeLabelBackgroundWidth(it.layout) }
-        maxLabelHeight = marks.maxOf { it.layout?.height?.toFloat() ?: 0f }
+        maxLabelWidth = marks.maxOfOrNull { computeLabelBackgroundWidth(it.layout) } ?: 0f
+        maxLabelHeight = marks.maxOfOrNull { it.layout?.height?.toFloat() ?: 0f } ?: 0f
 
         labelWidth = when (backgroundSizeType) {
             MarkLabelBackgroundSize.FitLargest -> maxLabelWidth

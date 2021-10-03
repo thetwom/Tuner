@@ -4,6 +4,7 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="app/src/main/res/drawable/ic_average.xml" value="0.30833333333333335" />
+        <entry key="app/src/main/res/drawable/ic_baseline_developer_board.xml" value="0.26666666666666666" />
         <entry key="app/src/main/res/drawable/ic_developer_off.xml" value="0.30833333333333335" />
         <entry key="app/src/main/res/drawable/ic_developer_on.xml" value="0.30833333333333335" />
         <entry key="app/src/main/res/drawable/ic_frequency_a.xml" value="0.2861111111111111" />

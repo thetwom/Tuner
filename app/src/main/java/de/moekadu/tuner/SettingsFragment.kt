@@ -57,7 +57,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
   override fun onPrepareOptionsMenu(menu : Menu) {
 //        super.onPrepareOptionsMenu(menu)
     menu.findItem(R.id.action_settings)?.isVisible = false
-    menu.findItem(R.id.scientific_mode)?.isVisible = false
+//    menu.findItem(R.id.scientific_mode)?.isVisible = false
   }
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
