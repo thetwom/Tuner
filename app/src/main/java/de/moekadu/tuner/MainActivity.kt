@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
 
         loadSimpleOrScientificFragment()
         setDisplayHomeButton()
-        
+
         supportFragmentManager.addOnBackStackChangedListener {
             setDisplayHomeButton()
             if (supportFragmentManager.backStackEntryCount == 0)

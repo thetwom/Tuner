@@ -1,67 +1,56 @@
 package de.moekadu.tuner
 
-class InstrumentDatabase {
-    private val instruments = ArrayList<Instrument>()
-
-    init {
-        instruments.add(GuitarEADGHE())
-        instruments.add(BassEADG())
-        instruments.add(BassBEADG())
-        instruments.add(UkuleleGCEA())
-    }
-}
-
 enum class InstrumentType {
-    Guitar, Bass, Ukulele
+    Piano, Guitar, Bass, Ukulele
 }
 
-interface Instrument {
-    fun getStrings(): IntArray
-    fun getName(): CharSequence
-    fun getType(): InstrumentType
+data class Instrument(val name: CharSequence, val strings: IntArray, val type: InstrumentType, val id: Int) {
+    val stringsSorted = strings.map { it.toFloat() }.toFloatArray().sortedArray()
 }
 
-class GuitarEADGHE : Instrument {
-    private val strings = intArrayOf(0, 5, 10, 15, 19, 24)
-    private val name = "6-string guitar (E-A-D-G-B-E)"
+val instrumentDatabase = createInstrumentDatabase()
 
-    override fun getStrings() = strings
-    override fun getName(): CharSequence {
-        return name
-    }
-    override fun getType() = InstrumentType.Guitar
+private fun createInstrumentDatabase(): ArrayList<Instrument> {
+    val instruments = ArrayList<Instrument>()
+    instruments.add(
+        Instrument(
+            name = "Piano",
+            strings = intArrayOf(),
+            type = InstrumentType.Piano,
+            id = instruments.size
+        )
+    )
+    instruments.add(
+        Instrument(
+            name = "6-string guitar (E-A-D-G-B-E)",
+            strings = intArrayOf(-29, -24, -19, -14, -10, -5),
+            type = InstrumentType.Guitar,
+            id = instruments.size
+        )
+    )
+    instruments.add(
+        Instrument(
+            name = "4-string bass (E-A-D-G)",
+            strings = intArrayOf(-41, -36, -31, -26),
+            type = InstrumentType.Bass,
+            id = instruments.size
+        )
+    )
+    instruments.add(
+        Instrument(
+            name = "5-string bass (B-E-A-D-G)",
+            strings = intArrayOf(-46, -41, -36, -31, -26),
+            type = InstrumentType.Bass,
+            id = instruments.size
+        )
+    )
+    instruments.add(
+        Instrument(
+            name = "Ukulele (G-C-E-A)",
+            strings = intArrayOf(-5, 0, 5, 10),
+            type = InstrumentType.Ukulele,
+            id = instruments.size
+        )
+    )
+    return instruments
 }
-
-class BassEADG : Instrument {
-    private val strings = intArrayOf(0, 5, 10, 15)
-    private val name = "4-string bass (E-A-D-G)"
-
-    override fun getStrings() = strings
-    override fun getName(): CharSequence {
-        return name
-    }
-    override fun getType() = InstrumentType.Bass
-}
-
-class BassBEADG : Instrument {
-    private val strings = intArrayOf(-5, 0, 5, 10, 15)
-    private val name = "5-string bass (B-E-A-D-G)"
-
-    override fun getStrings() = strings
-    override fun getName(): CharSequence {
-        return name
-    }
-    override fun getType() = InstrumentType.Bass
-}
-
-class UkuleleGCEA : Instrument {
-    private val strings = intArrayOf(-5, 0, 5, 10)
-    private val name = "Ukulele (G-C-E-A)"
-
-    override fun getStrings() = strings
-    override fun getName(): CharSequence {
-        return name
-    }
-    override fun getType() = InstrumentType.Ukulele
-}
-

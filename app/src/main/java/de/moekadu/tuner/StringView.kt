@@ -82,6 +82,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var labelSpacing = 2f
 
     private var labelWidth = 0f
+    private var labelWidthExpanded = 0f ///< Expanded label with so that it fills the columns
     private var labelHeight = 0f
 
     private val strings = ArrayList<StringInfo>()
@@ -106,6 +107,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         addUpdateListener {
             val offset = it.animatedValue as Float
             yOffset = offset
+//            Log.v("Tuner", "StringView.offsetAnimator: yOffset = $yOffset")
             updateStringPositionVariables(width, height)
             ViewCompat.postInvalidateOnAnimation(this@StringView)
         }
@@ -168,7 +170,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
             val x = e.x
             val y = e.y
-            val halfSizeX = 0.5f * (labelWidth + labelBackgroundPadding)
+            val halfSizeX = 0.5f * labelWidthExpanded
             val halfSizeY = rowHeight
             var toneIndex = NO_ACTIVE_TONE_INDEX
             for (i in stringStartIndex .. stringEndIndex) {
@@ -277,7 +279,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         val rowHeight = 0.5f * (labelHeight + stringPaint.strokeWidth) + labelSpacing
         val desiredHeight = max((paddingTop + labelHeight + (strings.size - 1) * rowHeight + paddingBottom).roundToInt() + 1, suggestedMinimumHeight)
         val h = resolveSize(desiredHeight, heightMeasureSpec)
-        Log.v("Tuner", "StringView.onMeasure: width=${MeasureSpec.toString(widthMeasureSpec)}, height=${MeasureSpec.toString(heightMeasureSpec)}, desiredHeight=$desiredHeight, resolvedHeight=$h")
+//        Log.v("Tuner", "StringView.onMeasure: width=${MeasureSpec.toString(widthMeasureSpec)}, height=${MeasureSpec.toString(heightMeasureSpec)}, desiredHeight=$desiredHeight, resolvedHeight=$h")
         setMeasuredDimension(w, h)
         //super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
@@ -294,6 +296,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     override fun onDraw(canvas: Canvas?) {
+//        Log.v("Tuner", "StringView.onDraw: yOffset = $yOffset")
         if (canvas == null)
             return
         canvas.drawRect(paddingLeft.toFloat(), paddingTop.toFloat(),
@@ -346,6 +349,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         strings.clear()
         var labelWidth = 0
         var labelHeight = 0
+
         for (toneIndex in toneIndices) {
             strings.add(StringInfo(toneIndex, labels(toneIndex)))
             strings.last().layout = buildLabelLayout(strings.last().label, highlight = false)
@@ -357,9 +361,18 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         this.labelWidth = labelWidth.toFloat() + 2 * labelBackgroundPadding
         this.labelHeight = labelHeight.toFloat() + 2 * labelBackgroundPadding
 
+        if (!(activeToneIndex in toneIndices))
+            activeToneIndex = NO_ACTIVE_TONE_INDEX
         updateActiveStringIndex(activeToneIndex)
 
         requestLayout()
+        invalidate()
+        post {
+            yOffset = 0f
+            updateStringPositionVariables(width, height)
+            setAutomaticControl(0L)
+//            Log.v("Tuner", "StringView.setStrings (post): yOffset = $yOffset")
+        }
         // TODO: in theory we should call updateStringPositionVariables( .... )
         //       but maybe we should also adapt the yOffset
 
@@ -375,13 +388,16 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             var yOffsetTarget = yPosOfString - (paddingTop + 0.5f * labelHeight + stringIndex * rowHeight)
             yOffsetTarget = min(yOffsetTarget, computeOffsetMax())
             yOffsetTarget = max(yOffsetTarget, computeOffsetMin())
+//            Log.v("Tuner", "StringView.scrollToString yOffsetMin = ${computeOffsetMin()}, yOffsetMax=${computeOffsetMax()}, yOffsetTarget=$yOffsetTarget")
+            offsetAnimator.cancel()
 
             if (animationDuration == 0L) {
                 yOffset = yOffsetTarget
                 updateStringPositionVariables(width, height)
+//                Log.v("Tuner", "StringView.scrollToString (animDur=0): yOffset = $yOffset")
                 invalidate()
             } else {
-                offsetAnimator.cancel()
+//                Log.v("Tuner", "StringView.scrollToString (animDur>0): yOffset = $yOffset")
                 offsetAnimator.duration = animationDuration
                 offsetAnimator.setFloatValues(yOffset, yOffsetTarget)
                 offsetAnimator.start()
@@ -398,11 +414,11 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         invalidate()
     }
 
-    fun setAutomaticControl() {
+    fun setAutomaticControl(animationDuration: Long = 200L) {
         automaticScrollToHighlight = true
         framePaint.color = frameColor
         if (activeToneIndex != NO_ACTIVE_TONE_INDEX)
-            scrollToString(activeToneIndex, 200L)
+            scrollToString(activeToneIndex, animationDuration)
         invalidate()
     }
 
@@ -424,7 +440,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     private fun drawString(xPos: Float, yPos: Float, stringInfo: StringInfo, highlight: Boolean, canvas: Canvas) {
         canvas.drawLine(paddingLeft.toFloat(), yPos, width.toFloat() - paddingRight, yPos, if (highlight) stringPaintHighlight else stringPaint)
-        canvas.drawRect(xPos - 0.5f * labelWidth, yPos - 0.5f * labelHeight, xPos + 0.5f * labelWidth,
+        canvas.drawRect(xPos - 0.5f * labelWidthExpanded, yPos - 0.5f * labelHeight, xPos + 0.5f * labelWidthExpanded,
             yPos + 0.5f * labelHeight, if (highlight) labelBackgroundPaintHighlight else labelBackgroundPaint)
 
         (if (highlight) stringInfo.layoutHighlight else stringInfo.layout)?.let { layout ->
@@ -460,6 +476,8 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private fun updateStringPositionVariables(w: Int, h: Int) {
         val effectiveWidth = w - paddingLeft - paddingRight
         numCols = (floor((effectiveWidth - labelSpacing) / (labelWidth + labelSpacing))).toInt()
+        numCols = max(1, min(numCols, strings.size))
+        labelWidthExpanded = (effectiveWidth - labelSpacing) / numCols - labelSpacing
         colWidth = (effectiveWidth - labelSpacing) / numCols
         rowHeight = 0.5f * (labelHeight + stringPaint.strokeWidth) + labelSpacing
 

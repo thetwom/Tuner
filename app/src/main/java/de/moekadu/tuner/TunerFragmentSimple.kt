@@ -105,8 +105,18 @@ class TunerFragmentSimple : Fragment() {
             val noteFrequencies = FloatArray(100) { tuningFrequencies.getNoteFrequency(it - 50) }
             pitchPlot?.setYTicks(noteFrequencies, false) { _, f -> tuningFrequencies.getNoteName(f) }
             pitchPlot?.setYTouchLimits(noteFrequencies.first(), noteFrequencies.last(), 0L)
-            stringView?.setStrings(IntArray(100) {it - 50}.reversedArray()) {
-                noteIndex -> tuningFrequencies.getNoteName(noteIndex, preferFlat = false)
+
+            if (viewModel.instrument.value?.type == InstrumentType.Piano)
+                setStringViewToChromatic()
+        }
+
+        viewModel.instrument.observe(viewLifecycleOwner) { instrument ->
+            if (instrument.type == InstrumentType.Piano) {
+                setStringViewToChromatic()
+            } else {
+                stringView?.setStrings(instrument.strings) { noteIndex ->
+                    viewModel.tuningFrequencies.value?.getNoteName(noteIndex, preferFlat = false)
+                }
             }
         }
 
@@ -195,6 +205,13 @@ class TunerFragmentSimple : Fragment() {
     override fun onStop() {
         viewModel.stopSampling()
         super.onStop()
+    }
+
+    private fun setStringViewToChromatic() {
+        val tuningFrequencies = viewModel.tuningFrequencies.value ?: return
+        stringView?.setStrings(IntArray(100) {it - 50}.reversedArray()) { noteIndex ->
+            tuningFrequencies.getNoteName(noteIndex, preferFlat = false)
+        }
     }
 
     private fun setStyles(isPitchInactive: Boolean, tuningStatus: TargetNote.TuningStatus, redraw: Boolean) {
