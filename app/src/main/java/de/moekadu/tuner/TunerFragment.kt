@@ -35,6 +35,12 @@ import kotlin.math.max
 
 class TunerFragment : Fragment() {
     private val viewModel: TunerViewModel by activityViewModels() // ? = null
+    private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
+        InstrumentsViewModel.Factory(
+            AppPreferences.readInstrumentId(requireActivity()),
+            requireActivity().application
+        )
+    }
 
     private var spectrumPlot: PlotView? = null
     private var correlationPlot: PlotView? = null
@@ -232,6 +238,9 @@ class TunerFragment : Fragment() {
 //                pitchPlot?.plot(it)
 //            }
 //        }
+        instrumentsViewModel.instrument.observe(viewLifecycleOwner) { instrument ->
+            viewModel.setInstrument(instrument)
+        }
 
         return view
     }

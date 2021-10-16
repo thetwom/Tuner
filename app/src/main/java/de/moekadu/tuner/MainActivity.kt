@@ -23,6 +23,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.WindowManager
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.commit
@@ -34,6 +35,14 @@ class MainActivity : AppCompatActivity() {
     // ... more settings possible?
 
     enum class TunerMode {Simple, Scientific, Unknown}
+
+    private val instrumentsViewModel: InstrumentsViewModel by viewModels {
+        InstrumentsViewModel.Factory(
+            AppPreferences.readInstrumentId(this),
+            application
+        )
+    }
+
     private var scientificMode = TunerMode.Unknown
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,6 +77,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStop() {
+        AppPreferences.writeTunerPreferences(instrumentsViewModel.instrument.value?.stableId, this)
+        super.onStop()
+    }
     override fun onSupportNavigateUp(): Boolean {
         supportFragmentManager.popBackStack()
         return super.onSupportNavigateUp()
@@ -84,6 +97,14 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.commit {
                 setReorderingAllowed(true)
                 replace<SettingsFragment>(R.id.main_content)
+                addToBackStack(null)
+            }
+            true
+        }
+        R.id.action_instruments -> {
+            supportFragmentManager.commit {
+                setReorderingAllowed(true)
+                replace<InstrumentsFragment>(R.id.main_content)
                 addToBackStack(null)
             }
             true

@@ -93,9 +93,9 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
             _tuningFrequencies.value = value
         }
 
-    private var _instrument = MutableLiveData<Instrument>().apply { value = instrumentDatabase[1] }
-    val instrument: LiveData<Instrument>
-        get() = _instrument
+//    private var _instrument = MutableLiveData<Instrument>().apply { value = instrumentDatabase[1] }
+//    val instrument: LiveData<Instrument>
+//        get() = _instrument
 
     private val _tuningFrequencies = MutableLiveData<TuningFrequencies>().apply { value = tuningFrequencyValues }
     val tuningFrequencies: LiveData<TuningFrequencies>
@@ -113,7 +113,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
     var useHint = true
 
-    private val targetNoteValue = TargetNote().apply { instrument = _instrument.value!! }
+    private val targetNoteValue = TargetNote().apply { instrument = instrumentDatabase[0] }
     private val _targetNote = MutableLiveData(targetNoteValue)
     val targetNote: LiveData<TargetNote>
             get() = _targetNote
@@ -183,7 +183,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     init {
-        Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
+//        Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
 
         sampleSource.testFunction = { t ->
             val freq = 400 + 2*t
@@ -272,12 +272,12 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun stopSampling() {
-        Log.v("Tuner", "TunerViewModel.stopSampling")
+//        Log.v("Tuner", "TunerViewModel.stopSampling")
         sampleSource.stopSampling()
     }
 
     fun setTargetNote(toneIndex: Int = AUTOMATIC_TARGET_NOTE_DETECTION) {
-        Log.v("Tuner", "TunerViewModel.setTargetNote: toneIndex=$toneIndex")
+//        Log.v("Tuner", "TunerViewModel.setTargetNote: toneIndex=$toneIndex")
         val oldTargetNote = targetNoteValue.toneIndex
 
         if (toneIndex == AUTOMATIC_TARGET_NOTE_DETECTION) {
@@ -287,7 +287,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
             }
         } else {
             userDefinedTargetNoteIndex = toneIndex
-            targetNoteValue.setToneIndexExplicitely(toneIndex)
+            targetNoteValue.setToneIndexExplicitly(toneIndex)
             //changeTargetNoteSettings(toneIndex = toneIndex)
         }
 
@@ -300,18 +300,14 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setInstrument(instrument: Instrument) {
-        val currentInstrument = _instrument.value
-        if (currentInstrument == null || currentInstrument.id == instrument.id) {
-            _instrument.value = instrument
-            val oldTargetNote = targetNoteValue.toneIndex
-            targetNoteValue.instrument = instrument
+        val oldTargetNote = targetNoteValue.toneIndex
+        targetNoteValue.instrument = instrument
 
-            if (oldTargetNote != targetNoteValue.toneIndex) { // changing instrument can change target note
-                pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
-                    updateFrequencyPlotRange(targetNoteValue.toneIndex, frequency)
-                }
-                _targetNote.value = targetNoteValue
+        if (oldTargetNote != targetNoteValue.toneIndex) { // changing instrument can change target note
+            pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
+                updateFrequencyPlotRange(targetNoteValue.toneIndex, frequency)
             }
+            _targetNote.value = targetNoteValue
         }
     }
 
@@ -329,7 +325,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     override fun onCleared() {
-        Log.v("Tuner", "TunerViewModel.onCleared")
+//        Log.v("Tuner", "TunerViewModel.onCleared")
         stopSampling()
         pref.unregisterOnSharedPreferenceChangeListener(onPreferenceChangedListener)
 

@@ -35,7 +35,12 @@ import kotlin.math.max
 
 class TunerFragmentSimple : Fragment() {
 
-    private val viewModel: TunerViewModel by activityViewModels() // ? = null
+    private val viewModel: TunerViewModel by activityViewModels()
+    private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
+        InstrumentsViewModel.Factory(
+            AppPreferences.readInstrumentId(requireActivity()),
+            requireActivity().application)
+    }
 
     private var pitchPlot: PlotView? = null
     private var volumeMeter: VolumeMeter? = null
@@ -68,7 +73,7 @@ class TunerFragmentSimple : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-//        Log.v("Tuner", "TunerFragment.onCreateView")
+        Log.v("Tuner", "TunerFragmentSimple.onCreateView")
         val view = inflater.inflate(R.layout.diagrams_simple, container, false)
 
         pitchPlot = view.findViewById(R.id.pitch_plot)
@@ -106,11 +111,13 @@ class TunerFragmentSimple : Fragment() {
             pitchPlot?.setYTicks(noteFrequencies, false) { _, f -> tuningFrequencies.getNoteName(f) }
             pitchPlot?.setYTouchLimits(noteFrequencies.first(), noteFrequencies.last(), 0L)
 
-            if (viewModel.instrument.value?.type == InstrumentType.Piano)
+            if (instrumentsViewModel.instrument.value?.type == InstrumentType.Piano)
                 setStringViewToChromatic()
         }
 
-        viewModel.instrument.observe(viewLifecycleOwner) { instrument ->
+        instrumentsViewModel.instrument.observe(viewLifecycleOwner) { instrument ->
+            Log.v("Tuner", "TunerFragmentSimple.onCreateView: instrumentViewModel.instrument: $instrument")
+            viewModel.setInstrument(instrument)
             if (instrument.type == InstrumentType.Piano) {
                 setStringViewToChromatic()
             } else {

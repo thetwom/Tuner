@@ -1,5 +1,6 @@
 package de.moekadu.tuner
 
+import android.util.Log
 import kotlin.math.roundToInt
 
 class TargetNote {
@@ -11,7 +12,7 @@ class TargetNote {
             field = value
             if (frequencyRange[1] > frequencyRange[0]) {
                 // this will already call "recomputeTargetNoteProperties"
-                setTargetNoteBasedOnFrequency(frequencyForLastTargetNoteDetection)
+                setTargetNoteBasedOnFrequency(frequencyForLastTargetNoteDetection, ignoreFrequencyRange = true)
             } else {
                 recomputeTargetNoteProperties(toneIndex, toleranceInCents, field)
             }
@@ -19,11 +20,13 @@ class TargetNote {
 
     var instrument: Instrument = instrumentDatabase[0]
         set(value) {
-            if (value.id != field.id) {
+            Log.v("Tuner", "TargetNote.instrument.set: value=$value, field=$field")
+            if (value.stableId != field.stableId) {
                 field = value
+                Log.v("Tuner", "TargetNote.instrument.set: frequencyRange=${frequencyRange[0]} -- ${frequencyRange[1]}")
                 if (frequencyRange[1] > frequencyRange[0]) {
                     // this will also call "recomputeTargetNoteProperties"
-                    setTargetNoteBasedOnFrequency(frequencyForLastTargetNoteDetection)
+                    setTargetNoteBasedOnFrequency(frequencyForLastTargetNoteDetection, ignoreFrequencyRange = true)
                 }
             }
         }
@@ -87,7 +90,7 @@ class TargetNote {
         else -> TuningStatus.InTune
     }
 
-    fun setToneIndexExplicitely(toneIndex: Int) {
+    fun setToneIndexExplicitly(toneIndex: Int) {
         frequencyRange[0] = 100f
         frequencyRange[1] = -100f
         if (toneIndex != this.toneIndex) {
@@ -96,13 +99,13 @@ class TargetNote {
         }
     }
 
-    fun setTargetNoteBasedOnFrequency(frequency: Float?): Int {
+    fun setTargetNoteBasedOnFrequency(frequency: Float?, ignoreFrequencyRange: Boolean = false): Int {
         if (frequency == null)
             return toneIndex
 
         frequencyForLastTargetNoteDetection = frequency
 
-        if (frequency in frequencyRange[0] .. frequencyRange[1])
+        if (frequency in frequencyRange[0] .. frequencyRange[1] && !ignoreFrequencyRange)
             return toneIndex
 
         val numStrings = instrument.strings.size
