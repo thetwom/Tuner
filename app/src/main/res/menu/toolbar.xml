@@ -7,12 +7,12 @@
 <!--    android:title="@string/scientific_mode"-->
 <!--    android:icon="@drawable/ic_developer_off"-->
 <!--    app:showAsAction="ifRoom"/>-->
-  <item
-      android:id="@+id/action_instruments"
-      android:title="@string/instruments"
-      android:icon="@drawable/ic_guitar"
-      app:showAsAction="ifRoom"
-    />
+<!--  <item-->
+<!--      android:id="@+id/action_instruments"-->
+<!--      android:title="@string/instruments"-->
+<!--      android:icon="@drawable/ic_guitar"-->
+<!--      app:showAsAction="ifRoom"-->
+<!--    />-->
 
   <item
       android:id="@+id/action_settings"

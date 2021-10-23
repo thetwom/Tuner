@@ -26,47 +26,65 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     constructor(context: Context, attrs: AttributeSet? = null) : this(context, attrs, R.attr.stringViewStyle)
 
     class StringInfo (val toneIndex: Int, val label: CharSequence?) {
-        var layout: StaticLayout? = null
-        var layoutHighlight: StaticLayout? = null
+        val layouts = Array<StaticLayout?>(3) {null}
     }
 
-    private val stringPaint = Paint().apply {
-        color = Color.BLACK
-        style = Paint.Style.STROKE
-        strokeWidth = 3f
-        isAntiAlias = true
-    }
+    private val stringPaint = arrayOf(
+        Paint().apply {
+            color = Color.BLACK
+            style = Paint.Style.STROKE
+            strokeWidth = 3f
+            isAntiAlias = true
+        },
+        Paint().apply {
+            color = Color.BLACK
+            style = Paint.Style.STROKE
+            strokeWidth = 3f
+            isAntiAlias = true
+        },
+        Paint().apply {
+            color = Color.BLACK
+            style = Paint.Style.STROKE
+            strokeWidth = 3f
+            isAntiAlias = true
+        }
+    )
 
-    private val stringPaintHighlight = Paint().apply {
-        color = Color.BLACK
-        style = Paint.Style.STROKE
-        strokeWidth = 3f
-        isAntiAlias = true
-    }
+    private val labelBackgroundPaint = arrayOf(
+        Paint().apply {
+            color = Color.BLACK
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        },
+        Paint().apply {
+            color = Color.BLACK
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        },
+        Paint().apply {
+            color = Color.BLACK
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        }
+    )
 
-    private val labelBackgroundPaint = Paint().apply {
-        color = Color.BLACK
-        style = Paint.Style.FILL
-        isAntiAlias = true
-    }
-
-    private val labelBackgroundPaintHighlight = Paint().apply {
-        color = Color.BLACK
-        style = Paint.Style.FILL
-        isAntiAlias = true
-    }
-
-    private val labelPaint = TextPaint().apply {
-        color = Color.GREEN
-        textSize = 12f
-        isAntiAlias = true
-    }
-
-    private val labelPaintHighlight = TextPaint().apply {
-        color = Color.GREEN
-        textSize = 12f
-        isAntiAlias = true
-    }
+    private val labelPaint = arrayOf(
+        TextPaint().apply {
+            color = Color.GREEN
+            textSize = 12f
+            isAntiAlias = true
+        },
+        TextPaint().apply {
+            color = Color.GREEN
+            textSize = 12f
+            isAntiAlias = true
+        },
+        TextPaint().apply {
+            color = Color.RED
+            textSize = 12f
+            isAntiAlias = true
+        }
+    )
 
     private val framePaint = Paint().apply {
         color = Color.BLACK
@@ -96,6 +114,14 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                     scrollToString(value, 200L)
                 else
                     invalidate()
+            }
+        }
+    var activeToneStyle: Int = 1
+        set(value) {
+            if (value != field) {
+                field = value
+                anchorDrawable.setColors(labelBackgroundPaint[value].color, labelPaint[value].color)
+                invalidate()
             }
         }
 
@@ -210,7 +236,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 invalidate()
             }
         }
-
+    private var anchorDrawablePosition = 1
 
     init {
         var touchDrawableId = R.drawable.ic_manual
@@ -219,7 +245,6 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
         var anchorDrawableId = R.drawable.ic_anchor_inv
         var anchorDrawableWidth = 10f
-        var anchorDrawableBackgoundTint = Color.WHITE
 
         attrs?.let {
             val ta = context.obtainStyledAttributes(
@@ -231,20 +256,27 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             labelBackgroundPadding = ta.getDimension(R.styleable.StringView_labelPadding, labelBackgroundPadding)
             labelSpacing = ta.getDimension(R.styleable.StringView_labelSpacing, labelSpacing)
 
-            labelPaint.textSize = ta.getDimension(R.styleable.StringView_labelTextSize, labelPaint.textSize)
-            labelPaint.color = ta.getColor(R.styleable.StringView_labelTextColor, labelPaint.color)
+            labelPaint[0].textSize = ta.getDimension(R.styleable.StringView_labelTextSize, labelPaint[0].textSize)
+            labelPaint[0].color = ta.getColor(R.styleable.StringView_labelTextColor, labelPaint[0].color)
 
-            labelPaintHighlight.textSize = labelPaint.textSize
-            labelPaintHighlight.color = ta.getColor(R.styleable.StringView_labelTextColorHighlight, labelPaintHighlight.color)
+            labelPaint[1].textSize = ta.getDimension(R.styleable.StringView_labelTextSize2, labelPaint[1].textSize)
+            labelPaint[1].color = ta.getColor(R.styleable.StringView_labelTextColor2, labelPaint[1].color)
 
-            stringPaint.color = ta.getColor(R.styleable.StringView_stringColor, stringPaint.color)
-            stringPaint.strokeWidth = ta.getDimension(R.styleable.StringView_stringLineWidth, stringPaint.strokeWidth)
+            labelPaint[2].textSize = ta.getDimension(R.styleable.StringView_labelTextSize3, labelPaint[2].textSize)
+            labelPaint[2].color = ta.getColor(R.styleable.StringView_labelTextColor3, labelPaint[2].color)
 
-            stringPaintHighlight.color = ta.getColor(R.styleable.StringView_stringColorHighlight, stringPaintHighlight.color)
-            stringPaintHighlight.strokeWidth = ta.getDimension(R.styleable.StringView_stringLineWidthHighlight, stringPaintHighlight.strokeWidth)
+            stringPaint[0].color = ta.getColor(R.styleable.StringView_stringColor, stringPaint[0].color)
+            stringPaint[0].strokeWidth = ta.getDimension(R.styleable.StringView_stringLineWidth, stringPaint[0].strokeWidth)
 
-            labelBackgroundPaint.color = stringPaint.color
-            labelBackgroundPaintHighlight.color = stringPaintHighlight.color
+            stringPaint[1].color = ta.getColor(R.styleable.StringView_stringColor2, stringPaint[1].color)
+            stringPaint[1].strokeWidth = ta.getDimension(R.styleable.StringView_stringLineWidth2, stringPaint[1].strokeWidth)
+
+            stringPaint[2].color = ta.getColor(R.styleable.StringView_stringColor3, stringPaint[2].color)
+            stringPaint[2].strokeWidth = ta.getDimension(R.styleable.StringView_stringLineWidth3, stringPaint[2].strokeWidth)
+
+            labelBackgroundPaint[0].color = stringPaint[0].color
+            labelBackgroundPaint[1].color = stringPaint[1].color
+            labelBackgroundPaint[2].color = stringPaint[2].color
 
             frameColor = ta.getColor(R.styleable.StringView_frameColor, frameColor)
             frameColorOnTouch = ta.getColor(R.styleable.StringView_frameColorOnTouch, frameColorOnTouch)
@@ -257,14 +289,14 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
             anchorDrawableId = ta.getResourceId(R.styleable.StringView_anchorDrawable, anchorDrawableId)
             anchorDrawableWidth = ta.getDimension(R.styleable.StringView_anchorDrawableWidth, anchorDrawableWidth)
-            anchorDrawableBackgoundTint = ta.getColor(R.styleable.StringView_anchorDrawableBackgroundTint, anchorDrawableBackgoundTint)
+            anchorDrawablePosition = ta.getInt(R.styleable.StringView_anchorDrawablePosition, 1)
             ta.recycle()
         }
 
         touchManualControlDrawable = TouchControlDrawable(context, frameColorOnTouch, touchDrawableBackgoundTint, touchDrawableId)
         touchManualControlDrawable.setSize(width = touchManualControlDrawableWidth)
 
-        anchorDrawable = TouchControlDrawable(context, stringPaintHighlight.color, anchorDrawableBackgoundTint, anchorDrawableId)
+        anchorDrawable = TouchControlDrawable(context, labelBackgroundPaint[activeToneStyle].color, labelPaint[activeToneStyle].color, anchorDrawableId)
         anchorDrawable.setSize(width = anchorDrawableWidth)
     }
 
@@ -273,11 +305,9 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         var proposedWidth = max(MeasureSpec.getSize(widthMeasureSpec), suggestedMinimumWidth)
         if (widthMode == MeasureSpec.UNSPECIFIED)
-            proposedWidth = max(6 * ((labelWidth + labelSpacing) + labelSpacing + paddingLeft + paddingRight).toInt(), suggestedMinimumWidth)
+            proposedWidth = max(6 * ((labelWidth + labelSpacing) + labelSpacing + paddingLeft + paddingRight + 2 * framePaint.strokeWidth).toInt(), suggestedMinimumWidth)
         val w = resolveSize(proposedWidth, widthMeasureSpec)
-
-        val rowHeight = 0.5f * (labelHeight + stringPaint.strokeWidth) + labelSpacing
-        val desiredHeight = max((paddingTop + labelHeight + (strings.size - 1) * rowHeight + paddingBottom).roundToInt() + 1, suggestedMinimumHeight)
+        val desiredHeight = max((paddingTop + getTotalStringHeight() + 2 * (labelSpacing + framePaint.strokeWidth) + paddingBottom).roundToInt() + 1, suggestedMinimumHeight)
         val h = resolveSize(desiredHeight, heightMeasureSpec)
 //        Log.v("Tuner", "StringView.onMeasure: width=${MeasureSpec.toString(widthMeasureSpec)}, height=${MeasureSpec.toString(heightMeasureSpec)}, desiredHeight=$desiredHeight, resolvedHeight=$h")
         setMeasuredDimension(w, h)
@@ -299,17 +329,21 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 //        Log.v("Tuner", "StringView.onDraw: yOffset = $yOffset")
         if (canvas == null)
             return
-        canvas.drawRect(paddingLeft.toFloat(), paddingTop.toFloat(),
-            width - paddingRight.toFloat(), height - paddingBottom.toFloat(), framePaint)
+        canvas.drawRect(paddingLeft.toFloat() + 0.5f * framePaint.strokeWidth,
+            paddingTop.toFloat() + 0.5f * framePaint.strokeWidth,
+            width - paddingRight.toFloat() - 0.5f * framePaint.strokeWidth,
+            height - paddingBottom.toFloat() - 0.5f * framePaint.strokeWidth,
+            framePaint
+        )
         //canvas.save()
         //canvas.clipRect(paddingLeft, paddingTop, width - paddingRight, height - paddingBottom)
-        canvas.clipRect(0, paddingTop, width, height - paddingBottom)
+        canvas.clipRect(0, (paddingTop + framePaint.strokeWidth).toInt(), width, (height - paddingBottom - framePaint.strokeWidth).toInt())
         var anchorYPos = NO_ANCHOR
 
         for (i in stringStartIndex .. stringEndIndex) {
             val xPos = getStringDrawingPositionX(i)
             val yPos = getStringDrawingPositionY(i)
-            drawString(xPos, yPos, strings[i], strings[i].toneIndex == activeToneIndex, canvas)
+            drawString(xPos, yPos, strings[i], if (strings[i].toneIndex == activeToneIndex) activeToneStyle else 0, canvas)
 
             if (strings[i].toneIndex == activeToneIndex)
                 anchorYPos = yPos
@@ -326,8 +360,8 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
         //canvas.restore()
         if (showAnchor) {
-            val minYPos = paddingTop + 0.5f * anchorDrawable.height - 0.5f * framePaint.strokeWidth
-            val maxYPos = height - paddingBottom - 0.5f * anchorDrawable.height + 0.5f * framePaint.strokeWidth
+            val minYPos = paddingTop + 0.5f * anchorDrawable.height + framePaint.strokeWidth
+            val maxYPos = height - paddingBottom - 0.5f * anchorDrawable.height - framePaint.strokeWidth
 
             if (anchorYPos == NO_ANCHOR){
                 anchorYPos = if (activeStringIndex < stringStartIndex)
@@ -337,11 +371,19 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             }
             anchorYPos = min(anchorYPos, maxYPos)
             anchorYPos = max(anchorYPos, minYPos)
-            anchorDrawable.drawToCanvas(
-                width - paddingRight.toFloat() - 0.5f * framePaint.strokeWidth,
-                anchorYPos,
-                MarkAnchor.West, canvas
-            )
+            if (anchorDrawablePosition == 0) {// left
+                anchorDrawable.drawToCanvas(
+                    paddingLeft.toFloat() + framePaint.strokeWidth,
+                    anchorYPos,
+                    MarkAnchor.East, canvas
+                )
+            } else { // right
+                anchorDrawable.drawToCanvas(
+                    width - paddingRight.toFloat() - framePaint.strokeWidth,
+                    anchorYPos,
+                    MarkAnchor.West, canvas
+                )
+            }
         }
     }
 
@@ -352,11 +394,12 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
         for (toneIndex in toneIndices) {
             strings.add(StringInfo(toneIndex, labels(toneIndex)))
-            strings.last().layout = buildLabelLayout(strings.last().label, highlight = false)
-            strings.last().layoutHighlight = buildLabelLayout(strings.last().label, highlight = true)
+            strings.last().layouts[0] = buildLabelLayout(strings.last().label, 0)
+            strings.last().layouts[1] = buildLabelLayout(strings.last().label, 1)
+            strings.last().layouts[2] = buildLabelLayout(strings.last().label, 2)
 
-            labelWidth = max(labelWidth, strings.last().layout?.width ?: 0)
-            labelHeight = max(labelHeight, strings.last().layout?.height ?: 0)
+            labelWidth = max(labelWidth, strings.last().layouts[0]?.width ?: 0)
+            labelHeight = max(labelHeight, strings.last().layouts[0]?.height ?: 0)
         }
         this.labelWidth = labelWidth.toFloat() + 2 * labelBackgroundPadding
         this.labelHeight = labelHeight.toFloat() + 2 * labelBackgroundPadding
@@ -415,6 +458,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun setAutomaticControl(animationDuration: Long = 200L) {
+        Log.v("Tuner", "StringView.setAutomaticControl")
         automaticScrollToHighlight = true
         framePaint.color = frameColor
         if (activeToneIndex != NO_ACTIVE_TONE_INDEX)
@@ -438,12 +482,13 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         ViewCompat.postInvalidateOnAnimation(this@StringView)
     }
 
-    private fun drawString(xPos: Float, yPos: Float, stringInfo: StringInfo, highlight: Boolean, canvas: Canvas) {
-        canvas.drawLine(paddingLeft.toFloat(), yPos, width.toFloat() - paddingRight, yPos, if (highlight) stringPaintHighlight else stringPaint)
+    private fun drawString(xPos: Float, yPos: Float, stringInfo: StringInfo, styleIndex: Int, canvas: Canvas) {
+        canvas.drawLine(paddingLeft.toFloat() + framePaint.strokeWidth, yPos,
+            width.toFloat() - paddingRight - framePaint.strokeWidth, yPos, stringPaint[styleIndex])
         canvas.drawRect(xPos - 0.5f * labelWidthExpanded, yPos - 0.5f * labelHeight, xPos + 0.5f * labelWidthExpanded,
-            yPos + 0.5f * labelHeight, if (highlight) labelBackgroundPaintHighlight else labelBackgroundPaint)
+            yPos + 0.5f * labelHeight, labelBackgroundPaint[styleIndex])
 
-        (if (highlight) stringInfo.layoutHighlight else stringInfo.layout)?.let { layout ->
+        stringInfo.layouts[styleIndex]?.let { layout ->
             canvas.withTranslation(
                 xPos - 0.5f * layout.width,yPos - 0.5f * layout.height
             ) {
@@ -452,11 +497,10 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
     }
 
-    private fun buildLabelLayout(label: CharSequence?, highlight: Boolean): StaticLayout? {
+    private fun buildLabelLayout(label: CharSequence?, index: Int): StaticLayout? {
         return if (label != null) {
-            val desiredWidth = ceil(StaticLayout.getDesiredWidth(label, labelPaint)).toInt()
-            val builder = StaticLayout.Builder.obtain(label,0, label.length,
-                if (highlight) labelPaintHighlight else labelPaint, desiredWidth)
+            val desiredWidth = ceil(StaticLayout.getDesiredWidth(label, labelPaint[index])).toInt()
+            val builder = StaticLayout.Builder.obtain(label,0, label.length, labelPaint[index], desiredWidth)
             builder.build()
         }
         else {
@@ -466,43 +510,59 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     private fun getStringDrawingPositionX(stringIndex: Int): Float {
         val col = stringIndex % numCols
-        return paddingLeft + 0.5f * labelSpacing + (0.5f + col) * colWidth
+        return paddingLeft + framePaint.strokeWidth + 0.5f * labelSpacing + (0.5f + col) * colWidth
     }
 
     private fun getStringDrawingPositionY(stringIndex: Int): Float {
-        return yOffset + paddingTop + 0.5f * labelHeight + stringIndex * rowHeight
+        val effectiveHeight = height - paddingTop - paddingBottom - 2 * (framePaint.strokeWidth + labelSpacing)
+        val stringTotalHeight = getTotalStringHeight()
+        val yOffsetMod = if (effectiveHeight > stringTotalHeight) {
+            0.5f * (effectiveHeight - stringTotalHeight)
+        } else {
+            yOffset
+        }
+        return yOffsetMod + paddingTop + framePaint.strokeWidth + labelSpacing + 0.5f * labelHeight + stringIndex * rowHeight
     }
 
     private fun updateStringPositionVariables(w: Int, h: Int) {
-        val effectiveWidth = w - paddingLeft - paddingRight
+        val effectiveWidth = w - paddingLeft - paddingRight - 2 * framePaint.strokeWidth
         numCols = (floor((effectiveWidth - labelSpacing) / (labelWidth + labelSpacing))).toInt()
         numCols = max(1, min(numCols, strings.size))
         labelWidthExpanded = (effectiveWidth - labelSpacing) / numCols - labelSpacing
         colWidth = (effectiveWidth - labelSpacing) / numCols
-        rowHeight = 0.5f * (labelHeight + stringPaint.strokeWidth) + labelSpacing
+        rowHeight = getRowHeight()
 
         // visible if
-        // yOffset + paddingTop + 0.5f * labelHeight + i * rowHeight + 0.5f * labelHeight > paddingTop
-        // i * rowHeight > -yOffset - labelHeight
-        // i > - (yOffset + labelHeight) / rowHeight
+        // yOffset + paddingTop + framePaint.strokeWidth + labelSpacing + 0.5f * labelHeight + i * rowHeight + 0.5f * labelHeight > paddingTop + framePaint.strokeWidth
+        // i * rowHeight > -yOffset - labelHeight - labelSpacing
+        // i > - (yOffset + labelHeight + labelSpacing) / rowHeight
         //
-        // yOffset + paddingTop + 0.5f * labelHeight + i * rowHeight - 0.5f * labelHeight < height - paddingBottom
-        // i * rowHeight < height - paddingBottom - paddingTop - yOffset
-        // i > (height - paddingBottom - paddingTop - yOffset) / rowHeight
-        stringStartIndex = max(0, floor(-(yOffset + labelHeight) / rowHeight).toInt())
-        stringEndIndex = min(strings.size-1, ceil((h - paddingBottom - paddingTop - yOffset) / rowHeight).toInt())
+        // yOffset + paddingTop + framePaint.strokeWith + labelSpacing + 0.5f * labelHeight + i * rowHeight - 0.5f * labelHeight < height - paddingBottom - framePaint.strokeWidth
+        // i * rowHeight < height - paddingBottom - paddingTop - yOffset - 2 * framePaint.strokeWidth - labelSpacing
+        // i > (height - paddingBottom - paddingTop - yOffset - 2 * framePaint.strokeWidth - labelSpacing) / rowHeight
+        stringStartIndex = max(0, floor(-(yOffset + labelHeight + labelSpacing) / rowHeight).toInt())
+        stringEndIndex = min(strings.size-1, ceil((h - paddingBottom - paddingTop - yOffset - 2 * framePaint.strokeWidth - labelSpacing) / rowHeight).toInt())
     }
 
     private fun computeOffsetMin(): Float {
-        val effectiveHeight = height - paddingTop - paddingBottom
-        val rowHeight = 0.5f * (labelHeight + stringPaint.strokeWidth) + labelSpacing
-        val stringTotalHeight = strings.size * rowHeight + 0.5f * labelHeight - labelSpacing // check
+        val effectiveHeight = height - paddingTop - paddingBottom - 2 * framePaint.strokeWidth
+        val stringTotalHeight = getTotalStringHeight()
 //        Log.v("Tuner", "StringView.computeOffsetMax: stringTotalHeight=$stringTotalHeight, effectiveHeight=$effectiveHeight")
-        return min(0f, effectiveHeight - stringTotalHeight)
+        return min(0f, effectiveHeight - stringTotalHeight - 2 * labelSpacing)
     }
 
-    private fun computeOffsetMax() = 0f
+    private fun computeOffsetMax(): Float {
+        return 0f
+    }
 
+    private fun getRowHeight(): Float {
+        val maxStrokeWidth = stringPaint.maxOf {it.strokeWidth}
+        return 0.5f * (labelHeight + maxStrokeWidth) + labelSpacing
+    }
+
+    private fun getTotalStringHeight(): Float {
+        return (strings.size - 1) * getRowHeight() + labelHeight
+    }
 
     companion object {
         const val NO_ACTIVE_TONE_INDEX = Int.MAX_VALUE

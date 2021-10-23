@@ -25,6 +25,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
@@ -45,6 +47,8 @@ class TunerFragmentSimple : Fragment() {
     private var pitchPlot: PlotView? = null
     private var volumeMeter: VolumeMeter? = null
     private var stringView: StringView? = null
+    private var instrumentIcon: ImageView? = null
+    private var instrumentTitle: TextView? = null
 
     private var isPitchInactive = false
     private var tuningStatus = TargetNote.TuningStatus.Unknown
@@ -79,6 +83,8 @@ class TunerFragmentSimple : Fragment() {
         pitchPlot = view.findViewById(R.id.pitch_plot)
         volumeMeter = view.findViewById(R.id.volume_meter)
         stringView = view.findViewById(R.id.string_view)
+        instrumentIcon = view.findViewById(R.id.instrument_icon)
+        instrumentTitle = view.findViewById(R.id.instrument_title)
 
         pitchPlot?.yRange(400f, 500f, PlotView.NO_REDRAW)
 
@@ -86,8 +92,10 @@ class TunerFragmentSimple : Fragment() {
             if (toneIndex == stringView?.activeToneIndex && viewModel.isTargetNoteUserDefined.value == true) {
                 viewModel.setTargetNote(TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
                 stringView?.setAutomaticControl()
+                stringView?.showAnchor = false
             } else if (toneIndex == StringView.NO_ACTIVE_TONE_INDEX) {
                 stringView?.setAutomaticControl()
+                stringView?.showAnchor = false
                 //viewModel.setTargetNote(TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
             } else {
                 viewModel.setTargetNote(toneIndex)
@@ -102,6 +110,11 @@ class TunerFragmentSimple : Fragment() {
 //        viewModel.standardDeviation.observe(viewLifecycleOwner) { standardDeviation ->
 //            volumeMeter?.volume = log10(max(1e-12f, standardDeviation))
 //        }
+
+        instrumentTitle?.setOnClickListener {
+            (requireActivity() as MainActivity).loadInstrumentsFragment()
+        }
+
         viewModel.isTargetNoteUserDefined.observe(viewLifecycleOwner) { isTargetNoteUserDefined ->
             stringView?.showAnchor = isTargetNoteUserDefined
         }
@@ -118,6 +131,8 @@ class TunerFragmentSimple : Fragment() {
         instrumentsViewModel.instrument.observe(viewLifecycleOwner) { instrument ->
             Log.v("Tuner", "TunerFragmentSimple.onCreateView: instrumentViewModel.instrument: $instrument")
             viewModel.setInstrument(instrument)
+            instrumentIcon?.setImageResource(instrument.iconResource)
+            instrumentTitle?.text = instrument.name
             if (instrument.type == InstrumentType.Piano) {
                 setStringViewToChromatic()
             } else {
@@ -125,6 +140,7 @@ class TunerFragmentSimple : Fragment() {
                     viewModel.tuningFrequencies.value?.getNoteName(noteIndex, preferFlat = false)
                 }
             }
+            stringView?.setAutomaticControl(0L)
         }
 
         viewModel.pitchHistory.sizeAsLiveData.observe(viewLifecycleOwner) {
@@ -207,6 +223,7 @@ class TunerFragmentSimple : Fragment() {
     override fun onStart() {
         super.onStart()
         askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
+        viewModel.setInstrument(instrumentsViewModel.instrument.value ?: instrumentDatabase[0])
     }
 
     override fun onStop() {
@@ -263,6 +280,11 @@ class TunerFragmentSimple : Fragment() {
                     pitchPlot?.setPointVisible(false, tag = 1L, suppressInvalidate = true)
                 }
             }
+        }
+
+        when (tuningStatus) {
+            TargetNote.TuningStatus.InTune -> stringView?.activeToneStyle = 1
+            else -> stringView?.activeToneStyle = 2
         }
         if (redraw)
             pitchPlot?.invalidate()

@@ -238,9 +238,9 @@ class TunerFragment : Fragment() {
 //                pitchPlot?.plot(it)
 //            }
 //        }
-        instrumentsViewModel.instrument.observe(viewLifecycleOwner) { instrument ->
-            viewModel.setInstrument(instrument)
-        }
+//        instrumentsViewModel.instrument.observe(viewLifecycleOwner) { instrument ->
+//            viewModel.setInstrument(instrument)
+//        }
 
         return view
     }
@@ -248,6 +248,7 @@ class TunerFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
+        viewModel.setInstrument(instrumentDatabase[0])
         viewModel.setTargetNote()
     }
 

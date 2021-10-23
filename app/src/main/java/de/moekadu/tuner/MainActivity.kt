@@ -101,18 +101,27 @@ class MainActivity : AppCompatActivity() {
             }
             true
         }
-        R.id.action_instruments -> {
-            supportFragmentManager.commit {
-                setReorderingAllowed(true)
-                replace<InstrumentsFragment>(R.id.main_content)
-                addToBackStack(null)
-            }
-            true
-        }
+//        R.id.action_instruments -> {
+//            supportFragmentManager.commit {
+//                setReorderingAllowed(true)
+//                replace<InstrumentsFragment>(R.id.main_content)
+//                addToBackStack(null)
+//            }
+//            loadInstrumentsFragment()
+//            true
+//        }
         else -> {
             // If we got here, the user's action was not recognized.
             // Invoke the superclass to handle it.
             super.onOptionsItemSelected(item)
+        }
+    }
+
+    fun loadInstrumentsFragment() {
+        supportFragmentManager.commit {
+            setReorderingAllowed(true)
+            replace<InstrumentsFragment>(R.id.main_content)
+            addToBackStack(null)
         }
     }
 

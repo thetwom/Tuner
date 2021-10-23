@@ -282,9 +282,8 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
         if (toneIndex == AUTOMATIC_TARGET_NOTE_DETECTION) {
             userDefinedTargetNoteIndex = AUTOMATIC_TARGET_NOTE_DETECTION
-            pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
-                targetNoteValue.setTargetNoteBasedOnFrequency(frequency)
-            }
+            val frequency = pitchHistory.historyAveraged.value?.lastOrNull()
+            targetNoteValue.setTargetNoteBasedOnFrequency(frequency, true)
         } else {
             userDefinedTargetNoteIndex = toneIndex
             targetNoteValue.setToneIndexExplicitly(toneIndex)
@@ -300,15 +299,24 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setInstrument(instrument: Instrument) {
-        val oldTargetNote = targetNoteValue.toneIndex
-        targetNoteValue.instrument = instrument
-
-        if (oldTargetNote != targetNoteValue.toneIndex) { // changing instrument can change target note
-            pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
-                updateFrequencyPlotRange(targetNoteValue.toneIndex, frequency)
-            }
-            _targetNote.value = targetNoteValue
+        Log.v("Tuner", "TunerViewModel.setInstrument $instrument, before: ${targetNoteValue.instrument}")
+        // val oldTargetNote = targetNoteValue.toneIndex
+        if (targetNoteValue.instrument.stableId != instrument.stableId) {
+            Log.v("Tuner", "TunerViewModel.setInstrument ...")
+            targetNoteValue.instrument = instrument
+            setTargetNote(AUTOMATIC_TARGET_NOTE_DETECTION)
         }
+//        userDefinedTargetNoteIndex = AUTOMATIC_TARGET_NOTE_DETECTION
+//        pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
+//            updateFrequencyPlotRange(targetNoteValue.toneIndex, frequency)
+//        }
+//        _targetNote.value = targetNoteValue
+//        if (oldTargetNote != targetNoteValue.toneIndex) { // changing instrument can change target note
+//            pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
+//                updateFrequencyPlotRange(targetNoteValue.toneIndex, frequency)
+//            }
+//            _targetNote.value = targetNoteValue
+//        }
     }
 
     private fun updateFrequencyPlotRange(targetNoteIndex: Int, currentFrequency: Float) {

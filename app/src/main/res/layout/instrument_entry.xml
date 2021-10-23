@@ -27,6 +27,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_margin="12dp"
         android:src="@drawable/ic_guitar"
+        android:contentDescription="@string/instrument_icon"
         />
 
     <TextView

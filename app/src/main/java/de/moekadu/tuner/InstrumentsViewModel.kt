@@ -6,9 +6,10 @@ import androidx.lifecycle.*
 
 
 class InstrumentsViewModel(initialInstrumentId: Long, application: Application) : AndroidViewModel(application) {
-    // TODO: show active instrument in fragments
-    // TODO: make notes in string view red when not in tune
     // TODO: landscape layout
+    // TODO: make current mark in pitch history red, when out of tune
+    // TODO: translations of instruments (and maybe also notes)
+
     private var _instrument = MutableLiveData<Instrument>().apply {
         value = instrumentDatabase.find { it.stableId == initialInstrumentId } ?: instrumentDatabase[0]
     }

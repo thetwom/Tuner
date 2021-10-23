@@ -60,4 +60,5 @@
     <string name="basic">Basic</string>
     <string name="others">Others</string>
     <string name="instruments">Instruments</string>
+    <string name="instrument_icon">Instrument icon</string>
 </resources>

@@ -19,17 +19,17 @@ class TargetNote {
         }
 
     var instrument: Instrument = instrumentDatabase[0]
-        set(value) {
-            Log.v("Tuner", "TargetNote.instrument.set: value=$value, field=$field")
-            if (value.stableId != field.stableId) {
-                field = value
-                Log.v("Tuner", "TargetNote.instrument.set: frequencyRange=${frequencyRange[0]} -- ${frequencyRange[1]}")
-                if (frequencyRange[1] > frequencyRange[0]) {
-                    // this will also call "recomputeTargetNoteProperties"
-                    setTargetNoteBasedOnFrequency(frequencyForLastTargetNoteDetection, ignoreFrequencyRange = true)
-                }
-            }
-        }
+//        set(value) {
+//            Log.v("Tuner", "TargetNote.instrument.set: value=$value, field=$field")
+//            if (value.stableId != field.stableId) {
+//                field = value
+//                Log.v("Tuner", "TargetNote.instrument.set: frequencyRange=${frequencyRange[0]} -- ${frequencyRange[1]}")
+//                //if (frequencyRange[1] > frequencyRange[0]) {
+//                // this will also call "recomputeTargetNoteProperties"
+//                //setTargetNoteBasedOnFrequency(frequencyForLastTargetNoteDetection, ignoreFrequencyRange = true)
+//                //}
+//            }
+//        }
 
     /// Tolerance in cents for a note to be in tune
     var toleranceInCents = 5
@@ -100,6 +100,11 @@ class TargetNote {
     }
 
     fun setTargetNoteBasedOnFrequency(frequency: Float?, ignoreFrequencyRange: Boolean = false): Int {
+        if (ignoreFrequencyRange) {
+            frequencyRange[0] = 100f
+            frequencyRange[1] = -100f
+        }
+
         if (frequency == null)
             return toneIndex
 
@@ -133,12 +138,12 @@ class TargetNote {
             frequencyRange[0] = if (stringIndex == 0)
                 Float.NEGATIVE_INFINITY
             else
-                tuningFrequencies.getNoteFrequency(0.5f * (instrument.stringsSorted[stringIndex] + instrument.stringsSorted[stringIndex - 1]) - allowedHalfToneDeviationBeforeChangingTarget)
+                tuningFrequencies.getNoteFrequency(0.4f * instrument.stringsSorted[stringIndex] + 0.6f * instrument.stringsSorted[stringIndex - 1])
 
             frequencyRange[1] = if (stringIndex == numStrings - 1)
                 Float.POSITIVE_INFINITY
             else
-                tuningFrequencies.getNoteFrequency(0.5f * (instrument.stringsSorted[stringIndex] + instrument.stringsSorted[stringIndex + 1]) + allowedHalfToneDeviationBeforeChangingTarget)
+                tuningFrequencies.getNoteFrequency(0.4f * instrument.stringsSorted[stringIndex] + 0.6f * instrument.stringsSorted[stringIndex + 1])
             toneIndex = instrument.stringsSorted[stringIndex].roundToInt()
         }
 

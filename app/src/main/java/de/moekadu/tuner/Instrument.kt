@@ -80,7 +80,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
     instruments.add(
         Instrument(
             name = "Ukulele (G-C-E-A)",
-            strings = intArrayOf(-5, 0, 5, 10),
+            strings = intArrayOf(-2, -9, -5, 0),
             type = InstrumentType.Ukulele,
             iconResource = R.drawable.ic_ukulele,
             stableId = instruments.size.toLong()

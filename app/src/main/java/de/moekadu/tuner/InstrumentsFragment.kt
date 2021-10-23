@@ -29,7 +29,7 @@ class InstrumentsFragment : Fragment() {
     override fun onPrepareOptionsMenu(menu : Menu) {
 //        super.onPrepareOptionsMenu(menu)
         menu.findItem(R.id.action_settings)?.isVisible = false
-        menu.findItem(R.id.action_instruments)?.isVisible = false
+//        menu.findItem(R.id.action_instruments)?.isVisible = false
     }
 
     override fun onCreateView(

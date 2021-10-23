@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.*
 import androidx.core.content.ContextCompat
 
-class TouchControlDrawable(context: Context, tint: Int, backgroundTint: Int?, drawableId: Int) {
+class TouchControlDrawable(context: Context, private var tint: Int, private var backgroundTint: Int?, drawableId: Int) {
     private val drawable = ContextCompat.getDrawable(context, drawableId)?.mutate()
 
     private val aspectRatio = (drawable?.intrinsicHeight?.toFloat() ?: 1f) / (drawable?.intrinsicWidth?.toFloat() ?: 1f)
@@ -21,9 +21,25 @@ class TouchControlDrawable(context: Context, tint: Int, backgroundTint: Int?, dr
         style = Paint.Style.FILL
         color = backgroundTint ?: Color.BLACK
     }
-    private val drawBackground = backgroundTint != null
+    private var drawBackground = backgroundTint != null
 
     private var bitmap: Bitmap? = null
+
+    fun setColors(tint: Int = this.tint, backgroundTint: Int? = this.backgroundTint): Boolean {
+        var changed = false
+        if (tint != this.tint) {
+            paint.colorFilter = PorterDuffColorFilter(tint, PorterDuff.Mode.SRC_IN)
+            this.tint = tint
+            changed = true
+        }
+        if (backgroundTint != this.backgroundTint) {
+            backgroundPaint.color = backgroundTint ?: Color.BLACK
+            this.backgroundTint = backgroundTint
+            drawBackground = (backgroundTint != null)
+            changed = true
+        }
+        return changed
+    }
 
     fun setSize(width: Float = USE_ASPECT_RATIO, height: Float = USE_ASPECT_RATIO) {
         require(!(width == USE_ASPECT_RATIO && height == USE_ASPECT_RATIO))
