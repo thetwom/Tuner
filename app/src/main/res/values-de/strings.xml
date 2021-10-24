@@ -46,4 +46,14 @@
     <string name="max_noise_summary">Keine Töne finden, wenn Rauschen über %d&#x200A;%%.</string>
     <string name="scientific_mode">Wissenschaftlicher Modus</string>
     <string name="tolerance_in_cents">Toleranz</string>
+    <string name="expert">Experten</string>
+    <string name="basic">Allgemein</string>
+    <string name="others">Andere</string>
+    <string name="instruments">Instrumente</string>
+    <string name="instrument_icon">Instrument Icon</string>
+    <string name="chromatic">Chromatisch</string>
+    <string name="guitar_eadgbe">6-saitige Gitarre (E-A-D-G-H-E)</string>
+    <string name="bass_eadg">4-saitiger Bass (E-A-D-G)</string>
+    <string name="bass_beadg">5-saitiger Bass (H-E-A-D-G)</string>
+    <string name="ukulele_gcea">Ukulele (G-C-E-A)</string>
 </resources>

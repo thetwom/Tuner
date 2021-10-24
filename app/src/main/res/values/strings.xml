@@ -61,4 +61,10 @@
     <string name="others">Others</string>
     <string name="instruments">Instruments</string>
     <string name="instrument_icon">Instrument icon</string>
+
+    <string name="chromatic">Chromatic</string>
+    <string name="guitar_eadgbe">6-string guitar (E-A-D-G-B-E)</string>
+    <string name="bass_eadg">4-string bass (E-A-D-G)</string>
+    <string name="bass_beadg">5-string bass (B-E-A-D-G)</string>
+    <string name="ukulele_gcea">Ukulele (G-C-E-A)</string>
 </resources>

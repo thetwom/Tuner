@@ -132,7 +132,7 @@ class TunerFragmentSimple : Fragment() {
             Log.v("Tuner", "TunerFragmentSimple.onCreateView: instrumentViewModel.instrument: $instrument")
             viewModel.setInstrument(instrument)
             instrumentIcon?.setImageResource(instrument.iconResource)
-            instrumentTitle?.text = instrument.name
+            instrumentTitle?.text = instrument.getNameString(requireContext())
             if (instrument.type == InstrumentType.Piano) {
                 setStringViewToChromatic()
             } else {

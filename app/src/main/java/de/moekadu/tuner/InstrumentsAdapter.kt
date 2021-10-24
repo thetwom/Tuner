@@ -68,7 +68,7 @@ class InstrumentsAdapter : ListAdapter<Instrument, InstrumentsAdapter.ViewHolder
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val instrument = getItem(position)
-        holder.titleView?.text = instrument.name
+        holder.titleView?.text = instrument.getNameString(holder.view.context)
         holder.icon?.setImageResource(instrument.iconResource)
         holder.isActivated = (instrument.stableId == activatedStableId)
     }

@@ -1,13 +1,22 @@
 package de.moekadu.tuner
 
+import android.content.Context
+
 enum class InstrumentType {
     Piano, Guitar, Bass, Ukulele
 }
 
-data class Instrument(val name: CharSequence, val strings: IntArray, val type: InstrumentType,
+data class Instrument(private val name: CharSequence?, private val nameResource: Int?, val strings: IntArray, val type: InstrumentType,
                       val iconResource: Int, val stableId: Long) {
     val stringsSorted = strings.map { it.toFloat() }.toFloatArray().sortedArray()
 
+    fun getNameString(context: Context): CharSequence {
+        return when {
+            nameResource != null -> context.getString(nameResource)
+            name != null -> name
+            else -> throw RuntimeException("No name given for instrument")
+        }
+    }
     companion object {
         const val NO_STABLE_ID = Long.MAX_VALUE
     }
@@ -43,7 +52,8 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
     val instruments = ArrayList<Instrument>()
     instruments.add(
         Instrument(
-            name = "Piano (chromatic)",
+            name = null,
+            nameResource = R.string.chromatic,
             strings = intArrayOf(),
             type = InstrumentType.Piano,
             iconResource = R.drawable.ic_piano,
@@ -52,7 +62,8 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
     )
     instruments.add(
         Instrument(
-            name = "6-string guitar (E-A-D-G-B-E)",
+            name = null,
+            nameResource = R.string.guitar_eadgbe,
             strings = intArrayOf(-29, -24, -19, -14, -10, -5),
             type = InstrumentType.Guitar,
             iconResource = R.drawable.ic_guitar,
@@ -61,7 +72,8 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
     )
     instruments.add(
         Instrument(
-            name = "4-string bass (E-A-D-G)",
+            name = null,
+            nameResource = R.string.bass_eadg,
             strings = intArrayOf(-41, -36, -31, -26),
             type = InstrumentType.Bass,
             iconResource = R.drawable.ic_bass,
@@ -70,7 +82,8 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
     )
     instruments.add(
         Instrument(
-            name = "5-string bass (B-E-A-D-G)",
+            name = null,
+            nameResource = R.string.bass_beadg,
             strings = intArrayOf(-46, -41, -36, -31, -26),
             type = InstrumentType.Bass,
             iconResource = R.drawable.ic_bass,
@@ -79,7 +92,8 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
     )
     instruments.add(
         Instrument(
-            name = "Ukulele (G-C-E-A)",
+            name = null,
+            nameResource = R.string.ukulele_gcea,
             strings = intArrayOf(-2, -9, -5, 0),
             type = InstrumentType.Ukulele,
             iconResource = R.drawable.ic_ukulele,

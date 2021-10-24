@@ -50,6 +50,7 @@ class InstrumentsFragment : Fragment() {
         instrumentsAdapter.onInstrumentClickedListener = InstrumentsAdapter.OnInstrumentClickedListener { instrument, stableId ->
 //            Log.v("Tuner", "InstrumentsFragment.onCreateView: new instrument: $instrument")
             instrumentsViewModel.setInstrument(instrument)
+            (activity as MainActivity?)?.onBackPressed()
         }
 
         instrumentsViewModel.instrument.observe(viewLifecycleOwner) {
