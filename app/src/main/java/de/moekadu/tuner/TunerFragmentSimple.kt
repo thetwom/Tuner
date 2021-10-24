@@ -268,16 +268,19 @@ class TunerFragmentSimple : Fragment() {
                     pitchPlot?.setPointVisible(true, tag = 1L, suppressInvalidate = true)
                     pitchPlot?.setPointStyle(4, tag = 1L, suppressInvalidate = true)
                     pitchPlot?.setPointOffset(0f, -1.5f * pointSize, 1L, suppressInvalidate = true)
+                    pitchPlot?.setMarkStyle(2, MARK_ID_FREQUENCY, suppressInvalidate = true)
                 }
                 TargetNote.TuningStatus.TooHigh -> {
                     pitchPlot?.setPointStyle(2, suppressInvalidate = true)
                     pitchPlot?.setPointVisible(true, tag = 1L, suppressInvalidate = true)
                     pitchPlot?.setPointStyle(3, tag = 1L, suppressInvalidate = true)
                     pitchPlot?.setPointOffset(0f, 1.5f * pointSize, 1L, suppressInvalidate = true)
+                    pitchPlot?.setMarkStyle(2, MARK_ID_FREQUENCY, suppressInvalidate = true)
                 }
                 else -> {
                     pitchPlot?.setPointStyle(0, suppressInvalidate = true)
                     pitchPlot?.setPointVisible(false, tag = 1L, suppressInvalidate = true)
+                    pitchPlot?.setMarkStyle(0, MARK_ID_FREQUENCY, suppressInvalidate = true)
                 }
             }
         }

@@ -855,17 +855,6 @@ private class PlotMarks(transformation: PlotTransformation,
             boundingBox.bottom = BOUND_UNDEFINED
 
         buildMarkLabels()
-        maxLabelWidth = marks.maxOfOrNull { computeLabelBackgroundWidth(it.layout) } ?: 0f
-        maxLabelHeight = marks.maxOfOrNull { it.layout?.height?.toFloat() ?: 0f } ?: 0f
-
-        labelWidth = when (backgroundSizeType) {
-            MarkLabelBackgroundSize.FitLargest -> maxLabelWidth
-            MarkLabelBackgroundSize.FitIndividually -> null
-        }
-        labelHeight = when (backgroundSizeType) {
-            MarkLabelBackgroundSize.FitLargest -> maxLabelHeight
-            MarkLabelBackgroundSize.FitIndividually -> null
-        }
 
         if (numMarks > 0 || numMarks != numMarksBefore)
             transformAndCallListener(transformation, !boundingBox.contentEquals(oldBoundingBox), suppressInvalidate)
@@ -885,6 +874,18 @@ private class PlotMarks(transformation: PlotTransformation,
         }
 //        for (m in marks)
 //            Log.v("Tuner", "PlotMarks.setMarks: mark=$m")
+    }
+
+    fun setStyleIndex(index: Int, suppressInvalidate: Boolean) {
+        if (index == styleIndex)
+            return
+        styleIndex = index
+        paint.color = colors[styleIndex]
+        paint.strokeWidth = lineWidths[styleIndex]
+        labelPaint.color = labelColors[styleIndex]
+        labelPaint.textSize = textSizes[styleIndex]
+        buildMarkLabels()
+        plotMarksChangedListener?.onPlotMarksChanged(this, hasNewBoundingBox = false, suppressInvalidate)
     }
 
     fun drawToCanvas(canvas: Canvas?) {
@@ -1098,6 +1099,18 @@ private class PlotMarks(transformation: PlotTransformation,
                 null
             }
         }
+
+        maxLabelWidth = marks.maxOfOrNull { computeLabelBackgroundWidth(it.layout) } ?: 0f
+        maxLabelHeight = marks.maxOfOrNull { it.layout?.height?.toFloat() ?: 0f } ?: 0f
+
+        labelWidth = when (backgroundSizeType) {
+            MarkLabelBackgroundSize.FitLargest -> maxLabelWidth
+            MarkLabelBackgroundSize.FitIndividually -> null
+        }
+        labelHeight = when (backgroundSizeType) {
+            MarkLabelBackgroundSize.FitLargest -> maxLabelHeight
+            MarkLabelBackgroundSize.FitIndividually -> null
+        }
     }
 
     companion object {
@@ -1159,7 +1172,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private val boundingBoxOld = RectF(0f, 0f, 0f, 0f)
 
     /// Number of available mark styles
-    private val numMarkStyles = 2
+    private val numMarkStyles = 3
     /// Color of x- and y-marks.
     private var markColor = IntArray(numMarkStyles) {Color.BLACK}
     /// Line width of x- and y-marks.
@@ -1442,6 +1455,11 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             markLineWidth[1] = ta.getDimension(R.styleable.PlotView_markLineWidth2, markLineWidth[1])
             markTextSize[1] = ta.getDimension(R.styleable.PlotView_markTextSize2, markTextSize[1])
             markLabelColor[1] = ta.getColor(R.styleable.PlotView_markLabelColor2, markLabelColor[1])
+
+            markColor[2] = ta.getColor(R.styleable.PlotView_markColor3, markColor[2])
+            markLineWidth[2] = ta.getDimension(R.styleable.PlotView_markLineWidth3, markLineWidth[2])
+            markTextSize[2] = ta.getDimension(R.styleable.PlotView_markTextSize3, markTextSize[2])
+            markLabelColor[2] = ta.getColor(R.styleable.PlotView_markLabelColor3, markLabelColor[2])
 
             tickColor = ta.getColor(R.styleable.PlotView_tickColor, tickColor)
             tickLineWidth = ta.getDimension(R.styleable.PlotView_tickLineWidth, tickLineWidth)
@@ -1795,6 +1813,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     fun setPointVisible(isVisible: Boolean, tag: Long = 0L, suppressInvalidate: Boolean) {
         plotPoints[tag]?.setVisible(isVisible, suppressInvalidate)
+    }
+
+    fun setMarkStyle(styleIndex: Int, tag: Long = 0L, suppressInvalidate: Boolean) {
+        markGroups[tag]?.setStyleIndex(styleIndex, suppressInvalidate)
     }
 
     /// Set x-range.
