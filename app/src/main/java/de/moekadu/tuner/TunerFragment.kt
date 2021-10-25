@@ -136,7 +136,7 @@ class TunerFragment : Fragment() {
 //        }
         viewModel.tuningFrequencies.observe(viewLifecycleOwner) { tuningFrequencies ->
             val noteFrequencies = FloatArray(100) { tuningFrequencies.getNoteFrequency(it - 50) }
-            pitchPlot?.setYTicks(noteFrequencies, false) { _, f -> tuningFrequencies.getNoteName(f) }
+            pitchPlot?.setYTicks(noteFrequencies, false) { _, f -> tuningFrequencies.getNoteName(requireContext(), f) }
             pitchPlot?.setYTouchLimits(noteFrequencies.first(), noteFrequencies.last(), 0L)
         }
 
@@ -213,7 +213,7 @@ class TunerFragment : Fragment() {
                 }
             }
 
-            pitchPlot?.setYMark(targetNote.frequency, targetNote.name, MARK_ID_FREQUENCY, MarkAnchor.East,
+            pitchPlot?.setYMark(targetNote.frequency, targetNote.getNoteName(requireContext(), false), MARK_ID_FREQUENCY, MarkAnchor.East,
                 0, placeLabelsOutsideBoundsIfPossible = true,
                 redraw = true)
         }

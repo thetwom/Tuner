@@ -121,7 +121,7 @@ class TunerFragmentSimple : Fragment() {
 
         viewModel.tuningFrequencies.observe(viewLifecycleOwner) { tuningFrequencies ->
             val noteFrequencies = FloatArray(100) { tuningFrequencies.getNoteFrequency(it - 50) }
-            pitchPlot?.setYTicks(noteFrequencies, false) { _, f -> tuningFrequencies.getNoteName(f) }
+            pitchPlot?.setYTicks(noteFrequencies, false) { _, f -> tuningFrequencies.getNoteName(requireContext(), f) }
             pitchPlot?.setYTouchLimits(noteFrequencies.first(), noteFrequencies.last(), 0L)
 
             if (instrumentsViewModel.instrument.value?.type == InstrumentType.Piano)
@@ -137,7 +137,7 @@ class TunerFragmentSimple : Fragment() {
                 setStringViewToChromatic()
             } else {
                 stringView?.setStrings(instrument.strings) { noteIndex ->
-                    viewModel.tuningFrequencies.value?.getNoteName(noteIndex, preferFlat = false)
+                    viewModel.tuningFrequencies.value?.getNoteName(requireContext(), noteIndex, preferFlat = false)
                 }
             }
             stringView?.setAutomaticControl(0L)
@@ -194,7 +194,7 @@ class TunerFragmentSimple : Fragment() {
                 }
             }
 
-            pitchPlot?.setYMark(targetNote.frequency, targetNote.name, MARK_ID_FREQUENCY, MarkAnchor.East,
+            pitchPlot?.setYMark(targetNote.frequency, targetNote.getNoteName(requireContext(), false), MARK_ID_FREQUENCY, MarkAnchor.East,
                 0, placeLabelsOutsideBoundsIfPossible = true,
                 redraw = true)
 
@@ -234,7 +234,7 @@ class TunerFragmentSimple : Fragment() {
     private fun setStringViewToChromatic() {
         val tuningFrequencies = viewModel.tuningFrequencies.value ?: return
         stringView?.setStrings(IntArray(100) {it - 50}.reversedArray()) { noteIndex ->
-            tuningFrequencies.getNoteName(noteIndex, preferFlat = false)
+            tuningFrequencies.getNoteName(requireContext(), noteIndex, preferFlat = false)
         }
     }
 

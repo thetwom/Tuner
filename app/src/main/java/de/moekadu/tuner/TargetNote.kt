@@ -1,5 +1,6 @@
 package de.moekadu.tuner
 
+import android.content.Context
 import android.util.Log
 import kotlin.math.roundToInt
 
@@ -55,9 +56,9 @@ class TargetNote {
     var toneIndex = 0
         private set
 
-    /// Current note name
-    var name: CharSequence? = null
-        private set
+//    /// Current note name
+//    var name: CharSequence? = null
+//        private set
 
     /// Frequency of current target note
     var frequency = 0f
@@ -159,6 +160,10 @@ class TargetNote {
             toneIndex - toleranceInCents / 100f)
         frequencyUpperTolerance = tuningFrequencies.getNoteFrequency(
             toneIndex + toleranceInCents / 100f)
-        name = tuningFrequencies.getNoteName(frequency)
+//        name = tuningFrequencies.getNoteName(frequency)
+    }
+
+    fun getNoteName(context: Context, preferFlat: Boolean): CharSequence {
+        return tuningFrequencies.getNoteName(context, toneIndex, preferFlat)
     }
 }

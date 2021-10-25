@@ -56,4 +56,17 @@
     <string name="bass_eadg">4-saitiger Bass (E-A-D-G)</string>
     <string name="bass_beadg">5-saitiger Bass (H-E-A-D-G)</string>
     <string name="ukulele_gcea">Ukulele (G-C-E-A)</string>
+
+    <string name="c_note_name">C</string>
+    <string name="cis_note_name">-</string>
+    <string name="d_note_name">D</string>
+    <string name="dis_note_name">-</string>
+    <string name="e_note_name">E</string>
+    <string name="f_note_name">F</string>
+    <string name="fis_note_name">-</string>
+    <string name="g_note_name">G</string>
+    <string name="gis_note_name">-</string>
+    <string name="a_note_name">A</string>
+    <string name="ais_note_name">-</string>
+    <string name="b_note_name">H</string>
 </resources>
