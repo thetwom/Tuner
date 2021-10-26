@@ -88,21 +88,30 @@ class TunerFragmentSimple : Fragment() {
 
         pitchPlot?.yRange(400f, 500f, PlotView.NO_REDRAW)
 
-        stringView?.stringClickedListener = StringView.StringClickedListener { toneIndex ->
-            if (toneIndex == stringView?.activeToneIndex && viewModel.isTargetNoteUserDefined.value == true) {
+        stringView?.stringClickedListener = object : StringView.StringClickedListener {
+            override fun onStringClicked(toneIndex: Int) {
+                if (toneIndex == stringView?.activeToneIndex && viewModel.isTargetNoteUserDefined.value == true) {
+                    viewModel.setTargetNote(TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
+                    stringView?.setAutomaticControl()
+                    //stringView?.showAnchor = false
+                } else if (toneIndex != StringView.NO_ACTIVE_TONE_INDEX) {
+                    viewModel.setTargetNote(toneIndex)
+                }
+            }
+
+            override fun onAnchorClicked() {
                 viewModel.setTargetNote(TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
                 stringView?.setAutomaticControl()
-                stringView?.showAnchor = false
-            } else if (toneIndex == StringView.NO_ACTIVE_TONE_INDEX) {
-                stringView?.setAutomaticControl()
-                stringView?.showAnchor = false
-                //viewModel.setTargetNote(TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
-            } else {
-                viewModel.setTargetNote(toneIndex)
             }
+
+            override fun onBackgroundClicked() {
+                stringView?.setAutomaticControl()
+            }
+        }
+
 //            if (toneIndex != StringView.NO_ACTIVE_TONE_INDEX)
 //                stringView?.activeToneIndex = toneIndex
-        }
+
         //val stringNames = arrayOf<CharSequence>("A", "BBBBB", "CC", "D", "E", "F", "Q", "R")
 //        stringView?.setStrings(intArrayOf(1,2,3,4,5,6,3,4,3,4)) {
 //            stringNames[it]

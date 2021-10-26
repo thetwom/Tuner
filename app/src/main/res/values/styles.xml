@@ -238,7 +238,7 @@
         <item name="touchDrawable">@drawable/ic_manual</item>
         <item name="touchDrawableWidth">25dp</item>
         <item name="touchDrawableBackgroundTint">?attr/colorOnError</item>
-        <item name="anchorDrawable">@drawable/ic_anchor_inv</item>
+        <item name="anchorDrawable">@drawable/ic_anchor_inv_x</item>
         <item name="anchorDrawableWidth">25dp</item>
         <item name="anchorDrawablePosition">right</item>
     </style>

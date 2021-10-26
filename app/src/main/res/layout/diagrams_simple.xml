@@ -71,7 +71,7 @@
         app:stringLineWidth="1dp"
         app:stringLineWidth2="2dp"
         app:stringLineWidth3="2dp"
-        app:anchorDrawableWidth="25sp"
+        app:anchorDrawableWidth="50sp"
         />
 
     <de.moekadu.tuner.PlotView

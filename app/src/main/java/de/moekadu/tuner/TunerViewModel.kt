@@ -185,11 +185,11 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     init {
 //        Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
 
-//        sampleSource.testFunction = { t ->
-//            val freq = 400 + 2*t
-//           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
-//            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
-//        }
+        sampleSource.testFunction = { t ->
+            val freq = 400 + 2*t
+           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
+            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
+        }
 //        sampleSource.testFunction = { t ->
 //            800f * Random.nextFloat()
 //            //1f

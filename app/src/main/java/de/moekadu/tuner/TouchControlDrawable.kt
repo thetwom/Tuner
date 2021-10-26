@@ -25,6 +25,8 @@ class TouchControlDrawable(context: Context, private var tint: Int, private var 
 
     private var bitmap: Bitmap? = null
 
+    private val boundingBox = RectF(0f, 0f, 0f ,0f)
+
     fun setColors(tint: Int = this.tint, backgroundTint: Int? = this.backgroundTint): Boolean {
         var changed = false
         if (tint != this.tint) {
@@ -73,12 +75,21 @@ class TouchControlDrawable(context: Context, private var tint: Int, private var 
                 MarkAnchor.South, MarkAnchor.SouthWest, MarkAnchor.SouthEast -> yPosition - height
             }
 
+            boundingBox.left = x
+            boundingBox.top = y
+            boundingBox.right = x + width
+            boundingBox.bottom = y + height
+
             bitmap?.let {
                 if (drawBackground)
                     canvas?.drawRect(x+1, y+1, x+width-1, y+height-1, backgroundPaint)
                 canvas?.drawBitmap(it, x, y, paint)
             }
         }
+    }
+
+    fun contains(xPosition: Float, yPosition: Float): Boolean {
+        return boundingBox.contains(xPosition, yPosition)
     }
 
     companion object {

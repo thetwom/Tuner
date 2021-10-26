@@ -191,7 +191,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
 
         override fun onSingleTapUp(e: MotionEvent?): Boolean {
-            if (e == null)
+            if (e == null || stringClickedListener == null)
                 return true
 
             val x = e.x
@@ -209,9 +209,15 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 }
             }
 //            Log.v("Tuner", "StringView..onSingleTapUp: toneIndex=$toneIndex")
-            stringClickedListener?.onStringClicked(toneIndex)
-            if (toneIndex == NO_ACTIVE_TONE_INDEX)
-                setAutomaticControl()
+            if (toneIndex != NO_ACTIVE_TONE_INDEX) {
+                stringClickedListener?.onStringClicked(toneIndex)
+            } else if (showAnchor && anchorDrawable.contains(x, y)) {
+                stringClickedListener?.onAnchorClicked()
+            } else {
+                stringClickedListener?.onBackgroundClicked()
+            }
+            //if (toneIndex == NO_ACTIVE_TONE_INDEX)
+            //    setAutomaticControl()
             performClick()
             return true
         }
@@ -219,8 +225,10 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     private val gestureDetector = GestureDetector(context, gestureListener)
 
-    fun interface StringClickedListener {
+    interface StringClickedListener {
         fun onStringClicked(toneIndex: Int)
+        fun onAnchorClicked()
+        fun onBackgroundClicked()
     }
 
     var stringClickedListener : StringClickedListener? = null
@@ -243,7 +251,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         var touchManualControlDrawableWidth = 10f
         var touchDrawableBackgoundTint = Color.WHITE
 
-        var anchorDrawableId = R.drawable.ic_anchor_inv
+        var anchorDrawableId = R.drawable.ic_anchor_inv_x
         var anchorDrawableWidth = 10f
 
         attrs?.let {
@@ -371,7 +379,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             }
             anchorYPos = min(anchorYPos, maxYPos)
             anchorYPos = max(anchorYPos, minYPos)
-            if (anchorDrawablePosition == 0) {// left
+            if (anchorDrawablePosition == 0) { // left
                 anchorDrawable.drawToCanvas(
                     paddingLeft.toFloat() + framePaint.strokeWidth,
                     anchorYPos,
