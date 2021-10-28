@@ -20,13 +20,16 @@ import androidx.dynamicanimation.animation.FloatValueHolder
 import kotlin.math.*
 
 class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
-    : View(context, attrs, defStyleAttr)
-{
+    : View(context, attrs, defStyleAttr) {
     // TODO: allow manual/auto control
-    constructor(context: Context, attrs: AttributeSet? = null) : this(context, attrs, R.attr.stringViewStyle)
+    constructor(context: Context, attrs: AttributeSet? = null) : this(
+        context,
+        attrs,
+        R.attr.stringViewStyle
+    )
 
-    class StringInfo (val toneIndex: Int, val label: CharSequence?) {
-        val layouts = Array<StaticLayout?>(3) {null}
+    class StringInfo(val toneIndex: Int, val label: CharSequence?) {
+        val layouts = Array<StaticLayout?>(3) { null }
     }
 
     private val stringPaint = arrayOf(
@@ -152,12 +155,16 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     /// Number of labels which can be placed next to each other
     private var numCols = 1
+
     /// The total horizontal space each label + equidistant spacing takes
     private var colWidth = 1f
+
     /// Vertical space for needed for each additional string
     private var rowHeight = 1f
+
     /// Current start index of string which is actually visible
     private var stringStartIndex = 0
+
     /// Current end index (index is included) of string which is actually visible
     private var stringEndIndex = 0
 
@@ -168,7 +175,13 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             flingAnimation.cancel()
             return true
         }
-        override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
+
+        override fun onScroll(
+            e1: MotionEvent?,
+            e2: MotionEvent?,
+            distanceX: Float,
+            distanceY: Float
+        ): Boolean {
 //            Log.v("Tuner", "PlotView: gestureListener.OnScroll x=$distanceX, y=$distanceY")
             setManualControl()
             scrollDistance(distanceY)
@@ -199,11 +212,12 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             val halfSizeX = 0.5f * labelWidthExpanded
             val halfSizeY = rowHeight
             var toneIndex = NO_ACTIVE_TONE_INDEX
-            for (i in stringStartIndex .. stringEndIndex) {
+            for (i in stringStartIndex..stringEndIndex) {
                 val xPos = getStringDrawingPositionX(i)
                 val yPos = getStringDrawingPositionY(i)
                 if (x >= xPos - halfSizeX && x < xPos + halfSizeX
-                    && y >= yPos - halfSizeY && y < yPos + halfSizeY) {
+                    && y >= yPos - halfSizeY && y < yPos + halfSizeY
+                ) {
                     toneIndex = strings[i].toneIndex
                     break
                 }
@@ -213,6 +227,9 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 stringClickedListener?.onStringClicked(toneIndex)
             } else if (showAnchor && anchorDrawable.contains(x, y)) {
                 stringClickedListener?.onAnchorClicked()
+            } else if ((anchorDrawablePosition == 0 && x < paddingLeft) ||
+                (anchorDrawablePosition == 1 && x > width - paddingRight)) {
+                setAutomaticControl(200L)
             } else {
                 stringClickedListener?.onBackgroundClicked()
             }
@@ -231,7 +248,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         fun onBackgroundClicked()
     }
 
-    var stringClickedListener : StringClickedListener? = null
+    var stringClickedListener: StringClickedListener? = null
 
     private var automaticScrollToHighlight = true
 
@@ -244,12 +261,15 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 invalidate()
             }
         }
-    private var anchorDrawablePosition = 1
+    private var anchorDrawablePosition = 1 // 0 -> left, 1 -> right
+
+    private var scrollUpDrawable: TouchControlDrawable
+    private var scrollDownDrawable: TouchControlDrawable
 
     init {
         var touchDrawableId = R.drawable.ic_manual
         var touchManualControlDrawableWidth = 10f
-        var touchDrawableBackgoundTint = Color.WHITE
+        var touchDrawableBackgroundTint = Color.WHITE
 
         var anchorDrawableId = R.drawable.ic_anchor_inv_x
         var anchorDrawableWidth = 10f
@@ -261,51 +281,92 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 defStyleAttr,
                 R.style.StringViewStyle
             )
-            labelBackgroundPadding = ta.getDimension(R.styleable.StringView_labelPadding, labelBackgroundPadding)
+            labelBackgroundPadding =
+                ta.getDimension(R.styleable.StringView_labelPadding, labelBackgroundPadding)
             labelSpacing = ta.getDimension(R.styleable.StringView_labelSpacing, labelSpacing)
 
-            labelPaint[0].textSize = ta.getDimension(R.styleable.StringView_labelTextSize, labelPaint[0].textSize)
-            labelPaint[0].color = ta.getColor(R.styleable.StringView_labelTextColor, labelPaint[0].color)
+            labelPaint[0].textSize =
+                ta.getDimension(R.styleable.StringView_labelTextSize, labelPaint[0].textSize)
+            labelPaint[0].color =
+                ta.getColor(R.styleable.StringView_labelTextColor, labelPaint[0].color)
 
-            labelPaint[1].textSize = ta.getDimension(R.styleable.StringView_labelTextSize2, labelPaint[1].textSize)
-            labelPaint[1].color = ta.getColor(R.styleable.StringView_labelTextColor2, labelPaint[1].color)
+            labelPaint[1].textSize =
+                ta.getDimension(R.styleable.StringView_labelTextSize2, labelPaint[1].textSize)
+            labelPaint[1].color =
+                ta.getColor(R.styleable.StringView_labelTextColor2, labelPaint[1].color)
 
-            labelPaint[2].textSize = ta.getDimension(R.styleable.StringView_labelTextSize3, labelPaint[2].textSize)
-            labelPaint[2].color = ta.getColor(R.styleable.StringView_labelTextColor3, labelPaint[2].color)
+            labelPaint[2].textSize =
+                ta.getDimension(R.styleable.StringView_labelTextSize3, labelPaint[2].textSize)
+            labelPaint[2].color =
+                ta.getColor(R.styleable.StringView_labelTextColor3, labelPaint[2].color)
 
-            stringPaint[0].color = ta.getColor(R.styleable.StringView_stringColor, stringPaint[0].color)
-            stringPaint[0].strokeWidth = ta.getDimension(R.styleable.StringView_stringLineWidth, stringPaint[0].strokeWidth)
+            stringPaint[0].color =
+                ta.getColor(R.styleable.StringView_stringColor, stringPaint[0].color)
+            stringPaint[0].strokeWidth =
+                ta.getDimension(R.styleable.StringView_stringLineWidth, stringPaint[0].strokeWidth)
 
-            stringPaint[1].color = ta.getColor(R.styleable.StringView_stringColor2, stringPaint[1].color)
-            stringPaint[1].strokeWidth = ta.getDimension(R.styleable.StringView_stringLineWidth2, stringPaint[1].strokeWidth)
+            stringPaint[1].color =
+                ta.getColor(R.styleable.StringView_stringColor2, stringPaint[1].color)
+            stringPaint[1].strokeWidth =
+                ta.getDimension(R.styleable.StringView_stringLineWidth2, stringPaint[1].strokeWidth)
 
-            stringPaint[2].color = ta.getColor(R.styleable.StringView_stringColor3, stringPaint[2].color)
-            stringPaint[2].strokeWidth = ta.getDimension(R.styleable.StringView_stringLineWidth3, stringPaint[2].strokeWidth)
+            stringPaint[2].color =
+                ta.getColor(R.styleable.StringView_stringColor3, stringPaint[2].color)
+            stringPaint[2].strokeWidth =
+                ta.getDimension(R.styleable.StringView_stringLineWidth3, stringPaint[2].strokeWidth)
 
             labelBackgroundPaint[0].color = stringPaint[0].color
             labelBackgroundPaint[1].color = stringPaint[1].color
             labelBackgroundPaint[2].color = stringPaint[2].color
 
             frameColor = ta.getColor(R.styleable.StringView_frameColor, frameColor)
-            frameColorOnTouch = ta.getColor(R.styleable.StringView_frameColorOnTouch, frameColorOnTouch)
-            framePaint.strokeWidth = ta.getDimension(R.styleable.StringView_frameStrokeWidth, framePaint.strokeWidth)
+            frameColorOnTouch =
+                ta.getColor(R.styleable.StringView_frameColorOnTouch, frameColorOnTouch)
+            framePaint.strokeWidth =
+                ta.getDimension(R.styleable.StringView_frameStrokeWidth, framePaint.strokeWidth)
             framePaint.color = frameColor
 
-            touchDrawableId = ta.getResourceId(R.styleable.StringView_touchDrawable, touchDrawableId)
-            touchManualControlDrawableWidth = ta.getDimension(R.styleable.StringView_touchDrawableWidth, touchManualControlDrawableWidth)
-            touchDrawableBackgoundTint = ta.getColor(R.styleable.StringView_touchDrawableBackgroundTint, touchDrawableBackgoundTint)
+            touchDrawableId =
+                ta.getResourceId(R.styleable.StringView_touchDrawable, touchDrawableId)
+            touchManualControlDrawableWidth = ta.getDimension(
+                R.styleable.StringView_touchDrawableWidth,
+                touchManualControlDrawableWidth
+            )
+            touchDrawableBackgroundTint = ta.getColor(
+                R.styleable.StringView_touchDrawableBackgroundTint,
+                touchDrawableBackgroundTint
+            )
 
-            anchorDrawableId = ta.getResourceId(R.styleable.StringView_anchorDrawable, anchorDrawableId)
-            anchorDrawableWidth = ta.getDimension(R.styleable.StringView_anchorDrawableWidth, anchorDrawableWidth)
+            anchorDrawableId =
+                ta.getResourceId(R.styleable.StringView_anchorDrawable, anchorDrawableId)
+            anchorDrawableWidth =
+                ta.getDimension(R.styleable.StringView_anchorDrawableWidth, anchorDrawableWidth)
             anchorDrawablePosition = ta.getInt(R.styleable.StringView_anchorDrawablePosition, 1)
             ta.recycle()
         }
 
-        touchManualControlDrawable = TouchControlDrawable(context, frameColorOnTouch, touchDrawableBackgoundTint, touchDrawableId)
+        touchManualControlDrawable = TouchControlDrawable(
+            context,
+            frameColorOnTouch,
+            touchDrawableBackgroundTint,
+            touchDrawableId
+        )
         touchManualControlDrawable.setSize(width = touchManualControlDrawableWidth)
 
-        anchorDrawable = TouchControlDrawable(context, labelBackgroundPaint[activeToneStyle].color, labelPaint[activeToneStyle].color, anchorDrawableId)
+        anchorDrawable = TouchControlDrawable(
+            context,
+            labelBackgroundPaint[activeToneStyle].color,
+            labelPaint[activeToneStyle].color,
+            anchorDrawableId
+        )
         anchorDrawable.setSize(width = anchorDrawableWidth)
+
+        scrollUpDrawable = TouchControlDrawable(context, frameColor, null, R.drawable.ic_scroll_up)
+        scrollUpDrawable.setSize(width = 0.5f * anchorDrawableWidth)
+
+        scrollDownDrawable =
+            TouchControlDrawable(context, frameColor, null, R.drawable.ic_scroll_down)
+        scrollDownDrawable.setSize(width = 0.5f * anchorDrawableWidth)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -313,9 +374,15 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         var proposedWidth = max(MeasureSpec.getSize(widthMeasureSpec), suggestedMinimumWidth)
         if (widthMode == MeasureSpec.UNSPECIFIED)
-            proposedWidth = max(6 * ((labelWidth + labelSpacing) + labelSpacing + paddingLeft + paddingRight + 2 * framePaint.strokeWidth).toInt(), suggestedMinimumWidth)
+            proposedWidth = max(
+                6 * ((labelWidth + labelSpacing) + labelSpacing + paddingLeft + paddingRight + 2 * framePaint.strokeWidth).toInt(),
+                suggestedMinimumWidth
+            )
         val w = resolveSize(proposedWidth, widthMeasureSpec)
-        val desiredHeight = max((paddingTop + getTotalStringHeight() + 2 * (labelSpacing + framePaint.strokeWidth) + paddingBottom).roundToInt() + 1, suggestedMinimumHeight)
+        val desiredHeight = max(
+            (paddingTop + getTotalStringHeight() + 2 * (labelSpacing + framePaint.strokeWidth) + paddingBottom).roundToInt() + 1,
+            suggestedMinimumHeight
+        )
         val h = resolveSize(desiredHeight, heightMeasureSpec)
 //        Log.v("Tuner", "StringView.onMeasure: width=${MeasureSpec.toString(widthMeasureSpec)}, height=${MeasureSpec.toString(heightMeasureSpec)}, desiredHeight=$desiredHeight, resolvedHeight=$h")
         setMeasuredDimension(w, h)
@@ -337,7 +404,8 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 //        Log.v("Tuner", "StringView.onDraw: yOffset = $yOffset")
         if (canvas == null)
             return
-        canvas.drawRect(paddingLeft.toFloat() + 0.5f * framePaint.strokeWidth,
+        canvas.drawRect(
+            paddingLeft.toFloat() + 0.5f * framePaint.strokeWidth,
             paddingTop.toFloat() + 0.5f * framePaint.strokeWidth,
             width - paddingRight.toFloat() - 0.5f * framePaint.strokeWidth,
             height - paddingBottom.toFloat() - 0.5f * framePaint.strokeWidth,
@@ -345,33 +413,45 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         )
         //canvas.save()
         //canvas.clipRect(paddingLeft, paddingTop, width - paddingRight, height - paddingBottom)
-        canvas.clipRect(0, (paddingTop + framePaint.strokeWidth).toInt(), width, (height - paddingBottom - framePaint.strokeWidth).toInt())
+        canvas.clipRect(
+            0,
+            (paddingTop + framePaint.strokeWidth).toInt(),
+            width,
+            (height - paddingBottom - framePaint.strokeWidth).toInt()
+        )
         var anchorYPos = NO_ANCHOR
 
-        for (i in stringStartIndex .. stringEndIndex) {
+        for (i in stringStartIndex..stringEndIndex) {
             val xPos = getStringDrawingPositionX(i)
             val yPos = getStringDrawingPositionY(i)
-            drawString(xPos, yPos, strings[i], if (strings[i].toneIndex == activeToneIndex) activeToneStyle else 0, canvas)
+            drawString(
+                xPos,
+                yPos,
+                strings[i],
+                if (strings[i].toneIndex == activeToneIndex) activeToneStyle else 0,
+                canvas
+            )
 
             if (strings[i].toneIndex == activeToneIndex)
                 anchorYPos = yPos
         }
 
-        if (!automaticScrollToHighlight) {
-            touchManualControlDrawable.drawToCanvas(
-                width - paddingRight.toFloat() - 0.5f * framePaint.strokeWidth + 1,
-                paddingTop.toFloat() + 0.5f * framePaint.strokeWidth - 1,
-                MarkAnchor.NorthEast,
-                canvas
-            )
-        }
+//        if (!automaticScrollToHighlight) {
+//            touchManualControlDrawable.drawToCanvas(
+//                width - paddingRight.toFloat() - 0.5f * framePaint.strokeWidth + 1,
+//                paddingTop.toFloat() + 0.5f * framePaint.strokeWidth - 1,
+//                MarkAnchor.NorthEast,
+//                canvas
+//            )
+//        }
 
         //canvas.restore()
         if (showAnchor) {
             val minYPos = paddingTop + 0.5f * anchorDrawable.height + framePaint.strokeWidth
-            val maxYPos = height - paddingBottom - 0.5f * anchorDrawable.height - framePaint.strokeWidth
+            val maxYPos =
+                height - paddingBottom - 0.5f * anchorDrawable.height - framePaint.strokeWidth
 
-            if (anchorYPos == NO_ANCHOR){
+            if (anchorYPos == NO_ANCHOR) {
                 anchorYPos = if (activeStringIndex < stringStartIndex)
                     minYPos
                 else
@@ -390,6 +470,29 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                     width - paddingRight.toFloat() - framePaint.strokeWidth,
                     anchorYPos,
                     MarkAnchor.West, canvas
+                )
+            }
+        }
+
+        if (!automaticScrollToHighlight && activeToneIndex != NO_ACTIVE_TONE_INDEX) {
+            val yOffsetTarget = getYOffsetAutoScroll(activeStringIndex)
+            val xPositionScrollDrawable = if (anchorDrawablePosition == 0) { // left
+                paddingLeft.toFloat() + framePaint.strokeWidth - 0.5f * anchorDrawable.width
+            } else { // right
+                width - paddingRight.toFloat() - framePaint.strokeWidth + 0.5f * anchorDrawable.width
+            }
+            if (yOffsetTarget <= yOffset) {
+                scrollUpDrawable.drawToCanvas(
+                    xPositionScrollDrawable,
+                    paddingTop + framePaint.strokeWidth,
+                    MarkAnchor.North, canvas
+                )
+            }
+            if (yOffsetTarget >= yOffset) {
+                scrollDownDrawable.drawToCanvas(
+                    xPositionScrollDrawable,
+                    height - paddingBottom - framePaint.strokeWidth,
+                    MarkAnchor.South, canvas
                 )
             }
         }
@@ -434,11 +537,14 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         if (stringIndex >= 0) {
             flingAnimation.cancel()
 
-            val yPosOfString = paddingTop + 0.5f * height
-            // yPos = yOffset + paddingTop + 0.5f * labelHeight + stringIndex * rowHeight
-            var yOffsetTarget = yPosOfString - (paddingTop + 0.5f * labelHeight + stringIndex * rowHeight)
-            yOffsetTarget = min(yOffsetTarget, computeOffsetMax())
-            yOffsetTarget = max(yOffsetTarget, computeOffsetMin())
+//            val yPosOfString = paddingTop + 0.5f * height
+//            // yPos = yOffset + paddingTop + 0.5f * labelHeight + stringIndex * rowHeight
+//            var yOffsetTarget =
+//                yPosOfString - (paddingTop + 0.5f * labelHeight + stringIndex * rowHeight)
+//            yOffsetTarget = min(yOffsetTarget, computeOffsetMax())
+//            yOffsetTarget = max(yOffsetTarget, computeOffsetMin())
+            val yOffsetTarget = getYOffsetAutoScroll(stringIndex)
+
 //            Log.v("Tuner", "StringView.scrollToString yOffsetMin = ${computeOffsetMin()}, yOffsetMax=${computeOffsetMax()}, yOffsetTarget=$yOffsetTarget")
             offsetAnimator.cancel()
 
@@ -461,7 +567,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         if (computeOffsetMax() == computeOffsetMin())
             return
         automaticScrollToHighlight = false
-        framePaint.color = frameColorOnTouch
+        //framePaint.color = frameColorOnTouch
         invalidate()
     }
 
@@ -490,15 +596,28 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         ViewCompat.postInvalidateOnAnimation(this@StringView)
     }
 
-    private fun drawString(xPos: Float, yPos: Float, stringInfo: StringInfo, styleIndex: Int, canvas: Canvas) {
-        canvas.drawLine(paddingLeft.toFloat() + framePaint.strokeWidth, yPos,
-            width.toFloat() - paddingRight - framePaint.strokeWidth, yPos, stringPaint[styleIndex])
-        canvas.drawRect(xPos - 0.5f * labelWidthExpanded, yPos - 0.5f * labelHeight, xPos + 0.5f * labelWidthExpanded,
-            yPos + 0.5f * labelHeight, labelBackgroundPaint[styleIndex])
+    private fun drawString(
+        xPos: Float,
+        yPos: Float,
+        stringInfo: StringInfo,
+        styleIndex: Int,
+        canvas: Canvas
+    ) {
+        canvas.drawLine(
+            paddingLeft.toFloat() + framePaint.strokeWidth, yPos,
+            width.toFloat() - paddingRight - framePaint.strokeWidth, yPos, stringPaint[styleIndex]
+        )
+        canvas.drawRect(
+            xPos - 0.5f * labelWidthExpanded,
+            yPos - 0.5f * labelHeight,
+            xPos + 0.5f * labelWidthExpanded,
+            yPos + 0.5f * labelHeight,
+            labelBackgroundPaint[styleIndex]
+        )
 
         stringInfo.layouts[styleIndex]?.let { layout ->
             canvas.withTranslation(
-                xPos - 0.5f * layout.width,yPos - 0.5f * layout.height
+                xPos - 0.5f * layout.width, yPos - 0.5f * layout.height
             ) {
                 layout.draw(this)
             }
@@ -508,10 +627,10 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private fun buildLabelLayout(label: CharSequence?, index: Int): StaticLayout? {
         return if (label != null) {
             val desiredWidth = ceil(StaticLayout.getDesiredWidth(label, labelPaint[index])).toInt()
-            val builder = StaticLayout.Builder.obtain(label,0, label.length, labelPaint[index], desiredWidth)
+            val builder =
+                StaticLayout.Builder.obtain(label, 0, label.length, labelPaint[index], desiredWidth)
             builder.build()
-        }
-        else {
+        } else {
             null
         }
     }
@@ -522,7 +641,8 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     private fun getStringDrawingPositionY(stringIndex: Int): Float {
-        val effectiveHeight = height - paddingTop - paddingBottom - 2 * (framePaint.strokeWidth + labelSpacing)
+        val effectiveHeight =
+            height - paddingTop - paddingBottom - 2 * (framePaint.strokeWidth + labelSpacing)
         val stringTotalHeight = getTotalStringHeight()
         val yOffsetMod = if (effectiveHeight > stringTotalHeight) {
             0.5f * (effectiveHeight - stringTotalHeight)
@@ -548,8 +668,12 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         // yOffset + paddingTop + framePaint.strokeWith + labelSpacing + 0.5f * labelHeight + i * rowHeight - 0.5f * labelHeight < height - paddingBottom - framePaint.strokeWidth
         // i * rowHeight < height - paddingBottom - paddingTop - yOffset - 2 * framePaint.strokeWidth - labelSpacing
         // i > (height - paddingBottom - paddingTop - yOffset - 2 * framePaint.strokeWidth - labelSpacing) / rowHeight
-        stringStartIndex = max(0, floor(-(yOffset + labelHeight + labelSpacing) / rowHeight).toInt())
-        stringEndIndex = min(strings.size-1, ceil((h - paddingBottom - paddingTop - yOffset - 2 * framePaint.strokeWidth - labelSpacing) / rowHeight).toInt())
+        stringStartIndex =
+            max(0, floor(-(yOffset + labelHeight + labelSpacing) / rowHeight).toInt())
+        stringEndIndex = min(
+            strings.size - 1,
+            ceil((h - paddingBottom - paddingTop - yOffset - 2 * framePaint.strokeWidth - labelSpacing) / rowHeight).toInt()
+        )
     }
 
     private fun computeOffsetMin(): Float {
@@ -564,12 +688,23 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     private fun getRowHeight(): Float {
-        val maxStrokeWidth = stringPaint.maxOf {it.strokeWidth}
+        val maxStrokeWidth = stringPaint.maxOf { it.strokeWidth }
         return 0.5f * (labelHeight + maxStrokeWidth) + labelSpacing
     }
 
     private fun getTotalStringHeight(): Float {
         return (strings.size - 1) * getRowHeight() + labelHeight
+    }
+
+    private fun getYOffsetAutoScroll(stringIndex: Int): Float {
+        val yPosOfString = paddingTop + 0.5f * height
+        // from getStringDrawingPositionY
+        // yPosOfString = yOffsetMod + paddingTop + framePaint.strokeWidth + labelSpacing + 0.5f * labelHeight + stringIndex * rowHeight
+        // -> yOffset = yPosOfString - (paddingTop + framePaint.strokeWidth + labelSpacing + 0.5f * labelHeight + stringIndex * rowHeight)
+        var offset = yPosOfString - (paddingTop + framePaint.strokeWidth + labelSpacing + 0.5f * labelHeight + stringIndex * rowHeight)
+        offset = min(offset, computeOffsetMax())
+        offset = max(offset, computeOffsetMin())
+        return offset
     }
 
     companion object {

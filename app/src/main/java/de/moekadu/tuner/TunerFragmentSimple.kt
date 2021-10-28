@@ -105,7 +105,7 @@ class TunerFragmentSimple : Fragment() {
             }
 
             override fun onBackgroundClicked() {
-                stringView?.setAutomaticControl()
+                // stringView?.setAutomaticControl()
             }
         }
 
