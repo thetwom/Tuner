@@ -1,0 +1,7 @@
+v2.0.0:
+- Introduce simple mode
+- Further UI improvments
+
+v2.0.1:
+- Fix: Configuration changes (e.g. rotation) loaded ui twice
+- Use center-to-current note icon instead of scroll-up/down icon
