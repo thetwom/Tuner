@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.*
 import androidx.core.content.ContextCompat
 
-class TouchControlDrawable(context: Context, private var tint: Int, private var backgroundTint: Int?, drawableId: Int) {
+class TouchControlDrawable(context: Context, private var tint: Int?, private var backgroundTint: Int?, drawableId: Int) {
     private val drawable = ContextCompat.getDrawable(context, drawableId)?.mutate()
 
     private val aspectRatio = (drawable?.intrinsicHeight?.toFloat() ?: 1f) / (drawable?.intrinsicWidth?.toFloat() ?: 1f)
@@ -14,7 +14,11 @@ class TouchControlDrawable(context: Context, private var tint: Int, private var 
         private set
 
     private val paint = Paint().apply {
-        colorFilter = PorterDuffColorFilter(tint, PorterDuff.Mode.SRC_IN)
+        val tintTmp = tint
+        colorFilter = if (tintTmp != null)
+            PorterDuffColorFilter(tintTmp, PorterDuff.Mode.SRC_IN)
+        else
+            null
     }
 
     private val backgroundPaint = Paint().apply {
@@ -27,10 +31,14 @@ class TouchControlDrawable(context: Context, private var tint: Int, private var 
 
     private val boundingBox = RectF(0f, 0f, 0f ,0f)
 
-    fun setColors(tint: Int = this.tint, backgroundTint: Int? = this.backgroundTint): Boolean {
+    fun setColors(tint: Int? = this.tint, backgroundTint: Int? = this.backgroundTint): Boolean {
         var changed = false
         if (tint != this.tint) {
-            paint.colorFilter = PorterDuffColorFilter(tint, PorterDuff.Mode.SRC_IN)
+            val tintTmp = tint
+            paint.colorFilter = if (tintTmp != null)
+                PorterDuffColorFilter(tintTmp, PorterDuff.Mode.SRC_IN)
+            else
+                null
             this.tint = tint
             changed = true
         }

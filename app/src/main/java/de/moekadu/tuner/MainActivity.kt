@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private var scientificMode = TunerMode.Unknown
+    // private var scientificMode = TunerMode.Unknown
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,7 +67,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar))
 
-        loadSimpleOrScientificFragment()
+        if (savedInstanceState == null)
+            loadSimpleOrScientificFragment()
         setDisplayHomeButton()
 
         supportFragmentManager.addOnBackStackChangedListener {
@@ -132,13 +133,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadSimpleOrScientificFragment() {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val scientificModeFromPref = if (sharedPreferences.getBoolean("scientific", false))
+        val currentMode = when (supportFragmentManager.findFragmentById(R.id.main_content)) {
+            is TunerFragment -> TunerMode.Scientific // Log.v("Tuner", "MainActivity.loadSimpleOrScientificFragment: activeFragment = TunerFragment")
+            is TunerFragmentSimple -> TunerMode.Simple // Log.v("Tuner", "MainActivity.loadSimpleOrScientificFragment: activeFragment = TunerFragmentSimple")
+            //null ->  Log.v("Tuner", "MainActivity.loadSimpleOrScientificFragment: activeFragment = null")
+            else -> TunerMode.Unknown // Log.v("Tuner", "MainActivity.loadSimpleOrScientificFragment: activeFragment = something else")
+        }
+        val modeFromPreferences = if (sharedPreferences.getBoolean("scientific", false))
             TunerMode.Scientific
         else
             TunerMode.Simple
 
-        if (scientificModeFromPref != scientificMode) {
-            when (scientificModeFromPref) {
+        if (modeFromPreferences != currentMode) {
+            when (modeFromPreferences) {
                 TunerMode.Scientific -> {
                     supportFragmentManager.commit {
                         setReorderingAllowed(true)
@@ -155,7 +162,7 @@ class MainActivity : AppCompatActivity() {
 
                 }
             }
-            scientificMode = scientificModeFromPref
+            // scientificMode = modeFromPreferences
         }
     }
 }

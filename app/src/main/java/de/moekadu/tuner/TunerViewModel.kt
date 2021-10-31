@@ -185,11 +185,11 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     init {
 //        Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
 
-//        sampleSource.testFunction = { t ->
-//            val freq = 400 + 2*t
-//           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
-//            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
-//        }
+        sampleSource.testFunction = { t ->
+            val freq = 400 + 2*t
+           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
+            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
+        }
 //        sampleSource.testFunction = { t ->
 //            800f * Random.nextFloat()
 //            //1f
@@ -267,7 +267,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun startSampling() {
-        Log.v("Tuner", "TunerViewModel.startSampling")
+        //Log.v("Tuner", "TunerViewModel.startSampling")
         sampleSource.restartSampling()
     }
 
@@ -299,10 +299,10 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setInstrument(instrument: Instrument) {
-        Log.v("Tuner", "TunerViewModel.setInstrument $instrument, before: ${targetNoteValue.instrument}")
+        //Log.v("Tuner", "TunerViewModel.setInstrument $instrument, before: ${targetNoteValue.instrument}")
         // val oldTargetNote = targetNoteValue.toneIndex
         if (targetNoteValue.instrument.stableId != instrument.stableId) {
-            Log.v("Tuner", "TunerViewModel.setInstrument ...")
+            //Log.v("Tuner", "TunerViewModel.setInstrument ...")
             targetNoteValue.instrument = instrument
             setTargetNote(AUTOMATIC_TARGET_NOTE_DETECTION)
         }

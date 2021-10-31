@@ -17,6 +17,8 @@
         <entry key="app/src/main/res/drawable/ic_moving_average.xml" value="0.29635416666666664" />
         <entry key="app/src/main/res/drawable/ic_piano.xml" value="0.2537037037037037" />
         <entry key="app/src/main/res/drawable/ic_scoll_up.xml" value="0.2740740740740741" />
+        <entry key="app/src/main/res/drawable/ic_scroll_center.xml" value="0.262037037037037" />
+        <entry key="app/src/main/res/drawable/ic_scroll_center_red.xml" value="0.262037037037037" />
         <entry key="app/src/main/res/drawable/ic_scroll_down.xml" value="0.2740740740740741" />
         <entry key="app/src/main/res/drawable/ic_settings_black.xml" value="0.2537037037037037" />
         <entry key="app/src/main/res/drawable/ic_tolerance.xml" value="0.3453125" />

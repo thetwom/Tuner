@@ -263,8 +263,10 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
     private var anchorDrawablePosition = 1 // 0 -> left, 1 -> right
 
-    private var scrollUpDrawable: TouchControlDrawable
-    private var scrollDownDrawable: TouchControlDrawable
+    private var scrollCenterDrawable: TouchControlDrawable
+    private var scrollCenterDrawableRed: TouchControlDrawable
+    //private var scrollUpDrawable: TouchControlDrawable
+    //private var scrollDownDrawable: TouchControlDrawable
 
     init {
         var touchDrawableId = R.drawable.ic_manual
@@ -361,12 +363,19 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         )
         anchorDrawable.setSize(width = anchorDrawableWidth)
 
-        scrollUpDrawable = TouchControlDrawable(context, frameColor, null, R.drawable.ic_scroll_up)
-        scrollUpDrawable.setSize(width = 0.5f * anchorDrawableWidth)
+//        scrollUpDrawable = TouchControlDrawable(context, frameColor, null, R.drawable.ic_scroll_up)
+//        scrollUpDrawable.setSize(width = 0.5f * anchorDrawableWidth)
+//
+//        scrollDownDrawable =
+//            TouchControlDrawable(context, frameColor, null, R.drawable.ic_scroll_down)
+//        scrollDownDrawable.setSize(width = 0.5f * anchorDrawableWidth)scrollUpDrawable = TouchControlDrawable(context, frameColor, null, R.drawable.ic_scroll_up)
+//        scrollUpDrawable.setSize(width = 0.5f * anchorDrawableWidth)
 
-        scrollDownDrawable =
-            TouchControlDrawable(context, frameColor, null, R.drawable.ic_scroll_down)
-        scrollDownDrawable.setSize(width = 0.5f * anchorDrawableWidth)
+        scrollCenterDrawable = TouchControlDrawable(context, null, null, R.drawable.ic_scroll_center)
+        scrollCenterDrawable.setSize(width = 0.5f * anchorDrawableWidth)
+        scrollCenterDrawableRed = TouchControlDrawable(context, null, null, R.drawable.ic_scroll_center_red)
+        scrollCenterDrawableRed.setSize(width = 0.5f * anchorDrawableWidth)
+
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -475,26 +484,49 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
 
         if (!automaticScrollToHighlight && activeToneIndex != NO_ACTIVE_TONE_INDEX) {
-            val yOffsetTarget = getYOffsetAutoScroll(activeStringIndex)
+            // val yOffsetTarget = getYOffsetAutoScroll(activeStringIndex)
+            var yPosition = 0.5f * (paddingTop + height - paddingBottom)
+            if (showAnchor && anchorYPos != NO_ANCHOR && anchorYPos >= yPosition){ //draw above anchor
+                yPosition = min(yPosition, anchorYPos - 0.5f * (anchorDrawable.height + scrollCenterDrawable.height) - framePaint.strokeWidth)
+            } else if (showAnchor && anchorYPos != NO_ANCHOR && anchorYPos < yPosition) { //draw below anchor
+                yPosition = max(yPosition, anchorYPos + 0.5f * (anchorDrawable.height + scrollCenterDrawable.height) + framePaint.strokeWidth)
+            }
+
             val xPositionScrollDrawable = if (anchorDrawablePosition == 0) { // left
                 paddingLeft.toFloat() + framePaint.strokeWidth - 0.5f * anchorDrawable.width
             } else { // right
                 width - paddingRight.toFloat() - framePaint.strokeWidth + 0.5f * anchorDrawable.width
             }
-            if (yOffsetTarget <= yOffset) {
-                scrollUpDrawable.drawToCanvas(
+
+            if (activeToneStyle == 1) {
+                scrollCenterDrawable.drawToCanvas(
                     xPositionScrollDrawable,
-                    paddingTop + framePaint.strokeWidth,
-                    MarkAnchor.North, canvas
+                    yPosition,
+                    MarkAnchor.Center, canvas
+                )
+            } else if (activeToneStyle == 2) {
+                scrollCenterDrawableRed.drawToCanvas(
+                    xPositionScrollDrawable,
+                    yPosition,
+                    MarkAnchor.Center, canvas
                 )
             }
-            if (yOffsetTarget >= yOffset) {
-                scrollDownDrawable.drawToCanvas(
-                    xPositionScrollDrawable,
-                    height - paddingBottom - framePaint.strokeWidth,
-                    MarkAnchor.South, canvas
-                )
-            }
+
+
+//            if (yOffsetTarget <= yOffset) {
+//                scrollUpDrawable.drawToCanvas(
+//                    xPositionScrollDrawable,
+//                    paddingTop + framePaint.strokeWidth,
+//                    MarkAnchor.North, canvas
+//                )
+//            }
+//            if (yOffsetTarget >= yOffset) {
+//                scrollDownDrawable.drawToCanvas(
+//                    xPositionScrollDrawable,
+//                    height - paddingBottom - framePaint.strokeWidth,
+//                    MarkAnchor.South, canvas
+//                )
+//            }
         }
     }
 
@@ -572,7 +604,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun setAutomaticControl(animationDuration: Long = 200L) {
-        Log.v("Tuner", "StringView.setAutomaticControl")
+        // Log.v("Tuner", "StringView.setAutomaticControl")
         automaticScrollToHighlight = true
         framePaint.color = frameColor
         if (activeToneIndex != NO_ACTIVE_TONE_INDEX)

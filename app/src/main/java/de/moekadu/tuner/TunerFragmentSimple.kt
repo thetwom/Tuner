@@ -77,7 +77,7 @@ class TunerFragmentSimple : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        Log.v("Tuner", "TunerFragmentSimple.onCreateView")
+        // Log.v("Tuner", "TunerFragmentSimple.onCreateView")
         val view = inflater.inflate(R.layout.diagrams_simple, container, false)
 
         pitchPlot = view.findViewById(R.id.pitch_plot)
@@ -138,7 +138,7 @@ class TunerFragmentSimple : Fragment() {
         }
 
         instrumentsViewModel.instrument.observe(viewLifecycleOwner) { instrument ->
-            Log.v("Tuner", "TunerFragmentSimple.onCreateView: instrumentViewModel.instrument: $instrument")
+            //Log.v("Tuner", "TunerFragmentSimple.onCreateView: instrumentViewModel.instrument: $instrument")
             viewModel.setInstrument(instrument)
             instrumentIcon?.setImageResource(instrument.iconResource)
             instrumentTitle?.text = instrument.getNameString(requireContext())
