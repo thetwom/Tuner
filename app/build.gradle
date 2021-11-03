@@ -29,12 +29,12 @@ android {
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation 'androidx.core:core-ktx:1.7.0-rc01'
-    implementation 'androidx.appcompat:appcompat:1.4.0-beta01'
-    implementation 'androidx.activity:activity-ktx:1.4.0-rc01'
-    implementation 'androidx.fragment:fragment-ktx:1.4.0-alpha10'
+    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation 'androidx.appcompat:appcompat:1.4.0-rc01'
+    implementation 'androidx.activity:activity-ktx:1.4.0'
+    implementation 'androidx.fragment:fragment-ktx:1.4.0-beta01'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2-native-mt"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0-rc01"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0"
     implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
     implementation 'androidx.preference:preference-ktx:1.1.1'
     implementation 'com.google.android.material:material:1.5.0-alpha05'

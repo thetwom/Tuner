@@ -1,7 +1,8 @@
 v2.0.0:
 - Introduce simple mode
-- Further UI improvments
+- Further UI improvements
 
 v2.0.1:
 - Fix: Configuration changes (e.g. rotation) loaded ui twice
+- Fix: Switching between simple/scientific mode sometimes stopped tuner
 - Use center-to-current note icon instead of scroll-up/down icon

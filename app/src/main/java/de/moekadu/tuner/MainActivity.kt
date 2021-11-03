@@ -71,10 +71,14 @@ class MainActivity : AppCompatActivity() {
             loadSimpleOrScientificFragment()
         setDisplayHomeButton()
 
+        supportFragmentManager.addFragmentOnAttachListener { fragmentManager, fragment ->
+            setDisplayHomeButton()
+        }
+
         supportFragmentManager.addOnBackStackChangedListener {
             setDisplayHomeButton()
-            if (supportFragmentManager.backStackEntryCount == 0)
-                loadSimpleOrScientificFragment()
+            //if (supportFragmentManager.backStackEntryCount == 0)
+            //    loadSimpleOrScientificFragment()
         }
     }
 
@@ -82,8 +86,22 @@ class MainActivity : AppCompatActivity() {
         AppPreferences.writeTunerPreferences(instrumentsViewModel.instrument.value?.stableId, this)
         super.onStop()
     }
+
+    override fun onBackPressed() {
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            supportFragmentManager.popBackStack()
+        } else if (!isCurrentFragmentATunerFragment()){
+            loadSimpleOrScientificFragment()
+        } else {
+            super.onBackPressed()
+        }
+    }
     override fun onSupportNavigateUp(): Boolean {
-        supportFragmentManager.popBackStack()
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            supportFragmentManager.popBackStack()
+        } else if (!isCurrentFragmentATunerFragment()){
+            loadSimpleOrScientificFragment()
+        }
         return super.onSupportNavigateUp()
     }
 
@@ -98,7 +116,8 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.commit {
                 setReorderingAllowed(true)
                 replace<SettingsFragment>(R.id.main_content)
-                addToBackStack(null)
+                if (!isCurrentFragmentATunerFragment())
+                    addToBackStack(null)
             }
             true
         }
@@ -122,13 +141,22 @@ class MainActivity : AppCompatActivity() {
         supportFragmentManager.commit {
             setReorderingAllowed(true)
             replace<InstrumentsFragment>(R.id.main_content)
-            addToBackStack(null)
+            if (!isCurrentFragmentATunerFragment())
+                addToBackStack(null)
         }
     }
 
     private fun setDisplayHomeButton() {
-        val showDisplayHomeButton = supportFragmentManager.backStackEntryCount > 0
+        val showDisplayHomeButton = !isCurrentFragmentATunerFragment() //supportFragmentManager.backStackEntryCount > 0
         supportActionBar?.setDisplayHomeAsUpEnabled(showDisplayHomeButton)
+    }
+
+    private fun isCurrentFragmentATunerFragment(): Boolean {
+        return when (supportFragmentManager.findFragmentById(R.id.main_content)) {
+            is TunerFragment -> true
+            is TunerFragmentSimple -> true
+            else -> false
+        }
     }
 
     private fun loadSimpleOrScientificFragment() {
