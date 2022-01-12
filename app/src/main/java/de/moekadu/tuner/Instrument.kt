@@ -56,7 +56,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
             nameResource = R.string.chromatic,
             strings = intArrayOf(),
             type = InstrumentType.Piano,
-            iconResource = R.drawable.ic_piano,
+            iconResource = R.drawable.ic_piano2,
             stableId = instruments.size.toLong() // this should be set by a id generator
         )
     )
