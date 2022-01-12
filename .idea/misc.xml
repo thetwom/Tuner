@@ -23,6 +23,7 @@
         <entry key="app/src/main/res/drawable/ic_settings_black.xml" value="0.2537037037037037" />
         <entry key="app/src/main/res/drawable/ic_tolerance.xml" value="0.3453125" />
         <entry key="app/src/main/res/drawable/ic_ukulele.xml" value="0.2537037037037037" />
+        <entry key="app/src/main/res/drawable/ic_violin.xml" value="0.3751906456532791" />
         <entry key="app/src/main/res/drawable/instrument_background_active.xml" value="0.24722222222222223" />
         <entry key="app/src/main/res/drawable/instrument_entry_background.xml" value="0.3875" />
         <entry key="app/src/main/res/layout-land/diagrams_simple.xml" value="0.1" />

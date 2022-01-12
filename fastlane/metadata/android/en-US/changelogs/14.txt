@@ -1,0 +1,7 @@
+v2.0.1:
+- Fix: Configuration changes (e.g. rotation) loaded ui twice
+- Fix: Switching between simple/scientific mode sometimes stopped tuner
+- Use center-to-current note icon instead of scroll-up/down icon
+
+v2.1.0:
+- Add violin
