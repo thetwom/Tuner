@@ -137,6 +137,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun loadTuningEditorFragment() {
+        supportFragmentManager.commit {
+            setReorderingAllowed(true)
+            replace<TuningEditorFragment>(R.id.main_content)
+            if (!isCurrentFragmentATunerFragment())
+                addToBackStack(null)
+        }
+    }
+
     fun loadInstrumentsFragment() {
         supportFragmentManager.commit {
             setReorderingAllowed(true)

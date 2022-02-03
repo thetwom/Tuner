@@ -81,4 +81,5 @@
     <string name="ais_note_name">-</string>
     <string name="b_note_name">B</string>
     <string name="violin_gdae">Violin (G-D-A-E)</string>
+    <string name="add_new_tuning">Add new tuning</string>
 </resources>

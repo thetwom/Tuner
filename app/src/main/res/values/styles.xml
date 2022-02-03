@@ -34,6 +34,7 @@
         <item name="android:statusBarColor">#000000</item>
         <item name="plotViewStyle">@style/PlotViewStyle</item>
         <item name="stringViewStyle">@style/StringViewStyle</item>
+        <item name="noteSelectorStyle">@style/NoteSelectorStyle</item>
         <item name="volumeMeterStyle">@style/VolumeMeterStyle</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
@@ -41,6 +42,7 @@
     <declare-styleable name="CustomTheme">
         <attr name="plotViewStyle" format="reference"/>
         <attr name="stringViewStyle" format="reference"/>
+        <attr name="noteSelectorStyle" format="reference"/>
         <attr name="volumeMeterStyle" format="reference"/>
     </declare-styleable>
     
@@ -241,6 +243,34 @@
         <item name="anchorDrawable">@drawable/ic_anchor_inv_x</item>
         <item name="anchorDrawableWidth">25dp</item>
         <item name="anchorDrawablePosition">right</item>
+    </style>
+
+    <declare-styleable name="NoteSelector">
+        <attr name="labelTextColor"/>
+        <attr name="labelTextColor2"/>
+        <attr name="windowColor" format="color"/>
+        <attr name="windowStrokeWidth" format="dimension"/>
+        <attr name="textPadding" format="dimension"/>
+        <attr name="rectangleRadius" format="dimension"/>
+        <attr name="textStyle" format="enum">
+            <enum name="normal" value="0"/>
+            <enum name="bold" value="1"/>
+        </attr>
+        <attr name="textStyle2" format="enum">
+            <enum name="normal" value="0"/>
+            <enum name="bold" value="1"/>
+        </attr>
+    </declare-styleable>
+
+    <style name="NoteSelectorStyle">
+        <item name="labelTextColor">?attr/colorPrimary</item>
+        <item name="labelTextColor2">?attr/colorOnBackground</item>
+        <item name="windowColor">?attr/colorSecondary</item>
+        <item name="windowStrokeWidth">2dp</item>
+        <item name="textPadding">2dp</item>
+        <item name="rectangleRadius">2dp</item>
+        <item name="textStyle">normal</item>
+        <item name="textStyle2">normal</item>
     </style>
 
     <declare-styleable name="VolumeMeter">

@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class InstrumentsFragment : Fragment() {
     private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
@@ -21,6 +22,8 @@ class InstrumentsFragment : Fragment() {
 
     private var recyclerView: RecyclerView? = null
     private val instrumentsAdapter = InstrumentsAdapter()
+
+    private var tuningEditorFab: FloatingActionButton? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setHasOptionsMenu(true)
@@ -56,6 +59,11 @@ class InstrumentsFragment : Fragment() {
         instrumentsViewModel.instrument.observe(viewLifecycleOwner) {
 //            Log.v("Tuner", "InstrumentsFragment.onCreateView: setStableId: $it")
             instrumentsAdapter.setActiveStableId(it.stableId, recyclerView)
+        }
+
+        tuningEditorFab = view.findViewById(R.id.tuning_editor_fab)
+        tuningEditorFab?.setOnClickListener {
+            (requireActivity() as MainActivity).loadTuningEditorFragment()
         }
         return view
     }
