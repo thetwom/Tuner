@@ -42,7 +42,7 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             maxLabelWidth = 0
             for (i in 0 until NUM_STYLES) {
                 textSizes[i] = labelPaint[i].textSize
-                layouts[i] = buildLabelLayout(i, labelPaint)
+                layouts[i] = buildLabelLayout(labelPaint[i])
 //                Log.v("Tuner", "NoteSelector.NoteLabel.init: label=$label, i=$i, layouts[i]=${layouts[i]}, labelPaint[i].textSize=${labelPaint[i].textSize}, w=${layouts[i]?.width}, h=${layouts[i]?.height}, a=${layouts[i]?.alignment}, bP=${layouts[i]?.bottomPadding}")
                 maxLabelWidth = max(maxLabelWidth, layouts[i]?.width ?: 0)
             }
@@ -54,7 +54,7 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             for (i in 0 until NUM_STYLES) {
                 if (labelPaint[i].textSize != textSizes[i]) {
                     textSizes[i] = labelPaint[i].textSize
-                    layouts[i] = buildLabelLayout(i, labelPaint)
+                    layouts[i] = buildLabelLayout(labelPaint[i])
 //                    Log.v("Tuner", "NoteSelector.NoteLabel.updateSize: label=$label, i=$i, layouts[i]=${layouts[i]}, labelPaint[i].textSize=${labelPaint[i].textSize}, w=${layouts[i]?.width}, h=${layouts[i]?.height}, a=${layouts[i]?.alignment}, bP=${layouts[i]?.bottomPadding}")
                     changed = true
                 }
@@ -64,10 +64,10 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             return changed
         }
 
-        private fun buildLabelLayout(index: Int, labelPaint: Array<TextPaint>): StaticLayout {
-            val desiredWidth = ceil(StaticLayout.getDesiredWidth(label, labelPaint[index])).toInt()
+        private fun buildLabelLayout(labelPaint: TextPaint): StaticLayout {
+            val desiredWidth = ceil(StaticLayout.getDesiredWidth(label, labelPaint)).toInt()
             val builder =
-                StaticLayout.Builder.obtain(label, 0, label.length, labelPaint[index], desiredWidth)
+                StaticLayout.Builder.obtain(label, 0, label.length, labelPaint, desiredWidth)
             return builder.build()
         }
     }
@@ -110,7 +110,7 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             offsetAnimator.cancel()
             flingAnimation.cancel()
             flingAnimation.setStartValue(0f)
-            flingAnimation.setStartVelocity(velocityY)
+            flingAnimation.setStartVelocity(velocityX)
             flingAnimation.addEndListener { _, canceled, _, _ ->
                 if (!canceled)
                     scrollToActiveNote(150L)

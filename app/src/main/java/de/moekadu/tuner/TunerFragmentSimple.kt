@@ -32,6 +32,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import kotlin.math.floor
 import kotlin.math.max
 
@@ -47,8 +50,7 @@ class TunerFragmentSimple : Fragment() {
     private var pitchPlot: PlotView? = null
     private var volumeMeter: VolumeMeter? = null
     private var stringView: StringView? = null
-    private var instrumentIcon: ImageView? = null
-    private var instrumentTitle: TextView? = null
+    private var instrumentTitle: MaterialButton? = null
 
     private var isPitchInactive = false
     private var tuningStatus = TargetNote.TuningStatus.Unknown
@@ -83,7 +85,6 @@ class TunerFragmentSimple : Fragment() {
         pitchPlot = view.findViewById(R.id.pitch_plot)
         volumeMeter = view.findViewById(R.id.volume_meter)
         stringView = view.findViewById(R.id.string_view)
-        instrumentIcon = view.findViewById(R.id.instrument_icon)
         instrumentTitle = view.findViewById(R.id.instrument_title)
 
         pitchPlot?.yRange(400f, 500f, PlotView.NO_REDRAW)
@@ -140,7 +141,8 @@ class TunerFragmentSimple : Fragment() {
         instrumentsViewModel.instrument.observe(viewLifecycleOwner) { instrument ->
             //Log.v("Tuner", "TunerFragmentSimple.onCreateView: instrumentViewModel.instrument: $instrument")
             viewModel.setInstrument(instrument)
-            instrumentIcon?.setImageResource(instrument.iconResource)
+            //instrumentIcon?.setImageResource(instrument.iconResource)
+            instrumentTitle?.setIconResource(instrument.iconResource)
             instrumentTitle?.text = instrument.getNameString(requireContext())
             if (instrument.type == InstrumentType.Piano) {
                 setStringViewToChromatic()

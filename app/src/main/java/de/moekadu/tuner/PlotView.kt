@@ -1231,6 +1231,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var frameColor = Color.BLACK
     private var frameColorOnTouch = Color.RED
     private val framePaint = Paint()
+    private var frameCornerRadius = 0f
 
     @Parcelize
     private class SavedState(
@@ -1477,6 +1478,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             frameStrokeWidth = ta.getDimension(R.styleable.PlotView_frameStrokeWidth, frameStrokeWidth)
             frameColor = ta.getColor(R.styleable.PlotView_frameColor, frameColor)
             frameColorOnTouch = ta.getColor(R.styleable.PlotView_frameColorOnTouch, frameColorOnTouch)
+            frameCornerRadius = ta.getDimension(R.styleable.PlotView_frameCornerRadius, frameCornerRadius)
 
             allowTouchX = ta.getBoolean(R.styleable.PlotView_enableTouchX, allowTouchX)
             allowTouchY = ta.getBoolean(R.styleable.PlotView_enableTouchY, allowTouchY)
@@ -1588,8 +1590,11 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         else
             frameColor
         //canvas?.drawRect(rawViewTransformation.viewPlotBounds, framePaint)
-        canvas?.drawRect(left + 0.5f * frameStrokeWidth, top + 0.5f * frameStrokeWidth,
-            right - 0.5f * frameStrokeWidth, bottom - 0.5f * frameStrokeWidth, framePaint)
+//        canvas?.drawRect(left + 0.5f * frameStrokeWidth, top + 0.5f * frameStrokeWidth,
+//            right - 0.5f * frameStrokeWidth, bottom - 0.5f * frameStrokeWidth, framePaint)
+        canvas?.drawRoundRect(left + 0.5f * frameStrokeWidth, top + 0.5f * frameStrokeWidth,
+            right - 0.5f * frameStrokeWidth, bottom - 0.5f * frameStrokeWidth,
+            frameCornerRadius, frameCornerRadius, framePaint)
 
         title?.let {
             canvas?.drawText(it,

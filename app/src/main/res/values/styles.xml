@@ -35,6 +35,7 @@
         <item name="plotViewStyle">@style/PlotViewStyle</item>
         <item name="stringViewStyle">@style/StringViewStyle</item>
         <item name="noteSelectorStyle">@style/NoteSelectorStyle</item>
+        <item name="detectedNoteViewerStyle">@style/DetectedNoteViewerStyle</item>a
         <item name="volumeMeterStyle">@style/VolumeMeterStyle</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
@@ -43,6 +44,7 @@
         <attr name="plotViewStyle" format="reference"/>
         <attr name="stringViewStyle" format="reference"/>
         <attr name="noteSelectorStyle" format="reference"/>
+        <attr name="detectedNoteViewerStyle" format="reference"/>
         <attr name="volumeMeterStyle" format="reference"/>
     </declare-styleable>
     
@@ -128,6 +130,7 @@
         <attr name="frameColor" format="color"/>
         <attr name="frameColorOnTouch" format="color"/>
         <attr name="frameStrokeWidth" format="dimension"/>
+        <attr name="frameCornerRadius" format="dimension"/>
         <attr name="enableTouchX" format="boolean"/>
         <attr name="enableTouchY" format="boolean"/>
         <attr name="touchDrawable" format="reference"/>
@@ -183,6 +186,7 @@
         <item name="frameColor">?attr/colorPrimary</item>
         <item name="frameColorOnTouch">?attr/colorError</item>
         <item name="frameStrokeWidth">2dp</item>
+        <item name="frameCornerRadius">3dp</item>
         <item name="enableTouchX">true</item>
         <item name="enableTouchY">true</item>
         <item name="touchDrawable">@drawable/ic_manual</item>
@@ -208,6 +212,7 @@
         <attr name="frameColor"/>
         <attr name="frameColorOnTouch"/>
         <attr name="frameStrokeWidth"/>
+        <attr name="frameCornerRadius"/>
         <attr name="touchDrawable"/>
         <attr name="touchDrawableWidth"/>
         <attr name="touchDrawableBackgroundTint"/>
@@ -237,6 +242,7 @@
         <item name="frameColor">?attr/colorPrimary</item>
         <item name="frameColorOnTouch">?attr/colorError</item>
         <item name="frameStrokeWidth">2dp</item>
+        <item name="frameCornerRadius">3dp</item>
         <item name="touchDrawable">@drawable/ic_manual</item>
         <item name="touchDrawableWidth">25dp</item>
         <item name="touchDrawableBackgroundTint">?attr/colorOnError</item>
@@ -271,6 +277,39 @@
         <item name="rectangleRadius">2dp</item>
         <item name="textStyle">normal</item>
         <item name="textStyle2">normal</item>
+    </style>
+
+    <declare-styleable name="DetectedNoteViewer">
+        <attr name="labelTextColor"/>
+        <attr name="noteNumber" format="integer"/>
+        <attr name="minimumLabelSpace" format="dimension"/>
+        <attr name="boxStrokeWidth" format="dimension"/>
+        <attr name="boxStrokeColor" format="color"/>
+        <attr name="boxStrokeOpacity" format="float"/>
+        <attr name="boxCornerRadius" format="dimension"/>
+        <attr name="title"/>
+        <attr name="titleColor"/>
+        <attr name="titleOpacity" format="float"/>
+        <attr name="titleBackgroundColor" format="color"/>
+        <attr name="titleSize"/>
+        <attr name="titlePadding" format="dimension"/>
+        <attr name="notePadding" format="dimension"/>
+    </declare-styleable>
+
+    <style name="DetectedNoteViewerStyle">
+        <item name="labelTextColor">?attr/colorPrimary</item>
+        <item name="noteNumber">4</item>
+        <item name="minimumLabelSpace">4dp</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeColor">?attr/colorPrimary</item>
+        <item name="boxStrokeOpacity">0.38</item>
+        <item name="boxCornerRadius">3dp</item>
+        <item name="titleColor">?attr/colorPrimary</item>
+        <item name="titleOpacity">0.38</item>
+        <item name="titleBackgroundColor">?android:attr/colorBackground</item>
+        <item name="titleSize">8sp</item>
+        <item name="titlePadding">4dp</item>
+        <item name="notePadding">4dp</item>
     </style>
 
     <declare-styleable name="VolumeMeter">

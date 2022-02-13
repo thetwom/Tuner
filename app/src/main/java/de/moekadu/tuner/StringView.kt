@@ -98,6 +98,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     private var frameColor = Color.BLACK
     private var frameColorOnTouch = Color.RED
+    private var frameCornerRadius = 0f
 
     private var labelBackgroundPadding = 2f
     private var labelSpacing = 2f
@@ -327,6 +328,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             framePaint.strokeWidth =
                 ta.getDimension(R.styleable.StringView_frameStrokeWidth, framePaint.strokeWidth)
             framePaint.color = frameColor
+            frameCornerRadius = ta.getDimension(R.styleable.StringView_frameCornerRadius, frameCornerRadius)
 
             touchDrawableId =
                 ta.getResourceId(R.styleable.StringView_touchDrawable, touchDrawableId)
@@ -413,11 +415,19 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 //        Log.v("Tuner", "StringView.onDraw: yOffset = $yOffset")
         if (canvas == null)
             return
-        canvas.drawRect(
+//        canvas.drawRect(
+//            paddingLeft.toFloat() + 0.5f * framePaint.strokeWidth,
+//            paddingTop.toFloat() + 0.5f * framePaint.strokeWidth,
+//            width - paddingRight.toFloat() - 0.5f * framePaint.strokeWidth,
+//            height - paddingBottom.toFloat() - 0.5f * framePaint.strokeWidth,
+//            framePaint
+//        )
+        canvas.drawRoundRect(
             paddingLeft.toFloat() + 0.5f * framePaint.strokeWidth,
             paddingTop.toFloat() + 0.5f * framePaint.strokeWidth,
             width - paddingRight.toFloat() - 0.5f * framePaint.strokeWidth,
             height - paddingBottom.toFloat() - 0.5f * framePaint.strokeWidth,
+            frameCornerRadius, frameCornerRadius,
             framePaint
         )
         //canvas.save()
@@ -430,21 +440,22 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         )
         var anchorYPos = NO_ANCHOR
 
-        for (i in stringStartIndex..stringEndIndex) {
-            val xPos = getStringDrawingPositionX(i)
-            val yPos = getStringDrawingPositionY(i)
-            drawString(
-                xPos,
-                yPos,
-                strings[i],
-                if (strings[i].toneIndex == activeToneIndex) activeToneStyle else 0,
-                canvas
-            )
+        if (strings.size > 0) {
+            for (i in stringStartIndex..stringEndIndex) {
+                val xPos = getStringDrawingPositionX(i)
+                val yPos = getStringDrawingPositionY(i)
+                drawString(
+                    xPos,
+                    yPos,
+                    strings[i],
+                    if (strings[i].toneIndex == activeToneIndex) activeToneStyle else 0,
+                    canvas
+                )
 
-            if (strings[i].toneIndex == activeToneIndex)
-                anchorYPos = yPos
+                if (strings[i].toneIndex == activeToneIndex)
+                    anchorYPos = yPos
+            }
         }
-
 //        if (!automaticScrollToHighlight) {
 //            touchManualControlDrawable.drawToCanvas(
 //                width - paddingRight.toFloat() - 0.5f * framePaint.strokeWidth + 1,
