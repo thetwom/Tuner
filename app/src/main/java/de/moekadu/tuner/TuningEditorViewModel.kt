@@ -1,14 +1,15 @@
 package de.moekadu.tuner
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 
 class TuningEditorViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _instrumentName = MutableLiveData("")
-    val instrumentName: LiveData<String> get() = _instrumentName
+    private val _instrumentName = MutableLiveData<CharSequence>("")
+    val instrumentName: LiveData<CharSequence> get() = _instrumentName
     private val _iconResourceId = MutableLiveData(R.drawable.ic_guitar)
     val iconResourceId: LiveData<Int> get() = _iconResourceId
     private val _strings = MutableLiveData(intArrayOf())
@@ -16,9 +17,10 @@ class TuningEditorViewModel(application: Application) : AndroidViewModel(applica
     private val _selectedStringIndex = MutableLiveData(0)
     val selectedStringIndex: LiveData<Int> = _selectedStringIndex
 
-    fun setInstrumentName(name: String) {
-        if (name != instrumentName.value)
-            _instrumentName.value = name
+    fun setInstrumentName(name: CharSequence?) {
+        //Log.v("Tuner", "TuningEditorViewModel: Set instrument name: |$name|, current: |${instrumentName.value}|")
+        if (name?.contentEquals(instrumentName.value) == false)
+            _instrumentName.value = name ?: ""
     }
 
     fun setInstrumentIcon(resourceId: Int) {
@@ -26,25 +28,16 @@ class TuningEditorViewModel(application: Application) : AndroidViewModel(applica
             _iconResourceId.value = resourceId
     }
 
-    fun selectString(toneIndex: Int) {
-        // TODO: string selecting should be better done by array index since we could have two times the same tone
-        val arrayIndex = strings.value?.indexOfLast { it == toneIndex }
-        if (arrayIndex != -1)
-            _selectedStringIndex.value = arrayIndex
+    fun selectString(stringIndex: Int) {
+        if (stringIndex != -1)
+            _selectedStringIndex.value = stringIndex
     }
 
     fun setStrings(toneIndices: IntArray) {
         if (!toneIndices.contentEquals(_strings.value)) {
-            val currentToneIndex = if (selectedStringIndex.value ?: 0 < strings.value?.size ?: 0)
-                strings.value?.get(selectedStringIndex.value ?: 0) ?: 0
-            else
-                Int.MAX_VALUE
-            // TODO: don't keep toneIndex constant, but better the arrayIndex!
-            var newIndexOfTone = toneIndices.indexOfLast { it == currentToneIndex }
-            if (newIndexOfTone == -1)
-                newIndexOfTone = toneIndices.size - 1
             _strings.value = toneIndices.copyOf()
-            _selectedStringIndex.value = newIndexOfTone
+            if (selectedStringIndex.value ?: 0 >= toneIndices.size)
+            _selectedStringIndex.value = toneIndices.size - 1
         }
     }
 
@@ -53,11 +46,10 @@ class TuningEditorViewModel(application: Application) : AndroidViewModel(applica
         val newStrings = IntArray(numOldStrings + 1)
         val currentSelectedIndex = selectedStringIndex.value ?: 0
 
-        val newToneIndex = when {
-            toneIndex != Int.MAX_VALUE -> toneIndex
-            currentSelectedIndex < numOldStrings -> strings.value?.get(currentSelectedIndex) ?: 0
-            else -> 0
-        }
+        val newToneIndex = if (toneIndex != Int.MAX_VALUE)
+            toneIndex
+        else
+            strings.value?.getOrNull(currentSelectedIndex) ?: 0
 
         if (numOldStrings > 0)
             strings.value?.copyInto(newStrings, 0,0, currentSelectedIndex + 1)
@@ -98,6 +90,8 @@ class TuningEditorViewModel(application: Application) : AndroidViewModel(applica
             if (currentSelectedIndex + 1 < stringArray.size)
                 stringArray.copyInto(newStringArray, currentSelectedIndex, currentSelectedIndex + 1, stringArray.size)
             _strings.value = newStringArray
+            if (currentSelectedIndex >= newStringArray.size)
+                _selectedStringIndex.value = newStringArray.size - 1
         }
     }
 }

@@ -3,6 +3,8 @@ package de.moekadu.tuner
 import android.Manifest
 import android.content.Context
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
@@ -11,6 +13,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.button.MaterialButton
@@ -19,7 +22,8 @@ import com.google.android.material.textfield.TextInputLayout
 
 class TuningEditorFragment : Fragment() {
     // TODO: toolbar should be adapted, removing the back button, but having an "accept"/"abort" button
-    // TODO: we must be able to handle two tones, which are equal
+    // TODO: landscape layout
+
     private val tunerViewModel: TunerViewModel by activityViewModels()
     private val viewModel: TuningEditorViewModel by activityViewModels()
 
@@ -76,7 +80,10 @@ class TuningEditorFragment : Fragment() {
         instrumentNameEditText = view.findViewById(R.id.instrument_title_edit_text)
 
         instrumentNameLayout?.setStartIconOnClickListener {
-            instrumentNameLayout?.setStartIconDrawable(R.drawable.ic_piano)
+            val dialog = IconPickerDialogFragment {
+                viewModel.setInstrumentIcon(it)
+            }
+            dialog.show(childFragmentManager, null)
         }
         instrumentNameEditText?.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
             if (v.id == R.id.instrument_title_edit_text && !hasFocus) {
@@ -101,30 +108,40 @@ class TuningEditorFragment : Fragment() {
             }
         }
 
-        // TODO: connect view model name and icon with TextInputLayout
+        viewModel.instrumentName.observe(viewLifecycleOwner) {
+//            Log.v("Tuner", "TuningEditorFragment: observe instrument name: new = |$it|, before = |${instrumentNameEditText?.text?.trim()}|, different? = ${instrumentNameEditText?.text?.trim()?.contentEquals(it)}")
+            if (instrumentNameEditText?.text?.trim()?.contentEquals(it) == false)
+                instrumentNameEditText?.setText(it)
+        }
+
+        viewModel.iconResourceId.observe(viewLifecycleOwner) {
+            instrumentNameLayout?.setStartIconDrawable(it)
+        }
 
         viewModel.strings.observe(viewLifecycleOwner) { strings ->
             val tuningFrequencies = tunerViewModel.tuningFrequencies.value
             stringView?.setStrings(strings) { i ->
                 tuningFrequencies?.getNoteName(requireContext(), i, preferFlat = false) ?: i.toString()
             }
+            val selectedStringIndex = viewModel.selectedStringIndex.value ?: -1
+            if (selectedStringIndex in strings.indices)
+                noteSelector?.setActiveTone(strings[selectedStringIndex], 150L)
+            else
+                noteSelector?.setActiveTone(strings.lastOrNull() ?: 0, 150L)
         }
 
         viewModel.selectedStringIndex.observe(viewLifecycleOwner) { selectedStringIndex ->
-            val numStrings = viewModel.strings.value?.size ?: 0
-            if (selectedStringIndex < numStrings) {
-                val toneIndex = viewModel.strings.value?.get(selectedStringIndex) ?: 0
-                // TODO: check how string view would handle the situation that the toneIndex of a string changes
-                stringView?.activeToneIndex = toneIndex
+            val strings = viewModel.strings.value
+            if (strings != null && selectedStringIndex in strings.indices) {
+                val toneIndex = strings[selectedStringIndex]
+                stringView?.highlightSingleString(selectedStringIndex, 300L)
                 noteSelector?.setActiveTone(toneIndex, 150L)
             }
         }
 
         stringView?.stringClickedListener = object : StringView.StringClickedListener {
-            override fun onStringClicked(toneIndex: Int) {
-                // TODO: this function should better take the array index (at least additionally)
-                //       since we could have two times the same tone
-                viewModel.selectString(toneIndex)
+            override fun onStringClicked(stringIndex: Int, toneIndex: Int) {
+                viewModel.selectString(stringIndex)
             }
 
             override fun onAnchorClicked() { }
@@ -146,6 +163,15 @@ class TuningEditorFragment : Fragment() {
         detectedNoteViewer?.noteClickedListener = DetectedNoteViewer.NoteClickedListener {
             viewModel.setSelectedStringTo(it)
         }
+
+        instrumentNameEditText?.addTextChangedListener(object :TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { }
+            override fun afterTextChanged(s: Editable?) {
+                viewModel.setInstrumentName(s?.trim())
+            }
+        })
+
         return view
     }
 
@@ -154,7 +180,7 @@ class TuningEditorFragment : Fragment() {
         super.onStart()
         askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
         tunerViewModel.setInstrument(instrumentDatabase[0])
-        tunerViewModel.setTargetNote()
+        tunerViewModel.setTargetNote(-1, TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
     }
 
     override fun onStop() {

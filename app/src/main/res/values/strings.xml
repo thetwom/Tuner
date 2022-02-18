@@ -82,4 +82,12 @@
     <string name="b_note_name">B</string>
     <string name="violin_gdae">Violin (G-D-A-E)</string>
     <string name="add_new_tuning">Add new tuning</string>
+    <string name="pick_icon">Pick icon</string>
+    <string name="ok">ok</string>
+    <string name="abort">Abort</string>
+    <string name="instrument_name">Instrument name</string>
+    <string name="clear_instrument_name">Clear instrument name</string>
+    <string name="add_note">Add note</string>
+    <string name="delete_note">Delete note</string>
+    <string name="lately_detected_notes">Lately detected tones</string>
 </resources>

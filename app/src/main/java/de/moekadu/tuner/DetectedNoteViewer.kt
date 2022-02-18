@@ -272,6 +272,12 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
         return true
     }
 
+    override fun performClick(): Boolean {
+        if (isSoundEffectsEnabled)
+            playSoundEffect(android.view.SoundEffectConstants.CLICK)
+        return super.performClick()
+    }
+
     fun setNotes(toneIndexBegin: Int, toneIndexEnd: Int, toneIndexToLabel: (Int) -> CharSequence) {
         this.toneIndexToLabel = toneIndexToLabel
         this.toneIndexBegin = toneIndexBegin

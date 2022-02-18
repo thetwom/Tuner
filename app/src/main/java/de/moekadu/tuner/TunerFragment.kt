@@ -214,7 +214,7 @@ class TunerFragment : Fragment() {
             }
 
             pitchPlot?.setYMark(targetNote.frequency, targetNote.getNoteName(requireContext(), false), MARK_ID_FREQUENCY, MarkAnchor.East,
-                0, placeLabelsOutsideBoundsIfPossible = true,
+                if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2, placeLabelsOutsideBoundsIfPossible = true,
                 redraw = true)
         }
 
@@ -249,7 +249,7 @@ class TunerFragment : Fragment() {
         super.onStart()
         askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
         viewModel.setInstrument(instrumentDatabase[0])
-        viewModel.setTargetNote()
+        viewModel.setTargetNote(-1, TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
     }
 
     override fun onStop() {

@@ -11,7 +11,7 @@
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/instrument_title"
-        android:hint="Instrument name"
+        android:hint="@string/instrument_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
@@ -24,7 +24,7 @@
         app:startIconDrawable="@drawable/ic_guitar"
         app:startIconCheckable="true"
         app:startIconTint="?attr/colorPrimary"
-        app:endIconContentDescription="Confirm instrument name"
+        app:endIconContentDescription="@string/clear_instrument_name"
         app:endIconMode="clear_text"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
         android:nextFocusDown="@id/root"
@@ -39,22 +39,6 @@
             android:maxLines="1"
             />
     </com.google.android.material.textfield.TextInputLayout>
-<!--    <EditText-->
-    <!--        android:id="@+id/instrument_title"-->
-<!--        android:layout_width="0dp"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:textSize="16sp"-->
-<!--        android:textColor="?attr/colorOnBackground"-->
-<!--        android:paddingStart="10sp"-->
-<!--        android:paddingEnd="12dp"-->
-<!--        android:paddingTop="12dp"-->
-<!--        android:paddingBottom="12dp"-->
-<!--        android:text="Test Title A-B-C-D"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        app:layout_constraintLeft_toRightOf="@id/instrument_icon"-->
-<!--        app:layout_constraintRight_toRightOf="parent"-->
-<!--        android:background="@drawable/instrument_entry_background"-->
-<!--        />-->
 
     <de.moekadu.tuner.StringView
         android:id="@+id/string_view"
@@ -91,7 +75,7 @@
         android:layout_marginLeft="12dp"
         android:layout_marginRight="4dp"
         android:layout_marginBottom="12dp"
-        android:text="Add note"
+        android:text="@string/add_note"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         />
 
@@ -105,7 +89,7 @@
         app:layout_constraintLeft_toRightOf="@id/button_add_note"
         android:layout_marginLeft="4dp"
         android:layout_marginRight="12dp"
-        android:text="Delete note"
+        android:text="@string/delete_note"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         />
 
@@ -118,7 +102,7 @@
         app:minimumLabelSpace="5dp"
         android:layout_marginBottom="12dp"
         app:labelTextColor="?attr/colorPrimary"
-        app:title="Lately detected tones"
+        app:title="@string/lately_detected_notes"
         app:titleSize="12sp"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"

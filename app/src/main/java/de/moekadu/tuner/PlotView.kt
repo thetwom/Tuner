@@ -1643,6 +1643,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             )
             ViewCompat.postInvalidateOnAnimation(this@PlotView)
         }
+
+        if (isSoundEffectsEnabled)
+            playSoundEffect(android.view.SoundEffectConstants.CLICK)
+
         return super.performClick()
     }
     @SuppressLint("ClickableViewAccessibility")

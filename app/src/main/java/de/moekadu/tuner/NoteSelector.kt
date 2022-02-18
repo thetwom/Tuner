@@ -133,6 +133,7 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 activeNoteArrayIndex = noteIndex
                 toneChangedListener?.onToneChanged(noteLabels[noteIndex].toneIndex)
                 scrollToActiveNote(150L)
+                Log.v("Tuner", "NoteSelector.onSingleTapUp: performingClick")
                 performClick()
             }
             return true
@@ -281,6 +282,12 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             rectangleRadius, rectangleRadius,
             windowPaint
         )
+    }
+
+    override fun performClick(): Boolean {
+        if (isSoundEffectsEnabled)
+            playSoundEffect(android.view.SoundEffectConstants.CLICK)
+        return super.performClick()
     }
 
     fun setNotes(toneIndexBegin: Int, toneIndexEnd: Int, labels: (Int) -> CharSequence) {

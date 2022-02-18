@@ -276,9 +276,11 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         sampleSource.stopSampling()
     }
 
-    fun setTargetNote(toneIndex: Int = AUTOMATIC_TARGET_NOTE_DETECTION) {
+    //fun setTargetNote(stringIndex: Int = -1, toneIndex: Int = AUTOMATIC_TARGET_NOTE_DETECTION) {
+    fun setTargetNote(stringIndex: Int, toneIndex: Int) {
 //        Log.v("Tuner", "TunerViewModel.setTargetNote: toneIndex=$toneIndex")
         val oldTargetNote = targetNoteValue.toneIndex
+        val oldStringIndex = targetNoteValue.stringIndex
 
         if (toneIndex == AUTOMATIC_TARGET_NOTE_DETECTION) {
             userDefinedTargetNoteIndex = AUTOMATIC_TARGET_NOTE_DETECTION
@@ -290,12 +292,16 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
             //changeTargetNoteSettings(toneIndex = toneIndex)
         }
 
+        targetNoteValue.stringIndex = stringIndex
+
         if (targetNoteValue.toneIndex != oldTargetNote) {
             pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
                 updateFrequencyPlotRange(targetNoteValue.toneIndex, frequency)
             }
-            _targetNote.value = targetNoteValue
         }
+
+        if (targetNoteValue.toneIndex != oldTargetNote || targetNoteValue.stringIndex != oldStringIndex)
+            _targetNote.value = targetNoteValue
     }
 
     fun setInstrument(instrument: Instrument) {
@@ -304,7 +310,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         if (targetNoteValue.instrument.stableId != instrument.stableId) {
             //Log.v("Tuner", "TunerViewModel.setInstrument ...")
             targetNoteValue.instrument = instrument
-            setTargetNote(AUTOMATIC_TARGET_NOTE_DETECTION)
+            setTargetNote(-1, AUTOMATIC_TARGET_NOTE_DETECTION)
         }
 //        userDefinedTargetNoteIndex = AUTOMATIC_TARGET_NOTE_DETECTION
 //        pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->

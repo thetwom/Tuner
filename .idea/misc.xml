@@ -31,8 +31,10 @@
         <entry key="app/src/main/res/drawable/instrument_entry_background.xml" value="0.3875" />
         <entry key="app/src/main/res/layout-land/diagrams_simple.xml" value="0.1" />
         <entry key="app/src/main/res/layout/diagrams_simple.xml" value="0.47239583333333335" />
+        <entry key="app/src/main/res/layout/icon_picker_entry.xml" value="0.21014492753623187" />
+        <entry key="app/src/main/res/layout/icon_picker_layout.xml" value="0.21014492753623187" />
         <entry key="app/src/main/res/layout/instrument_entry.xml" value="0.2875905797101449" />
-        <entry key="app/src/main/res/layout/instruments.xml" value="0.2875905797101449" />
+        <entry key="app/src/main/res/layout/instruments.xml" value="0.1" />
         <entry key="app/src/main/res/layout/tuning_editor.xml" value="0.1" />
         <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.315625" />
         <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.315625" />

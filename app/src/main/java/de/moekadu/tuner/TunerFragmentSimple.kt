@@ -31,10 +31,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import kotlin.math.floor
 import kotlin.math.max
 
@@ -90,18 +87,18 @@ class TunerFragmentSimple : Fragment() {
         pitchPlot?.yRange(400f, 500f, PlotView.NO_REDRAW)
 
         stringView?.stringClickedListener = object : StringView.StringClickedListener {
-            override fun onStringClicked(toneIndex: Int) {
-                if (toneIndex == stringView?.activeToneIndex && viewModel.isTargetNoteUserDefined.value == true) {
-                    viewModel.setTargetNote(TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
+            override fun onStringClicked(stringIndex: Int, toneIndex: Int) {
+                if (stringIndex == stringView?.highlightedStringIndex && viewModel.isTargetNoteUserDefined.value == true) {
+                    viewModel.setTargetNote(-1, TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
                     stringView?.setAutomaticControl()
                     //stringView?.showAnchor = false
-                } else if (toneIndex != StringView.NO_ACTIVE_TONE_INDEX) {
-                    viewModel.setTargetNote(toneIndex)
+                } else if (stringIndex != -1) {
+                    viewModel.setTargetNote(stringIndex, toneIndex)
                 }
             }
 
             override fun onAnchorClicked() {
-                viewModel.setTargetNote(TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
+                viewModel.setTargetNote(-1, TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
                 stringView?.setAutomaticControl()
             }
 
@@ -187,6 +184,7 @@ class TunerFragmentSimple : Fragment() {
             viewModel.pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
                 tuningStatus = targetNote.getTuningStatus(frequency)
             }
+            Log.v("Tuner", "TunerFragmentSimple: observing targetNote: tuningStatus=$tuningStatus")
             setStyles(isPitchInactive, tuningStatus, false)
 
             pitchPlot?.setMarks(
@@ -206,10 +204,14 @@ class TunerFragmentSimple : Fragment() {
             }
 
             pitchPlot?.setYMark(targetNote.frequency, targetNote.getNoteName(requireContext(), false), MARK_ID_FREQUENCY, MarkAnchor.East,
-                0, placeLabelsOutsideBoundsIfPossible = true,
+                if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2, placeLabelsOutsideBoundsIfPossible = true,
                 redraw = true)
 
-            stringView?.activeToneIndex = targetNote.toneIndex
+            Log.v("Tuner", "TunerFragmentSimple: target note changed: stringIndex = ${targetNote.stringIndex}, toneIndex=${targetNote.toneIndex}")
+            if (targetNote.stringIndex != -1)
+                stringView?.highlightSingleString(targetNote.stringIndex, 300L)
+            else
+                stringView?.highlightByToneIndex(targetNote.toneIndex, 300L)
             //stringView?.scrollToString(targetNote.toneIndex, 300L)
         }
 
@@ -250,7 +252,7 @@ class TunerFragmentSimple : Fragment() {
     }
 
     private fun setStyles(isPitchInactive: Boolean, tuningStatus: TargetNote.TuningStatus, redraw: Boolean) {
-
+        // Log.v("Tuner", "TunerFragmentSimple.setStyles: tuningStatus=$tuningStatus")
         if (isPitchInactive) {
             pitchPlot?.setLineStyle(1, suppressInvalidate = true)
             pitchPlot?.setPointStyle(1, suppressInvalidate = true)

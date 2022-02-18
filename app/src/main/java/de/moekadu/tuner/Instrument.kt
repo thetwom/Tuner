@@ -1,6 +1,8 @@
 package de.moekadu.tuner
 
 import android.content.Context
+import android.content.res.Resources
+import androidx.core.content.res.ResourcesCompat
 
 enum class InstrumentType {
     Piano, Guitar, Bass, Ukulele, Violin
@@ -105,6 +107,26 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
             name = null,
             nameResource = R.string.violin_gdae,
             strings = intArrayOf(-14, -7, 0, 7),
+            type = InstrumentType.Violin,
+            iconResource = R.drawable.ic_violin,
+            stableId = instruments.size.toLong()
+        )
+    )
+    instruments.add(
+        Instrument(
+            name = "Test instrument",
+            nameResource = null,
+            strings = intArrayOf(0, 1, 2, 0, 2, 2, 3, 4, 5, 0),
+            type = InstrumentType.Violin,
+            iconResource = R.drawable.ic_violin,
+            stableId = instruments.size.toLong()
+        )
+    )
+    instruments.add(
+        Instrument(
+            name = "Test instrument 2",
+            nameResource = null,
+            strings = intArrayOf(0, 1, 1),
             type = InstrumentType.Violin,
             iconResource = R.drawable.ic_violin,
             stableId = instruments.size.toLong()

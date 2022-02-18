@@ -6,6 +6,8 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.os.Bundle
+import android.os.Parcelable
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
@@ -17,11 +19,14 @@ import androidx.core.graphics.withTranslation
 import androidx.core.view.ViewCompat
 import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
+import kotlinx.parcelize.Parcelize
 import kotlin.math.*
 
 class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr) {
-    // TODO: allow manual/auto control
+
+    // TODO: we must store the centering tone index
+
     constructor(context: Context, attrs: AttributeSet? = null) : this(
         context,
         attrs,
@@ -31,6 +36,8 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     class StringInfo(val toneIndex: Int, val label: CharSequence?) {
         val layouts = Array<StaticLayout?>(3) { null }
     }
+
+    enum class HighlightBy { StringIndex, ToneIndex, Off }
 
     private val stringPaint = arrayOf(
         Paint().apply {
@@ -109,17 +116,18 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     private val strings = ArrayList<StringInfo>()
 
-    var activeToneIndex: Int = NO_ACTIVE_TONE_INDEX
-        set(value) {
-            if (value != field) {
-                field = value
-                updateActiveStringIndex(value)
-                if (field != NO_ACTIVE_TONE_INDEX && automaticScrollToHighlight)
-                    scrollToString(value, 200L)
-                else
-                    invalidate()
-            }
-        }
+//    private var activeToneIndex: Int = NO_ACTIVE_TONE_INDEX
+//        set(value) {
+//            if (value != field) {
+//                field = value
+//                updateActiveStringIndex(value)
+//                if (field != NO_ACTIVE_TONE_INDEX && automaticScrollToHighlight)
+//                    scrollToString(value, 200L)
+//                else
+//                    invalidate()
+//            }
+//        }
+
     var activeToneStyle: Int = 1
         set(value) {
             if (value != field) {
@@ -129,7 +137,12 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             }
         }
 
-    private var activeStringIndex: Int = NO_ACTIVE_TONE_INDEX
+    private var highlightBy = HighlightBy.Off
+    var highlightedStringIndex: Int = -1
+        private set
+    private var toneIndexForHighlighting = NO_ACTIVE_TONE_INDEX
+    private var stringIndexForCenteringToneIndex = -1
+    private var numHighlightedWithToneIndex = 0
 
     private var yOffset = 0f
 
@@ -212,24 +225,31 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             val y = e.y
             val halfSizeX = 0.5f * labelWidthExpanded
             val halfSizeY = rowHeight
-            var toneIndex = NO_ACTIVE_TONE_INDEX
+            var stringIndex = -1
             for (i in stringStartIndex..stringEndIndex) {
                 val xPos = getStringDrawingPositionX(i)
                 val yPos = getStringDrawingPositionY(i)
                 if (x >= xPos - halfSizeX && x < xPos + halfSizeX
                     && y >= yPos - halfSizeY && y < yPos + halfSizeY
                 ) {
-                    toneIndex = strings[i].toneIndex
+                    stringIndex = i
                     break
                 }
             }
 //            Log.v("Tuner", "StringView..onSingleTapUp: toneIndex=$toneIndex")
-            if (toneIndex != NO_ACTIVE_TONE_INDEX) {
-                stringClickedListener?.onStringClicked(toneIndex)
+            if (stringIndex >= 0) {
+                stringClickedListener?.onStringClicked(stringIndex, strings[stringIndex].toneIndex)
             } else if (showAnchor && anchorDrawable.contains(x, y)) {
                 stringClickedListener?.onAnchorClicked()
             } else if ((anchorDrawablePosition == 0 && x < paddingLeft) ||
                 (anchorDrawablePosition == 1 && x > width - paddingRight)) {
+                Log.v("Tuner", "StringView: Center icon clicked, highlightBy=$highlightBy, automaticScrollToSelected=$automaticScrollToSelected")
+                // select next note if we are in automatic scroll mode and highlight by toneIndex
+                if (automaticScrollToSelected && highlightBy == HighlightBy.ToneIndex) {
+                    stringIndexForCenteringToneIndex =
+                        getNextCenteringStringIndexWithToneIndex(stringIndexForCenteringToneIndex, toneIndexForHighlighting)
+                    Log.v("Tuner", "StringView: Center icon clicked, centeringStringIndex=$stringIndexForCenteringToneIndex")
+                }
                 setAutomaticControl(200L)
             } else {
                 stringClickedListener?.onBackgroundClicked()
@@ -244,14 +264,14 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private val gestureDetector = GestureDetector(context, gestureListener)
 
     interface StringClickedListener {
-        fun onStringClicked(toneIndex: Int)
+        fun onStringClicked(stringIndex: Int, toneIndex: Int)
         fun onAnchorClicked()
         fun onBackgroundClicked()
     }
 
     var stringClickedListener: StringClickedListener? = null
 
-    private var automaticScrollToHighlight = true
+    private var automaticScrollToSelected = true
 
     private var touchManualControlDrawable: TouchControlDrawable
     private var anchorDrawable: TouchControlDrawable
@@ -268,6 +288,17 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var scrollCenterDrawableRed: TouchControlDrawable
     //private var scrollUpDrawable: TouchControlDrawable
     //private var scrollDownDrawable: TouchControlDrawable
+
+    @Parcelize
+    private class SavedState(
+        val highlightBy: HighlightBy,
+        val highlightedStringIndex: Int,
+        val toneIndexForHighlighting: Int,
+        val stringIndexForCenteringToneIndex: Int,
+        val activeToneStyle: Int,
+        val stringIndexInViewCenter: Int, // for recomputing offset
+        val automaticScrollToSelected: Boolean
+    ) : Parcelable
 
     init {
         var touchDrawableId = R.drawable.ic_manual
@@ -444,15 +475,17 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             for (i in stringStartIndex..stringEndIndex) {
                 val xPos = getStringDrawingPositionX(i)
                 val yPos = getStringDrawingPositionY(i)
+                val highlight = (highlightBy == HighlightBy.StringIndex && i == highlightedStringIndex)
+                        || (highlightBy == HighlightBy.ToneIndex && toneIndexForHighlighting == strings[i].toneIndex)
                 drawString(
                     xPos,
                     yPos,
                     strings[i],
-                    if (strings[i].toneIndex == activeToneIndex) activeToneStyle else 0,
+                    if (highlight) activeToneStyle else 0,
                     canvas
                 )
 
-                if (strings[i].toneIndex == activeToneIndex)
+                if (highlightBy == HighlightBy.StringIndex && i == highlightedStringIndex)
                     anchorYPos = yPos
             }
         }
@@ -472,7 +505,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 height - paddingBottom - 0.5f * anchorDrawable.height - framePaint.strokeWidth
 
             if (anchorYPos == NO_ANCHOR) {
-                anchorYPos = if (activeStringIndex < stringStartIndex)
+                anchorYPos = if (highlightedStringIndex < stringStartIndex)
                     minYPos
                 else
                     maxYPos
@@ -494,7 +527,16 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             }
         }
 
-        if (!automaticScrollToHighlight && activeToneIndex != NO_ACTIVE_TONE_INDEX) {
+        var showScrollIcon = !automaticScrollToSelected && highlightBy == HighlightBy.ToneIndex && numHighlightedWithToneIndex > 0
+        showScrollIcon = showScrollIcon || (!automaticScrollToSelected && highlightBy == HighlightBy.StringIndex && highlightedStringIndex in strings.indices)
+        showScrollIcon = showScrollIcon || (highlightBy == HighlightBy.ToneIndex && numHighlightedWithToneIndex > 1)
+        showScrollIcon = showScrollIcon && (computeOffsetMin() < computeOffsetMax())
+        // TODO: also don't show if we cant scroll
+        // TODO: show another icon, if we are in automatic scroll mode and have multiple notes with same tone index
+
+        // show scrollToActive-icon either if we have an active note and are not centered
+        // OR always if we have more than one highlighted note (since then we jump between the notes when clicking it)
+        if (showScrollIcon) {
             // val yOffsetTarget = getYOffsetAutoScroll(activeStringIndex)
             var yPosition = 0.5f * (paddingTop + height - paddingBottom)
             if (showAnchor && anchorYPos != NO_ANCHOR && anchorYPos >= yPosition){ //draw above anchor
@@ -541,6 +583,51 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
     }
 
+    override fun performClick(): Boolean {
+        if (isSoundEffectsEnabled)
+            playSoundEffect(android.view.SoundEffectConstants.CLICK)
+        return super.performClick()
+    }
+
+    override fun onSaveInstanceState(): Parcelable {
+        val bundle = Bundle()
+        bundle.putParcelable("super state", super.onSaveInstanceState())
+
+        val stringIndexInViewCenter = 0 // TODO: set a good value here
+        val state = SavedState(
+            highlightBy = highlightBy,
+            highlightedStringIndex = highlightedStringIndex,
+            toneIndexForHighlighting = toneIndexForHighlighting,
+            stringIndexForCenteringToneIndex = stringIndexForCenteringToneIndex,
+            activeToneStyle = activeToneStyle,
+            stringIndexInViewCenter = stringIndexInViewCenter,
+            automaticScrollToSelected = automaticScrollToSelected
+        )
+
+        bundle.putParcelable("string view state", state)
+        return bundle
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+//        Log.v("Tuner", "PlotView.onRestoreInstanceState")
+        val superState = if (state is Bundle) {
+            state.getParcelable<SavedState>("string view state")?.let { scrollViewState ->
+                highlightBy = scrollViewState.highlightBy
+                highlightedStringIndex = scrollViewState.highlightedStringIndex
+                toneIndexForHighlighting = scrollViewState.toneIndexForHighlighting
+                stringIndexForCenteringToneIndex = scrollViewState.stringIndexForCenteringToneIndex
+                activeToneStyle = scrollViewState.activeToneStyle
+                // TODO: find out how to best scoll to stringIndexInViewCenter
+                automaticScrollToSelected = scrollViewState.automaticScrollToSelected
+            }
+            state.getParcelable("super state")
+        } else {
+            state
+        }
+        super.onRestoreInstanceState(superState)
+    }
+
+
     fun setStrings(toneIndices: IntArray, labels: (Int) -> CharSequence?) {
         strings.clear()
         var labelWidth = 0
@@ -558,9 +645,13 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         this.labelWidth = labelWidth.toFloat() + 2 * labelBackgroundPadding
         this.labelHeight = labelHeight.toFloat() + 2 * labelBackgroundPadding
 
-        if (!(activeToneIndex in toneIndices))
-            activeToneIndex = NO_ACTIVE_TONE_INDEX
-        updateActiveStringIndex(activeToneIndex)
+        if (isLaidOut)
+            updateStringPositionVariables(width, height)
+
+        if (!(highlightedStringIndex in toneIndices.indices))
+            highlightedStringIndex = -1
+        numHighlightedWithToneIndex = strings.count { it.toneIndex == toneIndexForHighlighting }
+        stringIndexForCenteringToneIndex = getClosestStringWithToneIndex(stringIndexForCenteringToneIndex, toneIndexForHighlighting)
 
         requestLayout()
         invalidate()
@@ -575,9 +666,35 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     }
 
-    fun scrollToString(toneIndex: Int, animationDuration: Long) {
-        val stringIndex = strings.indexOfFirst { it.toneIndex == toneIndex }
-        if (stringIndex >= 0) {
+    fun highlightSingleString(stringIndex: Int, animationDuration: Long = 200L) {
+        if (stringIndex == highlightedStringIndex && highlightBy == HighlightBy.StringIndex)
+            return
+//        Log.v("Tuner", "StringView.highlightSingleString: stringIndex=$stringIndex, duration=$animationDuration")
+        highlightedStringIndex = stringIndex
+        highlightBy = HighlightBy.StringIndex
+        if (automaticScrollToSelected)
+            scrollToStringIndex(highlightedStringIndex, animationDuration)
+        else
+            invalidate()
+    }
+
+    fun highlightByToneIndex(toneIndex: Int, animationDuration: Long = 200L) {
+        if (toneIndex == toneIndexForHighlighting && highlightBy == HighlightBy.ToneIndex)
+            return
+
+        highlightBy = HighlightBy.ToneIndex
+        toneIndexForHighlighting = toneIndex
+        numHighlightedWithToneIndex = strings.count { it.toneIndex == toneIndex }
+
+        val closestStringIndexToCenter = (stringStartIndex + stringEndIndex) / 2
+        stringIndexForCenteringToneIndex = getClosestStringWithToneIndex(closestStringIndexToCenter, toneIndexForHighlighting)
+        if (automaticScrollToSelected)
+            scrollToStringIndex(stringIndexForCenteringToneIndex, animationDuration)
+    }
+
+    fun scrollToStringIndex(stringIndex: Int, animationDuration: Long) {
+        //val stringIndex = strings.indexOfFirst { it.toneIndex == toneIndex }
+        if (stringIndex in strings.indices) {
             flingAnimation.cancel()
 
 //            val yPosOfString = paddingTop + 0.5f * height
@@ -609,26 +726,29 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         // no manual control if no scrolling is possible
         if (computeOffsetMax() == computeOffsetMin())
             return
-        automaticScrollToHighlight = false
+        automaticScrollToSelected = false
         //framePaint.color = frameColorOnTouch
         invalidate()
     }
 
     fun setAutomaticControl(animationDuration: Long = 200L) {
         // Log.v("Tuner", "StringView.setAutomaticControl")
-        automaticScrollToHighlight = true
+        automaticScrollToSelected = true
         framePaint.color = frameColor
-        if (activeToneIndex != NO_ACTIVE_TONE_INDEX)
-            scrollToString(activeToneIndex, animationDuration)
+        when (highlightBy) {
+            HighlightBy.StringIndex -> scrollToStringIndex(highlightedStringIndex, animationDuration)
+            HighlightBy.ToneIndex -> scrollToStringIndex(stringIndexForCenteringToneIndex, animationDuration)
+            else -> {}
+        }
         invalidate()
     }
 
-    private fun updateActiveStringIndex(toneIndex: Int) {
-        activeStringIndex = if (toneIndex == NO_ACTIVE_TONE_INDEX)
-            -1
-        else
-            strings.indexOfFirst { it.toneIndex == toneIndex }
-    }
+//    private fun updateActiveStringIndex(toneIndex: Int) {
+//        activeStringIndex = if (toneIndex == NO_ACTIVE_TONE_INDEX)
+//            -1
+//        else
+//            strings.indexOfFirst { it.toneIndex == toneIndex }
+//    }
 
     private fun scrollDistance(distance: Float) {
         yOffset -= distance
@@ -665,6 +785,48 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 layout.draw(this)
             }
         }
+    }
+
+    private fun getNextCenteringStringIndexWithToneIndex(stringIndex: Int, toneIndex: Int): Int {
+        var newCenteringStringIndex = -1
+        for (i in stringIndex + 1 until strings.size) {
+            if (strings[i].toneIndex == toneIndex) {
+                newCenteringStringIndex = i
+                break
+            }
+        }
+
+        if (newCenteringStringIndex == -1) {
+            for (i in 0 until min(stringIndex + 1, strings.size)) {
+                if (strings[i].toneIndex == toneIndex) {
+                    newCenteringStringIndex = i
+                    break
+                }
+            }
+        }
+        return newCenteringStringIndex
+    }
+
+    private fun getClosestStringWithToneIndex(stringIndexRef: Int, toneIndex: Int): Int {
+        var dist = Int.MAX_VALUE
+        var index = 0
+        // search positions greater than the reference index
+        for (i in max(0, stringIndexRef) until strings.size) {
+            if (strings[i].toneIndex == toneIndex) {
+                dist = i - stringIndexRef
+                index = i
+                break
+            }
+        }
+        // search positions smaller than the reference index
+        for (i in min(strings.size-1, stringIndexRef-1) downTo 0) {
+            if (strings[i].toneIndex == toneIndex) {
+                if (stringIndexRef - i < dist)
+                    index = i
+                break
+            }
+        }
+        return index
     }
 
     private fun buildLabelLayout(label: CharSequence?, index: Int): StaticLayout? {

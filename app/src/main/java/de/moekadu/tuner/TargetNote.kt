@@ -56,6 +56,9 @@ class TargetNote {
     var toneIndex = 0
         private set
 
+    /// String index of target note
+    var stringIndex = 0
+
 //    /// Current note name
 //    var name: CharSequence? = null
 //        private set
