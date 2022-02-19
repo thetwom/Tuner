@@ -7,10 +7,13 @@
         <entry key="app/src/main/res/drawable/detected_note_viewer_background.xml" value="0.1865" />
         <entry key="app/src/main/res/drawable/ic_anchor_inv_x.xml" value="0.35185185185185186" />
         <entry key="app/src/main/res/drawable/ic_average.xml" value="0.30833333333333335" />
+        <entry key="app/src/main/res/drawable/ic_baseline_cancel_24.xml" value="0.22" />
         <entry key="app/src/main/res/drawable/ic_baseline_developer_board.xml" value="0.26666666666666666" />
         <entry key="app/src/main/res/drawable/ic_bass.xml" value="0.2537037037037037" />
+        <entry key="app/src/main/res/drawable/ic_close.xml" value="0.22" />
         <entry key="app/src/main/res/drawable/ic_developer_off.xml" value="0.30833333333333335" />
         <entry key="app/src/main/res/drawable/ic_developer_on.xml" value="0.30833333333333335" />
+        <entry key="app/src/main/res/drawable/ic_done.xml" value="0.22" />
         <entry key="app/src/main/res/drawable/ic_frequency_a.xml" value="0.2861111111111111" />
         <entry key="app/src/main/res/drawable/ic_guitar.xml" value="0.2537037037037037" />
         <entry key="app/src/main/res/drawable/ic_info.xml" value="0.30833333333333335" />
@@ -30,12 +33,14 @@
         <entry key="app/src/main/res/drawable/instrument_background_active.xml" value="0.24722222222222223" />
         <entry key="app/src/main/res/drawable/instrument_entry_background.xml" value="0.3875" />
         <entry key="app/src/main/res/layout-land/diagrams_simple.xml" value="0.1" />
+        <entry key="app/src/main/res/layout-land/tuning_editor.xml" value="0.27628149435273675" />
         <entry key="app/src/main/res/layout/diagrams_simple.xml" value="0.47239583333333335" />
         <entry key="app/src/main/res/layout/icon_picker_entry.xml" value="0.21014492753623187" />
         <entry key="app/src/main/res/layout/icon_picker_layout.xml" value="0.21014492753623187" />
         <entry key="app/src/main/res/layout/instrument_entry.xml" value="0.2875905797101449" />
         <entry key="app/src/main/res/layout/instruments.xml" value="0.1" />
         <entry key="app/src/main/res/layout/tuning_editor.xml" value="0.1" />
+        <entry key="app/src/main/res/menu/tuning_editor.xml" value="3.242857142857143" />
         <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.315625" />
         <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.315625" />
       </map>

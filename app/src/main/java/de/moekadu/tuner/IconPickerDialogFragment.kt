@@ -29,7 +29,7 @@ class IconPickerDialogFragment(private val iconResourceSelectedListener: IconRes
                 R.drawable.ic_bass,
                 R.drawable.ic_violin
             )
-            
+
             val adapter = IconPickerAdapter(icons)
             //val recyclerView = view.findViewById<RecyclerView>(R.id.icon_list)
             val gridView = view.findViewById<GridView>(R.id.icon_list)

@@ -144,6 +144,8 @@ class MainActivity : AppCompatActivity() {
             if (!isCurrentFragmentATunerFragment())
                 addToBackStack(null)
         }
+        val actionMode = startSupportActionMode(TuningEditorActionCallback(this))
+        actionMode?.setTitle(R.string.edit_instrument)
     }
 
     fun loadInstrumentsFragment() {

@@ -90,4 +90,6 @@
     <string name="add_note">Add note</string>
     <string name="delete_note">Delete note</string>
     <string name="lately_detected_notes">Lately detected tones</string>
+    <string name="done">Done</string>
+    <string name="edit_instrument">Edit instrument</string>
 </resources>

@@ -19,8 +19,8 @@
         app:layout_constraintRight_toRightOf="parent"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
         app:startIconDrawable="@drawable/ic_guitar"
         app:startIconCheckable="true"
         app:startIconTint="?attr/colorPrimary"
@@ -48,7 +48,7 @@
         app:layout_constraintBottom_toTopOf="@id/button_add_note"
         android:layout_marginRight="12dp"
         android:paddingTop="0dp"
-        android:paddingBottom="12dp"
+        android:paddingBottom="3dp"
         android:paddingRight="60sp"
         android:paddingLeft="12dp"
         app:labelTextSize="20sp"
@@ -74,7 +74,7 @@
         app:layout_constraintRight_toLeftOf="@id/button_delete_note"
         android:layout_marginLeft="12dp"
         android:layout_marginRight="4dp"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="3dp"
         android:text="@string/add_note"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         />
@@ -93,25 +93,6 @@
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         />
 
-
-    <de.moekadu.tuner.DetectedNoteViewer
-        android:id="@+id/detected_note_viewer"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:minimumLabelSpace="5dp"
-        android:layout_marginBottom="12dp"
-        app:labelTextColor="?attr/colorPrimary"
-        app:title="@string/lately_detected_notes"
-        app:titleSize="12sp"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        app:boxStrokeColor="?attr/colorOnSurface"
-        app:titleColor="?attr/colorOnSurface"
-        android:clickable="true"
-        android:focusableInTouchMode="true"
-        android:focusable="true"
-        />
     <de.moekadu.tuner.NoteSelector
         android:id="@+id/note_selector"
         android:layout_width="match_parent"
@@ -120,11 +101,33 @@
         app:textPadding="2dp"
         app:labelTextColor="?attr/colorPrimary"
         app:labelTextColor2="?attr/colorPrimaryFaint"
+        android:paddingLeft="0dp"
+        android:paddingRight="0dp"
+        android:layout_marginBottom="8dp"
         app:textStyle="bold"
-        android:layout_marginBottom="12dp"
         app:rectangleRadius="3dp"
         android:clickable="true"
         android:focusableInTouchMode="true"
         android:focusable="true"
         />
+
+    <de.moekadu.tuner.DetectedNoteViewer
+        android:id="@+id/detected_note_viewer"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:minimumLabelSpace="5dp"
+        app:labelTextColor="?attr/colorPrimary"
+        app:title="@string/lately_detected_notes"
+        app:titleSize="12sp"
+        android:layout_marginBottom="12dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        app:boxStrokeColor="?attr/colorOnSurface"
+        app:titleColor="?attr/colorOnSurface"
+        android:clickable="true"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

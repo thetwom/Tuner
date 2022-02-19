@@ -256,6 +256,8 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             }
             //if (toneIndex == NO_ACTIVE_TONE_INDEX)
             //    setAutomaticControl()
+            if (isSoundEffectsEnabled)
+                playSoundEffect(android.view.SoundEffectConstants.CLICK)
             performClick()
             return true
         }
@@ -581,12 +583,6 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 //                )
 //            }
         }
-    }
-
-    override fun performClick(): Boolean {
-        if (isSoundEffectsEnabled)
-            playSoundEffect(android.view.SoundEffectConstants.CLICK)
-        return super.performClick()
     }
 
     override fun onSaveInstanceState(): Parcelable {

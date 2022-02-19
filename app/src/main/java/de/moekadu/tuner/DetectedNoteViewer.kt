@@ -258,6 +258,8 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
                 clickedToneIndex = NO_TONE_INDEX
 //                Log.v("Tuner", "DetectedNoteViewer.onTouchEvent: ACTION_UP, toneIndex= $toneIndex, x=${event.x}")
                 if (toneIndex != NO_TONE_INDEX) {
+                    if (isSoundEffectsEnabled)
+                        playSoundEffect(android.view.SoundEffectConstants.CLICK)
                     performClick()
                     noteClickedListener?.onNoteClicked(toneIndex)
                 }
@@ -270,12 +272,6 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
 
         super.onTouchEvent(event)
         return true
-    }
-
-    override fun performClick(): Boolean {
-        if (isSoundEffectsEnabled)
-            playSoundEffect(android.view.SoundEffectConstants.CLICK)
-        return super.performClick()
     }
 
     fun setNotes(toneIndexBegin: Int, toneIndexEnd: Int, toneIndexToLabel: (Int) -> CharSequence) {
