@@ -21,7 +21,6 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 
 class TuningEditorFragment : Fragment() {
-    // TODO: toolbar in lightmode has wrong text colors
     // TODO: more instrument icons
 
     private val tunerViewModel: TunerViewModel by activityViewModels()

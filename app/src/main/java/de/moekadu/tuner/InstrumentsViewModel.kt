@@ -6,7 +6,6 @@ import androidx.lifecycle.*
 
 
 class InstrumentsViewModel(initialInstrumentId: Long, application: Application) : AndroidViewModel(application) {
-    // TODO: translations of instruments (and maybe also notes)
 
     private var _instrument = MutableLiveData<Instrument>().apply {
         value = instrumentDatabase.find { it.stableId == initialInstrumentId } ?: instrumentDatabase[0]
