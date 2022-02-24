@@ -79,7 +79,8 @@ class InstrumentsAdapter : ListAdapter<Instrument, InstrumentsAdapter.ViewHolder
         if (recyclerView != null) {
             for (i in 0 until recyclerView.childCount) {
                 val child = recyclerView.getChildAt(i)
-                (recyclerView.getChildViewHolder(child) as InstrumentsAdapter.ViewHolder).let { viewHolder ->
+                val viewHolder = recyclerView.getChildViewHolder(child)
+                if (viewHolder is InstrumentsAdapter.ViewHolder) {
                     viewHolder.isActivated = (stableId == viewHolder.itemId)
                 }
             }

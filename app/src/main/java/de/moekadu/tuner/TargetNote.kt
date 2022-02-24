@@ -122,7 +122,7 @@ class TargetNote {
             frequencyRange[0] = Float.NEGATIVE_INFINITY
             frequencyRange[1] = Float.POSITIVE_INFINITY
             toneIndex = instrument.strings[0]
-        } else if (instrument.type == InstrumentType.Piano) {
+        } else if (instrument.isChromatic) {
             toneIndex = tuningFrequencies.getClosestToneIndex(frequency)
             frequencyRange[0] = tuningFrequencies.getNoteFrequency(toneIndex - allowedHalfToneDeviationBeforeChangingTarget)
             frequencyRange[1] = tuningFrequencies.getNoteFrequency(toneIndex + allowedHalfToneDeviationBeforeChangingTarget)

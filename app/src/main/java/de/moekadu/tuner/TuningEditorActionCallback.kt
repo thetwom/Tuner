@@ -4,7 +4,9 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.view.ActionMode
 
-class TuningEditorActionCallback(private val activity: MainActivity)
+class TuningEditorActionCallback(private val activity: MainActivity,
+                                 private val instrumentsViewModel: InstrumentsViewModel,
+                                 private val tuningEditorViewModel: TuningEditorViewModel)
     : ActionMode.Callback {
 
     override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
@@ -22,6 +24,7 @@ class TuningEditorActionCallback(private val activity: MainActivity)
         return when (item?.itemId) {
             R.id.action_edit_done -> {
                 mode?.finish()
+                instrumentsViewModel.addInstrument(tuningEditorViewModel.getInstrument())
                 true
             }
             else -> false

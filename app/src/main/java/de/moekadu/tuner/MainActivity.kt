@@ -39,9 +39,14 @@ class MainActivity : AppCompatActivity() {
     private val instrumentsViewModel: InstrumentsViewModel by viewModels {
         InstrumentsViewModel.Factory(
             AppPreferences.readInstrumentId(this),
+            AppPreferences.readInstrumentSection(this),
+            AppPreferences.readCustomInstruments(this),
+            AppPreferences.readPredefinedSectionExpanded(this),
+            AppPreferences.readCustomSectionExpanded(this),
             application
         )
     }
+    private val tuningEditorViewModel: TuningEditorViewModel by viewModels()
 
     // private var scientificMode = TunerMode.Unknown
 
@@ -83,7 +88,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        AppPreferences.writeTunerPreferences(instrumentsViewModel.instrument.value?.stableId, this)
+        AppPreferences.writeTunerPreferences(
+            instrumentsViewModel.instrument.value?.instrument?.stableId,
+            instrumentsViewModel.instrument.value?.section?.name,
+            instrumentsViewModel.predefinedDatabaseExpanded.value ?: true,
+            instrumentsViewModel.customDatabaseExpanded.value ?: true,
+            this)
         super.onStop()
     }
 
@@ -144,7 +154,8 @@ class MainActivity : AppCompatActivity() {
             if (!isCurrentFragmentATunerFragment())
                 addToBackStack(null)
         }
-        val actionMode = startSupportActionMode(TuningEditorActionCallback(this))
+        tuningEditorViewModel.clear()
+        val actionMode = startSupportActionMode(TuningEditorActionCallback(this, instrumentsViewModel, tuningEditorViewModel))
         actionMode?.setTitle(R.string.edit_instrument)
     }
 

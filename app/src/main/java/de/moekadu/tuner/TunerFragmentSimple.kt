@@ -41,6 +41,10 @@ class TunerFragmentSimple : Fragment() {
     private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
         InstrumentsViewModel.Factory(
             AppPreferences.readInstrumentId(requireActivity()),
+            AppPreferences.readInstrumentSection(requireActivity()),
+            AppPreferences.readCustomInstruments(requireActivity()),
+            AppPreferences.readPredefinedSectionExpanded(requireActivity()),
+            AppPreferences.readCustomSectionExpanded(requireActivity()),
             requireActivity().application)
     }
 
@@ -131,17 +135,18 @@ class TunerFragmentSimple : Fragment() {
             pitchPlot?.setYTicks(noteFrequencies, false) { _, f -> tuningFrequencies.getNoteName(requireContext(), f) }
             pitchPlot?.setYTouchLimits(noteFrequencies.first(), noteFrequencies.last(), 0L)
 
-            if (instrumentsViewModel.instrument.value?.type == InstrumentType.Piano)
+            if (instrumentsViewModel.instrument.value?.instrument?.isChromatic == true)
                 setStringViewToChromatic()
         }
 
-        instrumentsViewModel.instrument.observe(viewLifecycleOwner) { instrument ->
+        instrumentsViewModel.instrument.observe(viewLifecycleOwner) { instrumentAndSection ->
+            val instrument = instrumentAndSection.instrument
             //Log.v("Tuner", "TunerFragmentSimple.onCreateView: instrumentViewModel.instrument: $instrument")
             viewModel.setInstrument(instrument)
             //instrumentIcon?.setImageResource(instrument.iconResource)
             instrumentTitle?.setIconResource(instrument.iconResource)
             instrumentTitle?.text = instrument.getNameString(requireContext())
-            if (instrument.type == InstrumentType.Piano) {
+            if (instrument.isChromatic) {
                 setStringViewToChromatic()
             } else {
                 stringView?.setStrings(instrument.strings) { noteIndex ->
@@ -236,7 +241,7 @@ class TunerFragmentSimple : Fragment() {
     override fun onStart() {
         super.onStart()
         askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
-        viewModel.setInstrument(instrumentsViewModel.instrument.value ?: instrumentDatabase[0])
+        viewModel.setInstrument(instrumentsViewModel.instrument.value?.instrument ?: instrumentDatabase[0])
     }
 
     override fun onStop() {

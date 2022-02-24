@@ -75,10 +75,42 @@ class AppPreferences {
         fun writeInstrumentId(stableId: Long, activity: FragmentActivity) {
             writePreferenceLong("instrument_id", stableId, activity)
         }
-
-        fun writeTunerPreferences(instrumentId: Long?, activity: FragmentActivity) {
+        fun readInstrumentSection(activity: FragmentActivity): String? {
+            return readPreferenceString("instrument_section", activity)
+        }
+        fun writeInstrumentSection(section: String, activity: FragmentActivity) {
+            writePreferenceString("instrument_section", section, activity)
+        }
+        fun readCustomSectionExpanded(activity: FragmentActivity): Boolean {
+            return readPreferenceBoolean("custom_section_expanded", true, activity)
+        }
+        fun writeCustomSectionExpanded(expanded: Boolean, activity: FragmentActivity) {
+            writePreferenceBoolean("custom_section_expanded", expanded, activity)
+        }
+        fun readPredefinedSectionExpanded(activity: FragmentActivity): Boolean {
+            return readPreferenceBoolean("predefined_section_expanded", true, activity)
+        }
+        fun writePredefinedSectionExpanded(expanded: Boolean, activity: FragmentActivity) {
+            writePreferenceBoolean("predefined_section_expanded", expanded, activity)
+        }
+        fun readCustomInstruments(activity: FragmentActivity): String {
+            return readPreferenceString("custom_instruments", activity) ?: ""
+        }
+        fun writeCustomInstruments(instrumentsString: String, activity: FragmentActivity) {
+            writePreferenceString("custom_instruments", instrumentsString, activity)
+        }
+        fun writeTunerPreferences(
+            instrumentId: Long?,
+            instrumentSection: String?,
+            predefinedExpanded: Boolean,
+            customExpanded: Boolean,
+            activity: FragmentActivity) {
             if (instrumentId != null)
                 writeInstrumentId(instrumentId, activity)
+            if (instrumentSection != null)
+                writeInstrumentSection(instrumentSection, activity)
+            writePredefinedSectionExpanded(predefinedExpanded, activity)
+            writeCustomSectionExpanded(customExpanded, activity)
         }
     }
 }

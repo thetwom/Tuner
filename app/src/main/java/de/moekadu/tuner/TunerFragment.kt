@@ -38,6 +38,10 @@ class TunerFragment : Fragment() {
     private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
         InstrumentsViewModel.Factory(
             AppPreferences.readInstrumentId(requireActivity()),
+            AppPreferences.readInstrumentSection(requireActivity()),
+            AppPreferences.readCustomInstruments(requireActivity()),
+            AppPreferences.readPredefinedSectionExpanded(requireActivity()),
+            AppPreferences.readCustomSectionExpanded(requireActivity()),
             requireActivity().application
         )
     }

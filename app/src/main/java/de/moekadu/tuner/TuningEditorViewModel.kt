@@ -12,10 +12,27 @@ class TuningEditorViewModel(application: Application) : AndroidViewModel(applica
     val instrumentName: LiveData<CharSequence> get() = _instrumentName
     private val _iconResourceId = MutableLiveData(R.drawable.ic_guitar)
     val iconResourceId: LiveData<Int> get() = _iconResourceId
-    private val _strings = MutableLiveData(intArrayOf())
+    private val _strings = MutableLiveData<IntArray>()
     val strings: LiveData<IntArray> get() = _strings
     private val _selectedStringIndex = MutableLiveData(0)
     val selectedStringIndex: LiveData<Int> = _selectedStringIndex
+
+    fun getInstrument(): Instrument {
+        return Instrument(
+            instrumentName.value ?: "",
+            null,
+            strings.value ?: intArrayOf(),
+            iconResourceId.value ?: R.drawable.ic_guitar,
+            Instrument.NO_STABLE_ID
+        )
+    }
+
+    fun clear() {
+        _instrumentName.value = ""
+        _iconResourceId.value = R.drawable.ic_guitar
+        _strings.value = intArrayOf()
+        _selectedStringIndex.value = 0
+    }
 
     fun setInstrumentName(name: CharSequence?) {
         //Log.v("Tuner", "TuningEditorViewModel: Set instrument name: |$name|, current: |${instrumentName.value}|")

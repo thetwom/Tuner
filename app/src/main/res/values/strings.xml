@@ -92,4 +92,8 @@
     <string name="lately_detected_notes">Lately detected tones</string>
     <string name="done">Done</string>
     <string name="edit_instrument">Edit instrument</string>
+    <string name="predefinded_instruments">Predefined instruments</string>
+    <string name="custom_instruments">Custom instruments</string>
+    <string name="file_empty">File is empty: %s</string>
+    <string name="file_invalid">File is invalid: %s</string>
 </resources>
