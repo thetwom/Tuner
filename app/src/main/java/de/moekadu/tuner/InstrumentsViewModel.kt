@@ -22,23 +22,50 @@ class InstrumentsViewModel(
     val instrument: LiveData<InstrumentAndSection>
         get() = _instrument
 
+    private val _predefinedInstrumentList = MutableLiveData<List<Instrument> >()
+    val predefinedInstrumentList: LiveData<List<Instrument> >
+        get() = _predefinedInstrumentList
+
     private val _predefinedDatabaseExpanded = MutableLiveData(initialPredefinedExpanded)
     val predefinedDatabaseExpanded: LiveData<Boolean> get() = _predefinedDatabaseExpanded
 
-    private val _customInstrumentDatabase = MutableLiveData<InstrumentDatabase>()
+    val customInstrumentDatabase = InstrumentDatabase()
+    private val _customInstrumentDatabaseAsLiveData = MutableLiveData(customInstrumentDatabase)
+    val customInstrumentDatabaseAsLiveData: LiveData<InstrumentDatabase> get() = _customInstrumentDatabaseAsLiveData
 
-    val customInstrumentDatabase: LiveData<InstrumentDatabase>
-        get() = _customInstrumentDatabase
+    private val _customInstrumentList = MutableLiveData<List<Instrument> >()
+    val customInstrumentList: LiveData<List<Instrument> >
+        get() = _customInstrumentList
 
     private val _customDatabaseExpanded = MutableLiveData(initialCustomExpanded)
     val customDatabaseExpanded: LiveData<Boolean> get() = _customDatabaseExpanded
 
     init {
-        Log.v("Tuner", "InstrumentsViewModel.init: loading custom instruments $initialCustomInstrumentsString")
+        Log.v("Tuner", "InstrumentsViewModel.init: loading custom instruments $initialCustomInstrumentsString, customExpanded=${customDatabaseExpanded.value}")
         val instruments = InstrumentDatabase.stringToInstruments(initialCustomInstrumentsString)
-        val database = InstrumentDatabase()
-        database.loadInstruments(instruments.instruments, InstrumentDatabase.InsertMode.Replace)
-        _customInstrumentDatabase.value = database
+        customInstrumentDatabase.loadInstruments(instruments.instruments, InstrumentDatabase.InsertMode.Replace)
+        customInstrumentDatabase.databaseChangedListener = InstrumentDatabase.DatabaseChangedListener { db ->
+            Log.v("Tuner", "InstrumentsViewModel.DatabaseChanged: size=${db.size}, custom expanded=${customDatabaseExpanded.value}")
+            _customInstrumentDatabaseAsLiveData.value = db
+
+            if (customDatabaseExpanded.value == true) {
+                val listCopy = ArrayList<Instrument>(db.size)
+                db.instruments.forEach { listCopy.add(it.copy()) }
+                _customInstrumentList.value = listCopy
+            }
+        }
+
+        if (_customDatabaseExpanded.value == true) {
+            val listCopy = ArrayList<Instrument>(customInstrumentDatabase.size)
+            customInstrumentDatabase.instruments.forEach { listCopy.add(it.copy()) }
+            _customInstrumentList.value = listCopy
+        }
+
+        if (_predefinedDatabaseExpanded.value == true) {
+            val listCopy = ArrayList<Instrument>(instrumentDatabase.size)
+            instrumentDatabase.forEach {listCopy.add(it.copy())}
+            _predefinedInstrumentList.value = listCopy
+        }
 
         val section = try {
             if (initialInstrumentSection == null) Section.Predefined else Section.valueOf(initialInstrumentSection)
@@ -51,7 +78,7 @@ class InstrumentsViewModel(
                 InstrumentAndSection(i, Section.Predefined)
             }
             Section.Custom -> {
-                val i = customInstrumentDatabase.value?.instruments?.find { it.stableId == initialInstrumentId }
+                val i = customInstrumentDatabase.instruments.find { it.stableId == initialInstrumentId }
                 if (i == null)
                     InstrumentAndSection(instrumentDatabase[0], Section.Predefined)
                 else
@@ -69,19 +96,36 @@ class InstrumentsViewModel(
     }
 
     fun expandPredefinedDatabase(value: Boolean = true) {
-        if (value != _predefinedDatabaseExpanded.value)
+        if (value != _predefinedDatabaseExpanded.value) {
+            Log.v("Tuner", "InstrumentsViewModel.expandPredefinedDatabase: $value")
             _predefinedDatabaseExpanded.value = value
+            _predefinedInstrumentList.value = if (value) {
+                val listCopy = ArrayList<Instrument>(instrumentDatabase.size)
+                instrumentDatabase.forEach { listCopy.add(it.copy()) }
+                listCopy
+            } else {
+                ArrayList()
+            }
+        }
     }
     fun expandCustomDatabase(value: Boolean = true) {
-        if (value != _customDatabaseExpanded.value)
+        if (value != _customDatabaseExpanded.value) {
+            Log.v("Tuner", "InstrumentsViewModel.expandCustomDatabase: $value")
             _customDatabaseExpanded.value = value
+            _customInstrumentList.value = if (value) {
+                val listCopy = ArrayList<Instrument>(customInstrumentDatabase.size)
+                customInstrumentDatabase.instruments.forEach { listCopy.add(it.copy()) }
+                listCopy
+            } else {
+                ArrayList()
+            }
+        }
     }
-    fun addInstrument(instrument: Instrument) {
-        // TODO: maybe we must copy the database to make the adapter work correctly
-        val database = customInstrumentDatabase.value ?: InstrumentDatabase()
-        database.add(instrument)
-        _customInstrumentDatabase.value = database
-    }
+//    fun addInstrument(instrument: Instrument) {
+//        customInstrumentDatabase.add(instrument)
+//        if (customDatabaseExpanded.value == true)
+//            _customInstrumentList.value = customInstrumentDatabase.instruments
+//    }
 
     class Factory(
         private val initialInstrumentId: Long,

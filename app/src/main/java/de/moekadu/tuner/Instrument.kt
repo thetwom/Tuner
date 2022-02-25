@@ -53,7 +53,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
             nameResource = R.string.chromatic,
             strings = intArrayOf(),
             iconResource = R.drawable.ic_piano,
-            stableId = instruments.size.toLong(), // this should be set by a id generator
+            stableId = -1 - instruments.size.toLong(), // this should be set by a id generator
             isChromatic = true
         )
     )
@@ -63,7 +63,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
             nameResource = R.string.guitar_eadgbe,
             strings = intArrayOf(-29, -24, -19, -14, -10, -5),
             iconResource = R.drawable.ic_guitar,
-            stableId = instruments.size.toLong()
+            stableId = -1 - instruments.size.toLong()
         )
     )
     instruments.add(
@@ -72,7 +72,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
             nameResource = R.string.bass_eadg,
             strings = intArrayOf(-41, -36, -31, -26),
             iconResource = R.drawable.ic_bass,
-            stableId = instruments.size.toLong()
+            stableId = -1 - instruments.size.toLong()
         )
     )
     instruments.add(
@@ -81,7 +81,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
             nameResource = R.string.bass_beadg,
             strings = intArrayOf(-46, -41, -36, -31, -26),
             iconResource = R.drawable.ic_bass,
-            stableId = instruments.size.toLong()
+            stableId = -1 - instruments.size.toLong()
         )
     )
     instruments.add(
@@ -90,7 +90,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
             nameResource = R.string.ukulele_gcea,
             strings = intArrayOf(-2, -9, -5, 0),
             iconResource = R.drawable.ic_ukulele,
-            stableId = instruments.size.toLong()
+            stableId = -1 - instruments.size.toLong()
         )
     )
     instruments.add(
@@ -99,26 +99,26 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
             nameResource = R.string.violin_gdae,
             strings = intArrayOf(-14, -7, 0, 7),
             iconResource = R.drawable.ic_violin,
-            stableId = instruments.size.toLong()
+            stableId = -1 - instruments.size.toLong()
         )
     )
-    instruments.add(
-        Instrument(
-            name = "Test instrument",
-            nameResource = null,
-            strings = intArrayOf(0, 1, 2, 0, 2, 2, 3, 4, 5, 0),
-            iconResource = R.drawable.ic_violin,
-            stableId = instruments.size.toLong()
-        )
-    )
-    instruments.add(
-        Instrument(
-            name = "Test instrument 2",
-            nameResource = null,
-            strings = intArrayOf(0, 1, 1),
-            iconResource = R.drawable.ic_violin,
-            stableId = instruments.size.toLong()
-        )
-    )
+//    instruments.add(
+//        Instrument(
+//            name = "Test instrument",
+//            nameResource = null,
+//            strings = intArrayOf(0, 1, 2, 0, 2, 2, 3, 4, 5, 0),
+//            iconResource = R.drawable.ic_violin,
+//            stableId = -1 - instruments.size.toLong()
+//        )
+//    )
+//    instruments.add(
+//        Instrument(
+//            name = "Test instrument 2",
+//            nameResource = null,
+//            strings = intArrayOf(0, 1, 1),
+//            iconResource = R.drawable.ic_violin,
+//            stableId = -1 - instruments.size.toLong()
+//        )
+//    )
     return instruments
 }

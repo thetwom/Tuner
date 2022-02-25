@@ -8,7 +8,7 @@ import java.util.*
 import kotlin.math.min
 
 class InstrumentDatabase {
-    // TODO: we must store and load the stable id
+    // TODO: allow writing and loading empty strings lists
     private val _instruments = mutableListOf<Instrument>()
     val instruments: List<Instrument> get() = _instruments
     val size get() = _instruments.size
@@ -52,11 +52,12 @@ class InstrumentDatabase {
     }
 
     fun add(instrument: Instrument, callDatabaseChangedListener: Boolean = true): Long {
-        //Log.v("Metronome", "SceneDatabase.add: Adding: ${scene.title}, ${scene.noteList}")
+        //Log.v("Tuner", "InstrumentDatabase.add: Adding: ${instrument.getNameString(null)}")
         return add(instruments.size, instrument, callDatabaseChangedListener)
     }
 
     fun add(position: Int, instrument: Instrument, callDatabaseChangedListener: Boolean = true) : Long {
+        Log.v("Tuner", "InstrumentDatabase.add: Adding: ${instrument.getNameString(null)}")
         val positionCorrected = min(position, _instruments.size)
 
         // keep the scene stable id if possible else create a new one

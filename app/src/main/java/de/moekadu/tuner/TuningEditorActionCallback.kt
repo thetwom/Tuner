@@ -24,7 +24,7 @@ class TuningEditorActionCallback(private val activity: MainActivity,
         return when (item?.itemId) {
             R.id.action_edit_done -> {
                 mode?.finish()
-                instrumentsViewModel.addInstrument(tuningEditorViewModel.getInstrument())
+                instrumentsViewModel.customInstrumentDatabase.add(tuningEditorViewModel.getInstrument())
                 true
             }
             else -> false

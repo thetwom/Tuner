@@ -26,6 +26,8 @@ class InstrumentsAdapter : ListAdapter<Instrument, InstrumentsAdapter.ViewHolder
         var titleView: TextView? = null
         var icon: ImageView? = null
         var selectedView: View? = null
+        var instrument: Instrument? = null
+
         var isActivated = false
             set(value) {
                 field = value
@@ -49,7 +51,13 @@ class InstrumentsAdapter : ListAdapter<Instrument, InstrumentsAdapter.ViewHolder
         setHasStableIds(true)
     }
 
+    override fun submitList(list: List<Instrument>?) {
+        Log.v("Tuner", "InstrumentsAdapter.submitList: size=${list?.size}, list=$list")
+        super.submitList(list)
+    }
+
     override fun getItemId(position: Int): Long {
+//        Log.v("Tuner", "InstrumentAdapter.getItemId: position=$position, itemId=${getItem(position).stableId}")
         return getItem(position).stableId
     }
 
@@ -71,6 +79,7 @@ class InstrumentsAdapter : ListAdapter<Instrument, InstrumentsAdapter.ViewHolder
         holder.titleView?.text = instrument.getNameString(holder.view.context)
         holder.icon?.setImageResource(instrument.iconResource)
         holder.isActivated = (instrument.stableId == activatedStableId)
+        holder.instrument = instrument
     }
 
     fun setActiveStableId(stableId: Long, recyclerView: RecyclerView?) {

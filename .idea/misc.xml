@@ -12,6 +12,7 @@
         <entry key="app/src/main/res/drawable/ic_bass.xml" value="0.2537037037037037" />
         <entry key="app/src/main/res/drawable/ic_close.xml" value="0.22" />
         <entry key="app/src/main/res/drawable/ic_collapsed.xml" value="0.217" />
+        <entry key="app/src/main/res/drawable/ic_delete_instrument.xml" value="0.3505" />
         <entry key="app/src/main/res/drawable/ic_developer_off.xml" value="0.30833333333333335" />
         <entry key="app/src/main/res/drawable/ic_developer_on.xml" value="0.30833333333333335" />
         <entry key="app/src/main/res/drawable/ic_done.xml" value="0.22" />
@@ -33,6 +34,7 @@
         <entry key="app/src/main/res/drawable/ic_ukulele.xml" value="0.2537037037037037" />
         <entry key="app/src/main/res/drawable/ic_violin.xml" value="0.3751906456532791" />
         <entry key="app/src/main/res/drawable/instrument_background_active.xml" value="0.24722222222222223" />
+        <entry key="app/src/main/res/drawable/instrument_below_background.xml" value="0.3505" />
         <entry key="app/src/main/res/drawable/instrument_entry_background.xml" value="0.3875" />
         <entry key="app/src/main/res/layout-land/diagrams_simple.xml" value="0.1" />
         <entry key="app/src/main/res/layout-land/tuning_editor.xml" value="0.27628149435273675" />

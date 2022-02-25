@@ -1,5 +1,6 @@
 package de.moekadu.tuner
 
+import android.annotation.SuppressLint
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -14,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 class InstrumentsSectionAdapter(private val sectionResourceId: Int)
     : RecyclerView.Adapter<InstrumentsSectionAdapter.ViewHolder>() {
 
-    class ViewHolder(val view: View) : RecyclerView.ViewHolder(view) {}
+    class ViewHolder(val view: View) : RecyclerView.ViewHolder(view)
 
     fun interface SectionClickedListener {
         fun onSectionClicked()
@@ -34,6 +35,14 @@ class InstrumentsSectionAdapter(private val sectionResourceId: Int)
             }
         }
     //var sectionClickedListener: SectionClickedListener? = null
+    var visible = true
+        @SuppressLint("NotifyDataSetChanged")
+        set(value) {
+            if (value != field) {
+                field = value
+                notifyDataSetChanged()
+            }
+        }
 
     init {
         setHasStableIds(true)
@@ -60,6 +69,6 @@ class InstrumentsSectionAdapter(private val sectionResourceId: Int)
     }
 
     override fun getItemCount(): Int {
-        return 1
+        return if (visible) 1 else 0
     }
 }

@@ -96,4 +96,6 @@
     <string name="custom_instruments">Custom instruments</string>
     <string name="file_empty">File is empty: %s</string>
     <string name="file_invalid">File is invalid: %s</string>
+    <string name="instrument_deleted">Instrument deleted</string>
+    <string name="undo">Undo</string>
 </resources>
