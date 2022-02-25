@@ -7,7 +7,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 
 class TuningEditorViewModel(application: Application) : AndroidViewModel(application) {
-
+    // TODO: when opening, there should be already a string
     private val _instrumentName = MutableLiveData<CharSequence>("")
     val instrumentName: LiveData<CharSequence> get() = _instrumentName
     private val _iconResourceId = MutableLiveData(R.drawable.ic_guitar)
@@ -19,7 +19,7 @@ class TuningEditorViewModel(application: Application) : AndroidViewModel(applica
 
     fun getInstrument(): Instrument {
         return Instrument(
-            instrumentName.value ?: "",
+            instrumentName.value.toString(), // toString removes underlines and stuff ...
             null,
             strings.value ?: intArrayOf(),
             iconResourceId.value ?: R.drawable.ic_guitar,
@@ -37,7 +37,7 @@ class TuningEditorViewModel(application: Application) : AndroidViewModel(applica
     fun setInstrumentName(name: CharSequence?) {
         //Log.v("Tuner", "TuningEditorViewModel: Set instrument name: |$name|, current: |${instrumentName.value}|")
         if (name?.contentEquals(instrumentName.value) == false)
-            _instrumentName.value = name ?: ""
+            _instrumentName.value = name ?: null
     }
 
     fun setInstrumentIcon(resourceId: Int) {

@@ -8,7 +8,6 @@ import java.util.*
 import kotlin.math.min
 
 class InstrumentDatabase {
-    // TODO: allow writing and loading empty strings lists
     private val _instruments = mutableListOf<Instrument>()
     val instruments: List<Instrument> get() = _instruments
     val size get() = _instruments.size
@@ -57,7 +56,7 @@ class InstrumentDatabase {
     }
 
     fun add(position: Int, instrument: Instrument, callDatabaseChangedListener: Boolean = true) : Long {
-        Log.v("Tuner", "InstrumentDatabase.add: Adding: ${instrument.getNameString(null)}")
+//        Log.v("Tuner", "InstrumentDatabase.add: Adding: ${instrument.getNameString(null)}")
         val positionCorrected = min(position, _instruments.size)
 
         // keep the scene stable id if possible else create a new one
@@ -184,12 +183,15 @@ class InstrumentDatabase {
                 advance()
                 if (pos >= string.length || string[pos] != '[')
                     return null
+//                Log.v("Tuner", "InstrumentDatabase.readIntArray. string[pos]=${string[pos]}")
                 val posStart = pos
                 while (pos < string.length && string[pos] != '\n' && string[pos] != ']')
                     ++pos
                 if (string[pos] != ']')
                     return null
                 ++pos
+                if (pos - 1 <= posStart + 1) // allow empty int lists
+                    return intArrayOf()
                 val intArrayAsString = string.substring(posStart + 1, pos - 1)
                 return try {
                     intArrayAsString.split(",").map { it.trim().toInt() }.toIntArray()
@@ -240,27 +242,27 @@ class InstrumentDatabase {
             while (!stream.isEos()) {
                 stream.advance()
                 val k = readKeyword(stream)
-                Log.v("Tuner", "InstrumentDatabase.stringToInstruments: found keyword: $k")
+//                Log.v("Tuner", "InstrumentDatabase.stringToInstruments: found keyword: $k")
                 when (k) {
                     Keyword.Version -> {
                         version = stream.readString()
-                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading version: $version")
+//                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading version: $version")
                     }
                     Keyword.NameLength -> {
                         nameLength = stream.readInt() ?: -1
-                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading name length: $nameLength")
+//                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading name length: $nameLength")
                     }
                     Keyword.Name -> {
                         instrumentName = stream.readString(nameLength)
-                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading name: $instrumentName")
+//                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading name: $instrumentName")
                     }
                     Keyword.Icon -> {
                         iconId = instrumentIconName2Id(stream.readString())
-                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading icon id: $iconId")
+//                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading icon id: $iconId")
                     }
                     Keyword.Indices -> {
                         strings = stream.readIntArray()
-                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading strings: ${strings?.joinToString(separator=",", prefix="[", postfix="]")}")
+//                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading strings: ${strings?.joinToString(separator=",", prefix="[", postfix="]")}")
                     }
                     Keyword.Instrument -> {
                         strings?.let {
@@ -274,7 +276,7 @@ class InstrumentDatabase {
                         strings = null
                         iconId = instrumentIcons[0].resourceId
                         stableId = stream.readLong() ?: Instrument.NO_STABLE_ID
-                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading next instrument")
+//                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading next instrument")
                     }
                     Keyword.Invalid -> {}
                 }

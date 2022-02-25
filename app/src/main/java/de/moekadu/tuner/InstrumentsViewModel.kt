@@ -41,11 +41,11 @@ class InstrumentsViewModel(
     val customDatabaseExpanded: LiveData<Boolean> get() = _customDatabaseExpanded
 
     init {
-        Log.v("Tuner", "InstrumentsViewModel.init: loading custom instruments $initialCustomInstrumentsString, customExpanded=${customDatabaseExpanded.value}")
+//        Log.v("Tuner", "InstrumentsViewModel.init: loading custom instruments $initialCustomInstrumentsString, customExpanded=${customDatabaseExpanded.value}")
         val instruments = InstrumentDatabase.stringToInstruments(initialCustomInstrumentsString)
         customInstrumentDatabase.loadInstruments(instruments.instruments, InstrumentDatabase.InsertMode.Replace)
         customInstrumentDatabase.databaseChangedListener = InstrumentDatabase.DatabaseChangedListener { db ->
-            Log.v("Tuner", "InstrumentsViewModel.DatabaseChanged: size=${db.size}, custom expanded=${customDatabaseExpanded.value}")
+//            Log.v("Tuner", "InstrumentsViewModel.DatabaseChanged: size=${db.size}, custom expanded=${customDatabaseExpanded.value}")
             _customInstrumentDatabaseAsLiveData.value = db
 
             if (customDatabaseExpanded.value == true) {
@@ -97,7 +97,7 @@ class InstrumentsViewModel(
 
     fun expandPredefinedDatabase(value: Boolean = true) {
         if (value != _predefinedDatabaseExpanded.value) {
-            Log.v("Tuner", "InstrumentsViewModel.expandPredefinedDatabase: $value")
+//            Log.v("Tuner", "InstrumentsViewModel.expandPredefinedDatabase: $value")
             _predefinedDatabaseExpanded.value = value
             _predefinedInstrumentList.value = if (value) {
                 val listCopy = ArrayList<Instrument>(instrumentDatabase.size)
@@ -110,7 +110,7 @@ class InstrumentsViewModel(
     }
     fun expandCustomDatabase(value: Boolean = true) {
         if (value != _customDatabaseExpanded.value) {
-            Log.v("Tuner", "InstrumentsViewModel.expandCustomDatabase: $value")
+//            Log.v("Tuner", "InstrumentsViewModel.expandCustomDatabase: $value")
             _customDatabaseExpanded.value = value
             _customInstrumentList.value = if (value) {
                 val listCopy = ArrayList<Instrument>(customInstrumentDatabase.size)

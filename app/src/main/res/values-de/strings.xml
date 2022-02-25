@@ -52,10 +52,10 @@
     <string name="instruments">Instrumente</string>
     <string name="instrument_icon">Instrument Icon</string>
     <string name="chromatic">Chromatisch</string>
-    <string name="guitar_eadgbe">6-saitige Gitarre (E-A-D-G-H-E)</string>
-    <string name="bass_eadg">4-saitiger Bass (E-A-D-G)</string>
-    <string name="bass_beadg">5-saitiger Bass (H-E-A-D-G)</string>
-    <string name="ukulele_gcea">Ukulele (G-C-E-A)</string>
+    <string name="guitar_eadgbe">6-saitige Gitarre</string>
+    <string name="bass_eadg">4-saitiger Bass</string>
+    <string name="bass_beadg">5-saitiger Bass</string>
+    <string name="ukulele_gcea">Ukulele</string>
 
     <string name="c_note_name">C</string>
     <string name="cis_note_name">-</string>
@@ -69,5 +69,22 @@
     <string name="a_note_name">A</string>
     <string name="ais_note_name">-</string>
     <string name="b_note_name">H</string>
-    <string name="violin_gdae">Geige (G-D-A-E)</string>
+    <string name="violin_gdae">Geige</string>
+    <string name="ok">OK</string>
+    <string name="abort">Abbrechen</string>
+    <string name="instrument_name">Instrumentname</string>
+    <string name="clear_instrument_name">Instrumentname löschen</string>
+    <string name="add_note">Note hinzufügen</string>
+    <string name="delete_note">Note löschen</string>
+    <string name="lately_detected_notes">Kürzlich erkanne Noten</string>
+    <string name="done">Fertig</string>
+    <string name="edit_instrument">Instrument bearbeiten</string>
+    <string name="predefinded_instruments">Voreingestellte Instrumente</string>
+    <string name="custom_instruments">Benutzerdefinierte Instrumente</string>
+        <string name="file_empty">Datei ist leer: %s</string>
+    <string name="file_invalid">Datei ist ungültig: %s</string>
+    <string name="instrument_deleted">Instrument gelöscht</string>
+    <string name="undo">Rückgängig</string>
+    <string name="add_new_tuning">Stimmung hinzufügen</string>
+    <string name="pick_icon">Icon auswählen</string>
 </resources>

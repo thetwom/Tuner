@@ -16,6 +16,16 @@ data class Instrument(private val name: CharSequence?, private val nameResource:
         }
     }
 
+    fun getStringsString(context: Context, tuningFrequencies: TuningFrequencies, preferFlat: Boolean): CharSequence {
+        return if (isChromatic) {
+            context.getString(R.string.chromatic)
+        } else {
+            strings.joinToString(" - ", "", "") {
+                tuningFrequencies.getNoteName(context, it, preferFlat)
+            }
+        }
+    }
+
     companion object {
         const val NO_STABLE_ID = Long.MAX_VALUE
     }

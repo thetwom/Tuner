@@ -33,6 +33,7 @@ class InstrumentsFragment : Fragment() {
             requireActivity().application
         )
     }
+    private val tunerViewModel: TunerViewModel by activityViewModels() // ? = null
 
     private var recyclerView: RecyclerView? = null
     private val instrumentsPredefinedAdapter = InstrumentsAdapter()
@@ -60,7 +61,7 @@ class InstrumentsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        Log.v("Tuner", "InstrumentsFragment.onCreateView: Start creating view")
+//        Log.v("Tuner", "InstrumentsFragment.onCreateView: Start creating view")
 
         val view = inflater.inflate(R.layout.instruments, container, false)
 
@@ -163,7 +164,7 @@ class InstrumentsFragment : Fragment() {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 if (viewHolder is InstrumentsAdapter.ViewHolder && viewHolder.instrument?.stableId ?: -1 >= 0) {
                     lastRemovedInstrumentIndex = viewHolder.bindingAdapterPosition
-                    Log.v("Tuner", "InstrumentsFragment:onSwiped removing index $lastRemovedInstrumentIndex")
+//                    Log.v("Tuner", "InstrumentsFragment:onSwiped removing index $lastRemovedInstrumentIndex")
                     lastRemovedInstrument =
                         instrumentsViewModel.customInstrumentDatabase.remove(
                             lastRemovedInstrumentIndex
@@ -249,6 +250,11 @@ class InstrumentsFragment : Fragment() {
         val touchHelper = ItemTouchHelper(simpleTouchHelper)
         touchHelper.attachToRecyclerView(recyclerView)
 
+        tunerViewModel.tuningFrequencies.observe(viewLifecycleOwner) {
+            instrumentsPredefinedAdapter.setTuningFrequencies(it, recyclerView)
+            instrumentsCustomAdapter.setTuningFrequencies(it, recyclerView)
+        }
+
         instrumentsViewModel.instrument.observe(viewLifecycleOwner) {
 //            Log.v("Tuner", "InstrumentsFragment.onCreateView: setStableId: $it")
             when (it.section) {
@@ -289,10 +295,7 @@ class InstrumentsFragment : Fragment() {
         }
 
         instrumentsViewModel.customInstrumentList.observe(viewLifecycleOwner) { instrumentList ->
-            Log.v(
-                "Tuner",
-                "InstrumentsFragment: observing custrom instruments: new size= ${instrumentList.size}"
-            )
+//            Log.v("Tuner", "InstrumentsFragment: observing custom instruments: new size= ${instrumentList.size}")
 //                Log.v("Tuner", "InstrumentFragment: Instrument stableId = ${i.stableId}")
             //Log.v("Tuner", "InstrumentsFragment: observing database: submitting database= ${databaseCopy.size}")
             instrumentsCustomAdapter.submitList(instrumentList)
@@ -315,7 +318,7 @@ class InstrumentsFragment : Fragment() {
             (requireActivity() as MainActivity).loadTuningEditorFragment()
         }
 
-        Log.v("Tuner", "InstrumentsFragment.onCreateView: Finished creating view")
+//        Log.v("Tuner", "InstrumentsFragment.onCreateView: Finished creating view")
         return view
     }
 }

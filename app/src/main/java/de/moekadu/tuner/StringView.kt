@@ -243,12 +243,12 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 stringClickedListener?.onAnchorClicked()
             } else if ((anchorDrawablePosition == 0 && x < paddingLeft) ||
                 (anchorDrawablePosition == 1 && x > width - paddingRight)) {
-                Log.v("Tuner", "StringView: Center icon clicked, highlightBy=$highlightBy, automaticScrollToSelected=$automaticScrollToSelected")
+//                Log.v("Tuner", "StringView: Center icon clicked, highlightBy=$highlightBy, automaticScrollToSelected=$automaticScrollToSelected")
                 // select next note if we are in automatic scroll mode and highlight by toneIndex
                 if (automaticScrollToSelected && highlightBy == HighlightBy.ToneIndex) {
                     stringIndexForCenteringToneIndex =
                         getNextCenteringStringIndexWithToneIndex(stringIndexForCenteringToneIndex, toneIndexForHighlighting)
-                    Log.v("Tuner", "StringView: Center icon clicked, centeringStringIndex=$stringIndexForCenteringToneIndex")
+//                    Log.v("Tuner", "StringView: Center icon clicked, centeringStringIndex=$stringIndexForCenteringToneIndex")
                 }
                 setAutomaticControl(200L)
             } else {

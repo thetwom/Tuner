@@ -21,7 +21,9 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 
 class TuningEditorFragment : Fragment() {
-    // TODO: more instrument icons
+    // TODO: more instrument icon
+    // TODO: new strings should take the currently marked by the note selector
+    // TODO: names are sometimes underlined?
 
     private val tunerViewModel: TunerViewModel by activityViewModels()
     private val viewModel: TuningEditorViewModel by activityViewModels()

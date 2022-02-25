@@ -63,10 +63,10 @@
     <string name="instrument_icon">Instrument icon</string>
 
     <string name="chromatic">Chromatic</string>
-    <string name="guitar_eadgbe">6-string guitar (E-A-D-G-B-E)</string>
-    <string name="bass_eadg">4-string bass (E-A-D-G)</string>
-    <string name="bass_beadg">5-string bass (B-E-A-D-G)</string>
-    <string name="ukulele_gcea">Ukulele (G-C-E-A)</string>
+    <string name="guitar_eadgbe">6-string guitar</string>
+    <string name="bass_eadg">4-string bass</string>
+    <string name="bass_beadg">5-string bass</string>
+    <string name="ukulele_gcea">Ukulele</string>
 
     <string name="c_note_name">C</string>
     <string name="cis_note_name">-</string>
@@ -80,10 +80,8 @@
     <string name="a_note_name">A</string>
     <string name="ais_note_name">-</string>
     <string name="b_note_name">B</string>
-    <string name="violin_gdae">Violin (G-D-A-E)</string>
-    <string name="add_new_tuning">Add new tuning</string>
-    <string name="pick_icon">Pick icon</string>
-    <string name="ok">ok</string>
+    <string name="violin_gdae">Violin</string>
+    <string name="ok">OK</string>
     <string name="abort">Abort</string>
     <string name="instrument_name">Instrument name</string>
     <string name="clear_instrument_name">Clear instrument name</string>
@@ -98,4 +96,6 @@
     <string name="file_invalid">File is invalid: %s</string>
     <string name="instrument_deleted">Instrument deleted</string>
     <string name="undo">Undo</string>
+    <string name="add_new_tuning">Add new tuning</string>
+    <string name="pick_icon">Pick icon</string>
 </resources>
