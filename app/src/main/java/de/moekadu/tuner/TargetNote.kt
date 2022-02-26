@@ -1,7 +1,6 @@
 package de.moekadu.tuner
 
 import android.content.Context
-import android.util.Log
 import kotlin.math.roundToInt
 
 class TargetNote {
@@ -118,37 +117,41 @@ class TargetNote {
             return toneIndex
 
         val numStrings = instrument.strings.size
-        if (numStrings == 1) {
-            frequencyRange[0] = Float.NEGATIVE_INFINITY
-            frequencyRange[1] = Float.POSITIVE_INFINITY
-            toneIndex = instrument.strings[0]
-        } else if (instrument.isChromatic) {
-            toneIndex = tuningFrequencies.getClosestToneIndex(frequency)
-            frequencyRange[0] = tuningFrequencies.getNoteFrequency(toneIndex - allowedHalfToneDeviationBeforeChangingTarget)
-            frequencyRange[1] = tuningFrequencies.getNoteFrequency(toneIndex + allowedHalfToneDeviationBeforeChangingTarget)
-        } else {
-            val exactToneIndex = tuningFrequencies.getToneIndex(frequency)
-            var index = instrument.stringsSorted.binarySearch(exactToneIndex)
-            if (index < 0)
-                index = -(index + 1)
-
-            val stringIndex = when {
-                index == 0 -> 0
-                index == numStrings -> numStrings - 1
-                exactToneIndex - instrument.stringsSorted[index - 1] < instrument.stringsSorted[index] - exactToneIndex -> index - 1
-                else -> index
+        when {
+            numStrings == 1 -> {
+                frequencyRange[0] = Float.NEGATIVE_INFINITY
+                frequencyRange[1] = Float.POSITIVE_INFINITY
+                toneIndex = instrument.strings[0]
             }
+            instrument.isChromatic -> {
+                toneIndex = tuningFrequencies.getClosestToneIndex(frequency)
+                frequencyRange[0] = tuningFrequencies.getNoteFrequency(toneIndex - allowedHalfToneDeviationBeforeChangingTarget)
+                frequencyRange[1] = tuningFrequencies.getNoteFrequency(toneIndex + allowedHalfToneDeviationBeforeChangingTarget)
+            }
+            else -> {
+                val exactToneIndex = tuningFrequencies.getToneIndex(frequency)
+                var index = instrument.stringsSorted.binarySearch(exactToneIndex)
+                if (index < 0)
+                    index = -(index + 1)
 
-            frequencyRange[0] = if (stringIndex == 0)
-                Float.NEGATIVE_INFINITY
-            else
-                tuningFrequencies.getNoteFrequency(0.4f * instrument.stringsSorted[stringIndex] + 0.6f * instrument.stringsSorted[stringIndex - 1])
+                val stringIndex = when {
+                    index == 0 -> 0
+                    index == numStrings -> numStrings - 1
+                    exactToneIndex - instrument.stringsSorted[index - 1] < instrument.stringsSorted[index] - exactToneIndex -> index - 1
+                    else -> index
+                }
 
-            frequencyRange[1] = if (stringIndex == numStrings - 1)
-                Float.POSITIVE_INFINITY
-            else
-                tuningFrequencies.getNoteFrequency(0.4f * instrument.stringsSorted[stringIndex] + 0.6f * instrument.stringsSorted[stringIndex + 1])
-            toneIndex = instrument.stringsSorted[stringIndex].roundToInt()
+                frequencyRange[0] = if (stringIndex == 0)
+                    Float.NEGATIVE_INFINITY
+                else
+                    tuningFrequencies.getNoteFrequency(0.4f * instrument.stringsSorted[stringIndex] + 0.6f * instrument.stringsSorted[stringIndex - 1])
+
+                frequencyRange[1] = if (stringIndex == numStrings - 1)
+                    Float.POSITIVE_INFINITY
+                else
+                    tuningFrequencies.getNoteFrequency(0.4f * instrument.stringsSorted[stringIndex] + 0.6f * instrument.stringsSorted[stringIndex + 1])
+                toneIndex = instrument.stringsSorted[stringIndex].roundToInt()
+            }
         }
 
         recomputeTargetNoteProperties(toneIndex, toleranceInCents, tuningFrequencies)

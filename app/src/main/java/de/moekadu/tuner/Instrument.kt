@@ -1,9 +1,7 @@
 package de.moekadu.tuner
 
 import android.content.Context
-import android.content.res.Resources
 import android.text.SpannableStringBuilder
-import androidx.core.content.res.ResourcesCompat
 
 data class Instrument(private val name: CharSequence?, private val nameResource: Int?, val strings: IntArray,
                       val iconResource: Int, val stableId: Long, val isChromatic: Boolean = false) {

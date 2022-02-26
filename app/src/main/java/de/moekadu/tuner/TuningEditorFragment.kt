@@ -13,10 +13,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
@@ -103,7 +100,10 @@ class TuningEditorFragment : Fragment() {
             }
         }
 
-        // viewModel.pitchHistoryUpdateInterval must go to DetectedNoteViewer
+        tunerViewModel.pitchHistoryUpdateInterval.observe(viewLifecycleOwner) {
+            detectedNoteViewer?.setApproximateHitNoteUpdateInterval(it)
+        }
+
         tunerViewModel.pitchHistory.historyAveraged.observe(viewLifecycleOwner) {
             tunerViewModel.targetNote.value?.let { targetNote ->
                 detectedNoteViewer?.hitNote(targetNote.toneIndex)

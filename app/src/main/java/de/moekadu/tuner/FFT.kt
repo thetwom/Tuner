@@ -66,7 +66,7 @@ fun RealFFT.Companion.closestFrequencyIndex(frequency : Float, size: Int, dt : F
 }
 
 class RealFFT(val size : Int, private val windowType : WindowingFunction = WindowingFunction.Tophat) {
-    companion object {}
+    companion object;
 
     private val cosTable = FloatArray(size)
     private val sinTable = FloatArray(size)

@@ -1,7 +1,6 @@
 package de.moekadu.tuner
 
 import android.app.Dialog
-import android.content.DialogInterface
 import android.os.Bundle
 import android.widget.AdapterView
 import android.widget.GridView

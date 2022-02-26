@@ -50,7 +50,7 @@ fun pitchHistoryDurationToPitchSamples(duration: Float, sampleRate: Int, windowS
     return (duration / (windowSize.toFloat() / sampleRate.toFloat() * (1.0f - overlap))).roundToInt()
 }
 
-class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
+class PitchHistory(size : Int, var tuningFrequencies : TuningFrequencies) {
 
     var size = size
         set(value) {
@@ -67,16 +67,6 @@ class PitchHistory(size : Int, tuningFrequencies : TuningFrequencies) {
     private val _sizeAsLiveData = MutableLiveData<Int>().apply { value = size }
     val sizeAsLiveData: LiveData<Int>
         get() = _sizeAsLiveData
-
-    /// TuningFrequencies.
-    var tuningFrequencies = tuningFrequencies
-        set(value)  {
-            field = value
-            // invalidate range which then will force to update the current estimated tone index
-            //currentRangeBeforeChangingPitch[0] = 0.0f
-            //currentRangeBeforeChangingPitch[1] = -1.0f
-            // updateCurrentEstimatedToneIndex()
-        }
 
     /// Current tone estimated tone index based on pitch history
     var currentEstimatedToneIndex = 0

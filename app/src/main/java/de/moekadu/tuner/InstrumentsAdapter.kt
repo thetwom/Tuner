@@ -1,6 +1,5 @@
 package de.moekadu.tuner
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,7 +26,7 @@ fun RecyclerView.forEachViewHolder(op: (RecyclerView.ViewHolder) -> Unit) {
     }
 }
 
-class InstrumentsAdapter() : ListAdapter<Instrument, InstrumentsAdapter.ViewHolder>(InstrumentDiffCallback()) {
+class InstrumentsAdapter : ListAdapter<Instrument, InstrumentsAdapter.ViewHolder>(InstrumentDiffCallback()) {
 
     class ViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
         var titleView: TextView? = null
@@ -141,7 +140,7 @@ class InstrumentsAdapter() : ListAdapter<Instrument, InstrumentsAdapter.ViewHold
             for (i in 0 until recyclerView.childCount) {
                 val child = recyclerView.getChildAt(i)
                 val viewHolder = recyclerView.getChildViewHolder(child)
-                if (viewHolder is InstrumentsAdapter.ViewHolder) {
+                if (viewHolder is ViewHolder) {
                     viewHolder.isActivated = (stableId == viewHolder.itemId)
                 }
             }

@@ -1,10 +1,7 @@
 package de.moekadu.tuner
 
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
-import java.security.Key
-import java.util.*
 import kotlin.math.min
 
 class InstrumentDatabase {
@@ -77,15 +74,20 @@ class InstrumentDatabase {
         return stableId
     }
 
-    fun getSingleInstrumentString(context: Context?, instrument: Instrument): String {
+    private fun getSingleInstrumentString(context: Context?, instrument: Instrument): String {
         val name = instrument.getNameString(context)
         val iconName = instrumentIconId2Name(instrument.iconResource)
-        val s = "Instrument ${instrument.stableId}\n" +
+        return "Instrument ${instrument.stableId}\n" +
                 "Length of name=${name.length}\n" +
                 "Name=$name\n" +
                 "Icon=$iconName\n" +
-                "String indices=${instrument.strings.joinToString(separator=",", prefix="[", postfix="]")}\n"
-        return s
+                "String indices=${
+                    instrument.strings.joinToString(
+                        separator = ",",
+                        prefix = "[",
+                        postfix = "]"
+                    )
+                }\n"
     }
 
     fun getInstrumentsString(context: Context?) : String {
@@ -241,9 +243,8 @@ class InstrumentDatabase {
 
             while (!stream.isEos()) {
                 stream.advance()
-                val k = readKeyword(stream)
-//                Log.v("Tuner", "InstrumentDatabase.stringToInstruments: found keyword: $k")
-                when (k) {
+                //                Log.v("Tuner", "InstrumentDatabase.stringToInstruments: found keyword: $k")
+                when (readKeyword(stream)) {
                     Keyword.Version -> {
                         version = stream.readString()
 //                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading version: $version")

@@ -8,7 +8,6 @@ import android.graphics.Typeface
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.graphics.withTranslation
@@ -17,7 +16,7 @@ import kotlin.math.*
 class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr) {
     companion object {
-        private val NO_TONE_INDEX = Int.MAX_VALUE
+        private const val NO_TONE_INDEX = Int.MAX_VALUE
     }
     fun interface NoteClickedListener {
         fun onNoteClicked(toneIndex: Int)
@@ -140,7 +139,7 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
         style = Paint.Style.FILL
         color = Color.WHITE
     }
-    var titlePadding = 4f
+    private var titlePadding = 4f
 
     private var boxCornerRadius = 0f
     private var notePadding = 4f // minimum space between note top box lines
@@ -290,8 +289,8 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
     /**
      * @param durationInSeconds Update duration in seconds
      */
-    fun setApproximateHitNoteUpdateInterval(durationInSeconds: Int) {
-        hitCountMax = if (durationInSeconds == 0)
+    fun setApproximateHitNoteUpdateInterval(durationInSeconds: Float) {
+        hitCountMax = if (durationInSeconds == 0f)
             50
         else
             (durationToGrowToneSizeInSeconds / (durationInSeconds * ratioMinSizeToMaxSize)).roundToInt()
@@ -341,7 +340,7 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
             val desiredWidth = ceil(StaticLayout.getDesiredWidth(label, labelPaint)).toInt()
             val layout = StaticLayout.Builder.obtain(label, 0, label.length, labelPaint, desiredWidth).build()
             if (layout.height > 0f) {
-                // topPadding is a negative number, thats why we add it, ...
+                // topPadding is a negative number, that's why we add it, ...
                 val aspect = layout.width.toFloat() / (layout.height.toFloat() + layout.topPadding - layout.bottomPadding)
                 aspectRatioMin = min(aspect, aspectRatioMin)
                 aspectRatioMax = max(aspect, aspectRatioMax)

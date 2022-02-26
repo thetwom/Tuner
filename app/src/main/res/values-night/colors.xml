@@ -6,7 +6,6 @@
     <color name="colorAccent">#4caf50</color>
     <color name="colorOnPrimary">#000000</color>
     <color name="colorBackground">#292929</color>
-    <color name="colorOnBackground">#FFFFFF</color>
     <color name="colorBackgroundFloating">#121212</color>
 
 </resources>

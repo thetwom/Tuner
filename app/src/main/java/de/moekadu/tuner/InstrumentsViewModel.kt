@@ -1,9 +1,7 @@
 package de.moekadu.tuner
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.*
-import androidx.preference.PreferenceManager
 
 
 class InstrumentsViewModel(

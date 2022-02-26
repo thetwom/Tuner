@@ -1,6 +1,5 @@
 package de.moekadu.tuner
 
-import android.util.Log
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 

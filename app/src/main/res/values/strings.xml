@@ -59,7 +59,6 @@
     <string name="expert">Expert</string>
     <string name="basic">Basic</string>
     <string name="others">Others</string>
-    <string name="instruments">Instruments</string>
     <string name="instrument_icon">Instrument icon</string>
 
     <string name="chromatic">Chromatic</string>
@@ -81,7 +80,6 @@
     <string name="ais_note_name">-</string>
     <string name="b_note_name">B</string>
     <string name="violin_gdae">Violin</string>
-    <string name="ok">OK</string>
     <string name="abort">Abort</string>
     <string name="instrument_name">Instrument name</string>
     <string name="clear_instrument_name">Clear instrument name</string>
@@ -90,7 +88,7 @@
     <string name="lately_detected_notes">Lately detected tones</string>
     <string name="done">Done</string>
     <string name="edit_instrument">Edit instrument</string>
-    <string name="predefinded_instruments">Predefined instruments</string>
+    <string name="predefined_instruments">Predefined instruments</string>
     <string name="custom_instruments">Custom instruments</string>
     <string name="file_empty">File is empty: %s</string>
     <string name="file_invalid">File is invalid: %s</string>

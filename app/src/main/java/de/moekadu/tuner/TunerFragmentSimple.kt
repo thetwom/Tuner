@@ -25,8 +25,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
@@ -212,7 +210,7 @@ class TunerFragmentSimple : Fragment() {
                 if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2, placeLabelsOutsideBoundsIfPossible = true,
                 redraw = true)
 
-            Log.v("Tuner", "TunerFragmentSimple: target note changed: stringIndex = ${targetNote.stringIndex}, toneIndex=${targetNote.toneIndex}")
+//            Log.v("Tuner", "TunerFragmentSimple: target note changed: stringIndex = ${targetNote.stringIndex}, toneIndex=${targetNote.toneIndex}")
             if (targetNote.stringIndex != -1)
                 stringView?.highlightSingleString(targetNote.stringIndex, 300L)
             else
@@ -222,7 +220,7 @@ class TunerFragmentSimple : Fragment() {
 
         viewModel.pitchHistory.numValuesSinceLastLineUpdate.observe(viewLifecycleOwner) { numValuesSinceLastUpdate ->
             val maxTimeBeforeInactive = 0.3f // seconds
-            val maxNumValuesBeforeInactive = max(1f, floor(maxTimeBeforeInactive / viewModel.pitchHistoryUpdateInterval))
+            val maxNumValuesBeforeInactive = max(1f, floor(maxTimeBeforeInactive / (viewModel.pitchHistoryUpdateInterval.value ?: 1f)))
             isPitchInactive = (numValuesSinceLastUpdate > maxNumValuesBeforeInactive)
             setStyles(isPitchInactive, tuningStatus, redraw = true)
         }

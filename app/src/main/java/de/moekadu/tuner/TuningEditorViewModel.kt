@@ -1,7 +1,6 @@
 package de.moekadu.tuner
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -40,7 +39,7 @@ class TuningEditorViewModel(application: Application) : AndroidViewModel(applica
     fun setInstrumentName(name: CharSequence?) {
         //Log.v("Tuner", "TuningEditorViewModel: Set instrument name: |$name|, current: |${instrumentName.value}|")
         if (name?.contentEquals(instrumentName.value) == false)
-            _instrumentName.value = name ?: null
+            _instrumentName.value = name ?: ""
     }
 
     fun setInstrumentIcon(resourceId: Int) {

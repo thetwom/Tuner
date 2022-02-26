@@ -21,8 +21,10 @@ package de.moekadu.tuner
 
 import android.app.Application
 import android.content.SharedPreferences
-import android.util.Log
-import androidx.lifecycle.*
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.buffer
@@ -30,7 +32,10 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.*
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -45,7 +50,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         set(value) {
             if (value != field) {
                 field = value
-//                Log.v("Tuner", "TunerViewModel.pitchH istoryDuration: new duration = $value, new size = $pitchHistorySize")
+//                Log.v("Tuner", "TunerViewModel.pitchHistoryDuration: new duration = $value, new size = $pitchHistorySize")
                 pitchHistory.size = pitchHistorySize
             }
         }
@@ -54,10 +59,6 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     private val pitchHistorySize
         get() = pitchHistoryDurationToPitchSamples(
             pitchHistoryDuration, sampleSource.sampleRate, windowSize, overlap)
-
-    /// Duration in seconds between two updates for the pitch history
-    val pitchHistoryUpdateInterval
-        get() = windowSize.toFloat() * (1f - overlap) / sampleSource.sampleRate
 
     var a4Frequency = 440f
         set(value) {
@@ -84,6 +85,10 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                 pitchHistory.size = pitchHistorySize
             }
         }
+
+    /// Duration in seconds between two updates for the pitch history
+    private val _pitchHistoryUpdateInterval = MutableLiveData(windowSize.toFloat() * (1f - overlap) / sampleSource.sampleRate)
+    val pitchHistoryUpdateInterval: LiveData<Float> = _pitchHistoryUpdateInterval
 
     private var tuningFrequencyValues = TuningEqualTemperament(a4Frequency)
         set(value) {
@@ -197,6 +202,10 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
         pref.registerOnSharedPreferenceChangeListener(onPreferenceChangedListener)
         loadSettingsFromSharedPreferences()
+
+        sampleSource.settingsChangedListener = SoundSource.SettingsChangedListener { sampleRate, windowSize, overlap ->
+            _pitchHistoryUpdateInterval.value = windowSize.toFloat() * (1f - overlap) / sampleRate
+        }
 
         changeTargetNoteSettings(tuningFrequencies = tuningFrequencyValues)
 

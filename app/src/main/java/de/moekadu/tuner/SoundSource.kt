@@ -30,13 +30,17 @@ import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlin.math.max
 import kotlin.math.roundToInt
-import kotlin.collections.ArrayList
 
 /// Generator of sound samples
 /**
  * @param scope Coroutine scope used for the sample data generator.
  */
 class SoundSource(private val scope: CoroutineScope) {
+
+    fun interface SettingsChangedListener {
+        fun onSettingsChanged(sampleRate: Int, windowSize: Int, overlap: Float)
+    }
+    var settingsChangedListener: SettingsChangedListener? = null
 
     /// Job which is generating sound.
     private var sourceJob: Job? = null
@@ -74,6 +78,7 @@ class SoundSource(private val scope: CoroutineScope) {
             if (field != value) {
                 require(overlap < 1f)
                 field = value
+                settingsChangedListener?.onSettingsChanged(sampleRate, windowSize, value)
                 if (sourceJob != null)
                     restartSampling()
             }
@@ -84,6 +89,7 @@ class SoundSource(private val scope: CoroutineScope) {
         set(value) {
             if (field != value) {
                 field = value
+                settingsChangedListener?.onSettingsChanged(sampleRate, value, overlap)
                 if (sourceJob != null)
                     restartSampling()
             }
@@ -94,6 +100,7 @@ class SoundSource(private val scope: CoroutineScope) {
         set(value) {
             if (field != value) {
                 field = value
+                settingsChangedListener?.onSettingsChanged(value, windowSize, overlap)
                 if (sourceJob != null)
                     restartSampling()
             }

@@ -46,7 +46,6 @@ class MainActivity : AppCompatActivity() {
             application
         )
     }
-    private val tuningEditorViewModel: TuningEditorViewModel by viewModels()
 
     // private var scientificMode = TunerMode.Unknown
 

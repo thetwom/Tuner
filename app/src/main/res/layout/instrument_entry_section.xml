@@ -2,19 +2,31 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="30sp"
-    android:background="?attr/colorPrimary">
+    android:layout_height="40sp">
 
+    <View
+        android:id="@+id/bottom_spacing"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
+    <View
+        android:id="@+id/background"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="?attr/colorPrimary"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottom_spacing"
+        />
     <TextView
         android:id="@+id/section_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textSize="14sp"
+        android:textSize="16sp"
         android:textColor="?attr/colorOnPrimary"
         android:layout_marginStart="12dp"
-        android:text="Test section"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/background"
         app:layout_constraintStart_toEndOf="@id/expand_collapse"
         app:layout_constraintEnd_toEndOf="parent"
         />
@@ -24,7 +36,7 @@
         android:layout_width="24dp"
         android:layout_height="24dp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/background"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginEnd="12dp"
         app:srcCompat="@drawable/ic_expand"

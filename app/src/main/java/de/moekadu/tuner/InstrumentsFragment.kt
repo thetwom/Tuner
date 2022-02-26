@@ -2,7 +2,6 @@ package de.moekadu.tuner
 
 import android.graphics.Canvas
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.View
@@ -38,7 +37,7 @@ class InstrumentsFragment : Fragment() {
     private var recyclerView: RecyclerView? = null
     private val instrumentsPredefinedAdapter = InstrumentsAdapter()
     private val instrumentsCustomAdapter = InstrumentsAdapter()
-    private val instrumentSectionPredefinedAdapter = InstrumentsSectionAdapter(R.string.predefinded_instruments)
+    private val instrumentSectionPredefinedAdapter = InstrumentsSectionAdapter(R.string.predefined_instruments)
     private val instrumentSectionCustomAdapter = InstrumentsSectionAdapter(R.string.custom_instruments)
 
     private var tuningEditorFab: FloatingActionButton? = null
@@ -205,7 +204,7 @@ class InstrumentsFragment : Fragment() {
                 if (viewHolder is InstrumentsAdapter.ViewHolder && viewHolder.instrument?.stableId ?: -1 >= 0) {
                     val itemView = viewHolder.itemView
 
-                    // not sure why, but this method get's called for viewholder that are already swiped away
+                    // not sure why, but this method gets called for view holder that are already swiped away
                     if (viewHolder.bindingAdapterPosition == RecyclerView.NO_POSITION) {
                         // not interested in those
                         return

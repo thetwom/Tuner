@@ -60,14 +60,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
 //    menu.findItem(R.id.action_instruments)?.isVisible = false
   }
 
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
 
     val appearance = findPreference<ListPreference?>("appearance")
       ?: throw RuntimeException("No appearance preference")
 
     appearance.summaryProvider =
       Preference.SummaryProvider<ListPreference> { preference ->
-        when (preference?.value) {
+        when (preference.value) {
           "dark" -> getString(R.string.dark_appearance)
           "light" -> getString(R.string.light_appearance)
           else -> getString(R.string.system_appearance)
@@ -97,7 +97,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
       editText.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
     }
     a4Frequency?.summaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
-      getString(R.string.hertz_str, preference?.text ?: "440")
+      getString(R.string.hertz_str, preference.text ?: "440")
     }
 
     val tolerance = findPreference<SeekBarPreference>("tolerance_in_cents") ?: throw RuntimeException("No tolerance preference")

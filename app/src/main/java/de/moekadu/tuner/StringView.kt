@@ -11,7 +11,6 @@ import android.os.Parcelable
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
-import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -613,7 +612,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 toneIndexForHighlighting = scrollViewState.toneIndexForHighlighting
                 stringIndexForCenteringToneIndex = scrollViewState.stringIndexForCenteringToneIndex
                 activeToneStyle = scrollViewState.activeToneStyle
-                // TODO: find out how to best scoll to stringIndexInViewCenter
+                // TODO: find out how to best scroll to stringIndexInViewCenter
                 automaticScrollToSelected = scrollViewState.automaticScrollToSelected
             }
             state.getParcelable("super state")
@@ -644,7 +643,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         if (isLaidOut)
             updateStringPositionVariables(width, height)
 
-        if (!(highlightedStringIndex in toneIndices.indices))
+        if (highlightedStringIndex !in toneIndices.indices)
             highlightedStringIndex = -1
         numHighlightedWithToneIndex = strings.count { it.toneIndex == toneIndexForHighlighting }
         stringIndexForCenteringToneIndex = getClosestStringWithToneIndex(stringIndexForCenteringToneIndex, toneIndexForHighlighting)

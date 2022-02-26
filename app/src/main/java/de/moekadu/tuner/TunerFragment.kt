@@ -29,22 +29,21 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import kotlin.math.floor
 import kotlin.math.max
 
 class TunerFragment : Fragment() {
     private val viewModel: TunerViewModel by activityViewModels() // ? = null
-    private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
-        InstrumentsViewModel.Factory(
-            AppPreferences.readInstrumentId(requireActivity()),
-            AppPreferences.readInstrumentSection(requireActivity()),
-            AppPreferences.readCustomInstruments(requireActivity()),
-            AppPreferences.readPredefinedSectionExpanded(requireActivity()),
-            AppPreferences.readCustomSectionExpanded(requireActivity()),
-            requireActivity().application
-        )
-    }
+//    private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
+//        InstrumentsViewModel.Factory(
+//            AppPreferences.readInstrumentId(requireActivity()),
+//            AppPreferences.readInstrumentSection(requireActivity()),
+//            AppPreferences.readCustomInstruments(requireActivity()),
+//            AppPreferences.readPredefinedSectionExpanded(requireActivity()),
+//            AppPreferences.readCustomSectionExpanded(requireActivity()),
+//            requireActivity().application
+//        )
+//    }
 
     private var spectrumPlot: PlotView? = null
     private var correlationPlot: PlotView? = null
@@ -224,7 +223,7 @@ class TunerFragment : Fragment() {
 
         viewModel.pitchHistory.numValuesSinceLastLineUpdate.observe(viewLifecycleOwner) { numValuesSinceLastUpdate ->
             val maxTimeBeforeInactive = 0.3f // seconds
-            val maxNumValuesBeforeInactive = max(1f, floor(maxTimeBeforeInactive / viewModel.pitchHistoryUpdateInterval))
+            val maxNumValuesBeforeInactive = max(1f, floor(maxTimeBeforeInactive / (viewModel.pitchHistoryUpdateInterval.value ?: 1f)))
             isPitchInactive = (numValuesSinceLastUpdate > maxNumValuesBeforeInactive)
             setStyles(isPitchInactive, tuningStatus, redraw = true)
         }

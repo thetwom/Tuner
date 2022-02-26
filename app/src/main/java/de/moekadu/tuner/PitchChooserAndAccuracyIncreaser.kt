@@ -82,7 +82,6 @@ fun calculateMostProbableSpectrumPitch(
 
         // should we only consider the N first maxima?
         val totalPeakSum = orderedSpectrumPeakIndices.map{ ampSqrSpec[it] }.sum()
-
         for (harmonicNumber in 1..maxHarmonic) {
             val pitchFrequency = frequency(orderedSpectrumPeakIndices[0]) / harmonicNumber
             var harmonicPeakSum = 0.0f

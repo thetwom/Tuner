@@ -37,8 +37,6 @@ import androidx.core.view.ViewCompat
 import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
 import kotlinx.parcelize.Parcelize
-import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.math.*
 
 private const val NO_REDRAW_PRIVATE = Long.MAX_VALUE
@@ -1197,7 +1195,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     /// Symbol size for different styles of the points.
     val pointSizes = FloatArray(7) {5f}
     /// Point shape for different styles of the points.
-    private val pointShapes = Array<PointShapes>(7) {PointShapes.Circle}
+    private val pointShapes = Array(7) {PointShapes.Circle}
     /// Point instances
     private val plotPoints = mutableMapOf<Long, PlotPoints>()
 
@@ -2124,7 +2122,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         0 -> PointShapes.Circle
         1 -> PointShapes.TriangleUp
         2 -> PointShapes.TriangleDown
-        else -> throw RuntimeException("Unkown shape index: $number")
+        else -> throw RuntimeException("Unknown shape index: $number")
     }
 //    fun drawArrow(canvas: Canvas?, startX : Float, startY : Float, endX : Float, endY : Float, paint : Paint) {
 //        val lineLength = sqrt((endX - startX).pow(2) + (endY - startY).pow(2))

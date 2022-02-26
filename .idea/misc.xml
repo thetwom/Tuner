@@ -5,6 +5,7 @@
       <map>
         <entry key="app/src/main/res/drawable-night/ic_piano2.xml" value="0.2355" />
         <entry key="app/src/main/res/drawable/detected_note_viewer_background.xml" value="0.1865" />
+        <entry key="app/src/main/res/drawable/ic_anchor_inv.xml" value="0.2195" />
         <entry key="app/src/main/res/drawable/ic_anchor_inv_x.xml" value="0.35185185185185186" />
         <entry key="app/src/main/res/drawable/ic_average.xml" value="0.30833333333333335" />
         <entry key="app/src/main/res/drawable/ic_baseline_cancel_24.xml" value="0.22" />

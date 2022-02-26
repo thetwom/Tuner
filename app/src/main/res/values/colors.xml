@@ -6,6 +6,5 @@
     <color name="colorPrimaryDark">#777777</color>
     <color name="colorAccent">#4caf50</color>
     <color name="colorBackground">#FFFFFF</color>
-    <color name="colorOnBackground">#000000</color>
     <color name="colorBackgroundFloating">#f5f5f5</color>
 </resources>
