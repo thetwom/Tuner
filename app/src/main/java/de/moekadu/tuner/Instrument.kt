@@ -2,6 +2,7 @@ package de.moekadu.tuner
 
 import android.content.Context
 import android.content.res.Resources
+import android.text.SpannableStringBuilder
 import androidx.core.content.res.ResourcesCompat
 
 data class Instrument(private val name: CharSequence?, private val nameResource: Int?, val strings: IntArray,
@@ -20,9 +21,17 @@ data class Instrument(private val name: CharSequence?, private val nameResource:
         return if (isChromatic) {
             context.getString(R.string.chromatic)
         } else {
-            strings.joinToString(" - ", "", "") {
-                tuningFrequencies.getNoteName(context, it, preferFlat)
+            val builder = SpannableStringBuilder()
+            if (strings.isNotEmpty())
+                builder.append(tuningFrequencies.getNoteName(context, strings[0], preferFlat))
+            for (i in 1 until strings.size) {
+                builder.append(" - ")
+                builder.append(tuningFrequencies.getNoteName(context, strings[i], preferFlat))
             }
+            builder
+//            strings.joinToString(" - ", "", "") {
+//                tuningFrequencies.getNoteName(context, it, preferFlat)
+//            }
         }
     }
 

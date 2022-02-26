@@ -13,8 +13,10 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
@@ -22,11 +24,19 @@ import com.google.android.material.textfield.TextInputLayout
 
 class TuningEditorFragment : Fragment() {
     // TODO: more instrument icon
-    // TODO: new strings should take the currently marked by the note selector
-    // TODO: names are sometimes underlined?
 
     private val tunerViewModel: TunerViewModel by activityViewModels()
     private val viewModel: TuningEditorViewModel by activityViewModels()
+    private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
+        InstrumentsViewModel.Factory(
+            AppPreferences.readInstrumentId(requireActivity()),
+            AppPreferences.readInstrumentSection(requireActivity()),
+            AppPreferences.readCustomInstruments(requireActivity()),
+            AppPreferences.readPredefinedSectionExpanded(requireActivity()),
+            AppPreferences.readCustomSectionExpanded(requireActivity()),
+            requireActivity().application
+        )
+    }
 
     private var instrumentNameLayout: TextInputLayout? = null
     private var instrumentNameEditText: TextInputEditText? = null
@@ -111,7 +121,8 @@ class TuningEditorFragment : Fragment() {
 
         viewModel.instrumentName.observe(viewLifecycleOwner) {
 //            Log.v("Tuner", "TuningEditorFragment: observe instrument name: new = |$it|, before = |${instrumentNameEditText?.text?.trim()}|, different? = ${instrumentNameEditText?.text?.trim()?.contentEquals(it)}")
-            if (instrumentNameEditText?.text?.trim()?.contentEquals(it) == false)
+            //if (instrumentNameEditText?.text?.trim()?.contentEquals(it) == false)
+            if (instrumentNameEditText?.text?.contentEquals(it) == false)
                 instrumentNameEditText?.setText(it)
         }
 
@@ -150,7 +161,7 @@ class TuningEditorFragment : Fragment() {
         }
 
         addButton?.setOnClickListener {
-            viewModel.addStringBelowSelectedAndSelectNewString()
+            viewModel.addStringBelowSelectedAndSelectNewString(noteSelector?.activeToneIndex ?: Int.MAX_VALUE)
         }
 
         deleteButton?.setOnClickListener {
@@ -169,7 +180,8 @@ class TuningEditorFragment : Fragment() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { }
             override fun afterTextChanged(s: Editable?) {
-                viewModel.setInstrumentName(s?.trim())
+                //viewModel.setInstrumentName(s?.trim())
+                viewModel.setInstrumentName(s)
             }
         })
 
@@ -182,6 +194,10 @@ class TuningEditorFragment : Fragment() {
         askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
         tunerViewModel.setInstrument(instrumentDatabase[0])
         tunerViewModel.setTargetNote(-1, TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
+
+        val actionMode = (requireActivity() as MainActivity).startSupportActionMode(
+            TuningEditorActionCallback(requireActivity() as MainActivity, instrumentsViewModel, viewModel))
+        actionMode?.setTitle(R.string.edit_instrument)
     }
 
     override fun onStop() {

@@ -22,7 +22,6 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 class InstrumentsFragment : Fragment() {
-    // TODO: show string list automatically (do not use the strings)
     private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
         InstrumentsViewModel.Factory(
             AppPreferences.readInstrumentId(requireActivity()),
@@ -33,6 +32,7 @@ class InstrumentsFragment : Fragment() {
             requireActivity().application
         )
     }
+    private val tuningEditorViewModel: TuningEditorViewModel by activityViewModels()
     private val tunerViewModel: TunerViewModel by activityViewModels() // ? = null
 
     private var recyclerView: RecyclerView? = null
@@ -315,6 +315,7 @@ class InstrumentsFragment : Fragment() {
 
         tuningEditorFab = view.findViewById(R.id.tuning_editor_fab)
         tuningEditorFab?.setOnClickListener {
+            tuningEditorViewModel.clear(0)
             (requireActivity() as MainActivity).loadTuningEditorFragment()
         }
 

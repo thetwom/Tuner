@@ -10,14 +10,13 @@ class TuningEditorActionCallback(private val activity: MainActivity,
     : ActionMode.Callback {
 
     override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-        //activity.menuInflater.inflate(R.menu.tuning_editor, menu)
         val inflater = mode?.menuInflater
         inflater?.inflate(R.menu.tuning_editor, menu)
         return true
     }
 
     override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-        return false
+        return true
     }
 
     override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {

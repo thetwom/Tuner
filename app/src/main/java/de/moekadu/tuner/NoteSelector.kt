@@ -165,6 +165,13 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private val widthFactor = 1.2f
 
     private var activeNoteArrayIndex = 0
+    val activeToneIndex: Int
+        get() {
+            return if (activeNoteArrayIndex in noteLabels.indices)
+                noteLabels[activeNoteArrayIndex].toneIndex
+            else
+                Int.MAX_VALUE
+        }
     private var horizontalScrollPosition = 0f
 
     constructor(context: Context, attrs: AttributeSet? = null) : this(context, attrs, R.attr.noteSelectorStyle)
