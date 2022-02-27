@@ -1,5 +1,6 @@
 package de.moekadu.tuner
 
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.view.ActionMode
@@ -31,6 +32,7 @@ class TuningEditorActionCallback(private val activity: MainActivity,
     }
 
     override fun onDestroyActionMode(mode: ActionMode?) {
+        Log.v("Tuner", "TuningEditorActionCallback: onDestroyActionMode")
         activity.onBackPressed()
     }
 }

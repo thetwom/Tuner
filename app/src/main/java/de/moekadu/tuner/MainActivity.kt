@@ -97,6 +97,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
+//        Log.v("Tuner", "MainActivity.onBackPressed")
         if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStack()
         } else if (!isCurrentFragmentATunerFragment()){
@@ -106,6 +107,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
     override fun onSupportNavigateUp(): Boolean {
+//        Log.v("Tuner", "MainActivity.onSupportNavigateUp")
         if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStack()
         } else if (!isCurrentFragmentATunerFragment()){
@@ -147,6 +149,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun loadTuningEditorFragment() {
+//        Log.v("Tuner", "MainActivity.loadTuningEditorFragment")
         supportFragmentManager.commit {
             setReorderingAllowed(true)
             replace<TuningEditorFragment>(R.id.main_content)
@@ -159,6 +162,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun loadInstrumentsFragment() {
+//        Log.v("Tuner", "MainActivity.loadInstrumentsFragment")
         supportFragmentManager.commit {
             setReorderingAllowed(true)
             replace<InstrumentsFragment>(R.id.main_content)
@@ -181,6 +185,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadSimpleOrScientificFragment() {
+//        Log.v("Tuner", "MainActivity.loadSimpleOrScientificFragment")
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
         val currentMode = when (supportFragmentManager.findFragmentById(R.id.main_content)) {
             is TunerFragment -> TunerMode.Scientific // Log.v("Tuner", "MainActivity.loadSimpleOrScientificFragment: activeFragment = TunerFragment")

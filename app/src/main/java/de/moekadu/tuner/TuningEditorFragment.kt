@@ -185,22 +185,28 @@ class TuningEditorFragment : Fragment() {
             }
         })
 
-        return view
-    }
-
-
-    override fun onStart() {
-        super.onStart()
-        askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
-        tunerViewModel.setInstrument(instrumentDatabase[0])
-        tunerViewModel.setTargetNote(-1, TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
-
         val actionMode = (requireActivity() as MainActivity).startSupportActionMode(
             TuningEditorActionCallback(requireActivity() as MainActivity, instrumentsViewModel, viewModel))
         actionMode?.setTitle(R.string.edit_instrument)
+
+        return view
+    }
+
+//    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+//        inflater.inflate(R.menu.tuning_editor, menu)
+//        // super.onCreateOptionsMenu(menu, inflater)
+//    }
+
+    override fun onStart() {
+        super.onStart()
+//        Log.v("Tuner", "TuningEditorFragment.onStart()")
+        askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
+        tunerViewModel.setInstrument(instrumentDatabase[0])
+        tunerViewModel.setTargetNote(-1, TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
     }
 
     override fun onStop() {
+//        Log.v("Tuner", "TuningEditorFragment.onStop()")
         tunerViewModel.stopSampling()
         super.onStop()
     }
