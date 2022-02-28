@@ -96,4 +96,7 @@
     <string name="undo">Undo</string>
     <string name="add_new_tuning">Add new tuning</string>
     <string name="pick_icon">Pick icon</string>
+    <string name="copy_instrument">Copy instrument</string>
+    <string name="close_expansion">Close expanded icons</string>
+    <string name="copy_extension">%s (copy)</string>
 </resources>

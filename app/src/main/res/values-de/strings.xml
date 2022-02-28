@@ -85,4 +85,7 @@
     <string name="undo">Rückgängig</string>
     <string name="add_new_tuning">Stimmung hinzufügen</string>
     <string name="pick_icon">Icon auswählen</string>
+    <string name="copy_instrument">Instrument kopieren</string>
+    <string name="close_expansion">Ausgeklappte Icons schließen</string>
+    <string name="copy_extension">%s (Kopie)</string>
 </resources>

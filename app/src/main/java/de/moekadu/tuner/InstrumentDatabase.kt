@@ -74,6 +74,16 @@ class InstrumentDatabase {
         return stableId
     }
 
+    /// Replace when instrument with stable id exists, else add
+    fun replaceOrAdd(instrument: Instrument, callDatabaseChangedListener: Boolean = true) {
+        val index = instruments.indexOfFirst { it.stableId == instrument.stableId }
+        if (index >= 0)
+            _instruments[index] = instrument
+        else
+            add(instrument, false)
+        databaseChangedListener?.onChanged(this)
+    }
+
     private fun getSingleInstrumentString(context: Context?, instrument: Instrument): String {
         val name = instrument.getNameString(context)
         val iconName = instrumentIconId2Name(instrument.iconResource)

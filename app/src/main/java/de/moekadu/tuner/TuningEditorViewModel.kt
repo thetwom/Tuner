@@ -16,14 +16,24 @@ class TuningEditorViewModel(application: Application) : AndroidViewModel(applica
     private val _selectedStringIndex = MutableLiveData(0)
     val selectedStringIndex: LiveData<Int> = _selectedStringIndex
 
+    var stableId = Instrument.NO_STABLE_ID
+
     fun getInstrument(): Instrument {
         return Instrument(
             instrumentName.value.toString(), // toString removes underlines and stuff ...
             null,
             strings.value ?: intArrayOf(),
             iconResourceId.value ?: R.drawable.ic_guitar,
-            Instrument.NO_STABLE_ID
+            stableId
         )
+    }
+
+    fun setInstrument(instrument: Instrument) {
+        _instrumentName.value = instrument.getNameString(getApplication())
+        _iconResourceId.value = instrument.iconResource
+        _strings.value = instrument.strings
+        _selectedStringIndex.value = instrument.strings.size - 1
+        stableId = instrument.stableId
     }
 
     fun clear(singleStringToneIndex: Int = Int.MAX_VALUE) {
@@ -34,6 +44,7 @@ class TuningEditorViewModel(application: Application) : AndroidViewModel(applica
         else
             intArrayOf()
         _selectedStringIndex.value = 0
+        stableId = Instrument.NO_STABLE_ID
     }
 
     fun setInstrumentName(name: CharSequence?) {

@@ -30,33 +30,75 @@
         android:contentDescription="@string/instrument_icon"
         />
 
+    <ImageView
+        android:id="@+id/edit_instrument"
+        android:layout_width="48dp"
+        android:layout_height="0dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:padding="12dp"
+        android:src="@drawable/ic_edit_expand"
+        android:contentDescription="@string/edit_instrument"
+        />
+
+    <ImageView
+        android:id="@+id/copy_instrument"
+        android:layout_width="48dp"
+        android:layout_height="0dp"
+        app:layout_constraintRight_toLeftOf="@id/edit_instrument"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:padding="12dp"
+        android:src="@drawable/ic_copy"
+        android:contentDescription="@string/copy_instrument"
+        />
+
+    <ImageView
+        android:id="@+id/close_expansion"
+        android:layout_width="24dp"
+        android:layout_height="0dp"
+        app:layout_constraintRight_toLeftOf="@id/copy_instrument"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:padding="0dp"
+        android:src="@drawable/ic_arrow_right"
+        android:contentDescription="@string/close_expansion"
+        />
+
     <TextView
         android:id="@+id/instrument_title"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textSize="16sp"
         android:paddingBottom="4dp"
         android:textColor="?attr/colorOnBackground"
         android:layout_marginLeft="12dp"
         android:text="Test Title A-B-C-D"
+        android:maxLines="1"
+        android:ellipsize="middle"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/string_list"
         app:layout_constraintLeft_toRightOf="@id/instrument_icon"
+        app:layout_constraintRight_toLeftOf="@id/close_expansion"
         app:layout_constraintVertical_chainStyle="packed"
         />
 
     <TextView
         android:id="@+id/string_list"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textSize="12sp"
         android:textColor="?attr/colorOnBackground"
         android:layout_marginLeft="0dp"
         android:text="a-c-d-b"
+        android:maxLines="1"
+        android:ellipsize="middle"
         android:paddingTop="4sp"
         app:layout_constraintTop_toBottomOf="@id/instrument_title"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="@id/instrument_title"
+        app:layout_constraintRight_toRightOf="@id/instrument_title"
         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

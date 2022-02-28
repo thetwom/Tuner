@@ -35,8 +35,8 @@ class InstrumentsFragment : Fragment() {
     private val tunerViewModel: TunerViewModel by activityViewModels() // ? = null
 
     private var recyclerView: RecyclerView? = null
-    private val instrumentsPredefinedAdapter = InstrumentsAdapter()
-    private val instrumentsCustomAdapter = InstrumentsAdapter()
+    private val instrumentsPredefinedAdapter = InstrumentsAdapter(InstrumentsAdapter.Mode.Copy)
+    private val instrumentsCustomAdapter = InstrumentsAdapter(InstrumentsAdapter.Mode.EditCopy)
     private val instrumentSectionPredefinedAdapter = InstrumentsSectionAdapter(R.string.predefined_instruments)
     private val instrumentSectionCustomAdapter = InstrumentsSectionAdapter(R.string.custom_instruments)
 
@@ -90,19 +90,52 @@ class InstrumentsFragment : Fragment() {
         //recyclerView?.adapter = instrumentsCustomAdapter
 
         instrumentsPredefinedAdapter.onInstrumentClickedListener =
-            InstrumentsAdapter.OnInstrumentClickedListener { instrument, stableId ->
-//            Log.v("Tuner", "InstrumentsFragment.onCreateView: new instrument: $instrument")
-                instrumentsViewModel.setInstrument(
-                    instrument,
-                    InstrumentsViewModel.Section.Predefined
-                )
-                (activity as MainActivity?)?.onBackPressed()
+            object : InstrumentsAdapter.OnInstrumentClickedListener {
+                override fun onInstrumentClicked(instrument: Instrument, stableId: Long) {
+//                  Log.v("Tuner", "InstrumentsFragment.onCreateView: new instrument: $instrument")
+                    instrumentsViewModel.setInstrument(
+                        instrument,
+                        InstrumentsViewModel.Section.Predefined
+                    )
+                    (activity as MainActivity?)?.onBackPressed()
+                }
+
+                override fun onEditIconClicked(instrument: Instrument, stableId: Long) {}
+
+                override fun onCopyIconClicked(instrument: Instrument, stableId: Long) {
+                    val instrumentCopy = instrument.copy(
+                        name = context?.getString(R.string.copy_extension, instrument.getNameString(context)),
+                        nameResource = null,
+                        stableId = Instrument.NO_STABLE_ID,
+                        strings = instrument.strings.copyOf()
+                    )
+                    tuningEditorViewModel.setInstrument(instrumentCopy)
+                    (requireActivity() as MainActivity).loadTuningEditorFragment()
+                }
             }
         instrumentsCustomAdapter.onInstrumentClickedListener =
-            InstrumentsAdapter.OnInstrumentClickedListener { instrument, stableId ->
+            object : InstrumentsAdapter.OnInstrumentClickedListener {
+                override fun onInstrumentClicked(instrument: Instrument, stableId: Long) {
 //            Log.v("Tuner", "InstrumentsFragment.onCreateView: new instrument: $instrument")
-                instrumentsViewModel.setInstrument(instrument, InstrumentsViewModel.Section.Custom)
-                (activity as MainActivity?)?.onBackPressed()
+                    instrumentsViewModel.setInstrument(instrument, InstrumentsViewModel.Section.Custom)
+                    (activity as MainActivity?)?.onBackPressed()
+                }
+
+                override fun onEditIconClicked(instrument: Instrument, stableId: Long) {
+                    tuningEditorViewModel.setInstrument(instrument)
+                    (requireActivity() as MainActivity).loadTuningEditorFragment()
+                }
+
+                override fun onCopyIconClicked(instrument: Instrument, stableId: Long) {
+                    val instrumentCopy = instrument.copy(
+                        name = context?.getString(R.string.copy_extension, instrument.getNameString(context)),
+                        nameResource = null,
+                        stableId = Instrument.NO_STABLE_ID,
+                        strings = instrument.strings.copyOf()
+                    )
+                    tuningEditorViewModel.setInstrument(instrumentCopy)
+                    (requireActivity() as MainActivity).loadTuningEditorFragment()
+                }
             }
 
         val simpleTouchHelper = object : ItemTouchHelper.SimpleCallback(

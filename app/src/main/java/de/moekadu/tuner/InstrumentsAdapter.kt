@@ -26,11 +26,16 @@ fun RecyclerView.forEachViewHolder(op: (RecyclerView.ViewHolder) -> Unit) {
     }
 }
 
-class InstrumentsAdapter : ListAdapter<Instrument, InstrumentsAdapter.ViewHolder>(InstrumentDiffCallback()) {
+class InstrumentsAdapter(val mode: Mode) : ListAdapter<Instrument, InstrumentsAdapter.ViewHolder>(InstrumentDiffCallback()) {
+
+    enum class Mode {Copy, EditCopy}
 
     class ViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
         var titleView: TextView? = null
         var icon: ImageView? = null
+        var editIcon: ImageView? = null
+        var copyIcon: ImageView? = null
+        var closeExpansionIcon: ImageView? = null
         var stringText: TextView? = null
 
         var selectedView: View? = null
@@ -48,8 +53,10 @@ class InstrumentsAdapter : ListAdapter<Instrument, InstrumentsAdapter.ViewHolder
             }
     }
 
-    fun interface OnInstrumentClickedListener {
+    interface OnInstrumentClickedListener {
         fun onInstrumentClicked(instrument: Instrument, stableId: Long)
+        fun onEditIconClicked(instrument: Instrument, stableId: Long)
+        fun onCopyIconClicked(instrument: Instrument, stableId: Long)
     }
 
     private var tuningFrequencies: TuningFrequencies? = null
@@ -92,6 +99,46 @@ class InstrumentsAdapter : ListAdapter<Instrument, InstrumentsAdapter.ViewHolder
             titleView = view.findViewById(R.id.instrument_title)
             stringText = view.findViewById(R.id.string_list)
             icon = view.findViewById(R.id.instrument_icon)
+            editIcon = view.findViewById(R.id.edit_instrument)
+            editIcon?.setOnClickListener {
+                onInstrumentClickedListener?.onEditIconClicked(getItem(bindingAdapterPosition), itemId)
+            }
+            editIcon?.setOnLongClickListener {
+                closeExpansionIcon?.visibility = View.VISIBLE
+                copyIcon?.visibility = View.VISIBLE
+                editIcon?.setImageResource(R.drawable.ic_edit)
+                true
+            }
+            copyIcon = view.findViewById(R.id.copy_instrument)
+            copyIcon?.setOnClickListener {
+                if (mode == Mode.EditCopy) {
+                    closeExpansionIcon?.visibility = View.GONE
+                    copyIcon?.visibility = View.GONE
+                    editIcon?.setImageResource(R.drawable.ic_edit_expand)
+                }
+                onInstrumentClickedListener?.onCopyIconClicked(getItem(bindingAdapterPosition), itemId)
+            }
+            closeExpansionIcon = view.findViewById(R.id.close_expansion)
+            closeExpansionIcon?.setOnClickListener {
+                closeExpansionIcon?.visibility = View.GONE
+                copyIcon?.visibility = View.GONE
+                editIcon?.setImageResource(R.drawable.ic_edit_expand)
+            }
+
+            when (mode) {
+                Mode.Copy -> {
+                    closeExpansionIcon?.visibility = View.GONE
+                    editIcon?.visibility = View.GONE
+                    copyIcon?.visibility = View.VISIBLE
+                }
+                Mode.EditCopy -> {
+                    closeExpansionIcon?.visibility = View.GONE
+                    editIcon?.visibility = View.VISIBLE
+                    editIcon?.setImageResource(R.drawable.ic_edit_expand)
+                    copyIcon?.visibility = View.GONE
+                }
+            }
+
             selectedView = view.findViewById(R.id.instrument_active)
             view.setOnClickListener {
                 activatedStableId = itemId
@@ -113,6 +160,12 @@ class InstrumentsAdapter : ListAdapter<Instrument, InstrumentsAdapter.ViewHolder
         holder.icon?.setImageResource(instrument.iconResource)
         holder.isActivated = (instrument.stableId == activatedStableId)
         holder.instrument = instrument
+
+        // Extremely hacky way to disable copying the predefined chromatic instrument
+        if (instrument.isChromatic && instrument.stableId < 0)
+            holder.copyIcon?.visibility = View.GONE
+        else if (instrument.stableId < 0)
+            holder.copyIcon?.visibility = View.VISIBLE
     }
 
     override fun onViewAttachedToWindow(holder: ViewHolder) {
