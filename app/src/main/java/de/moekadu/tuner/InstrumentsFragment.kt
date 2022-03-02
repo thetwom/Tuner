@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
-import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -21,6 +21,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 class InstrumentsFragment : Fragment() {
+    // TODO: import/export
     private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
         InstrumentsViewModel.Factory(
             AppPreferences.readInstrumentId(requireActivity()),
@@ -32,7 +33,7 @@ class InstrumentsFragment : Fragment() {
         )
     }
     private val tuningEditorViewModel: TuningEditorViewModel by activityViewModels()
-    private val tunerViewModel: TunerViewModel by activityViewModels() // ? = null
+    private val tunerViewModel: TunerViewModel by activityViewModels()
 
     private var recyclerView: RecyclerView? = null
     private val instrumentsPredefinedAdapter = InstrumentsAdapter(InstrumentsAdapter.Mode.Copy)
@@ -202,7 +203,7 @@ class InstrumentsFragment : Fragment() {
                             lastRemovedInstrumentIndex
                         )
 
-                    (getView() as ConstraintLayout?)?.let { coLayout ->
+                    (getView() as CoordinatorLayout?)?.let { coLayout ->
                         lastRemovedInstrument?.let { removedItem ->
                             Snackbar.make(
                                 coLayout,
