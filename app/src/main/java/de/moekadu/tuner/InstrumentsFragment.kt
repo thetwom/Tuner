@@ -1,6 +1,7 @@
 package de.moekadu.tuner
 
 import android.content.Intent
+import android.content.res.Resources
 import android.graphics.Canvas
 import android.os.Bundle
 import android.view.*
@@ -22,7 +23,6 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 class InstrumentsFragment : Fragment() {
-    // TODO: allow deleting also on swiping to right
     val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
         InstrumentsViewModel.Factory(
             AppPreferences.readInstrumentId(requireActivity()),
@@ -48,6 +48,8 @@ class InstrumentsFragment : Fragment() {
     private var lastRemovedInstrument: Instrument? = null
 
     private val instrumentArchiving = InstrumentArchiving(this)
+
+    private val deleteIconSpacing = (12f * Resources.getSystem().displayMetrics.density).toInt()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setHasOptionsMenu(true)
@@ -193,7 +195,7 @@ class InstrumentsFragment : Fragment() {
 
         val simpleTouchHelper = object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-            ItemTouchHelper.LEFT
+            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
         ) {
 
             val background = activity?.let {
@@ -222,7 +224,7 @@ class InstrumentsFragment : Fragment() {
             ): Int {
                 //Log.v("Tuner", "InstrumentFragment.simpleTouchHelper.getSwipeDirs: itemId=${viewHolder.itemId}")
                 return if (viewHolder is InstrumentsAdapter.ViewHolder && viewHolder.instrument?.stableId ?: -1 >= 0)
-                    ItemTouchHelper.LEFT
+                    ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                 else
                     0
             }
@@ -305,12 +307,12 @@ class InstrumentsFragment : Fragment() {
                     background?.draw(c)
 
                     if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
-                        deleteIcon?.alpha =
-                            min(255, (255 * 3 * dX.absoluteValue / itemView.width).toInt())
-                        val iconHeight =
-                            (0.4f * (itemView.height - itemView.paddingTop - itemView.paddingBottom)).roundToInt()
-                        val deleteIconLeft =
-                            itemView.right - iconHeight - itemView.paddingRight //itemView.right + iconHeight + itemView.paddingRight + dX.roundToInt()
+                        deleteIcon?.alpha = min(255, (255 * 3 * dX.absoluteValue / itemView.width).toInt())
+                        val iconHeight = (0.4f * (itemView.height - itemView.paddingTop - itemView.paddingBottom)).roundToInt()
+                        val deleteIconLeft = if (dX < 0f)
+                            itemView.right - iconHeight - itemView.paddingRight - deleteIconSpacing
+                        else
+                            itemView.left + itemView.paddingLeft + deleteIconSpacing
                         deleteIcon?.setBounds(
                             deleteIconLeft,
                             (itemView.top + itemView.bottom - iconHeight) / 2,
