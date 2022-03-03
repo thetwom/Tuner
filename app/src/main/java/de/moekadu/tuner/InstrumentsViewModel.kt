@@ -1,6 +1,7 @@
 package de.moekadu.tuner
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.*
 
 
@@ -37,6 +38,9 @@ class InstrumentsViewModel(
 
     private val _customDatabaseExpanded = MutableLiveData(initialCustomExpanded)
     val customDatabaseExpanded: LiveData<Boolean> get() = _customDatabaseExpanded
+
+    private val _uri = MutableLiveData<Uri?>()
+    val uri: LiveData<Uri?> get() = _uri
 
     init {
 //        Log.v("Tuner", "InstrumentsViewModel.init: loading custom instruments $initialCustomInstrumentsString, customExpanded=${customDatabaseExpanded.value}")
@@ -118,6 +122,14 @@ class InstrumentsViewModel(
                 ArrayList()
             }
         }
+    }
+
+    fun loadInstrumentsFromFile(uri: Uri) {
+        _uri.value = uri
+    }
+
+    fun loadingFileCompleted() {
+        _uri.value = null
     }
 //    fun addInstrument(instrument: Instrument) {
 //        customInstrumentDatabase.add(instrument)

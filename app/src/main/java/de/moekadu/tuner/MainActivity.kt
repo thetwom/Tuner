@@ -19,6 +19,7 @@
 
 package de.moekadu.tuner
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -26,6 +27,7 @@ import android.view.WindowManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
 import androidx.preference.PreferenceManager
@@ -84,6 +86,9 @@ class MainActivity : AppCompatActivity() {
             //if (supportFragmentManager.backStackEntryCount == 0)
             //    loadSimpleOrScientificFragment()
         }
+
+        if (savedInstanceState == null)
+            handleFileLoadingIntent(intent)
     }
 
     override fun onStop() {
@@ -217,6 +222,25 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             // scientificMode = modeFromPreferences
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+//        Log.v("Tuner", "MainActivity.onNewIntent: intent=$intent")
+        handleFileLoadingIntent(intent)
+    }
+
+    private fun handleFileLoadingIntent(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_SEND || intent?.action == Intent.ACTION_VIEW) {
+//            Log.v("Tuner", "MainActivity.handleFileLoadingIntent: intent=${intent.data}")
+
+            intent.data?.let { uri ->
+//                Log.v("Tuner", "MainActivity.handleFileLoadingIntent: uri=$uri")
+                supportFragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+                instrumentsViewModel.loadInstrumentsFromFile(uri)
+                loadInstrumentsFragment()
+            }
         }
     }
 }

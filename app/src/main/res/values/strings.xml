@@ -99,4 +99,22 @@
     <string name="copy_instrument">Copy instrument</string>
     <string name="close_expansion">Close expanded icons</string>
     <string name="copy_extension">%s (copy)</string>
+    <string name="failed_to_archive_instruments">Failed to write instruments to file</string>
+    <string name="database_saved">Writing instruments to \"%s\".</string>
+    <string name="database_empty">There are no instruments which can be saved.</string>
+    <plurals name="load_instruments">
+        <item quantity="one">Loading %d instruments</item>
+        <item quantity="other">Loading %d instruments</item>
+    </plurals>
+    <string name="replace_current_list">Replace current list</string>
+    <string name="prepend_current_list">Prepend to current list</string>
+    <string name="append_current_list">Append to current list</string>
+    <string name="share">Share instruments</string>
+    <plurals name="sharing_num_instruments">
+        <item quantity="one">Sharing %d instrument</item>
+        <item quantity="other">Sharing %d instruments</item>
+    </plurals>
+    <string name="no_instruments_for_sharing">There are no instruments, which can be shared.</string>
+    <string name="load_from_disk">Load instruments from file</string>
+    <string name="save_to_disk">Save instruments to file</string>
 </resources>

@@ -25,4 +25,11 @@
         <item>@string/window_hann</item>
     </string-array>
 
+    <string-array name="load_instruments_list">
+        <item>@string/replace_current_list</item>
+        <item>@string/prepend_current_list</item>
+        <item>@string/append_current_list</item>
+    </string-array>
+
+
 </resources>
