@@ -11,6 +11,7 @@ import android.os.Parcelable
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
+import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -23,8 +24,6 @@ import kotlin.math.*
 
 class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr) {
-
-    // TODO: we must store the centering tone index
 
     constructor(context: Context, attrs: AttributeSet? = null) : this(
         context,
@@ -274,6 +273,8 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     private var automaticScrollToSelected = true
 
+    private var stringIndexInViewCenter = Float.MAX_VALUE
+
     private var touchManualControlDrawable: TouchControlDrawable
     private var anchorDrawable: TouchControlDrawable
     var showAnchor = false
@@ -297,8 +298,9 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         val toneIndexForHighlighting: Int,
         val stringIndexForCenteringToneIndex: Int,
         val activeToneStyle: Int,
-        val stringIndexInViewCenter: Int, // for recomputing offset
-        val automaticScrollToSelected: Boolean
+        val stringIndexInViewCenter: Float, // for recomputing offset
+        val automaticScrollToSelected: Boolean,
+        val showAnchor: Boolean
     ) : Parcelable
 
     init {
@@ -413,7 +415,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-
+        Log.v("Tuner", "StringView.onMeasure")
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         var proposedWidth = max(MeasureSpec.getSize(widthMeasureSpec), suggestedMinimumWidth)
         if (widthMode == MeasureSpec.UNSPECIFIED)
@@ -439,12 +441,22 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        updateStringPositionVariables(w, h)
+        Log.v("Tuner", "StringView.onDraw: onSizeChanged")
+        updateStringPositionVariables(w, h) // for computing numcols etc.
+        if (stringIndexInViewCenter != Float.MAX_VALUE) {
+            yOffset = getYOffsetFromStringIndex(stringIndexInViewCenter)
+            Log.v("Tuner", "StringView.onDraw: onSizeChanged: stringIndexInViewCenter=$stringIndexInViewCenter, offset=$yOffset")
+            stringIndexInViewCenter = Float.MAX_VALUE
+        }
+        if (automaticScrollToSelected)
+            setAutomaticControl(0L)
+
+        updateStringPositionVariables(w, h) // for computing minstringindex and maxstringindex
         super.onSizeChanged(w, h, oldw, oldh)
     }
 
     override fun onDraw(canvas: Canvas?) {
-//        Log.v("Tuner", "StringView.onDraw: yOffset = $yOffset")
+        Log.v("Tuner", "StringView.onDraw: yOffset = $yOffset")
         if (canvas == null)
             return
 //        canvas.drawRect(
@@ -532,7 +544,6 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         showScrollIcon = showScrollIcon || (!automaticScrollToSelected && highlightBy == HighlightBy.StringIndex && highlightedStringIndex in strings.indices)
         showScrollIcon = showScrollIcon || (highlightBy == HighlightBy.ToneIndex && numHighlightedWithToneIndex > 1)
         showScrollIcon = showScrollIcon && (computeOffsetMin() < computeOffsetMax())
-        // TODO: also don't show if we cant scroll
         // TODO: show another icon, if we are in automatic scroll mode and have multiple notes with same tone index
 
         // show scrollToActive-icon either if we have an active note and are not centered
@@ -588,15 +599,15 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         val bundle = Bundle()
         bundle.putParcelable("super state", super.onSaveInstanceState())
 
-        val stringIndexInViewCenter = 0 // TODO: set a good value here
         val state = SavedState(
             highlightBy = highlightBy,
             highlightedStringIndex = highlightedStringIndex,
             toneIndexForHighlighting = toneIndexForHighlighting,
             stringIndexForCenteringToneIndex = stringIndexForCenteringToneIndex,
             activeToneStyle = activeToneStyle,
-            stringIndexInViewCenter = stringIndexInViewCenter,
-            automaticScrollToSelected = automaticScrollToSelected
+            stringIndexInViewCenter = getStringIndexAtYCenterAsFloat(),
+            automaticScrollToSelected = automaticScrollToSelected,
+            showAnchor = showAnchor
         )
 
         bundle.putParcelable("string view state", state)
@@ -604,7 +615,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
-//        Log.v("Tuner", "PlotView.onRestoreInstanceState")
+        Log.v("Tuner", "StringView.onRestoreInstanceState")
         val superState = if (state is Bundle) {
             state.getParcelable<SavedState>("string view state")?.let { scrollViewState ->
                 highlightBy = scrollViewState.highlightBy
@@ -612,8 +623,10 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 toneIndexForHighlighting = scrollViewState.toneIndexForHighlighting
                 stringIndexForCenteringToneIndex = scrollViewState.stringIndexForCenteringToneIndex
                 activeToneStyle = scrollViewState.activeToneStyle
-                // TODO: find out how to best scroll to stringIndexInViewCenter
                 automaticScrollToSelected = scrollViewState.automaticScrollToSelected
+                showAnchor = scrollViewState.showAnchor
+                Log.v("Tuner", "StringView.onRestoreInstanceState: stringIndexInViewCenter=${scrollViewState.stringIndexInViewCenter}, automaticScollToSelected=$automaticScrollToSelected")
+                stringIndexInViewCenter = if (automaticScrollToSelected) Float.MAX_VALUE else scrollViewState.stringIndexInViewCenter
             }
             state.getParcelable("super state")
         } else {
@@ -640,31 +653,30 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         this.labelWidth = labelWidth.toFloat() + 2 * labelBackgroundPadding
         this.labelHeight = labelHeight.toFloat() + 2 * labelBackgroundPadding
 
-        if (isLaidOut)
-            updateStringPositionVariables(width, height)
-
         if (highlightedStringIndex !in toneIndices.indices)
             highlightedStringIndex = -1
         numHighlightedWithToneIndex = strings.count { it.toneIndex == toneIndexForHighlighting }
         stringIndexForCenteringToneIndex = getClosestStringWithToneIndex(stringIndexForCenteringToneIndex, toneIndexForHighlighting)
 
+        if (isLaidOut) {
+            updateStringPositionVariables(width, height)
+        }
+
         requestLayout()
         invalidate()
-        post {
-            yOffset = 0f
-            updateStringPositionVariables(width, height)
-            setAutomaticControl(0L)
-//            Log.v("Tuner", "StringView.setStrings (post): yOffset = $yOffset")
-        }
-        // TODO: in theory we should call updateStringPositionVariables( .... )
-        //       but maybe we should also adapt the yOffset
-
+//        post {
+//            yOffset = 0f
+//            updateStringPositionVariables(width, height)
+//            setAutomaticControl(0L)
+////            Log.v("Tuner", "StringView.setStrings (post): yOffset = $yOffset")
+//        }
     }
 
     fun highlightSingleString(stringIndex: Int, animationDuration: Long = 200L) {
+        Log.v("Tuner", "StringView.highlightSingleString: stringIndex=$stringIndex, oldStringIndex=$highlightedStringIndex, highlightBy=$highlightBy")
         if (stringIndex == highlightedStringIndex && highlightBy == HighlightBy.StringIndex)
             return
-//        Log.v("Tuner", "StringView.highlightSingleString: stringIndex=$stringIndex, duration=$animationDuration")
+        Log.v("Tuner", "StringView.highlightSingleString: stringIndex=$stringIndex, duration=$animationDuration")
         highlightedStringIndex = stringIndex
         highlightBy = HighlightBy.StringIndex
         if (automaticScrollToSelected)
@@ -674,6 +686,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun highlightByToneIndex(toneIndex: Int, animationDuration: Long = 200L) {
+        Log.v("Tuner", "StringView.highlightByToneIndex: stringIndex=$toneIndex, oldTonIndex=$toneIndexForHighlighting, highlightBy=$highlightBy")
         if (toneIndex == toneIndexForHighlighting && highlightBy == HighlightBy.ToneIndex)
             return
 
@@ -685,6 +698,8 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         stringIndexForCenteringToneIndex = getClosestStringWithToneIndex(closestStringIndexToCenter, toneIndexForHighlighting)
         if (automaticScrollToSelected)
             scrollToStringIndex(stringIndexForCenteringToneIndex, animationDuration)
+        else
+            invalidate()
     }
 
     fun scrollToStringIndex(stringIndex: Int, animationDuration: Long) {
@@ -692,13 +707,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         if (stringIndex in strings.indices) {
             flingAnimation.cancel()
 
-//            val yPosOfString = paddingTop + 0.5f * height
-//            // yPos = yOffset + paddingTop + 0.5f * labelHeight + stringIndex * rowHeight
-//            var yOffsetTarget =
-//                yPosOfString - (paddingTop + 0.5f * labelHeight + stringIndex * rowHeight)
-//            yOffsetTarget = min(yOffsetTarget, computeOffsetMax())
-//            yOffsetTarget = max(yOffsetTarget, computeOffsetMin())
-            val yOffsetTarget = getYOffsetAutoScroll(stringIndex)
+            val yOffsetTarget = getYOffsetFromStringIndex(stringIndex)
 
 //            Log.v("Tuner", "StringView.scrollToString yOffsetMin = ${computeOffsetMin()}, yOffsetMax=${computeOffsetMax()}, yOffsetTarget=$yOffsetTarget")
             offsetAnimator.cancel()
@@ -718,6 +727,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun setManualControl() {
+        Log.v("Tuner", "StringView.setManualControl")
         // no manual control if no scrolling is possible
         if (computeOffsetMax() == computeOffsetMin())
             return
@@ -727,7 +737,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun setAutomaticControl(animationDuration: Long = 200L) {
-        // Log.v("Tuner", "StringView.setAutomaticControl")
+        Log.v("Tuner", "StringView.setAutomaticControl")
         automaticScrollToSelected = true
         framePaint.color = frameColor
         when (highlightBy) {
@@ -737,13 +747,6 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
         invalidate()
     }
-
-//    private fun updateActiveStringIndex(toneIndex: Int) {
-//        activeStringIndex = if (toneIndex == NO_ACTIVE_TONE_INDEX)
-//            -1
-//        else
-//            strings.indexOfFirst { it.toneIndex == toneIndex }
-//    }
 
     private fun scrollDistance(distance: Float) {
         yOffset -= distance
@@ -852,6 +855,22 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         return yOffsetMod + paddingTop + framePaint.strokeWidth + labelSpacing + 0.5f * labelHeight + stringIndex * rowHeight
     }
 
+    private fun getStringIndexAtYCenterAsFloat(): Float {
+        val effectiveHeight =
+            height - paddingTop - paddingBottom - 2 * (framePaint.strokeWidth + labelSpacing)
+        val stringTotalHeight = getTotalStringHeight()
+        val yOffsetMod = if (effectiveHeight > stringTotalHeight) {
+            0.5f * (effectiveHeight - stringTotalHeight)
+        } else {
+            yOffset
+        }
+        // From getStringDrawingPositionY:
+        //      yPosition = yOffsetMod + paddingTop + framePaint.strokeWidth + labelSpacing + 0.5f * labelHeight + stringIndex * rowHeight
+        // <=> stringIndex = (yPosition - yOffsetMod - paddingTop - framePaint.strokeWidth - labelSpacing - 0.5f * labelHeight) / rowHeight
+        val yPosition = 0.5f * (paddingTop + height - paddingBottom)
+        return (yPosition - yOffsetMod - paddingTop - framePaint.strokeWidth - labelSpacing - 0.5f * labelHeight) / rowHeight
+    }
+
     private fun updateStringPositionVariables(w: Int, h: Int) {
         val effectiveWidth = w - paddingLeft - paddingRight - 2 * framePaint.strokeWidth
         numCols = (floor((effectiveWidth - labelSpacing) / (labelWidth + labelSpacing))).toInt()
@@ -896,8 +915,12 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         return (strings.size - 1) * getRowHeight() + labelHeight
     }
 
-    private fun getYOffsetAutoScroll(stringIndex: Int): Float {
-        val yPosOfString = paddingTop + 0.5f * height
+    private fun getYOffsetFromStringIndex(stringIndex: Int): Float {
+        return getYOffsetFromStringIndex(stringIndex.toFloat())
+    }
+
+    private fun getYOffsetFromStringIndex(stringIndex: Float): Float {
+        val yPosOfString = 0.5f * (paddingTop + height - paddingBottom)
         // from getStringDrawingPositionY
         // yPosOfString = yOffsetMod + paddingTop + framePaint.strokeWidth + labelSpacing + 0.5f * labelHeight + stringIndex * rowHeight
         // -> yOffset = yPosOfString - (paddingTop + framePaint.strokeWidth + labelSpacing + 0.5f * labelHeight + stringIndex * rowHeight)

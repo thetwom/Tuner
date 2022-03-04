@@ -88,4 +88,22 @@
     <string name="copy_instrument">Instrument kopieren</string>
     <string name="close_expansion">Ausgeklappte Icons schließen</string>
     <string name="copy_extension">%s (Kopie)</string>
+    <string name="failed_to_archive_instruments">Speichern der Instrumente fehlgeschlagen</string>
+    <string name="database_saved">Speichere Instrumente nach \"%s\".</string>
+    <string name="database_empty">Keine zu speichernden Instrumente.</string>
+    <string name="replace_current_list">Aktuelle Liste ersetzen</string>
+    <string name="prepend_current_list">Vor aktueller Liste einfügen</string>
+    <string name="append_current_list">An aktuelle Liste anhängen</string>
+    <string name="share">Instrumente teilen</string>
+    <string name="no_instruments_for_sharing">Keine zu teilenden Instrumente verfügbar.</string>
+    <string name="load_from_disk">Lade Instrumente aus Datei</string>
+    <string name="save_to_disk">Instrumente in Datei speichern</string>
+    <plurals name="load_instruments">
+        <item quantity="one">Lade %d Instrument</item>
+        <item quantity="other">Lade %d Instrumente</item>
+    </plurals>
+    <plurals name="sharing_num_instruments">
+        <item quantity="one">Teile %d Instrument</item>
+        <item quantity="other">Teile %d Instrumente</item>
+    </plurals>
 </resources>

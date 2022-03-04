@@ -89,16 +89,31 @@ private fun FloatArray.asPlotViewArray(): PlotViewArray = FloatArrayPlotViewArra
 private fun ArrayList<Float>.asPlotViewArray(): PlotViewArray = ArrayListPlotViewArray(this)
 
 
-class PlotRange(val allowTouchControl: Boolean = true)  {
+class PlotRange(private val allowTouchControl: Boolean = true)  {
 
     enum class AnimationStrategy {Direct, ExtendShrink}
-
+    /// Range which was set manually using setRange.
+    /**
+     * If this is not AUTO  and if no touchbased range is on, this is the range, to be used
+     */
     private val fixedRange = FloatArray(2) {AUTO}
+    /// Range which was set by touch input
+    /**
+     * If this range is not OFF, this is what we will use
+     */
     private val touchBasedRange = FloatArray(2) {OFF}
+    /// The range limits which should be not exceeded, when in touch mode
     val touchBasedRangeLimits = floatArrayOf (Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY)
 
+    /// Current range to be displayed.
+    /**
+     * In contrary to targetRange, the current range is what is actually be displayed. E.g. at
+     * animation, the target will define the animation target, but the current range is the
+     * current state of the animation.
+     */
     private val currentRange = FloatArray(2) {0f}
 
+    /// Tell if the range is controlled by touch input
     val isTouchControlled
         get() = touchBasedRange[0] != OFF && touchBasedRange[1] != OFF
 
@@ -120,7 +135,11 @@ class PlotRange(val allowTouchControl: Boolean = true)  {
     private val dataRange = FloatArray(2) { BOUND_UNDEFINED }
     private val ticksRange = FloatArray(2) { BOUND_UNDEFINED }
 
+    /// Callback when the range to be displayed has changed
     var rangeChangedListener: RangeChangedListener? = null
+
+    val rangeMin get() = currentRange[0]
+    val rangeMax get() = currentRange[1]
 
     /// Evaluator for range needed for animation.
     private val rangeEvaluator = FloatArrayEvaluator(floatArrayOf(0f, 0f))
@@ -232,8 +251,15 @@ class PlotRange(val allowTouchControl: Boolean = true)  {
         setDataRange(state.dataRange[0], state.dataRange[1], true)
         setRange(state.fixedRange[0], state.fixedRange[1], AnimationStrategy.Direct, NO_REDRAW_PRIVATE)
         state.touchBasedRange.copyInto(touchBasedRange)
+        determineTargetRange()
+        targetRange.copyInto(currentRange)
     }
 
+    /// Determine the target range, which should be shown or serves as a target, when we animate.
+    /**
+     * This function resolves correct value based on the different options we have
+     * (touch base range, fixed range, range defined through limits of input data, ...)
+     */
     private fun determineTargetRange() {
         if (touchBasedRange[0] == OFF || touchBasedRange[1] == OFF) {
             for (i in 0..1) {
@@ -1545,6 +1571,11 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
     }
 
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        rawViewTransformation.setRawDataBounds(xMin = xRange.rangeMin, xMax = xRange.rangeMax,
+            yMin = yRange.rangeMin, yMax = yRange.rangeMax, suppressInvalidate = true)
+    }
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
 

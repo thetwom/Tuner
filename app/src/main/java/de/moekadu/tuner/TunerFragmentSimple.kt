@@ -151,7 +151,7 @@ class TunerFragmentSimple : Fragment() {
                     viewModel.tuningFrequencies.value?.getNoteName(requireContext(), noteIndex, preferFlat = false)
                 }
             }
-            stringView?.setAutomaticControl(0L)
+            //stringView?.setAutomaticControl(0L)
         }
 
         viewModel.pitchHistory.sizeAsLiveData.observe(viewLifecycleOwner) {
@@ -165,7 +165,7 @@ class TunerFragmentSimple : Fragment() {
 //        }
 
         viewModel.frequencyPlotRange.observe(viewLifecycleOwner) {
-//            Log.v("TestRecordFlow", "TunerFragment.plotRange: ${it[0]} -- ${it[1]}")
+//            Log.v("Tuner", "TunerFragmentSimple observe frequencyPlotRange: ${it[0]} -- ${it[1]}")
             pitchPlot?.yRange(it[0], it[1], 600)
         }
 
@@ -187,7 +187,7 @@ class TunerFragmentSimple : Fragment() {
             viewModel.pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
                 tuningStatus = targetNote.getTuningStatus(frequency)
             }
-            Log.v("Tuner", "TunerFragmentSimple: observing targetNote: tuningStatus=$tuningStatus")
+//            Log.v("Tuner", "TunerFragmentSimple: observing targetNote: tuningStatus=$tuningStatus")
             setStyles(isPitchInactive, tuningStatus, false)
 
             pitchPlot?.setMarks(
@@ -210,7 +210,7 @@ class TunerFragmentSimple : Fragment() {
                 if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2, placeLabelsOutsideBoundsIfPossible = true,
                 redraw = true)
 
-//            Log.v("Tuner", "TunerFragmentSimple: target note changed: stringIndex = ${targetNote.stringIndex}, toneIndex=${targetNote.toneIndex}")
+            Log.v("Tuner", "TunerFragmentSimple: target note changed: stringIndex = ${targetNote.stringIndex}, toneIndex=${targetNote.toneIndex}")
             if (targetNote.stringIndex != -1)
                 stringView?.highlightSingleString(targetNote.stringIndex, 300L)
             else

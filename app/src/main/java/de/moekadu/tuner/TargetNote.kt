@@ -56,7 +56,7 @@ class TargetNote {
         private set
 
     /// String index of target note
-    var stringIndex = 0
+    var stringIndex = -1
 
 //    /// Current note name
 //    var name: CharSequence? = null
