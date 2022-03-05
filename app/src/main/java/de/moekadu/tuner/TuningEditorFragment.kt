@@ -96,7 +96,7 @@ class TuningEditorFragment : Fragment() {
         }
 
         instrumentNameEditText?.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
-            Log.v("Tuner", "TuningEditorFragment: instrumentNameEditText -> onFocusChanged: hasFocus=$hasFocus")
+//            Log.v("Tuner", "TuningEditorFragment: instrumentNameEditText -> onFocusChanged: hasFocus=$hasFocus")
             if (v.id == R.id.instrument_title_edit_text && !hasFocus) {
                 val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
                 imm?.hideSoftInputFromWindow(v.windowToken, 0)

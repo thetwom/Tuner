@@ -67,7 +67,7 @@ class TunerFragmentSimple : Fragment() {
             Toast.makeText(activity, getString(R.string.no_audio_recording_permission), Toast.LENGTH_LONG)
                 .show()
             Log.v(
-                "TestRecordFlow",
+                "Tuner",
                 "TunerFragment.askForPermissionAnNotifyViewModel: No audio recording permission is granted."
             )
         }
@@ -210,7 +210,7 @@ class TunerFragmentSimple : Fragment() {
                 if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2, placeLabelsOutsideBoundsIfPossible = true,
                 redraw = true)
 
-            Log.v("Tuner", "TunerFragmentSimple: target note changed: stringIndex = ${targetNote.stringIndex}, toneIndex=${targetNote.toneIndex}")
+//            Log.v("Tuner", "TunerFragmentSimple: target note changed: stringIndex = ${targetNote.stringIndex}, toneIndex=${targetNote.toneIndex}")
             if (targetNote.stringIndex != -1)
                 stringView?.highlightSingleString(targetNote.stringIndex, 300L)
             else

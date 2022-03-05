@@ -11,7 +11,6 @@ import android.os.Parcelable
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
-import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -415,7 +414,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        Log.v("Tuner", "StringView.onMeasure")
+//        Log.v("Tuner", "StringView.onMeasure")
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         var proposedWidth = max(MeasureSpec.getSize(widthMeasureSpec), suggestedMinimumWidth)
         if (widthMode == MeasureSpec.UNSPECIFIED)
@@ -441,11 +440,11 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        Log.v("Tuner", "StringView.onDraw: onSizeChanged")
+//        Log.v("Tuner", "StringView.onDraw: onSizeChanged")
         updateStringPositionVariables(w, h) // for computing numcols etc.
         if (stringIndexInViewCenter != Float.MAX_VALUE) {
             yOffset = getYOffsetFromStringIndex(stringIndexInViewCenter)
-            Log.v("Tuner", "StringView.onDraw: onSizeChanged: stringIndexInViewCenter=$stringIndexInViewCenter, offset=$yOffset")
+//            Log.v("Tuner", "StringView.onDraw: onSizeChanged: stringIndexInViewCenter=$stringIndexInViewCenter, offset=$yOffset")
             stringIndexInViewCenter = Float.MAX_VALUE
         }
         if (automaticScrollToSelected)
@@ -456,7 +455,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     override fun onDraw(canvas: Canvas?) {
-        Log.v("Tuner", "StringView.onDraw: yOffset = $yOffset")
+//        Log.v("Tuner", "StringView.onDraw: yOffset = $yOffset")
         if (canvas == null)
             return
 //        canvas.drawRect(
@@ -615,7 +614,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
-        Log.v("Tuner", "StringView.onRestoreInstanceState")
+//        Log.v("Tuner", "StringView.onRestoreInstanceState")
         val superState = if (state is Bundle) {
             state.getParcelable<SavedState>("string view state")?.let { scrollViewState ->
                 highlightBy = scrollViewState.highlightBy
@@ -625,7 +624,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 activeToneStyle = scrollViewState.activeToneStyle
                 automaticScrollToSelected = scrollViewState.automaticScrollToSelected
                 showAnchor = scrollViewState.showAnchor
-                Log.v("Tuner", "StringView.onRestoreInstanceState: stringIndexInViewCenter=${scrollViewState.stringIndexInViewCenter}, automaticScollToSelected=$automaticScrollToSelected")
+//                Log.v("Tuner", "StringView.onRestoreInstanceState: stringIndexInViewCenter=${scrollViewState.stringIndexInViewCenter}, automaticScollToSelected=$automaticScrollToSelected")
                 stringIndexInViewCenter = if (automaticScrollToSelected) Float.MAX_VALUE else scrollViewState.stringIndexInViewCenter
             }
             state.getParcelable("super state")
@@ -673,10 +672,10 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun highlightSingleString(stringIndex: Int, animationDuration: Long = 200L) {
-        Log.v("Tuner", "StringView.highlightSingleString: stringIndex=$stringIndex, oldStringIndex=$highlightedStringIndex, highlightBy=$highlightBy")
+//        Log.v("Tuner", "StringView.highlightSingleString: stringIndex=$stringIndex, oldStringIndex=$highlightedStringIndex, highlightBy=$highlightBy")
         if (stringIndex == highlightedStringIndex && highlightBy == HighlightBy.StringIndex)
             return
-        Log.v("Tuner", "StringView.highlightSingleString: stringIndex=$stringIndex, duration=$animationDuration")
+//        Log.v("Tuner", "StringView.highlightSingleString: stringIndex=$stringIndex, duration=$animationDuration")
         highlightedStringIndex = stringIndex
         highlightBy = HighlightBy.StringIndex
         if (automaticScrollToSelected)
@@ -686,7 +685,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun highlightByToneIndex(toneIndex: Int, animationDuration: Long = 200L) {
-        Log.v("Tuner", "StringView.highlightByToneIndex: stringIndex=$toneIndex, oldTonIndex=$toneIndexForHighlighting, highlightBy=$highlightBy")
+//        Log.v("Tuner", "StringView.highlightByToneIndex: stringIndex=$toneIndex, oldTonIndex=$toneIndexForHighlighting, highlightBy=$highlightBy")
         if (toneIndex == toneIndexForHighlighting && highlightBy == HighlightBy.ToneIndex)
             return
 
@@ -727,7 +726,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun setManualControl() {
-        Log.v("Tuner", "StringView.setManualControl")
+//        Log.v("Tuner", "StringView.setManualControl")
         // no manual control if no scrolling is possible
         if (computeOffsetMax() == computeOffsetMin())
             return
@@ -737,7 +736,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun setAutomaticControl(animationDuration: Long = 200L) {
-        Log.v("Tuner", "StringView.setAutomaticControl")
+//        Log.v("Tuner", "StringView.setAutomaticControl")
         automaticScrollToSelected = true
         framePaint.color = frameColor
         when (highlightBy) {
