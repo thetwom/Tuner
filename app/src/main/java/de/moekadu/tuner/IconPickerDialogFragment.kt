@@ -21,13 +21,18 @@ class IconPickerDialogFragment(private val iconResourceSelectedListener: IconRes
 
             val view = requireActivity().layoutInflater.inflate(R.layout.icon_picker_layout, null)
 
-            val icons = intArrayOf(
-                R.drawable.ic_piano,
-                R.drawable.ic_guitar,
-                R.drawable.ic_ukulele,
-                R.drawable.ic_bass,
-                R.drawable.ic_violin
-            )
+            val icons = IntArray(instrumentIcons.size) {
+                instrumentIcons[it].resourceId
+            }
+//            val icons = intArrayOf(
+//                R.drawable.ic_piano,
+//                R.drawable.ic_guitar,
+//                R.drawable.ic_ukulele,
+//                R.drawable.ic_bass,
+//                R.drawable.ic_violin,
+//                R.drawable.ic_double_bass,
+//                R.drawable.ic_trumpet
+//            )
 
             val adapter = IconPickerAdapter(icons)
             //val recyclerView = view.findViewById<RecyclerView>(R.id.icon_list)
