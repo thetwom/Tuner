@@ -33,6 +33,7 @@ class InstrumentsFragment : Fragment() {
             requireActivity().application
         )
     }
+
     private val tuningEditorViewModel: TuningEditorViewModel by activityViewModels()
     private val tunerViewModel: TunerViewModel by activityViewModels()
 

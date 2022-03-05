@@ -21,7 +21,6 @@
         android:layout_marginRight="0dp"
         android:layout_marginTop="8dp"
         app:startIconDrawable="@drawable/ic_guitar"
-        app:startIconCheckable="true"
         app:startIconTint="?attr/colorPrimary"
         app:endIconContentDescription="@string/clear_instrument_name"
         app:endIconMode="clear_text"

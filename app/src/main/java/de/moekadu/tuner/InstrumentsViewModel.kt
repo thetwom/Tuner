@@ -55,6 +55,11 @@ class InstrumentsViewModel(
                 db.instruments.forEach { listCopy.add(it.copy()) }
                 _customInstrumentList.value = listCopy
             }
+
+            // update instrument if necessary
+            db.getInstrument(instrument.value?.instrument?.stableId ?: Instrument.NO_STABLE_ID)?.let {
+                _instrument.value = InstrumentAndSection(it, Section.Custom)
+            }
         }
 
         if (_customDatabaseExpanded.value == true) {
