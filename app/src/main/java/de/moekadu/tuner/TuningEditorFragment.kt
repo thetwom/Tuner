@@ -113,13 +113,12 @@ class TuningEditorFragment : Fragment() {
             }
         }
 
-        tunerViewModel.tuningFrequencies.observe(viewLifecycleOwner) { tuningFrequencies ->
-            noteSelector?.setNotes(-50, 50) { i ->
-                tuningFrequencies.getNoteName(requireContext(), i, preferFlat = false)
-            }
-            detectedNoteViewer?.setNotes(-50, 50) { i ->
-                tuningFrequencies.getNoteName(requireContext(), i, preferFlat = false)
-            }
+        tunerViewModel.noteNames.observe(viewLifecycleOwner) {
+            updateNoteNamesInAllViews()
+        }
+
+        tunerViewModel.preferFlat.observe(viewLifecycleOwner) {
+            updateNoteNamesInAllViews()
         }
 
         viewModel.instrumentName.observe(viewLifecycleOwner) {
@@ -134,9 +133,10 @@ class TuningEditorFragment : Fragment() {
         }
 
         viewModel.strings.observe(viewLifecycleOwner) { strings ->
-            val tuningFrequencies = tunerViewModel.tuningFrequencies.value
+            val noteNames = tunerViewModel.noteNames.value
+            val preferFlat = tunerViewModel.preferFlat.value ?: false
             stringView?.setStrings(strings) { i ->
-                tuningFrequencies?.getNoteName(requireContext(), i, preferFlat = false) ?: i.toString()
+                noteNames?.getNoteName(requireContext(), i, preferFlat = preferFlat) ?: i.toString()
             }
             val selectedStringIndex = viewModel.selectedStringIndex.value ?: -1
             if (selectedStringIndex in strings.indices)
@@ -212,5 +212,22 @@ class TuningEditorFragment : Fragment() {
 //        Log.v("Tuner", "TuningEditorFragment.onStop()")
         tunerViewModel.stopSampling()
         super.onStop()
+    }
+
+    private fun updateNoteNamesInAllViews() {
+        val noteNames = tunerViewModel.noteNames.value ?: return
+        val preferFlat = tunerViewModel.preferFlat.value ?: false
+
+        noteSelector?.setNotes(-50, 50) { i ->
+            noteNames.getNoteName(requireContext(), i, preferFlat = preferFlat)
+        }
+        detectedNoteViewer?.setNotes(-50, 50) { i ->
+            noteNames.getNoteName(requireContext(), i, preferFlat = preferFlat)
+        }
+        viewModel.strings.value?.let { strings ->
+            stringView?.setStrings(strings) { i ->
+                noteNames.getNoteName(requireContext(), i, preferFlat = preferFlat)
+            }
+        }
     }
 }

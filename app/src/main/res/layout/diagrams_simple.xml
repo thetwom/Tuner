@@ -35,6 +35,8 @@
         android:maxLines="1"
         app:icon="@drawable/ic_guitar"
         app:iconPadding="12sp"
+        android:textSize="16sp"
+        app:iconSize="30sp"
         app:iconTint="?attr/colorPrimary"
         android:textAllCaps="false"
         android:textAlignment="textStart"

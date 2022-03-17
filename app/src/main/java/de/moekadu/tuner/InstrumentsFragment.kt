@@ -338,9 +338,16 @@ class InstrumentsFragment : Fragment() {
         val touchHelper = ItemTouchHelper(simpleTouchHelper)
         touchHelper.attachToRecyclerView(recyclerView)
 
-        tunerViewModel.tuningFrequencies.observe(viewLifecycleOwner) {
-            instrumentsPredefinedAdapter.setTuningFrequencies(it, recyclerView)
-            instrumentsCustomAdapter.setTuningFrequencies(it, recyclerView)
+        tunerViewModel.noteNames.observe(viewLifecycleOwner) {
+            val preferFlat = tunerViewModel.preferFlat.value ?: false
+            instrumentsPredefinedAdapter.setNoteNames(it, preferFlat = preferFlat, recyclerView)
+            instrumentsCustomAdapter.setNoteNames(it, preferFlat = preferFlat, recyclerView)
+        }
+
+        tunerViewModel.preferFlat.observe(viewLifecycleOwner) {
+            val noteNames = tunerViewModel.noteNames.value
+            instrumentsPredefinedAdapter.setNoteNames(noteNames, preferFlat = it, recyclerView)
+            instrumentsCustomAdapter.setNoteNames(noteNames, preferFlat = it, recyclerView)
         }
 
         instrumentsViewModel.instrument.observe(viewLifecycleOwner) {

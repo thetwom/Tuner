@@ -64,7 +64,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         set(value) {
             if (field != value) {
                 field = value
-                tuningFrequencyValues = TuningEqualTemperament(value)
+                tuningFrequencyValues = TuningEqualTemperament(12, 0, value)
             }
         }
 
@@ -90,7 +90,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     private val _pitchHistoryUpdateInterval = MutableLiveData(windowSize.toFloat() * (1f - overlap) / sampleSource.sampleRate)
     val pitchHistoryUpdateInterval: LiveData<Float> = _pitchHistoryUpdateInterval
 
-    private var tuningFrequencyValues = TuningEqualTemperament(a4Frequency)
+    private var tuningFrequencyValues = TuningEqualTemperament(12, 0, a4Frequency)
         set(value) {
             field = value
             pitchHistory.tuningFrequencies = value
@@ -105,6 +105,9 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     private val _tuningFrequencies = MutableLiveData<TuningFrequencies>().apply { value = tuningFrequencyValues }
     val tuningFrequencies: LiveData<TuningFrequencies>
         get() = _tuningFrequencies
+
+    private val _noteNames = MutableLiveData<NoteNames>().apply { value = noteNames12Tone }
+    val noteNames: LiveData<NoteNames> get() = _noteNames
 
     private val _standardDeviation = MutableLiveData(0f)
     val standardDeviation: LiveData<Float> get() = _standardDeviation
@@ -137,6 +140,9 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     val frequencyPlotRange: LiveData<FloatArray>
         get() = _frequencyPlotRange
 
+    private val _preferFlat = MutableLiveData(false)
+    val preferFlat: LiveData<Boolean> get() = _preferFlat
+
     private val pref = PreferenceManager.getDefaultSharedPreferences(application)
     
     private val onPreferenceChangedListener = object : SharedPreferences.OnSharedPreferenceChangeListener {
@@ -148,6 +154,9 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                 "a4_frequency" -> {
 //                    Log.v("Tuner", "TunerFragment.setupPreferenceListener: a4_frequency changed")
                     a4Frequency = sharedPreferences.getString("a4_frequency", "440")?.toFloat() ?: 440f
+                }
+                "prefer_flat" -> {
+                    _preferFlat.value = sharedPreferences.getBoolean(key, false)
                 }
                 "windowing" -> {
                     val value = sharedPreferences.getString(key, null)
@@ -334,6 +343,10 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 //        }
     }
 
+    fun setNoteNames(noteNames: NoteNames) {
+        _noteNames.value = noteNames
+    }
+
     private fun updateFrequencyPlotRange(targetNoteIndex: Int, currentFrequency: Float) {
         val minOld = frequencyPlotRangeValues[0]
         val maxOld = frequencyPlotRangeValues[1]
@@ -356,7 +369,8 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun changeTargetNoteSettings(tolerance: Int = NO_NEW_TOLERANCE,
-                                         tuningFrequencies: TuningFrequencies? = null) {
+                                         tuningFrequencies: TuningFrequencies? = null
+    ) {
         var changed = false
         if (tolerance != NO_NEW_TOLERANCE && tolerance != targetNoteValue.toleranceInCents) {
             targetNoteValue.toleranceInCents = tolerance
@@ -366,6 +380,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
             targetNoteValue.tuningFrequencies = tuningFrequencies
             changed = true
         }
+
         if (changed) {
             _targetNote.value = targetNoteValue
             pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
@@ -376,6 +391,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun loadSettingsFromSharedPreferences() {
         a4Frequency = pref.getString("a4_frequency", "440")?.toFloat() ?: 440f
+        _preferFlat.value = pref.getBoolean("prefer_flat", false)
         windowingFunction = when (pref.getString("windowing", "no_window")) {
             "no_window" -> WindowingFunction.Tophat
             "window_hamming" -> WindowingFunction.Hamming

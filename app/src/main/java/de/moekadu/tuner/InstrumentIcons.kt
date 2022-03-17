@@ -8,6 +8,7 @@ val instrumentIcons = arrayOf(
     InstrumentIcon(R.drawable.ic_eguitar, "eguitar"),
     InstrumentIcon(R.drawable.ic_bass, "bass"),
     InstrumentIcon(R.drawable.ic_violin, "violin"),
+    InstrumentIcon(R.drawable.ic_cello, "cello"),
     InstrumentIcon(R.drawable.ic_double_bass, "double bass"),
     InstrumentIcon(R.drawable.ic_trumpet, "trumpet"),
     InstrumentIcon(R.drawable.ic_saxophone, "saxophone"),

@@ -15,16 +15,16 @@ data class Instrument(private val name: CharSequence?, private val nameResource:
         }
     }
 
-    fun getStringsString(context: Context, tuningFrequencies: TuningFrequencies, preferFlat: Boolean): CharSequence {
+    fun getStringsString(context: Context, noteNames: NoteNames, preferFlat: Boolean): CharSequence {
         return if (isChromatic) {
             context.getString(R.string.chromatic)
         } else {
             val builder = SpannableStringBuilder()
             if (strings.isNotEmpty())
-                builder.append(tuningFrequencies.getNoteName(context, strings[0], preferFlat))
+                builder.append(noteNames.getNoteName(context, strings[0], preferFlat))
             for (i in 1 until strings.size) {
                 builder.append(" - ")
-                builder.append(tuningFrequencies.getNoteName(context, strings[i], preferFlat))
+                builder.append(noteNames.getNoteName(context, strings[i], preferFlat))
             }
             builder
 //            strings.joinToString(" - ", "", "") {

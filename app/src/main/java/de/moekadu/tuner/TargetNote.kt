@@ -1,6 +1,5 @@
 package de.moekadu.tuner
 
-import android.content.Context
 import kotlin.math.roundToInt
 
 class TargetNote {
@@ -169,7 +168,7 @@ class TargetNote {
 //        name = tuningFrequencies.getNoteName(frequency)
     }
 
-    fun getNoteName(context: Context, preferFlat: Boolean): CharSequence {
-        return tuningFrequencies.getNoteName(context, toneIndex, preferFlat)
-    }
+//    fun getNoteName(context: Context, preferFlat: Boolean): CharSequence {
+//        return tuningFrequencies.getNoteName(context, toneIndex, preferFlat)
+//    }
 }

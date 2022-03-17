@@ -109,13 +109,6 @@ class TunerFragmentSimple : Fragment() {
             }
         }
 
-//            if (toneIndex != StringView.NO_ACTIVE_TONE_INDEX)
-//                stringView?.activeToneIndex = toneIndex
-
-        //val stringNames = arrayOf<CharSequence>("A", "BBBBB", "CC", "D", "E", "F", "Q", "R")
-//        stringView?.setStrings(intArrayOf(1,2,3,4,5,6,3,4,3,4)) {
-//            stringNames[it]
-//        }
 //        viewModel.standardDeviation.observe(viewLifecycleOwner) { standardDeviation ->
 //            volumeMeter?.volume = log10(max(1e-12f, standardDeviation))
 //        }
@@ -129,12 +122,29 @@ class TunerFragmentSimple : Fragment() {
         }
 
         viewModel.tuningFrequencies.observe(viewLifecycleOwner) { tuningFrequencies ->
-            val noteFrequencies = FloatArray(100) { tuningFrequencies.getNoteFrequency(it - 50) }
-            pitchPlot?.setYTicks(noteFrequencies, false) { _, f -> tuningFrequencies.getNoteName(requireContext(), f) }
-            pitchPlot?.setYTouchLimits(noteFrequencies.first(), noteFrequencies.last(), 0L)
+            updatePitchPlotNoteNames()
+            // TODO: the range (100, -50 ..) should be taken directly from the tuningFrequencies
+            // TODO: should we extend the limits slightly, that the whole mark is visible?
+            val firstFrequency = tuningFrequencies.getNoteFrequency(-50)
+            val lastFrequency = tuningFrequencies.getNoteFrequency(-50 + 100)
+            pitchPlot?.setYTouchLimits(firstFrequency, lastFrequency, 0L)
+            // we do not have to call updatePitchPlotMarks, since this is fully handled by
+            // observing the target note
 
-            if (instrumentsViewModel.instrument.value?.instrument?.isChromatic == true)
-                setStringViewToChromatic()
+            // TODO: if the range limits come from the tuningFrequencies, we must enable the
+            //       following lines
+//            if (instrumentsViewModel.instrument.value?.instrument?.isChromatic == true)
+//                updateStringViewNoteNames()
+        }
+
+        viewModel.noteNames.observe(viewLifecycleOwner) { // noteNames ->
+            updatePitchPlotNoteNames()
+            updateStringViewNoteNames()
+        }
+
+        viewModel.preferFlat.observe(viewLifecycleOwner) {
+            updatePitchPlotNoteNames()
+            updateStringViewNoteNames()
         }
 
         instrumentsViewModel.instrument.observe(viewLifecycleOwner) { instrumentAndSection ->
@@ -144,13 +154,7 @@ class TunerFragmentSimple : Fragment() {
             //instrumentIcon?.setImageResource(instrument.iconResource)
             instrumentTitle?.setIconResource(instrument.iconResource)
             instrumentTitle?.text = instrument.getNameString(requireContext())
-            if (instrument.isChromatic) {
-                setStringViewToChromatic()
-            } else {
-                stringView?.setStrings(instrument.strings) { noteIndex ->
-                    viewModel.tuningFrequencies.value?.getNoteName(requireContext(), noteIndex, preferFlat = false)
-                }
-            }
+            updateStringViewNoteNames()
             //stringView?.setAutomaticControl(0L)
         }
 
@@ -158,11 +162,6 @@ class TunerFragmentSimple : Fragment() {
 //            Log.v("TestRecordFlow", "TunerFragment.sizeAsLiveData: $it")
             pitchPlot?.xRange(0f, 1.08f * it.toFloat(), PlotView.NO_REDRAW)
         }
-
-//        viewModel.pitchHistory.frequencyPlotRangeAveraged.observe(viewLifecycleOwner) {
-////            Log.v("TestRecordFlow", "TunerFragment.plotRange: ${it[0]} -- ${it[1]}")
-//            pitchPlot?.yRange(it[0], it[1], 600)
-//        }
 
         viewModel.frequencyPlotRange.observe(viewLifecycleOwner) {
 //            Log.v("Tuner", "TunerFragmentSimple observe frequencyPlotRange: ${it[0]} -- ${it[1]}")
@@ -182,33 +181,13 @@ class TunerFragmentSimple : Fragment() {
         }
 
         viewModel.targetNote.observe(viewLifecycleOwner) { targetNote ->
-            val nameMinusBound = getString(R.string.cent, -targetNote.toleranceInCents)
-            val namePlusBound = getString(R.string.cent, targetNote.toleranceInCents)
             viewModel.pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
                 tuningStatus = targetNote.getTuningStatus(frequency)
             }
 //            Log.v("Tuner", "TunerFragmentSimple: observing targetNote: tuningStatus=$tuningStatus")
-            setStyles(isPitchInactive, tuningStatus, false)
+            setStyles(isPitchInactive, tuningStatus, redraw = false)
 
-            pitchPlot?.setMarks(
-                null,
-                floatArrayOf(targetNote.frequencyLowerTolerance, targetNote.frequencyUpperTolerance),
-                MARK_ID_TOLERANCE,
-                1,
-                arrayOf(MarkAnchor.NorthWest, MarkAnchor.SouthWest),
-                MarkLabelBackgroundSize.FitLargest,
-                placeLabelsOutsideBoundsIfPossible = false,
-                redraw = false) { i, _, _ ->
-                when (i) {
-                    0 -> nameMinusBound
-                    1 -> namePlusBound
-                    else -> ""
-                }
-            }
-
-            pitchPlot?.setYMark(targetNote.frequency, targetNote.getNoteName(requireContext(), false), MARK_ID_FREQUENCY, MarkAnchor.East,
-                if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2, placeLabelsOutsideBoundsIfPossible = true,
-                redraw = true)
+            updatePitchPlotMarks(redraw = true)
 
 //            Log.v("Tuner", "TunerFragmentSimple: target note changed: stringIndex = ${targetNote.stringIndex}, toneIndex=${targetNote.toneIndex}")
             if (targetNote.stringIndex != -1)
@@ -225,14 +204,6 @@ class TunerFragmentSimple : Fragment() {
             setStyles(isPitchInactive, tuningStatus, redraw = true)
         }
 
-//        viewModel.pitchHistory.history.value?.let {
-//            if (it.size > 0) {
-//                pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), it.last()), redraw = false)
-//                pitchPlot?.setPointStyle(currentPointStyle, suppressInvalidate = true)
-//                pitchPlot?.plot(it)
-//            }
-//        }
-
         return view
     }
 
@@ -245,13 +216,6 @@ class TunerFragmentSimple : Fragment() {
     override fun onStop() {
         viewModel.stopSampling()
         super.onStop()
-    }
-
-    private fun setStringViewToChromatic() {
-        val tuningFrequencies = viewModel.tuningFrequencies.value ?: return
-        stringView?.setStrings(IntArray(100) {it - 50}.reversedArray()) { noteIndex ->
-            tuningFrequencies.getNoteName(requireContext(), noteIndex, preferFlat = false)
-        }
     }
 
     private fun setStyles(isPitchInactive: Boolean, tuningStatus: TargetNote.TuningStatus, redraw: Boolean) {
@@ -307,6 +271,88 @@ class TunerFragmentSimple : Fragment() {
         }
         if (redraw)
             pitchPlot?.invalidate()
+    }
+
+    private fun updatePitchPlotMarks(redraw: Boolean = true) {
+        val targetNote = viewModel.targetNote.value ?: return
+        val noteNames = viewModel.noteNames.value ?: return
+        val preferFlat = viewModel.preferFlat.value ?: false
+
+        val nameMinusBound = getString(R.string.cent, -targetNote.toleranceInCents)
+        val namePlusBound = getString(R.string.cent, targetNote.toleranceInCents)
+
+        pitchPlot?.setMarks(
+            null,
+            floatArrayOf(targetNote.frequencyLowerTolerance, targetNote.frequencyUpperTolerance),
+            MARK_ID_TOLERANCE,
+            1,
+            arrayOf(MarkAnchor.NorthWest, MarkAnchor.SouthWest),
+            MarkLabelBackgroundSize.FitLargest,
+            placeLabelsOutsideBoundsIfPossible = false,
+            redraw = false
+        ) { i, _, _ ->
+            when (i) {
+                0 -> nameMinusBound
+                1 -> namePlusBound
+                else -> ""
+            }
+        }
+
+        pitchPlot?.setYMark(
+            targetNote.frequency,
+            noteNames.getNoteName(requireContext(), targetNote.toneIndex, preferFlat = preferFlat),
+            MARK_ID_FREQUENCY,
+            MarkAnchor.East,
+            if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
+            placeLabelsOutsideBoundsIfPossible = true,
+            redraw = redraw
+        )
+    }
+
+    private fun updatePitchPlotNoteNames(redraw: Boolean = true) {
+        val noteNames = viewModel.noteNames.value ?: return
+        val preferFlat = viewModel.preferFlat.value ?: return
+        val tuningFrequencies = viewModel.tuningFrequencies.value ?: return
+
+        // TODO: the range (100, -50 ..) should be taken directly from the tuningFrequencies
+        val noteFrequencies = FloatArray(100) { tuningFrequencies.getNoteFrequency(it - 50) }
+
+        // Update ticks in pitch history plot
+        pitchPlot?.setYTicks(noteFrequencies, false) { _, f ->
+            val toneIndex = tuningFrequencies.getClosestToneIndex(f)
+            noteNames.getNoteName(requireContext(), toneIndex, preferFlat = preferFlat)
+        }
+
+        // Update active ymark in pitch history plot
+        viewModel.targetNote.value?.let { targetNote ->
+            pitchPlot?.setYMark(
+                targetNote.frequency,
+                noteNames.getNoteName(requireContext(), targetNote.toneIndex, preferFlat),
+                MARK_ID_FREQUENCY,
+                MarkAnchor.East,
+                if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
+                placeLabelsOutsideBoundsIfPossible = true,
+                redraw = redraw
+            )
+        }
+    }
+
+    private fun updateStringViewNoteNames() {
+        val instrument = instrumentsViewModel.instrument.value?.instrument ?: return
+        val noteNames = viewModel.noteNames.value ?: return
+        val preferFlat = viewModel.preferFlat.value ?: false
+        val ctx = context ?: return
+
+        if (instrument.isChromatic) {
+            // TODO: get range (100, -50, ..) from tuning frequencies
+            stringView?.setStrings(IntArray(100) {it - 50}.reversedArray()) { noteIndex ->
+                noteNames.getNoteName(ctx, noteIndex, preferFlat = preferFlat)
+            }
+        } else {
+            stringView?.setStrings(instrument.strings) { noteIndex ->
+                noteNames.getNoteName(ctx, noteIndex, preferFlat = preferFlat)
+            }
+        }
     }
 
     companion object{

@@ -19,8 +19,6 @@
 
 package de.moekadu.tuner
 
-import android.content.Context
-
 interface TuningFrequencies {
 
     fun getToneIndex(frequency : Float)  : Float
@@ -29,7 +27,6 @@ interface TuningFrequencies {
     fun getNoteFrequency(noteIndex : Int) : Float
     fun getNoteFrequency(noteIndex : Float) : Float
 
-    fun getNoteName(context: Context, frequency : Float) : CharSequence
-    //fun getNoteName(toneIndex : Int, preferFlat : Boolean) : CharSequence
-    fun getNoteName(context: Context, toneIndex : Int, preferFlat : Boolean) : CharSequence
+//    fun getNoteName(context: Context, frequency : Float) : CharSequence
+//    fun getNoteName(context: Context, toneIndex : Int, preferFlat : Boolean) : CharSequence
 }

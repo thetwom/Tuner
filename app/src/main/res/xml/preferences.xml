@@ -14,12 +14,12 @@
         android:summary="@string/system_appearance"
         />
 
-    <SwitchPreferenceCompat
-        app:key="screenon"
-        app:title="@string/keep_screen_on"
-        app:defaultValue="false"
-        app:icon="@drawable/ic_screen_on"
-        />
+        <SwitchPreferenceCompat
+            app:key="screenon"
+            app:title="@string/keep_screen_on"
+            app:defaultValue="false"
+            app:icon="@drawable/ic_screen_on"
+            />
 
     <EditTextPreference
         app:key="a4_frequency"
@@ -40,6 +40,12 @@
          app:icon="@drawable/ic_tolerance"
          />
 
+        <SwitchPreferenceCompat
+            app:key="prefer_flat"
+            app:title="@string/prefer_flat"
+            app:defaultValue="false"
+            app:icon="@drawable/ic_prefer_flat"
+            />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/expert">

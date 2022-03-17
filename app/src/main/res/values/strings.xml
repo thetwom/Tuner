@@ -68,16 +68,16 @@
     <string name="ukulele_gcea">Ukulele</string>
 
     <string name="c_note_name">C</string>
-    <string name="cis_note_name">-</string>
+    <string name="csharp_note_name">-</string>
     <string name="d_note_name">D</string>
-    <string name="dis_note_name">-</string>
+    <string name="dsharp_note_name">-</string>
     <string name="e_note_name">E</string>
     <string name="f_note_name">F</string>
-    <string name="fis_note_name">-</string>
+    <string name="fsharp_note_name">-</string>
     <string name="g_note_name">G</string>
-    <string name="gis_note_name">-</string>
+    <string name="gsharp_note_name">-</string>
     <string name="a_note_name">A</string>
-    <string name="ais_note_name">-</string>
+    <string name="asharp_note_name">-</string>
     <string name="b_note_name">B</string>
     <string name="violin_gdae">Violin</string>
     <string name="abort">Abort</string>
@@ -117,4 +117,12 @@
     <string name="no_instruments_for_sharing">There are no instruments, which can be shared.</string>
     <string name="load_from_disk">Load instruments from file</string>
     <string name="save_to_disk">Save instruments to file</string>
+    <string name="dflat_note_name">-</string>
+    <string name="eflat_note_name">-</string>
+    <string name="esharp_note_name">-</string>
+    <string name="gflat_note_name">-</string>
+    <string name="aflat_note_name">-</string>
+    <string name="bflat_note_name">-</string>
+    <string name="bsharp_note_name">-</string>
+    <string name="prefer_flat">Prefer \u266D over \u266F</string>
 </resources>
