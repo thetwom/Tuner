@@ -114,4 +114,7 @@
     <string name="bflat_note_name">-</string>
     <string name="bsharp_note_name">-</string>
     <string name="prefer_flat">Bevorzuge \u266D vor \u266F</string>
+    <string name="viola_cgda">Bratsche</string>
+    <string name="cello_cgda">Cello</string>
+    <string name="double_bass_eadg">Kontrabass</string>
 </resources>

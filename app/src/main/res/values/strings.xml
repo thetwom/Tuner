@@ -125,4 +125,7 @@
     <string name="bflat_note_name">-</string>
     <string name="bsharp_note_name">-</string>
     <string name="prefer_flat">Prefer \u266D over \u266F</string>
+    <string name="viola_cgda">Viola</string>
+    <string name="cello_cgda">Cello</string>
+    <string name="double_bass_eadg">Double bass</string>
 </resources>

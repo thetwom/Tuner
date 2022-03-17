@@ -34,7 +34,7 @@ import kotlin.math.floor
 import kotlin.math.max
 
 class TunerFragmentSimple : Fragment() {
-
+    // TODO: can we make lower strings in string view a bit thicker?
     private val viewModel: TunerViewModel by activityViewModels()
     private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
         InstrumentsViewModel.Factory(

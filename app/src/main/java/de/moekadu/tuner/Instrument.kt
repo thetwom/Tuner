@@ -119,6 +119,33 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
             stableId = -1 - instruments.size.toLong()
         )
     )
+    instruments.add(
+        Instrument(
+            name = null,
+            nameResource = R.string.viola_cgda,
+            strings = intArrayOf(-21, -14, -7, 0),
+            iconResource = R.drawable.ic_violin,
+            stableId = -1 - instruments.size.toLong()
+        )
+    )
+    instruments.add(
+        Instrument(
+            name = null,
+            nameResource = R.string.cello_cgda,
+            strings = intArrayOf(-33, -26, -19, -12),
+            iconResource = R.drawable.ic_cello,
+            stableId = -1 - instruments.size.toLong()
+        )
+    )
+    instruments.add(
+        Instrument(
+            name = null,
+            nameResource = R.string.double_bass_eadg,
+            strings = intArrayOf(-41, -36, -31, -26),
+            iconResource = R.drawable.ic_double_bass,
+            stableId = -1 - instruments.size.toLong()
+        )
+    )
 //    instruments.add(
 //        Instrument(
 //            name = "Test instrument",
