@@ -20,12 +20,27 @@
 package de.moekadu.tuner
 
 interface TuningFrequencies {
+    /// Get name of the tuning
+    fun getTuningNameResourceId(): Int?
 
-    fun getToneIndex(frequency : Float)  : Float
-    fun getClosestToneIndex(frequency : Float)  : Int
+    /// Get further description of the tuning
+    fun getTuningDescriptionResourceId(): Int?
 
-    fun getNoteFrequency(noteIndex : Int) : Float
-    fun getNoteFrequency(noteIndex : Float) : Float
+    fun getToneIndex(frequency: Float): Float
+    fun getClosestToneIndex(frequency: Float): Int
+
+    fun getNoteFrequency(noteIndex: Int): Float
+    fun getNoteFrequency(noteIndex: Float): Float
+
+    /// Get the minimum tone index.
+    fun getToneIndexBegin(): Int
+    /// Get the maximum tone index.
+    fun getToneIndexEnd(): Int
+    /// Return circle of fifth instance if the underlying tuning can provide one.
+    fun getCircleOfFifths(): TuningCircleOfFifths?
+
+    /// Return the ratios as rational numbers (first one 1/1 and octave 2/1 must be included) if possible
+    fun getRationalNumberRatios(): Array<RationalNumber>?
 
 //    fun getNoteName(context: Context, frequency : Float) : CharSequence
 //    fun getNoteName(context: Context, toneIndex : Int, preferFlat : Boolean) : CharSequence

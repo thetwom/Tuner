@@ -101,18 +101,6 @@ class NoteNames(private val noteNames: IntArray,
         else if (noteDist == 1)
             noteModifier = "\u266D"
 
-//        if (noteName == "-" && preferFlat) {
-//            noteName = context.getString(noteNames[(noteIndexWithinOctave + 1) % noteNames.size])
-//            if (noteIndexWithinOctave + 1 == noteNames.size)
-//                octaveIndex += 1
-//            noteModifier = "\u266D"
-//        } else if (noteName == "-") {
-//            noteName = context.getString(noteNames[(noteIndexWithinOctave - 1) % noteNames.size])
-//            if (noteIndexWithinOctave == 0)
-//                octaveIndex -= 1
-//            noteModifier = "\u266F"
-//        }
-
         val octaveText = octaveIndex.toString()
         val result = SpannableString(noteName + noteModifier + octaveText)
         result.setSpan(SuperscriptSpan(), noteName.length + noteModifier.length, result.length, 0)

@@ -64,7 +64,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         set(value) {
             if (field != value) {
                 field = value
-                tuningFrequencyValues = TuningEqualTemperament(12, 0, value)
+                tuningFrequencyValues = TuningEqualTemperament(numNotesPerOctave = 12, noteIndexAtReferenceFrequency = 0, referenceFrequency = value)
             }
         }
 
@@ -90,7 +90,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     private val _pitchHistoryUpdateInterval = MutableLiveData(windowSize.toFloat() * (1f - overlap) / sampleSource.sampleRate)
     val pitchHistoryUpdateInterval: LiveData<Float> = _pitchHistoryUpdateInterval
 
-    private var tuningFrequencyValues = TuningEqualTemperament(12, 0, a4Frequency)
+    private var tuningFrequencyValues = TuningEqualTemperament(numNotesPerOctave = 12, noteIndexAtReferenceFrequency = 0, referenceFrequency = a4Frequency)
         set(value) {
             field = value
             pitchHistory.tuningFrequencies = value

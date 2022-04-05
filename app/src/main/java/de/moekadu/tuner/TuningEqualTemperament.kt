@@ -29,13 +29,44 @@ import kotlin.math.roundToInt
  * @param noteIndexAtReferenceFrequency Index of note which should have the reference frequency
  * @param referenceFrequency Frequency of note at given index (noteIndexAtReferenceFrequency)
  */
-class TuningEqualTemperament(private val numNotesPerOctave: Int = 12,
-                             private val noteIndexAtReferenceFrequency: Int = 0, // 0 for 12-tone is a4
-                             private val referenceFrequency: Float = 440f
+class TuningEqualTemperament(
+    private val nameResourceId: Int? = null,
+    private val descriptionResourceId: Int? = null,
+    private val numNotesPerOctave: Int = 12,
+    private val noteIndexAtReferenceFrequency: Int = 0, // 0 for 12-tone is a4
+    private val referenceFrequency: Float = 440f,
+    private val frequencyMin: Float = 16.3f,  // 16.4Hz would be c0 if the a4 is 440Hz
+    private val frequencyMax: Float = 16744.1f  // 16744Hz would be c10 if the a4 is 440Hz
 ) : TuningFrequencies {
     /// Ratio between two neighboring half tones
     private val halfToneRatio = 2.0f.pow(1.0f / numNotesPerOctave)
 
+    override fun getCircleOfFifths(): TuningCircleOfFifths? {
+        return if (numNotesPerOctave == 12)
+            circleOfFifthsEDO12
+        else
+            null
+    }
+
+    override fun getRationalNumberRatios(): Array<RationalNumber>? {
+        return null
+    }
+
+    override fun getTuningNameResourceId(): Int? {
+        return nameResourceId
+    }
+
+    override fun getTuningDescriptionResourceId(): Int? {
+        return descriptionResourceId
+    }
+
+    override fun getToneIndexBegin(): Int {
+        return getClosestToneIndex(frequencyMin)
+    }
+
+    override fun getToneIndexEnd(): Int {
+        return getClosestToneIndex(frequencyMax) + 1
+    }
     /** Get tone index for the given frequency.
      *
      * @note We return a float here since a frequency can lay between two tones

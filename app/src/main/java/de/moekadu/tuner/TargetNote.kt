@@ -161,6 +161,8 @@ class TargetNote {
     /// Recompute current target status.
     private fun recomputeTargetNoteProperties(toneIndex: Int, toleranceInCents: Int, tuningFrequencies: TuningFrequencies) {
         frequency = tuningFrequencies.getNoteFrequency(toneIndex)
+        // TODO: this must change, to have the correct definition of cents in all temperaments
+        //   The cent freq ratio is 2.0.pow(1.0/1200.0)
         frequencyLowerTolerance = tuningFrequencies.getNoteFrequency(
             toneIndex - toleranceInCents / 100f)
         frequencyUpperTolerance = tuningFrequencies.getNoteFrequency(
