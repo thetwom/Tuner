@@ -2,27 +2,6 @@ package de.moekadu.tuner
 
 class TuningFactory {
     companion object {
-        enum class Tuning {
-            EDO12,
-            Pythagorean,
-            Pure,
-            QuarterCommaMeanTone,
-            ThirdCommaMeanTone,
-            WerckmeisterIII,
-            WerckmeisterIV,
-            WerckmeisterV,
-            WerckmeisterVI,
-            Kirnberger1,
-            Kirnberger2,
-            Kirnberger3,
-            Neidhardt1,
-            Neidhardt2,
-            Neidhardt3,
-            // Neidhardt4,
-            Valotti,
-            Young2
-        }
-
         fun create(
             tuning: Tuning,
             rootNoteIndex: Int,
@@ -31,6 +10,7 @@ class TuningFactory {
         ): TuningFrequencies {
             return when (tuning) {
                 Tuning.EDO12 -> TuningEqualTemperament(
+                    tuning,
                     R.string.equal_temperament_12,
                     R.string.equal_temperament_12_desc,
                     12,
@@ -38,6 +18,7 @@ class TuningFactory {
                     referenceFrequency
                 )
                 Tuning.Pythagorean -> TuningRatioBased(
+                    tuning,
                     circleOfFifthsPythagorean,
                     R.string.pythagorean_tuning,
                     null,
@@ -46,6 +27,7 @@ class TuningFactory {
                     referenceFrequency
                 )
                 Tuning.Pure -> TuningRatioBased(
+                    tuning,
                     rationalNumberTuningPure,
                     R.string.pure_tuning,
                     R.string.pure_tuning_desc,
@@ -54,6 +36,7 @@ class TuningFactory {
                     referenceFrequency
                 )
                 Tuning.QuarterCommaMeanTone -> TuningRatioBased(
+                    tuning,
                     circleOfFifthsQuarterCommaMeanTone,
                     R.string.quarter_comma_mean_tone,
                     R.string.quarter_comma_mean_tone_desc,
@@ -62,6 +45,7 @@ class TuningFactory {
                     referenceFrequency
                 )
                 Tuning.ThirdCommaMeanTone -> TuningRatioBased(
+                    tuning,
                     circleOfFifthsThirdCommaMeanTone,
                     R.string.third_comma_mean_tone,
                     R.string.third_comma_mean_tone_desc,
@@ -70,6 +54,7 @@ class TuningFactory {
                     referenceFrequency
                 )
                 Tuning.WerckmeisterIII -> TuningRatioBased(
+                    tuning,
                     circleOfFifthsWerckmeisterIII,
                     R.string.werckmeister_iii,
                     R.string.werckmeister_iii_desc,
@@ -78,6 +63,7 @@ class TuningFactory {
                     referenceFrequency
                 )
                 Tuning.WerckmeisterIV -> TuningRatioBased(
+                    tuning,
                     circleOfFifthsWerckmeisterIV,
                     R.string.werckmeister_iv,
                     R.string.werckmeister_iv_desc,
@@ -86,6 +72,7 @@ class TuningFactory {
                     referenceFrequency
                 )
                 Tuning.WerckmeisterV -> TuningRatioBased(
+                    tuning,
                     circleOfFifthsWerckmeisterV,
                     R.string.werckmeister_v,
                     R.string.werckmeister_v_desc,
@@ -94,6 +81,7 @@ class TuningFactory {
                     referenceFrequency
                 )
                 Tuning.WerckmeisterVI -> TuningRatioBased(
+                    tuning,
                     rationalNumberTuningWerckmeisterVI,
                     R.string.werckmeister_vi,
                     R.string.werckmeister_vi_desc,
@@ -102,6 +90,7 @@ class TuningFactory {
                     referenceFrequency
                 )
                 Tuning.Kirnberger1 -> TuningRatioBased(
+                    tuning,
                     circleOfFifthsKirnberger1,
                     R.string.kirnberger1,
                     R.string.kirnberger1_desc,
@@ -110,6 +99,7 @@ class TuningFactory {
                     referenceFrequency
                 )
                 Tuning.Kirnberger2 -> TuningRatioBased(
+                    tuning,
                     circleOfFifthsKirnberger2,
                     R.string.kirnberger2,
                     R.string.kirnberger2_desc,
@@ -118,6 +108,7 @@ class TuningFactory {
                     referenceFrequency
                 )
                 Tuning.Kirnberger3 -> TuningRatioBased(
+                    tuning,
                     circleOfFifthsKirnberger3,
                     R.string.kirnberger3,
                     R.string.kirnberger3_desc,
@@ -126,6 +117,7 @@ class TuningFactory {
                     referenceFrequency
                 )
                 Tuning.Neidhardt1 -> TuningRatioBased(
+                    tuning,
                     circleOfFifthsNeidhardt1,
                     R.string.neidhardt1,
                     R.string.neidhardt1_desc,
@@ -134,6 +126,7 @@ class TuningFactory {
                     referenceFrequency
                 )
                 Tuning.Neidhardt2 -> TuningRatioBased(
+                    tuning,
                     circleOfFifthsNeidhardt2,
                     R.string.neidhardt2,
                     R.string.neidhardt2_desc,
@@ -142,6 +135,7 @@ class TuningFactory {
                     referenceFrequency
                 )
                 Tuning.Neidhardt3 -> TuningRatioBased(
+                    tuning,
                     circleOfFifthsNeidhardt3,
                     R.string.neidhardt3,
                     R.string.neidhardt3_desc,
@@ -150,6 +144,7 @@ class TuningFactory {
                     referenceFrequency
                 )
 //                Tuning.Neidhardt4 -> TuningRatioBased(
+//                    tuning,
 //                    circleOfFifthsNeidthardt4,
 //                    null,
 //                    null,
@@ -158,6 +153,7 @@ class TuningFactory {
 //                    referenceFrequency
 //                )
                 Tuning.Valotti -> TuningRatioBased(
+                    tuning,
                     circleOfFifthsValotti,
                     R.string.valotti,
                     null,
@@ -166,6 +162,7 @@ class TuningFactory {
                     referenceFrequency
                 )
                 Tuning.Young2 -> TuningRatioBased(
+                    tuning,
                     circleOfFifthsYoung2,
                     R.string.young2,
                     null,

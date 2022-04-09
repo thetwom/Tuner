@@ -59,6 +59,7 @@
         <entry key="app/src/main/res/layout/instrument_entry.xml" value="0.1" />
         <entry key="app/src/main/res/layout/instrument_entry_section.xml" value="0.4083333333333333" />
         <entry key="app/src/main/res/layout/instruments.xml" value="0.3333333333333333" />
+        <entry key="app/src/main/res/layout/reference_note_preference.xml" value="0.2259963768115942" />
         <entry key="app/src/main/res/layout/tuning_editor.xml" value="0.1" />
         <entry key="app/src/main/res/menu/instruments.xml" value="0.34739583333333335" />
         <entry key="app/src/main/res/menu/tuning_editor.xml" value="3.242857142857143" />

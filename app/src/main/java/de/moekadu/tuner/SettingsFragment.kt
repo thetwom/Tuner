@@ -22,7 +22,7 @@ package de.moekadu.tuner
 import android.app.AlertDialog
 import android.content.res.Resources
 import android.os.Bundle
-import android.text.InputType
+import android.text.SpannableStringBuilder
 import android.view.*
 import android.widget.TextView
 import androidx.preference.*
@@ -49,6 +49,17 @@ fun indexToTolerance(index: Int): Int {
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
+  private var preferFlatPreference: SwitchPreferenceCompat? = null
+  private var referenceNotePreference: ReferenceNotePreference? = null
+//  override fun onCreate(savedInstanceState: Bundle?) {
+//    super.onCreate(savedInstanceState)
+//
+//    setFragmentResultListener("reference_note_tag") {key, result ->
+//      Log.v("Tuner", "SettingsFragment: request result: AAAAAA, $key, $result")
+//    }
+//
+//  }
+
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     setPreferencesFromResource(R.xml.preferences, rootKey)
     setHasOptionsMenu(true)
@@ -61,7 +72,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
   }
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-
     val appearance = findPreference<ListPreference?>("appearance")
       ?: throw RuntimeException("No appearance preference")
 
@@ -92,13 +102,27 @@ class SettingsFragment : PreferenceFragmentCompat() {
       true
     }
 
-    val a4Frequency = findPreference<EditTextPreference?>("a4_frequency")
-    a4Frequency?.setOnBindEditTextListener { editText ->
-      editText.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+//    val a4Frequency = findPreference<EditTextPreference?>("a4_frequency")
+//    a4Frequency?.setOnBindEditTextListener { editText ->
+//      editText.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+//    }
+//    a4Frequency?.summaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
+//      getString(R.string.hertz_str, preference.text ?: "440")
+//    }
+
+    preferFlatPreference = findPreference("prefer_flat") ?: throw RuntimeException("No prefer_flat preference")
+    preferFlatPreference?.setOnPreferenceChangeListener { preference, newValue ->
+//      Log.v("Tuner", "SettingsFragment: preferFlatPreference changed")
+      setReferenceNoteSummary(preferFlat = newValue as Boolean)
+      true
     }
-    a4Frequency?.summaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
-      getString(R.string.hertz_str, preference.text ?: "440")
+
+    referenceNotePreference = findPreference("reference_note") ?: throw RuntimeException("no reference_note preference")
+    referenceNotePreference?.setOnReferenceNoteChangedListener { preference, frequency, toneIndex ->
+//      Log.v("Tuner", "SettingsFragment: referenceNotePreference changed")
+      setReferenceNoteSummary(frequency, toneIndex)
     }
+    setReferenceNoteSummary()
 
     val tolerance = findPreference<SeekBarPreference>("tolerance_in_cents") ?: throw RuntimeException("No tolerance preference")
     tolerance.setOnPreferenceChangeListener { preference, newValue ->
@@ -191,7 +215,23 @@ class SettingsFragment : PreferenceFragmentCompat() {
       }
       false
     }
+
     return super.onCreateView(inflater, container, savedInstanceState)
+  }
+
+  override fun onDisplayPreferenceDialog(preference: Preference) {
+    if (parentFragmentManager.findFragmentByTag("reference_note_tag") != null)
+      return
+
+    when (preference) {
+      is ReferenceNotePreference -> {
+        val preferFlat = preferFlatPreference?.isChecked ?: false
+        val dialog = ReferenceNotePreferenceDialog.newInstance(preference.key, "reference_note_tag", preferFlat)
+        dialog.show(parentFragmentManager, "reference_note_tag")
+        dialog.setTargetFragment(this, 0)
+      }
+      else -> super.onDisplayPreferenceDialog(preference)
+    }
   }
 
   private fun getWindowSizeSummary(windowSizeIndex: Int): String {
@@ -208,5 +248,26 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
   private fun getMaxNoiseSummary(percent: Int): String {
     return getString(R.string.max_noise_summary, percent)
+  }
+
+  private fun setReferenceNoteSummary(frequency: Float = Float.MAX_VALUE, toneIndex: Int = Int.MAX_VALUE, preferFlat: Boolean? = null) {
+//    Log.v("Tuner", "SettingsFragment.setReferenceNoteSummary: frequency=$frequency, toneIndex=$toneIndex, preferFlat=$preferFlat, f2=${referenceNotePreference?.value?.frequency}, t2=${referenceNotePreference?.value?.toneIndex}")
+    context?.let { ctx ->
+      val f = if (frequency == Float.MAX_VALUE)
+        referenceNotePreference?.value?.frequency ?: 440f
+      else
+        frequency
+      val t = if (toneIndex == Int.MAX_VALUE)
+        referenceNotePreference?.value?.toneIndex ?: 0
+      else
+        toneIndex
+
+      val pF = preferFlat ?: (preferFlatPreference?.isChecked ?: false)
+      //val f = referenceFrequency?.value?.frequency ?: 440f
+      //val t = referenceFrequency?.value?.noteIndex ?: 0
+      val build = SpannableStringBuilder().append(noteNames12Tone.getNoteName(ctx, t, preferFlat = pF))
+        .append(" = ${getString(R.string.hertz_2f, f)}")
+      referenceNotePreference?.summary = build
+    }
   }
 }

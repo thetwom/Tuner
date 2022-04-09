@@ -4,6 +4,7 @@
     <!--    <string name="percent">%d&#x200A;\%</string>-->
     <string name="percent" translatable="false">%d&#x200A;%%</string>
     <string name="hertz" translatable="false">%.0f&#x200A;Hz</string>
+    <string name="hertz_2f" translatable="false">%.2f&#x200A;Hz</string>
     <string name="hertz_str" translatable="false">%s&#x200A;Hz</string>
     <string name="seconds" translatable="false">%.2f&#x200A;s</string>
 
@@ -159,4 +160,6 @@
     <string name="neidhardt3_desc">For a big city, 1732</string>
     <string name="valotti">Valotti</string>
     <string name="young2">Young 2</string>
+    <string name="reference_frequency">Reference frequency</string>
+    <string name="frequency">Frequency</string>
 </resources>

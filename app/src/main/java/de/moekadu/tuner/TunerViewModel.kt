@@ -60,13 +60,13 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         get() = pitchHistoryDurationToPitchSamples(
             pitchHistoryDuration, sampleSource.sampleRate, windowSize, overlap)
 
-    var a4Frequency = 440f
-        set(value) {
-            if (field != value) {
-                field = value
-                tuningFrequencyValues = TuningEqualTemperament(numNotesPerOctave = 12, noteIndexAtReferenceFrequency = 0, referenceFrequency = value)
-            }
-        }
+//    var a4Frequency = 440f
+//        set(value) {
+//            if (field != value) {
+//                field = value
+//                tuningFrequencyValues = TuningEqualTemperament(numNotesPerOctave = 12, noteIndexAtReferenceFrequency = 0, referenceFrequency = value)
+//            }
+//        }
 
     var windowSize = 4096
         set(value) {
@@ -90,7 +90,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     private val _pitchHistoryUpdateInterval = MutableLiveData(windowSize.toFloat() * (1f - overlap) / sampleSource.sampleRate)
     val pitchHistoryUpdateInterval: LiveData<Float> = _pitchHistoryUpdateInterval
 
-    private var tuningFrequencyValues = TuningEqualTemperament(numNotesPerOctave = 12, noteIndexAtReferenceFrequency = 0, referenceFrequency = a4Frequency)
+    private var tuningFrequencyValues: TuningFrequencies = TuningFactory.create(Tuning.EDO12, -9, 0, 440f)
         set(value) {
             field = value
             pitchHistory.tuningFrequencies = value
@@ -149,11 +149,18 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
             if (sharedPreferences == null)
                 return
-//            Log.v("Tuner", "TunerFragment.setupPreferenceListener: key=$key")
+//            Log.v("Tuner", "TunerViewModel.setupPreferenceListener: key=$key")
             when (key) {
-                "a4_frequency" -> {
-//                    Log.v("Tuner", "TunerFragment.setupPreferenceListener: a4_frequency changed")
-                    a4Frequency = sharedPreferences.getString("a4_frequency", "440")?.toFloat() ?: 440f
+//                "a4_frequency" -> {
+////                    Log.v("Tuner", "TunerFragment.setupPreferenceListener: a4_frequency changed")
+//                    a4Frequency = sharedPreferences.getString("a4_frequency", "440")?.toFloat() ?: 440f
+//                }
+                "reference_note" -> {
+                    val referenceFrequencyString = sharedPreferences.getString("reference_note", null)
+//                    Log.v("Tuner", "TunerViewModel.setupPreferenceListener: reference_note changed: $referenceFrequencyString")
+                    val referenceFrequency = ReferenceNotePreference.getFrequencyFromValue(referenceFrequencyString)
+                    val indexOfReferenceNote = ReferenceNotePreference.getToneIndexFromValue(referenceFrequencyString)
+                    changeTuning(indexOfReferenceNote = indexOfReferenceNote, referenceFrequency = referenceFrequency)
                 }
                 "prefer_flat" -> {
                     _preferFlat.value = sharedPreferences.getBoolean(key, false)
@@ -205,7 +212,9 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 //            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
 //        }
 //        sampleSource.testFunction = { t ->
-//            800f * Random.nextFloat()
+//            val freq = 440f
+//            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
+//            //800f * Random.nextFloat()
 //            //1f
 //        }
 
@@ -389,8 +398,23 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private fun changeTuning(rootNote: Int? = null, indexOfReferenceNote: Int? = null,
+                             referenceFrequency: Float? = null, tuning: Tuning? = null) {
+        val tuningResolved = tuning ?: tuningFrequencyValues.getTuning()
+        val rootNoteResolved = rootNote ?: tuningFrequencyValues.getRootNote()
+        val indexOfReferenceNoteResolved = indexOfReferenceNote ?: tuningFrequencyValues.getIndexOfReferenceNote()
+        val referenceFrequencyResolved = referenceFrequency ?: tuningFrequencyValues.getReferenceFrequency()
+        tuningFrequencyValues = TuningFactory.create(tuningResolved, rootNoteResolved, indexOfReferenceNoteResolved, referenceFrequencyResolved)
+        _tuningFrequencies.value = tuningFrequencyValues
+    }
+
     private fun loadSettingsFromSharedPreferences() {
-        a4Frequency = pref.getString("a4_frequency", "440")?.toFloat() ?: 440f
+        val referenceFrequencyString = pref.getString("reference_note", null)
+        val referenceFrequency = ReferenceNotePreference.getFrequencyFromValue(referenceFrequencyString)
+        val indexOfReferenceNote = ReferenceNotePreference.getToneIndexFromValue(referenceFrequencyString)
+        changeTuning(indexOfReferenceNote = indexOfReferenceNote, referenceFrequency = referenceFrequency)
+
+        // a4Frequency = pref.getString("a4_frequency", "440")?.toFloat() ?: 440f
         _preferFlat.value = pref.getBoolean("prefer_flat", false)
         windowingFunction = when (pref.getString("windowing", "no_window")) {
             "no_window" -> WindowingFunction.Tophat

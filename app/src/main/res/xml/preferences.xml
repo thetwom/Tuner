@@ -21,13 +21,20 @@
             app:icon="@drawable/ic_screen_on"
             />
 
-    <EditTextPreference
-        app:key="a4_frequency"
-        app:title="@string/a4_frequency"
-        android:defaultValue="440"
-        android:summary="440 Hz"
-        app:icon="@drawable/ic_frequency_a"
-        />
+<!--    <EditTextPreference-->
+<!--        app:key="a4_frequency"-->
+<!--        app:title="@string/a4_frequency"-->
+<!--        android:defaultValue="440"-->
+<!--        android:summary="440 Hz"-->
+<!--        app:icon="@drawable/ic_frequency_a"-->
+<!--        />-->
+
+        <de.moekadu.tuner.ReferenceNotePreference
+            app:key="reference_note"
+            app:title="@string/reference_frequency"
+            app:icon="@drawable/ic_frequency_a"
+            android:defaultValue="440.0 0"
+            />
 
      <SeekBarPreference
          android:key="tolerance_in_cents"

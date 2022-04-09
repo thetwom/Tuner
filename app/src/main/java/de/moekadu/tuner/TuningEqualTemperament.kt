@@ -27,14 +27,15 @@ import kotlin.math.roundToInt
  *
  * @param numNotesPerOctave Number of notes per octave
  * @param noteIndexAtReferenceFrequency Index of note which should have the reference frequency
- * @param referenceFrequency Frequency of note at given index (noteIndexAtReferenceFrequency)
+ * @param _referenceFrequency Frequency of note at given index (noteIndexAtReferenceFrequency)
  */
 class TuningEqualTemperament(
+    private val _tuning: Tuning,
     private val nameResourceId: Int? = null,
     private val descriptionResourceId: Int? = null,
     private val numNotesPerOctave: Int = 12,
     private val noteIndexAtReferenceFrequency: Int = 0, // 0 for 12-tone is a4
-    private val referenceFrequency: Float = 440f,
+    private val _referenceFrequency: Float = 440f,
     private val frequencyMin: Float = 16.3f,  // 16.4Hz would be c0 if the a4 is 440Hz
     private val frequencyMax: Float = 16744.1f  // 16744Hz would be c10 if the a4 is 440Hz
 ) : TuningFrequencies {
@@ -50,6 +51,22 @@ class TuningEqualTemperament(
 
     override fun getRationalNumberRatios(): Array<RationalNumber>? {
         return null
+    }
+
+    override fun getTuning(): Tuning {
+        return _tuning
+    }
+
+    override fun getRootNote(): Int {
+        return 0
+    }
+
+    override fun getIndexOfReferenceNote(): Int {
+        return noteIndexAtReferenceFrequency
+    }
+
+    override fun getReferenceFrequency(): Float {
+        return _referenceFrequency
     }
 
     override fun getTuningNameResourceId(): Int? {
@@ -74,7 +91,7 @@ class TuningEqualTemperament(
      * @return Note index.
      */
     override fun getToneIndex(frequency : Float)  : Float {
-        return log(frequency / referenceFrequency, halfToneRatio) + noteIndexAtReferenceFrequency
+        return log(frequency / _referenceFrequency, halfToneRatio) + noteIndexAtReferenceFrequency
     }
 
     /** Get tone index which is closest to the given frequency.
@@ -93,7 +110,7 @@ class TuningEqualTemperament(
      * @return Frequency of note index.
      */
     override fun getNoteFrequency(noteIndex : Int) : Float {
-       return referenceFrequency * halfToneRatio.pow(noteIndex - noteIndexAtReferenceFrequency)
+       return _referenceFrequency * halfToneRatio.pow(noteIndex - noteIndexAtReferenceFrequency)
     }
 
     /** Get frequency of note with the given index, where the index can also be in between two notes.
@@ -103,6 +120,6 @@ class TuningEqualTemperament(
      * @return Frequency for note index.
     */
    override fun getNoteFrequency(noteIndex : Float) : Float {
-       return referenceFrequency * halfToneRatio.pow(noteIndex - noteIndexAtReferenceFrequency)
+       return _referenceFrequency * halfToneRatio.pow(noteIndex - noteIndexAtReferenceFrequency)
     }
 }

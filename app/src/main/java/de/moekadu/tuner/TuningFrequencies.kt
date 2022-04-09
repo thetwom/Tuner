@@ -20,6 +20,11 @@
 package de.moekadu.tuner
 
 interface TuningFrequencies {
+    fun getTuning(): Tuning
+    fun getRootNote(): Int
+    fun getIndexOfReferenceNote(): Int
+    fun getReferenceFrequency(): Float
+
     /// Get name of the tuning
     fun getTuningNameResourceId(): Int?
 
