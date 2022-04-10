@@ -150,4 +150,5 @@
     <string name="young2">Young 2</string>
     <string name="reference_frequency">Referenzfrequenz</string>
     <string name="frequency">Frequenz</string>
+    <string name="standard_pitch">Setze Kammerton</string>
 </resources>

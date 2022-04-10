@@ -9,6 +9,7 @@ import android.view.View
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.preference.DialogPreference
 import androidx.preference.PreferenceDialogFragmentCompat
+import com.google.android.material.button.MaterialButton
 
 class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
     companion object {
@@ -27,6 +28,7 @@ class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
 
     private var referenceNoteView: NoteSelector? = null
     private var editTextView: AppCompatEditText? = null
+    private var standardPitch: MaterialButton? = null
     private var restoredToneIndex: Int = Int.MAX_VALUE
     private var restoredFrequencyString: String? = null
     private var preferFlat = false
@@ -56,12 +58,19 @@ class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
         var activeToneIndex = restoredToneIndex
         var currentFrequency = restoredFrequencyString?.toFloatOrNull()
 
+        referenceNoteView = view.findViewById(R.id.reference_note)
+        editTextView = view.findViewById(R.id.reference_frequency)
+        standardPitch = view.findViewById(R.id.standard_pitch)
+
         context?.let {ctx ->
-            referenceNoteView = view.findViewById(R.id.reference_note)
-            editTextView = view.findViewById(R.id.reference_frequency)
             referenceNoteView?.setNotes(-50, 50) {
                 noteNames12Tone.getNoteName(ctx, it, preferFlat = preferFlat)
             }
+        }
+
+        standardPitch?.setOnClickListener {
+            referenceNoteView?.setActiveTone(0, 200L)
+            editTextView?.setText(440f.toString())
         }
 
         when (preference) {

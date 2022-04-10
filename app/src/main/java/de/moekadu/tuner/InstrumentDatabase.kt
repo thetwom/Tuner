@@ -281,7 +281,6 @@ class InstrumentDatabase {
                             instruments.add(instrument)
                             numInstrumentsRead += 1
                         }
-                        strings = null
                         nameLength = -1
                         instrumentName = ""
                         strings = null

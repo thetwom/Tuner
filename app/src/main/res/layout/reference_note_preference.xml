@@ -24,4 +24,15 @@
         app:layout_constraintTop_toBottomOf="@id/reference_note"
         android:hint="@string/frequency"
         />
+
+     <com.google.android.material.button.MaterialButton
+         android:id="@+id/standard_pitch"
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
+         android:layout_margin="8dp"
+         app:layout_constraintTop_toBottomOf="@id/reference_frequency"
+         android:text="@string/standard_pitch"
+         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+         />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

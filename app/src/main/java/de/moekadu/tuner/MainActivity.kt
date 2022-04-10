@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity() {
             loadSimpleOrScientificFragment()
         setDisplayHomeButton()
 
-        supportFragmentManager.addFragmentOnAttachListener { fragmentManager, fragment ->
+        supportFragmentManager.addFragmentOnAttachListener { _, _ ->
             setDisplayHomeButton()
         }
 

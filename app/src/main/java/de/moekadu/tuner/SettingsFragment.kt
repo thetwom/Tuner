@@ -111,14 +111,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
 //    }
 
     preferFlatPreference = findPreference("prefer_flat") ?: throw RuntimeException("No prefer_flat preference")
-    preferFlatPreference?.setOnPreferenceChangeListener { preference, newValue ->
+    preferFlatPreference?.setOnPreferenceChangeListener { _, newValue ->
 //      Log.v("Tuner", "SettingsFragment: preferFlatPreference changed")
       setReferenceNoteSummary(preferFlat = newValue as Boolean)
       true
     }
 
     referenceNotePreference = findPreference("reference_note") ?: throw RuntimeException("no reference_note preference")
-    referenceNotePreference?.setOnReferenceNoteChangedListener { preference, frequency, toneIndex ->
+    referenceNotePreference?.setOnReferenceNoteChangedListener { _, frequency, toneIndex ->
 //      Log.v("Tuner", "SettingsFragment: referenceNotePreference changed")
       setReferenceNoteSummary(frequency, toneIndex)
     }
@@ -267,7 +267,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
       //val t = referenceFrequency?.value?.noteIndex ?: 0
       val build = SpannableStringBuilder().append(noteNames12Tone.getNoteName(ctx, t, preferFlat = pF))
         .append(" = ${getString(R.string.hertz_2f, f)}")
-      referenceNotePreference?.summary = build
+      // use .toString() to delete the superscript-formatting, since superscripting numbers won't
+      // fit into the vertical space of the summary line
+      referenceNotePreference?.summary = build.toString()
     }
   }
 }

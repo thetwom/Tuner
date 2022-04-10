@@ -162,4 +162,5 @@
     <string name="young2">Young 2</string>
     <string name="reference_frequency">Reference frequency</string>
     <string name="frequency">Frequency</string>
+    <string name="standard_pitch">Set standard pitch</string>
 </resources>
