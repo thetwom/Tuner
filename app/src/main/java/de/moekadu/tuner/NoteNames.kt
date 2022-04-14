@@ -70,9 +70,12 @@ class NoteNames(private val noteNames: IntArray,
      *   indices give a distance of one half tone.
      * @param preferFlat If the best fitting note is flat or sharp and this parameter is true,
      *   the "flat" version is preferred. Else the sharp version is returned.
+     *  @param withOctaveIndex If true, we return teh standart notation, e.g. A#4, if false
+     *   we do not add the octave index, so it would e.g. A#.
      * @return Note name.
      */
-    fun getNoteName(context: Context, toneIndex : Int, preferFlat : Boolean) : CharSequence {
+    fun getNoteName(context: Context, toneIndex : Int, preferFlat : Boolean,
+                    withOctaveIndex: Boolean = true) : CharSequence {
         var octaveIndex = (toneIndex + arrayIndexForNoteIndex0) / noteNames.size + octavesForNoteIndex0
         var noteIndexWithinOctave = (toneIndex + arrayIndexForNoteIndex0) % noteNames.size
         if (noteIndexWithinOctave < 0) {
@@ -101,9 +104,14 @@ class NoteNames(private val noteNames: IntArray,
         else if (noteDist == 1)
             noteModifier = "\u266D"
 
-        val octaveText = octaveIndex.toString()
-        val result = SpannableString(noteName + noteModifier + octaveText)
-        result.setSpan(SuperscriptSpan(), noteName.length + noteModifier.length, result.length, 0)
+        val result = if (withOctaveIndex) {
+            val octaveText = octaveIndex.toString()
+            SpannableString(noteName + noteModifier + octaveText).apply {
+                setSpan(SuperscriptSpan(), noteName.length + noteModifier.length, length, 0)
+            }
+        } else {
+            SpannableString(noteName + noteModifier)
+        }
         return result
     }
 

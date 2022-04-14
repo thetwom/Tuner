@@ -15,9 +15,8 @@ class TuningRatioBasedTest {
         val numNotesPerOctave = ratios.size - 1
         val octRatio = (ratios.last() / ratios.first()).toFloat()
         val tuning = TuningRatioBased(
+            Tuning.EDO12, // not important here
             ratios,
-            null,
-            null,
             rootNoteIndex,
             noteIndexAtReferenceFrequency,
             referenceFrequency,
@@ -76,9 +75,8 @@ class TuningRatioBasedTest {
         testNoteIndex: Int
     ) {
         val tuning = TuningRatioBased(
+            Tuning.EDO12, // not important here
             ratios,
-            null,
-            null,
             rootNoteIndex,
             noteIndexAtReferenceFrequency,
             referenceFrequency,
@@ -133,7 +131,8 @@ class TuningRatioBasedTest {
         val freqMin = ratios[0].toFloat() * referenceFrequency -0.001f
         val freqMax = ratios.last().toFloat() * referenceFrequency + 0.001f
         val tuning = TuningRatioBased(
-            ratios, null, null,
+            Tuning.EDO12, // not important here
+            ratios,
             rootNoteIndex, noteIndexAtReferenceFrequency, referenceFrequency,
             freqMin,
             freqMax

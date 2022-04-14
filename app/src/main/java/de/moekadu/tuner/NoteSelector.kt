@@ -159,6 +159,12 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         isAntiAlias = true
     }
 
+    /** Factor for scaling the text size
+     *  e.g. if there are superscripts, it makes sense to scale the text down a bit so that
+     *  it fits nicely into the choice box.
+     */
+    private var scaleText = 0.7f
+
     private var rectangleRadius = 0f
 
     private val widthFactor = 1.2f
@@ -190,7 +196,7 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             windowPaint.strokeWidth = ta.getDimension(R.styleable.NoteSelector_windowStrokeWidth, 3f)
 
             textPadding = ta.getDimension(R.styleable.NoteSelector_textPadding, 4f)
-
+            scaleText = ta.getFloat(R.styleable.NoteSelector_scaleText, scaleText)
             rectangleRadius = ta.getDimension(R.styleable.NoteSelector_rectangleRadius, rectangleRadius)
 
             ta.recycle()
@@ -341,7 +347,7 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             textPaint.textSize = totalTextHeight
             val fm = fontMetrics[index]
             textPaint.getFontMetrics(fm)
-            textPaint.textSize = floor(0.7f * totalTextHeight * totalTextHeight / (fm.bottom - fm.top))
+            textPaint.textSize = floor(scaleText * totalTextHeight * totalTextHeight / (fm.bottom - fm.top))
             //textPaint.textSize = floor(s * s / (labelPaint[0].descent() - labelPaint[0].ascent()))
             textPaint.getFontMetrics(fm)
         }

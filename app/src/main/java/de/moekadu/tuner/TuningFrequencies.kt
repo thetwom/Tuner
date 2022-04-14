@@ -25,12 +25,6 @@ interface TuningFrequencies {
     fun getIndexOfReferenceNote(): Int
     fun getReferenceFrequency(): Float
 
-    /// Get name of the tuning
-    fun getTuningNameResourceId(): Int?
-
-    /// Get further description of the tuning
-    fun getTuningDescriptionResourceId(): Int?
-
     fun getToneIndex(frequency: Float): Float
     fun getClosestToneIndex(frequency: Float): Int
 

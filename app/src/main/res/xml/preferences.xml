@@ -61,9 +61,14 @@
             app:key="scientific"
             app:title="@string/scientific_mode"
             app:defaultValue="false"
-            android:icon="@drawable/ic_baseline_developer_board"
+            app:icon="@drawable/ic_baseline_developer_board"
             />
 
+        <de.moekadu.tuner.TemperamentPreference
+            app:key="temperament"
+            app:title="@string/temperament"
+            app:icon="@drawable/ic_temperament"
+            />
 
         <SeekBarPreference
         android:key="num_moving_average"

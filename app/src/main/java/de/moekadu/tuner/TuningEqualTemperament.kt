@@ -31,8 +31,6 @@ import kotlin.math.roundToInt
  */
 class TuningEqualTemperament(
     private val _tuning: Tuning,
-    private val nameResourceId: Int? = null,
-    private val descriptionResourceId: Int? = null,
     private val numNotesPerOctave: Int = 12,
     private val noteIndexAtReferenceFrequency: Int = 0, // 0 for 12-tone is a4
     private val _referenceFrequency: Float = 440f,
@@ -67,14 +65,6 @@ class TuningEqualTemperament(
 
     override fun getReferenceFrequency(): Float {
         return _referenceFrequency
-    }
-
-    override fun getTuningNameResourceId(): Int? {
-        return nameResourceId
-    }
-
-    override fun getTuningDescriptionResourceId(): Int? {
-        return descriptionResourceId
     }
 
     override fun getToneIndexBegin(): Int {

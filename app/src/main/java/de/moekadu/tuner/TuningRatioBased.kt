@@ -2,11 +2,13 @@ package de.moekadu.tuner
 
 import kotlin.math.*
 
+// we must better give:
+// - rootNoteIndex to be the absolute index of the root note
+// - noteIndexAtReferenceFrequency to be the aboslute index of the noteIndex at reference
+
 open class TuningRatioBased(
     private val _tuning: Tuning,
     private val ratios: DoubleArray,
-    private val nameResourceId: Int?,
-    private val descriptionResourceId: Int?,
     private val rootNoteIndex: Int = -9, // the frequency ratios are based on this index
     private val noteIndexAtReferenceFrequency: Int = 0, // 0 for 12-tone is a4
     private val _referenceFrequency: Float = 440f,
@@ -24,16 +26,12 @@ open class TuningRatioBased(
     constructor(
         tuning: Tuning,
         circleOfFifths: TuningCircleOfFifths,
-        nameResourceId: Int?,
-        descriptionResourceId: Int?,
         rootNoteIndex: Int,
         noteIndexAtReferenceFrequency: Int,
         referenceFrequency: Float
     ) : this(
         tuning,
         circleOfFifths.getRatios(),
-        nameResourceId,
-        descriptionResourceId,
         rootNoteIndex,
         noteIndexAtReferenceFrequency,
         referenceFrequency
@@ -44,16 +42,12 @@ open class TuningRatioBased(
     constructor(
         tuning: Tuning,
         rationalNumbers: Array<RationalNumber>,
-        nameResourceId: Int?,
-        descriptionResourceId: Int?,
         rootNoteIndex: Int,
         noteIndexAtReferenceFrequency: Int,
         referenceFrequency: Float
     ) : this(
         tuning,
         rationalNumbers.map {it.toDouble()}.toDoubleArray(),
-        nameResourceId,
-        descriptionResourceId,
         rootNoteIndex,
         noteIndexAtReferenceFrequency,
         referenceFrequency
@@ -62,15 +56,16 @@ open class TuningRatioBased(
     }
 
     init {
-        require(rootNoteIndex >= 0)
-        require(rootNoteIndex < ratios.size - 1)
+        //require(rootNoteIndex >= 0)
+        //require(rootNoteIndex < ratios.size - 1)
 
         val numNotesPerOctave = ratios.size - 1
         val octaveRatio = ratios.last() / ratios.first()
         var ratioIndexReference = (noteIndexAtReferenceFrequency - rootNoteIndex) % numNotesPerOctave
         if (ratioIndexReference < 0)
-            ratioIndexReference += (ratios.size - 1)
+            ratioIndexReference += numNotesPerOctave
 
+        // recompute ratios such that the referenceNote comes first
         val ratiosRef = DoubleArray(numNotesPerOctave) {
             if (it + ratioIndexReference < ratios.size)
                 (ratios[it + ratioIndexReference] / ratios[ratioIndexReference])
@@ -136,14 +131,6 @@ open class TuningRatioBased(
 
     override fun getReferenceFrequency(): Float {
         return _referenceFrequency
-    }
-
-    override fun getTuningNameResourceId(): Int? {
-        return nameResourceId
-    }
-
-    override fun getTuningDescriptionResourceId(): Int? {
-        return descriptionResourceId
     }
 
     override fun getToneIndexBegin(): Int {

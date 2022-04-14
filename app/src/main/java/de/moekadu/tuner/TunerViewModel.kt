@@ -162,6 +162,13 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                     val indexOfReferenceNote = ReferenceNotePreference.getToneIndexFromValue(referenceFrequencyString)
                     changeTuning(indexOfReferenceNote = indexOfReferenceNote, referenceFrequency = referenceFrequency)
                 }
+                "temperament" -> {
+                    val temperamentString = sharedPreferences.getString("temperament", null)
+//                    Log.v("Tuner", "TunerViewModel.setupPreferenceListener: temperament changed: temperamentString")
+                    val tuning = TemperamentPreference.getTuningFromValue(temperamentString)
+                    val indexOfRootNote = TemperamentPreference.getRootNoteIndexFromValue(temperamentString)
+                    changeTuning(tuning = tuning, rootNote = indexOfRootNote)
+                }
                 "prefer_flat" -> {
                     _preferFlat.value = sharedPreferences.getBoolean(key, false)
                 }
@@ -412,7 +419,11 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         val referenceFrequencyString = pref.getString("reference_note", null)
         val referenceFrequency = ReferenceNotePreference.getFrequencyFromValue(referenceFrequencyString)
         val indexOfReferenceNote = ReferenceNotePreference.getToneIndexFromValue(referenceFrequencyString)
-        changeTuning(indexOfReferenceNote = indexOfReferenceNote, referenceFrequency = referenceFrequency)
+
+        val temperamentString = pref.getString("temperament", null)
+        val tuning = TemperamentPreference.getTuningFromValue(temperamentString)
+        val indexOfRootNote = TemperamentPreference.getRootNoteIndexFromValue(temperamentString)
+        changeTuning(tuning = tuning, rootNote = indexOfRootNote, indexOfReferenceNote = indexOfReferenceNote, referenceFrequency = referenceFrequency)
 
         // a4Frequency = pref.getString("a4_frequency", "440")?.toFloat() ?: 440f
         _preferFlat.value = pref.getBoolean("prefer_flat", false)

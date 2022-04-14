@@ -51,6 +51,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
   private var preferFlatPreference: SwitchPreferenceCompat? = null
   private var referenceNotePreference: ReferenceNotePreference? = null
+  private var temperamentPreference: TemperamentPreference? = null
 //  override fun onCreate(savedInstanceState: Bundle?) {
 //    super.onCreate(savedInstanceState)
 //
@@ -113,7 +114,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
     preferFlatPreference = findPreference("prefer_flat") ?: throw RuntimeException("No prefer_flat preference")
     preferFlatPreference?.setOnPreferenceChangeListener { _, newValue ->
 //      Log.v("Tuner", "SettingsFragment: preferFlatPreference changed")
-      setReferenceNoteSummary(preferFlat = newValue as Boolean)
+        setReferenceNoteSummary(preferFlat = newValue as Boolean)
+        setTemperamentSummary(preferFlat = newValue)
       true
     }
 
@@ -123,6 +125,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
       setReferenceNoteSummary(frequency, toneIndex)
     }
     setReferenceNoteSummary()
+
+    temperamentPreference = findPreference("temperament") ?: throw RuntimeException("no temperament preference")
+    temperamentPreference?.setOnTemperamentChangedListener { _, tuning, rootNote ->
+//      Log.v("Tuner", "SettingsFragment: temperament changed")
+          setTemperamentSummary(tuning, rootNote)
+      }
+      setTemperamentSummary()
 
     val tolerance = findPreference<SeekBarPreference>("tolerance_in_cents") ?: throw RuntimeException("No tolerance preference")
     tolerance.setOnPreferenceChangeListener { preference, newValue ->
@@ -230,10 +239,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
         dialog.show(parentFragmentManager, "reference_note_tag")
         dialog.setTargetFragment(this, 0)
       }
+      is TemperamentPreference -> {
+          val preferFlat = preferFlatPreference?.isChecked ?: false
+        val dialog = TemperamentPreferenceDialog.newInstance(preference.key, "temperament_tag", preferFlat = preferFlat)
+        dialog.show(parentFragmentManager, "temperament_tag")
+        dialog.setTargetFragment(this, 0)
+      }
       else -> super.onDisplayPreferenceDialog(preference)
     }
   }
-
   private fun getWindowSizeSummary(windowSizeIndex: Int): String {
     val s = indexToWindowSize(windowSizeIndex)
     // the factor 2 in the next line is used since only one wave inside the window is not enough for
@@ -272,4 +286,30 @@ class SettingsFragment : PreferenceFragmentCompat() {
       referenceNotePreference?.summary = build.toString()
     }
   }
+
+    private fun setTemperamentSummary(tuning: Tuning? = null, rootNote: Int = Int.MAX_VALUE, preferFlat: Boolean? = null) {
+//    Log.v("Tuner", "SettingsFragment.setTemperamentSummary")
+        context?.let { ctx ->
+            val r = if (rootNote == Int.MAX_VALUE)
+                temperamentPreference?.value?.rootNote ?: -9
+            else
+                rootNote
+
+            val t = tuning ?: temperamentPreference?.value?.tuning ?: Tuning.EDO12
+            val pF = preferFlat ?: (preferFlatPreference?.isChecked ?: false)
+
+            val n = ctx.getString(getTuningNameResourceId(t))
+            // val dId = getTuningDescriptionResourceId(t)
+            val rN = noteNames12Tone.getNoteName(ctx, r, pF, withOctaveIndex = false)
+
+            temperamentPreference?.summary = ctx.getString(R.string.tuning_summary_no_desc, n, rN)
+//            if (dId != null) {
+//                val d = ctx.getString(dId)
+//                ctx.getString(R.string.tuning_summary, n, d, rN)
+//            } else {
+//                ctx.getString(R.string.tuning_summary_no_desc, n, rN)
+//            }
+        }
+    }
+
 }

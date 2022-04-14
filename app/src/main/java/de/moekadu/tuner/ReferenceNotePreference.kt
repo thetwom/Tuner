@@ -16,7 +16,7 @@ class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
         private const val REQUEST_KEY = "reference_note_preference_dialog.request_key"
         private const val PREFER_FLAT_KEY = "reference_note_preference_dialog.prefer_flat"
         fun newInstance(key: String, requestCode: String, preferFlat: Boolean): ReferenceNotePreferenceDialog{
-            val args = Bundle(1)
+            val args = Bundle(3)
             args.putString(ARG_KEY, key)
             args.putString(REQUEST_KEY, requestCode)
             args.putBoolean(PREFER_FLAT_KEY, preferFlat)
@@ -29,7 +29,7 @@ class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
     private var referenceNoteView: NoteSelector? = null
     private var editTextView: AppCompatEditText? = null
     private var standardPitch: MaterialButton? = null
-    private var restoredToneIndex: Int = Int.MAX_VALUE
+    private var restoredToneIndex = Int.MAX_VALUE
     private var restoredFrequencyString: String? = null
     private var preferFlat = false
 
@@ -95,13 +95,13 @@ class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
     override fun onDialogClosed(positiveResult: Boolean) {
         if (positiveResult) {
             arguments?.getString(REQUEST_KEY)?.let {
-                val bundle = Bundle(2)
+                // val bundle = Bundle(2)
                 val toneIndex = referenceNoteView?.activeToneIndex ?: 0
                 val frequency = editTextView?.text.toString().toFloatOrNull()
 
                 if (frequency != null) {
-                    bundle.putInt("tone index", toneIndex)
-                    bundle.putFloat("reference frequency", frequency)
+                    // bundle.putInt("tone index", toneIndex)
+                    // bundle.putFloat("reference frequency", frequency)
 //                    Log.v("Tuner", "ReferenceNotePreference.onDialogClosed (Settings), posres=$positiveResult, bundle=$bundle, requestKey=$it")
                     (preference as ReferenceNotePreference).setValueFromData(frequency, toneIndex)
                     // setFragmentResult(it, bundle)

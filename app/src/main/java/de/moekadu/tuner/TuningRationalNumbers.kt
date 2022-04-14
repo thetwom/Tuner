@@ -31,3 +31,19 @@ val rationalNumberTuningPure = arrayOf(
     RationalNumber(15, 8), // B
     RationalNumber(2, 1) // C2
 )
+
+val rationalNumberTuningTest = arrayOf(
+    RationalNumber(20, 20), // C
+    RationalNumber(21, 20), // C#
+    RationalNumber(22, 20), // D
+    RationalNumber(23, 20), // Eb
+    RationalNumber(24, 20), // E
+    RationalNumber(25, 20), // F
+    RationalNumber(26, 20), // F#
+    RationalNumber(27, 20), // G
+    RationalNumber(28, 20), // G#
+    RationalNumber(29, 20), // A
+    RationalNumber(30, 20), // Bb (sometimes 16.0/9.0)
+    RationalNumber(31, 20), // B
+    RationalNumber(40, 20) // C2
+)
