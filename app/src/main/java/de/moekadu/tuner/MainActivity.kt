@@ -33,8 +33,6 @@ import androidx.fragment.app.replace
 import androidx.preference.PreferenceManager
 
 class MainActivity : AppCompatActivity() {
-    // TODO: Allow setting minimum and maximum allowed note
-    // ... more settings possible?
 
     enum class TunerMode {Simple, Scientific, Unknown}
 

@@ -99,13 +99,13 @@ class TuningCircleOfFifthsTest {
         }
     }
 
-    @Test
-    fun neidhardt4() {
-        val ratios = circleOfFifthsNeidhardtIV.getRatios()
-        ratios.zip(notes).forEach { p ->
-            println("Neidhardt 4: ${p.second}: ${cent(p.first)}")
-        }
-    }
+//    @Test
+//    fun neidhardt4() {
+//        val ratios = circleOfFifthsNeidhardtIV.getRatios()
+//        ratios.zip(notes).forEach { p ->
+//            println("Neidhardt 4: ${p.second}: ${cent(p.first)}")
+//        }
+//    }
 
     @Test
     fun valotti() {

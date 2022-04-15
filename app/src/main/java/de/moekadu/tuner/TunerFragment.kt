@@ -138,10 +138,12 @@ class TunerFragment : Fragment() {
 
         viewModel.tuningFrequencies.observe(viewLifecycleOwner) { tuningFrequencies ->
             updatePitchPlotNoteNames()
-            // TODO: the range (100, -50 ..) should be taken directly from the tuningFrequencies
             // TODO: should we extend the limits slightly, that the whole mark is visible?
-            val noteFrequencies = FloatArray(100) { tuningFrequencies.getNoteFrequency(it - 50) }
-            pitchPlot?.setYTouchLimits(noteFrequencies.first(), noteFrequencies.last(), 0L)
+            val firstFrequencyIndex = tuningFrequencies.getToneIndexBegin()
+            val lastFrequencyIndex = tuningFrequencies.getToneIndexEnd() - 1
+            val firstFrequency = tuningFrequencies.getNoteFrequency(firstFrequencyIndex)
+            val lastFrequency = tuningFrequencies.getNoteFrequency(lastFrequencyIndex)
+            pitchPlot?.setYTouchLimits(firstFrequency, lastFrequency, 0L)
         }
 
         viewModel.noteNames.observe(viewLifecycleOwner) { // noteNames ->
@@ -329,8 +331,10 @@ class TunerFragment : Fragment() {
         val preferFlat = viewModel.preferFlat.value ?: return
         val tuningFrequencies = viewModel.tuningFrequencies.value ?: return
 
-        // TODO: the range (100, -50 ..) should be taken directly from the tuningFrequencies
-        val noteFrequencies = FloatArray(100) { tuningFrequencies.getNoteFrequency(it - 50) }
+        val numNotes = tuningFrequencies.getToneIndexEnd() - tuningFrequencies.getToneIndexBegin()
+        val noteFrequencies = FloatArray(numNotes) {
+            tuningFrequencies.getNoteFrequency(tuningFrequencies.getToneIndexBegin() + it)
+        }
 
         // Update ticks in pitch history plot
         pitchPlot?.setYTicks(noteFrequencies, false) { _, f ->

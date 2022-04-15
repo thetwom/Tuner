@@ -134,13 +134,13 @@ class TuningFactory {
                     noteIndexAtReferenceFrequency,
                     referenceFrequency
                 )
-//                Tuning.Test -> TuningRatioBased(
-//                    tuning,
-//                    rationalNumberTuningTest,
-//                    rootNoteIndex,
-//                    noteIndexAtReferenceFrequency,
-//                    referenceFrequency
-//                )
+                Tuning.Test -> TuningRatioBased(
+                    tuning,
+                    rationalNumberTuningTest,
+                    rootNoteIndex,
+                    noteIndexAtReferenceFrequency,
+                    referenceFrequency
+                )
             }
         }
     }

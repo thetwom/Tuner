@@ -155,4 +155,42 @@ class TuningRatioBasedTest {
         assertEquals(0, tuning.getClosestToneIndex(0.1f * freqMin))
         assertEquals(ratios.size - 1, tuning.getClosestToneIndex(10f * freqMax))
     }
+
+    @Test
+    fun testTwelveTone() {
+
+        val referenceNoteIndex = 0
+        val ratios = doubleArrayOf(15.0/15.0, 16.0/15.0, 17.0/15.0, 18.0/15.0, 19.0/15.0, 20.0/15.0,
+            21.0/15.0, 22.0/15.0, 23.0/15.0, 24.0/15.0, 25.0/15.0, 26.0/15.0, 30.0/15.0)
+        val fRef = 440f
+        //val fMin = fRef / 100
+        //val fMax = fRef * 100
+        val numNotesPerOctave = ratios.size - 1
+
+        for (rootNote in -20 .. 20) {
+            val tuning = TuningRatioBased(
+                Tuning.EDO12, // not important here
+                ratios, rootNote, referenceNoteIndex, fRef // , fMin, fMax
+            )
+
+            // check that the resulting frequencies are independent on which octave the reference note is
+            for (r in -5..-5) {
+                val tuning2 = TuningRatioBased(
+                    Tuning.EDO12, // not important here
+                    ratios, rootNote, referenceNoteIndex + r * numNotesPerOctave, fRef // , fMin, fMax
+                )
+                val numNotes = tuning.getToneIndexEnd() - tuning.getToneIndexBegin()
+                val numNotes2 = tuning2.getToneIndexEnd() - tuning2.getToneIndexBegin()
+                assertEquals(numNotes, numNotes2)
+
+                for (i in 0 until numNotes) {
+                    val iNote = tuning.getToneIndexBegin() + i
+                    val iNote2 = tuning2.getToneIndexBegin() + i
+                    val freq = tuning.getNoteFrequency(iNote)
+                    val freq2 = tuning2.getNoteFrequency(iNote2)
+                    assertEquals(freq, freq2, 1 - 12f)
+                }
+            }
+        }
+    }
 }

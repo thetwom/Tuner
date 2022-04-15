@@ -19,7 +19,7 @@ enum class Tuning {
     // Neidhardt4,
     Valotti,
     Young2,
-    // Test
+    Test
 }
 
 fun getTuningNameResourceId(tuning: Tuning) = when(tuning) {
@@ -40,7 +40,7 @@ fun getTuningNameResourceId(tuning: Tuning) = when(tuning) {
     Tuning.Neidhardt3 -> R.string.neidhardt3
     Tuning.Valotti -> R.string.valotti
     Tuning.Young2 -> R.string.young2
-    // Tuning.Test -> R.string.test_tuning
+     Tuning.Test -> R.string.test_tuning
 }
 
 fun getTuningDescriptionResourceId(tuning: Tuning) = when(tuning) {
@@ -61,6 +61,6 @@ fun getTuningDescriptionResourceId(tuning: Tuning) = when(tuning) {
     Tuning.Neidhardt3 -> R.string.neidhardt3_desc
     Tuning.Valotti -> null
     Tuning.Young2 -> null
-    // Tuning.Test -> null
+    Tuning.Test -> null
 }
 

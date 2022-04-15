@@ -20,8 +20,6 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 
 class TuningEditorFragment : Fragment() {
-    // TODO: more instrument icon
-
     private val tunerViewModel: TunerViewModel by activityViewModels()
     private val viewModel: TuningEditorViewModel by activityViewModels()
     private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {

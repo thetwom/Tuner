@@ -36,7 +36,7 @@ class TemperamentSpinnerAdapter(context: Context) : ArrayAdapter<TemperamentProp
     }
 
     override fun getCount(): Int {
-        return tunings.size
+        return tunings.size - 1 // DISABLE LAST TUNING SINCE IT IS THE TEST TUNING
     }
 
     override fun getItem(position: Int): TemperamentProperties? {

@@ -13,7 +13,7 @@ class PitchHistoryTest {
 
     @Test
     fun addData() {
-        val pitchHistory = PitchHistory(10, TuningEqualTemperament())
+        val pitchHistory = PitchHistory(10, TuningEqualTemperament(Tuning.EDO12))
         pitchHistory.maxNumFaultyValues = 2
 
         pitchHistory.appendValue(440f, 0.0f)

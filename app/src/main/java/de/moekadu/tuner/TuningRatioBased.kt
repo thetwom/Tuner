@@ -2,14 +2,10 @@ package de.moekadu.tuner
 
 import kotlin.math.*
 
-// we must better give:
-// - rootNoteIndex to be the absolute index of the root note
-// - noteIndexAtReferenceFrequency to be the aboslute index of the noteIndex at reference
-
 open class TuningRatioBased(
     private val _tuning: Tuning,
     private val ratios: DoubleArray,
-    private val rootNoteIndex: Int = -9, // the frequency ratios are based on this index
+    private val rootNoteIndex: Int = -9, // the first ratio of ratios is set at this index (-9 for 12-tone is c)
     private val noteIndexAtReferenceFrequency: Int = 0, // 0 for 12-tone is a4
     private val _referenceFrequency: Float = 440f,
     frequencyMin: Float = 16.3f, // this would be c0 if the noteIndexAtReferenceFrequency is 0 (~16.4Hz for equal temperament)
@@ -107,6 +103,7 @@ open class TuningRatioBased(
         frequencies = FloatArray(negativeIndices.size + positiveIndices.size)
         negativeIndices.reversed().forEachIndexed { index, f -> frequencies[index] = f }
         positiveIndices.forEachIndexed { index, f -> frequencies[negativeIndices.size + index] = f }
+//        Log.v("Tuner", "TuningRatioBased.init: end")
     }
 
     override fun getCircleOfFifths(): TuningCircleOfFifths? {
