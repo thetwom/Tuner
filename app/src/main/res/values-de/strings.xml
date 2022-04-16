@@ -151,4 +151,8 @@
     <string name="reference_frequency">Referenzfrequenz</string>
     <string name="frequency">Frequenz</string>
     <string name="standard_pitch">Setze Kammerton</string>
+    <string name="temperament">Stimmung</string>
+    <string name="root_note">Grundton</string>
+    <string name="tuning_summary">%s, %s, %s</string>
+    <string name="tuning_summary_no_desc">%s, %s</string>
 </resources>

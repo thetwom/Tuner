@@ -8,8 +8,8 @@ open class TuningRatioBased(
     private val rootNoteIndex: Int = -9, // the first ratio of ratios is set at this index (-9 for 12-tone is c)
     private val noteIndexAtReferenceFrequency: Int = 0, // 0 for 12-tone is a4
     private val _referenceFrequency: Float = 440f,
-    frequencyMin: Float = 16.3f, // this would be c0 if the noteIndexAtReferenceFrequency is 0 (~16.4Hz for equal temperament)
-    frequencyMax: Float = 16744.1f) // this would be c10 if the noteIndexAtReferenceFrequency is 0 (~16744Hz for equal temperament)
+    frequencyMin: Float = 16.0f, // this would be c0 if the noteIndexAtReferenceFrequency is 0 (~16.4Hz for equal temperament)
+    frequencyMax: Float = 17000.0f) // this would be c10 if the noteIndexAtReferenceFrequency is 0 (~16744Hz for equal temperament)
     : TuningFrequencies {
 
     private var noteIndexBegin = Int.MAX_VALUE
@@ -122,6 +122,9 @@ open class TuningRatioBased(
         return rootNoteIndex
     }
 
+    override fun getNumberOfNotesPerOctave(): Int {
+        return ratios.size - 1
+    }
     override fun getIndexOfReferenceNote(): Int {
        return noteIndexAtReferenceFrequency
     }

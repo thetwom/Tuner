@@ -24,6 +24,7 @@ interface TuningFrequencies {
     fun getRootNote(): Int
     fun getIndexOfReferenceNote(): Int
     fun getReferenceFrequency(): Float
+    fun getNumberOfNotesPerOctave(): Int
 
     fun getToneIndex(frequency: Float): Float
     fun getClosestToneIndex(frequency: Float): Int

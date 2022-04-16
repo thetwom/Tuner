@@ -5,10 +5,16 @@ import android.content.res.TypedArray
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
+import android.widget.AdapterView
 import android.widget.Spinner
+import android.widget.TextView
 import androidx.preference.DialogPreference
 import androidx.preference.PreferenceDialogFragmentCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import kotlin.math.log
 import kotlin.math.max
+import kotlin.math.pow
 
 class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
     companion object {
@@ -23,11 +29,22 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
             fragment.arguments = args
             return fragment
         }
+
+        private fun computeCent(ratio: Float): Float {
+            val centRatio = 2.0.pow(1.0/1200).toFloat()
+            return log(ratio, centRatio)
+        }
     }
 
     private var spinner: Spinner? = null
     private var rootNote: NoteSelector? = null
+    private var rootNoteTitle: TextView? = null
+    private var noteTable: RecyclerView? = null
+    private val tableAdapter = TemperamentTableAdapter()
+
     private var preferFlat = false
+
+    private var centArray = Array(0) { 0f }
 
     private var restoredRootNote = Int.MAX_VALUE
     private var restoredTemperament: Tuning? = null
@@ -60,14 +77,8 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
 
         spinner = view.findViewById(R.id.spinner)
         rootNote = view.findViewById(R.id.root_note)
-
-        context?.let { ctx ->
-            spinner?.adapter = TemperamentSpinnerAdapter(ctx)
-
-            rootNote?.setNotes(-9, 3) {
-                noteNames12Tone.getNoteName(ctx, it, preferFlat = preferFlat, withOctaveIndex = false)
-            }
-        }
+        rootNoteTitle = view.findViewById(R.id.root_note_title)
+        noteTable = view.findViewById(R.id.note_table)
 
         when (preference) {
             is TemperamentPreference -> {
@@ -83,9 +94,38 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
         if (restoredTemperament == null)
             restoredTemperament = Tuning.EDO12
 
+        context?.let { ctx ->
+            spinner?.adapter = TemperamentSpinnerAdapter(ctx)
+
+            rootNote?.setNotes(-9, 3) {
+                noteNames12Tone.getNoteName(ctx, it, preferFlat = preferFlat, withOctaveIndex = false)
+            }
+
+            noteTable?.layoutManager = LinearLayoutManager(ctx, LinearLayoutManager.HORIZONTAL, false)
+            noteTable?.adapter = tableAdapter
+        }
+
         rootNote?.setActiveTone(restoredRootNote, 0L)
+        rootNote?.toneChangedListener = NoteSelector.ToneChangedListener {
+            updateTable()
+        }
         val spinnerIndex = max(0, Tuning.values().indexOfFirst { it == restoredTemperament })
         spinner?.setSelection(spinnerIndex)
+        spinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val tuningType = Tuning.values()[position]
+
+                centArray = computeCentArray(tuningType)
+                updateTable()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+
+            }
+        }
+
+        centArray = computeCentArray(tuningType = restoredTemperament ?: Tuning.EDO12)
+        updateTable()
     }
 
     override fun onDialogClosed(positiveResult: Boolean) {
@@ -98,6 +138,27 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
                 // setFragmentResult(it, bundle)
             }
         }
+    }
+
+    private fun computeCentArray(tuningType: Tuning): Array<Float> {
+        val tuning = TuningFactory.create(tuningType, 0, 0, 440f)
+
+        return Array(tuning.getNumberOfNotesPerOctave() + 1) {
+            computeCent(tuning.getNoteFrequency(it) / tuning.getNoteFrequency(0))
+        }
+    }
+
+    private fun updateTable() {
+        val ctx = context ?: return
+        val rootNoteValue = rootNote?.activeToneIndex?: -9
+
+        tableAdapter.setEntries(
+            Array(centArray.size) {
+                noteNames12Tone.getNoteName(ctx, rootNoteValue + it, preferFlat = preferFlat, withOctaveIndex = false)
+            },
+            centArray,
+            null
+        )
     }
 }
 
@@ -157,7 +218,7 @@ class TemperamentPreference(context: Context, attrs: AttributeSet?)
         setValueFromString(getPersistedString(defaultValueResolved))
     }
 
-    fun setValueFromString(value: String) {
+    private fun setValueFromString(value: String) {
 //        Log.v("Tuner", "TemperamentPreference.onSetValueFromString: $value")
         this.value.fromString(value)
         persistString(value)

@@ -19,10 +19,6 @@ class IconPickerAdapter(private val icons: IntArray) : BaseAdapter() {
         return position.toLong()
     }
 
-//    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-//        val icon: AppCompatImageButton = view.findViewById(R.id.icon)
-//    }
-
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
         val view = convertView ?: LayoutInflater.from(parent!!.context).inflate(R.layout.icon_picker_entry, parent, false)
         val icon: AppCompatImageView = view.findViewById(R.id.icon)
@@ -31,24 +27,3 @@ class IconPickerAdapter(private val icons: IntArray) : BaseAdapter() {
     }
 
 }
-//class IconPickerAdapter(private val icons: IntArray)
-//    : RecyclerView.Adapter<IconPickerAdapter.ViewHolder>(){
-//
-//    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-//        val icon: AppCompatImageButton = view.findViewById(R.id.icon)
-//    }
-//
-//    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-//        val view = LayoutInflater.from(parent.context).inflate(R.layout.icon_picker_entry, parent, false)
-//
-//        return ViewHolder(view)
-//    }
-//
-//    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-//        holder.icon.setImageResource(icons[position])
-//    }
-//
-//    override fun getItemCount(): Int {
-//        return icons.size
-//    }
-//}

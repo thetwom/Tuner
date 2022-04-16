@@ -34,8 +34,8 @@ class TuningEqualTemperament(
     private val numNotesPerOctave: Int = 12,
     private val noteIndexAtReferenceFrequency: Int = 0, // 0 for 12-tone is a4
     private val _referenceFrequency: Float = 440f,
-    private val frequencyMin: Float = 16.3f,  // 16.4Hz would be c0 if the a4 is 440Hz
-    private val frequencyMax: Float = 16744.1f  // 16744Hz would be c10 if the a4 is 440Hz
+    private val frequencyMin: Float = 16.0f,  // 16.4Hz would be c0 if the a4 is 440Hz
+    private val frequencyMax: Float = 17000f, //16744.1f  // 16744Hz would be c10 if the a4 is 440Hz
 ) : TuningFrequencies {
     /// Ratio between two neighboring half tones
     private val halfToneRatio = 2.0f.pow(1.0f / numNotesPerOctave)
@@ -57,6 +57,10 @@ class TuningEqualTemperament(
 
     override fun getRootNote(): Int {
         return 0
+    }
+
+    override fun getNumberOfNotesPerOctave(): Int {
+        return numNotesPerOctave
     }
 
     override fun getIndexOfReferenceNote(): Int {
