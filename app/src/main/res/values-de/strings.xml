@@ -155,4 +155,6 @@
     <string name="root_note">Grundton</string>
     <string name="tuning_summary">%s, %s, %s</string>
     <string name="tuning_summary_no_desc">%s, %s</string>
+    <string name="test_tuning">Teststimmung</string>
+    <string name="details">Details</string>
 </resources>

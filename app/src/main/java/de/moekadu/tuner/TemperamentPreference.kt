@@ -107,6 +107,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
 
         rootNote?.setActiveTone(restoredRootNote, 0L)
         rootNote?.toneChangedListener = NoteSelector.ToneChangedListener {
+            // TOOD: update only on up
             updateTable()
         }
         val spinnerIndex = max(0, Tuning.values().indexOfFirst { it == restoredTemperament })
