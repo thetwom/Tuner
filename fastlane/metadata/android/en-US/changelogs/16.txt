@@ -1,0 +1,7 @@
+v3.0.0:
+- Custom tunings
+- UI improvements
+
+v3.1.0
+- Tunings for viola, cello and double bass
+- Prefer-flat (instead of sharp) option
