@@ -9,11 +9,11 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.roundToInt
 
-data class TemperamentTableEntry(val noteName: CharSequence, val cent: Float, val ratio: RationalNumber?)
+data class TemperamentTableEntry(val noteName: CharSequence, val cent: Float, val ratio: RationalNumber?, val stableId: Long)
 
 class TemperamentTableEntryDiffCallback : DiffUtil.ItemCallback<TemperamentTableEntry>() {
     override fun areItemsTheSame(oldItem: TemperamentTableEntry, newItem: TemperamentTableEntry): Boolean {
-        return oldItem === newItem
+        return oldItem.stableId == newItem.stableId
     }
 
     override fun areContentsTheSame(oldItem: TemperamentTableEntry, newItem: TemperamentTableEntry): Boolean {
@@ -26,6 +26,32 @@ class TemperamentTableAdapter : ListAdapter<TemperamentTableEntry, TemperamentTa
     class ViewHolder(val view: View): RecyclerView.ViewHolder(view){
         var noteName: TextView? = null
         var cent: TextView? = null
+        var numerator: TextView? = null
+        var denominator: TextView? = null
+        var fractionSeparator: View?= null
+        init {
+            noteName = view.findViewById(R.id.note_name)
+            cent = view.findViewById(R.id.cent)
+            numerator = view.findViewById(R.id.ratio_numerator)
+            denominator = view.findViewById(R.id.ratio_denominator)
+            fractionSeparator = view.findViewById(R.id.ratio_separator)
+        }
+
+        fun setEntry(entry: TemperamentTableEntry) {
+            noteName?.text = entry.noteName
+            cent?.text = view.context.getString(R.string.cent_nosign, entry.cent.roundToInt())
+            if (entry.ratio == null) {
+                numerator?.visibility = View.GONE
+                denominator?.visibility = View.GONE
+                fractionSeparator?.visibility = View.GONE
+            } else {
+                numerator?.visibility = View.VISIBLE
+                denominator?.visibility = View.VISIBLE
+                fractionSeparator?.visibility = View.VISIBLE
+                numerator?.text = entry.ratio.numerator.toString()
+                denominator?.text = entry.ratio.denominator.toString()
+            }
+        }
     }
 
     fun setEntries(notes: Array<CharSequence>, cents: Array<Float>, ratios: Array<RationalNumber>?) {
@@ -36,7 +62,7 @@ class TemperamentTableAdapter : ListAdapter<TemperamentTableEntry, TemperamentTa
 
         val entries =  ArrayList<TemperamentTableEntry>()
         for (i in notes.indices)
-            entries.add(TemperamentTableEntry(notes[i], cents[i], ratios?.get(i)))
+            entries.add(TemperamentTableEntry(notes[i], cents[i], ratios?.get(i), i.toLong()))
 
         submitList(entries)
     }
@@ -48,15 +74,10 @@ class TemperamentTableAdapter : ListAdapter<TemperamentTableEntry, TemperamentTa
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val context = parent.context
         val view = LayoutInflater.from(context).inflate(R.layout.temperament_table_entry, parent, false)
-        return ViewHolder(view).apply {
-            noteName = view.findViewById(R.id.note_name)
-            cent = view.findViewById(R.id.cent)
-        }
+        return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val entry = getItem(position)
-        holder.noteName?.text = entry.noteName
-        holder.cent?.text = holder.view.context.getString(R.string.cent_nosign, entry.cent.roundToInt())
+        holder.setEntry(getItem(position))
     }
 }

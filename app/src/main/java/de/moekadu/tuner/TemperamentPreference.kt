@@ -45,6 +45,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
     private var preferFlat = false
 
     private var centArray = Array(0) { 0f }
+    private var ratioArray: Array<RationalNumber>? = null
 
     private var restoredRootNote = Int.MAX_VALUE
     private var restoredTemperament: Tuning? = null
@@ -79,6 +80,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
         rootNote = view.findViewById(R.id.root_note)
         rootNoteTitle = view.findViewById(R.id.root_note_title)
         noteTable = view.findViewById(R.id.note_table)
+        noteTable?.itemAnimator = null
 
         when (preference) {
             is TemperamentPreference -> {
@@ -116,7 +118,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val tuningType = Tuning.values()[position]
 
-                centArray = computeCentArray(tuningType)
+                computeCentAndRatioArrays(tuningType)
                 updateTable()
             }
 
@@ -125,7 +127,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
             }
         }
 
-        centArray = computeCentArray(tuningType = restoredTemperament ?: Tuning.EDO12)
+        computeCentAndRatioArrays(tuningType = restoredTemperament ?: Tuning.EDO12)
         updateTable()
     }
 
@@ -141,12 +143,13 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
         }
     }
 
-    private fun computeCentArray(tuningType: Tuning): Array<Float> {
+    private fun computeCentAndRatioArrays(tuningType: Tuning) {
         val tuning = TuningFactory.create(tuningType, 0, 0, 440f)
 
-        return Array(tuning.getNumberOfNotesPerOctave() + 1) {
+        centArray =  Array(tuning.getNumberOfNotesPerOctave() + 1) {
             computeCent(tuning.getNoteFrequency(it) / tuning.getNoteFrequency(0))
         }
+        ratioArray = tuning.getRationalNumberRatios()
     }
 
     private fun updateTable() {
@@ -158,7 +161,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
                 noteNames12Tone.getNoteName(ctx, rootNoteValue + it, preferFlat = preferFlat, withOctaveIndex = false)
             },
             centArray,
-            null
+            ratioArray
         )
     }
 }
