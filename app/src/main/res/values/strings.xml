@@ -170,4 +170,10 @@
     <string name="tuning_summary_no_desc">%s, %s</string>
     <string name="test_tuning">Test tuning</string>
     <string name="details">Details</string>
+    <string name="pythagorean_comma" translatable="false">%d\u2044%d&#x200A;pC</string>
+    <string name="syntonic_comma" translatable="false">%d\u2044%d&#x200A;sC</string>
+    <string name="schisma" translatable="false">%d\u2044%d&#x200A;sch</string>
+    <string name="plus_correction" translatable="false">" + "</string>
+    <string name="minus_correction" translatable="false">" - "</string>
+    <string name="fifth_from_to">%s ➔ %s</string>
 </resources>

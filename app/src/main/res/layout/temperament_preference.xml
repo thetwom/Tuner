@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-
+<!--    TODO: wrap whole layout into scroll view-->
     <Spinner
         android:id="@+id/spinner"
         android:layout_width="match_parent"
@@ -84,4 +84,686 @@
         android:layout_marginLeft="16dp"
         android:layout_marginTop="8dp"
         />
+
+    <HorizontalScrollView
+        android:id="@+id/circle_of_fifth"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginLeft="16dp"
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@id/note_table">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            >
+            <TextView
+                android:id="@+id/fifth_first"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:padding="4dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:text="C"
+                />
+
+            <TextView
+                android:id="@+id/fifth_first_to_second"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintStart_toEndOf="@id/fifth_first"
+                android:layout_marginBottom="14sp"
+                android:paddingTop="4dp"
+                android:paddingLeft="2dp"
+                android:paddingRight="2dp"
+                android:textColor="?attr/colorPrimaryFaint"
+                android:textSize="14sp"
+                android:text="1/2 pC"
+                />
+
+            <ImageView
+                android:id="@+id/fifth_first_to_second_stroke"
+                android:layout_width="0dp"
+                android:layout_height="8sp"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintTop_toTopOf="@id/fifth_first"
+                app:layout_constraintStart_toStartOf="@id/fifth_first_to_second"
+                app:layout_constraintEnd_toEndOf="@id/fifth_first_to_second"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_stroke"
+                android:scaleType="fitXY"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <ImageView
+                android:id="@+id/fifth_first_to_second_arrow"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toEndOf="@id/fifth_first_to_second_stroke"
+                app:layout_constraintTop_toTopOf="@id/fifth_first_to_second_stroke"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first_to_second_stroke"
+                app:layout_constraintDimensionRatio="43:50"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_arrow"
+                android:scaleType="fitCenter"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <TextView
+                android:id="@+id/fifth_second"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/fifth_first_to_second_arrow"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:padding="4dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:text="G"
+                />
+
+            <TextView
+                android:id="@+id/fifth_second_to_third"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintStart_toEndOf="@id/fifth_second"
+                android:layout_marginBottom="14sp"
+                android:paddingTop="4dp"
+                android:paddingLeft="2dp"
+                android:paddingRight="2dp"
+                android:textColor="?attr/colorPrimaryFaint"
+                android:textSize="14sp"
+                android:text="1/2 pC"
+                />
+
+            <ImageView
+                android:id="@+id/fifth_second_to_third_stroke"
+                android:layout_width="0dp"
+                android:layout_height="8sp"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintTop_toTopOf="@id/fifth_first"
+                app:layout_constraintStart_toStartOf="@id/fifth_second_to_third"
+                app:layout_constraintEnd_toEndOf="@id/fifth_second_to_third"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_stroke"
+                android:scaleType="fitXY"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <ImageView
+                android:id="@+id/fifth_second_to_third_arrow"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toEndOf="@id/fifth_second_to_third_stroke"
+                app:layout_constraintTop_toTopOf="@id/fifth_second_to_third_stroke"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_second_to_third_stroke"
+                app:layout_constraintDimensionRatio="43:50"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_arrow"
+                android:scaleType="fitCenter"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <TextView
+                android:id="@+id/fifth_third"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/fifth_second_to_third_arrow"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:padding="4dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:text="D"
+                />
+
+            <TextView
+                android:id="@+id/fifth_third_to_forth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintStart_toEndOf="@id/fifth_third"
+                android:layout_marginBottom="14sp"
+                android:paddingTop="4dp"
+                android:paddingLeft="2dp"
+                android:paddingRight="2dp"
+                android:textColor="?attr/colorPrimaryFaint"
+                android:textSize="14sp"
+                android:text="1/2 pC"
+                />
+
+            <ImageView
+                android:id="@+id/fifth_third_to_forth_stroke"
+                android:layout_width="0dp"
+                android:layout_height="8sp"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintTop_toTopOf="@id/fifth_first"
+                app:layout_constraintStart_toStartOf="@id/fifth_third_to_forth"
+                app:layout_constraintEnd_toEndOf="@id/fifth_third_to_forth"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_stroke"
+                android:scaleType="fitXY"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <ImageView
+                android:id="@+id/fifth_third_to_forth_arrow"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toEndOf="@id/fifth_third_to_forth_stroke"
+                app:layout_constraintTop_toTopOf="@id/fifth_third_to_forth_stroke"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_third_to_forth_stroke"
+                app:layout_constraintDimensionRatio="43:50"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_arrow"
+                android:scaleType="fitCenter"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <TextView
+                android:id="@+id/fifth_forth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/fifth_third_to_forth_arrow"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:padding="4dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:text="A"
+                />
+
+            <TextView
+                android:id="@+id/fifth_forth_to_fifth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintStart_toEndOf="@id/fifth_forth"
+                android:layout_marginBottom="14sp"
+                android:paddingTop="4dp"
+                android:paddingLeft="2dp"
+                android:paddingRight="2dp"
+                android:textColor="?attr/colorPrimaryFaint"
+                android:textSize="14sp"
+                android:text="1/2 pC"
+                />
+
+            <ImageView
+                android:id="@+id/fifth_forth_to_fifth_stroke"
+                android:layout_width="0dp"
+                android:layout_height="8sp"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintTop_toTopOf="@id/fifth_first"
+                app:layout_constraintStart_toStartOf="@id/fifth_forth_to_fifth"
+                app:layout_constraintEnd_toEndOf="@id/fifth_forth_to_fifth"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_stroke"
+                android:scaleType="fitXY"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <ImageView
+                android:id="@+id/fifth_forth_to_fifth_arrow"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toEndOf="@id/fifth_forth_to_fifth_stroke"
+                app:layout_constraintTop_toTopOf="@id/fifth_forth_to_fifth_stroke"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_forth_to_fifth_stroke"
+                app:layout_constraintDimensionRatio="43:50"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_arrow"
+                android:scaleType="fitCenter"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <TextView
+                android:id="@+id/fifth_fifth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/fifth_forth_to_fifth_arrow"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:padding="4dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:text="E"
+                />
+
+            <TextView
+                android:id="@+id/fifth_fifth_to_sixth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintStart_toEndOf="@id/fifth_fifth"
+                android:layout_marginBottom="14sp"
+                android:paddingTop="4dp"
+                android:paddingLeft="2dp"
+                android:paddingRight="2dp"
+                android:textColor="?attr/colorPrimaryFaint"
+                android:textSize="14sp"
+                android:text="1/2 pC"
+                />
+
+            <ImageView
+                android:id="@+id/fifth_fifth_to_sixth_stroke"
+                android:layout_width="0dp"
+                android:layout_height="8sp"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintTop_toTopOf="@id/fifth_first"
+                app:layout_constraintStart_toStartOf="@id/fifth_fifth_to_sixth"
+                app:layout_constraintEnd_toEndOf="@id/fifth_fifth_to_sixth"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_stroke"
+                android:scaleType="fitXY"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <ImageView
+                android:id="@+id/fifth_fifth_to_sixth_arrow"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toEndOf="@id/fifth_fifth_to_sixth_stroke"
+                app:layout_constraintTop_toTopOf="@id/fifth_fifth_to_sixth_stroke"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_fifth_to_sixth_stroke"
+                app:layout_constraintDimensionRatio="43:50"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_arrow"
+                android:scaleType="fitCenter"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <TextView
+                android:id="@+id/fifth_sixth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/fifth_fifth_to_sixth_arrow"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:padding="4dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:text="B"
+                />
+
+            <TextView
+                android:id="@+id/fifth_sixth_to_seventh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintStart_toEndOf="@id/fifth_sixth"
+                android:layout_marginBottom="14sp"
+                android:paddingTop="4dp"
+                android:paddingLeft="2dp"
+                android:paddingRight="2dp"
+                android:textColor="?attr/colorPrimaryFaint"
+                android:textSize="14sp"
+                android:text="1/2 pC"
+                />
+
+            <ImageView
+                android:id="@+id/fifth_sixth_to_seventh_stroke"
+                android:layout_width="0dp"
+                android:layout_height="8sp"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintTop_toTopOf="@id/fifth_first"
+                app:layout_constraintStart_toStartOf="@id/fifth_sixth_to_seventh"
+                app:layout_constraintEnd_toEndOf="@id/fifth_sixth_to_seventh"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_stroke"
+                android:scaleType="fitXY"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <ImageView
+                android:id="@+id/fifth_sixth_to_seventh_arrow"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toEndOf="@id/fifth_sixth_to_seventh_stroke"
+                app:layout_constraintTop_toTopOf="@id/fifth_sixth_to_seventh_stroke"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_sixth_to_seventh_stroke"
+                app:layout_constraintDimensionRatio="43:50"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_arrow"
+                android:scaleType="fitCenter"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <TextView
+                android:id="@+id/fifth_seventh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/fifth_sixth_to_seventh_arrow"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:padding="4dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:text="F#"
+                />
+
+            <TextView
+                android:id="@+id/fifth_seventh_to_eighth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintStart_toEndOf="@id/fifth_seventh"
+                android:layout_marginBottom="14sp"
+                android:paddingTop="4dp"
+                android:paddingLeft="2dp"
+                android:paddingRight="2dp"
+                android:textColor="?attr/colorPrimaryFaint"
+                android:textSize="14sp"
+                android:text="1/2 pC"
+                />
+
+            <ImageView
+                android:id="@+id/fifth_seventh_to_eighth_stroke"
+                android:layout_width="0dp"
+                android:layout_height="8sp"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintTop_toTopOf="@id/fifth_first"
+                app:layout_constraintStart_toStartOf="@id/fifth_seventh_to_eighth"
+                app:layout_constraintEnd_toEndOf="@id/fifth_seventh_to_eighth"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_stroke"
+                android:scaleType="fitXY"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <ImageView
+                android:id="@+id/fifth_seventh_to_eighth_arrow"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toEndOf="@id/fifth_seventh_to_eighth_stroke"
+                app:layout_constraintTop_toTopOf="@id/fifth_seventh_to_eighth_stroke"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_seventh_to_eighth_stroke"
+                app:layout_constraintDimensionRatio="43:50"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_arrow"
+                android:scaleType="fitCenter"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <TextView
+                android:id="@+id/fifth_eighth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/fifth_seventh_to_eighth_arrow"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:padding="4dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:text="C#"
+                />
+
+            <TextView
+                android:id="@+id/fifth_eighth_to_ninth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintStart_toEndOf="@id/fifth_eighth"
+                android:layout_marginBottom="14sp"
+                android:paddingTop="4dp"
+                android:paddingLeft="2dp"
+                android:paddingRight="2dp"
+                android:textColor="?attr/colorPrimaryFaint"
+                android:textSize="14sp"
+                android:text="1/2 pC"
+                />
+
+            <ImageView
+                android:id="@+id/fifth_eighth_to_ninth_stroke"
+                android:layout_width="0dp"
+                android:layout_height="8sp"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintTop_toTopOf="@id/fifth_first"
+                app:layout_constraintStart_toStartOf="@id/fifth_eighth_to_ninth"
+                app:layout_constraintEnd_toEndOf="@id/fifth_eighth_to_ninth"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_stroke"
+                android:scaleType="fitXY"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <ImageView
+                android:id="@+id/fifth_eighth_to_ninth_arrow"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toEndOf="@id/fifth_eighth_to_ninth_stroke"
+                app:layout_constraintTop_toTopOf="@id/fifth_eighth_to_ninth_stroke"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_eighth_to_ninth_stroke"
+                app:layout_constraintDimensionRatio="43:50"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_arrow"
+                android:scaleType="fitCenter"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <TextView
+                android:id="@+id/fifth_ninth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/fifth_eighth_to_ninth_arrow"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:padding="4dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:text="G#"
+                />
+
+
+            <TextView
+                android:id="@+id/fifth_ninth_to_tenth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintStart_toEndOf="@id/fifth_ninth"
+                android:layout_marginBottom="14sp"
+                android:paddingTop="4dp"
+                android:paddingLeft="2dp"
+                android:paddingRight="2dp"
+                android:textColor="?attr/colorPrimaryFaint"
+                android:textSize="14sp"
+                android:text="1/2 pC"
+                />
+
+            <ImageView
+                android:id="@+id/fifth_ninth_to_tenth_stroke"
+                android:layout_width="0dp"
+                android:layout_height="8sp"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintTop_toTopOf="@id/fifth_first"
+                app:layout_constraintStart_toStartOf="@id/fifth_ninth_to_tenth"
+                app:layout_constraintEnd_toEndOf="@id/fifth_ninth_to_tenth"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_stroke"
+                android:scaleType="fitXY"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <ImageView
+                android:id="@+id/fifth_ninth_to_tenth_arrow"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toEndOf="@id/fifth_ninth_to_tenth_stroke"
+                app:layout_constraintTop_toTopOf="@id/fifth_ninth_to_tenth_stroke"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_ninth_to_tenth_stroke"
+                app:layout_constraintDimensionRatio="43:50"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_arrow"
+                android:scaleType="fitCenter"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <TextView
+                android:id="@+id/fifth_tenth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/fifth_ninth_to_tenth_arrow"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:padding="4dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:text="D#"
+                />
+
+
+            <TextView
+                android:id="@+id/fifth_tenth_to_eleventh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintStart_toEndOf="@id/fifth_tenth"
+                android:layout_marginBottom="14sp"
+                android:paddingTop="4dp"
+                android:paddingLeft="2dp"
+                android:paddingRight="2dp"
+                android:textColor="?attr/colorPrimaryFaint"
+                android:textSize="14sp"
+                android:text="1/2 pC"
+                />
+
+            <ImageView
+                android:id="@+id/fifth_tenth_to_eleventh_stroke"
+                android:layout_width="0dp"
+                android:layout_height="8sp"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintTop_toTopOf="@id/fifth_first"
+                app:layout_constraintStart_toStartOf="@id/fifth_tenth_to_eleventh"
+                app:layout_constraintEnd_toEndOf="@id/fifth_tenth_to_eleventh"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_stroke"
+                android:scaleType="fitXY"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <ImageView
+                android:id="@+id/fifth_tenth_to_eleventh_arrow"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toEndOf="@id/fifth_tenth_to_eleventh_stroke"
+                app:layout_constraintTop_toTopOf="@id/fifth_tenth_to_eleventh_stroke"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_tenth_to_eleventh_stroke"
+                app:layout_constraintDimensionRatio="43:50"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_arrow"
+                android:scaleType="fitCenter"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <TextView
+                android:id="@+id/fifth_eleventh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/fifth_tenth_to_eleventh_arrow"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:padding="4dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:text="Bb"
+                />
+
+            <TextView
+                android:id="@+id/fifth_eleventh_to_twelfth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintStart_toEndOf="@id/fifth_eleventh"
+                android:layout_marginBottom="14sp"
+                android:paddingTop="4dp"
+                android:paddingLeft="2dp"
+                android:paddingRight="2dp"
+                android:textColor="?attr/colorPrimaryFaint"
+                android:textSize="14sp"
+                android:text="1/2 pC"
+                />
+
+            <ImageView
+                android:id="@+id/fifth_eleventh_to_twelfth_stroke"
+                android:layout_width="0dp"
+                android:layout_height="8sp"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintTop_toTopOf="@id/fifth_first"
+                app:layout_constraintStart_toStartOf="@id/fifth_eleventh_to_twelfth"
+                app:layout_constraintEnd_toEndOf="@id/fifth_eleventh_to_twelfth"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_stroke"
+                android:scaleType="fitXY"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <ImageView
+                android:id="@+id/fifth_eleventh_to_twelfth_arrow"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toEndOf="@id/fifth_eleventh_to_twelfth_stroke"
+                app:layout_constraintTop_toTopOf="@id/fifth_eleventh_to_twelfth_stroke"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_eleventh_to_twelfth_stroke"
+                app:layout_constraintDimensionRatio="43:50"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_arrow"
+                android:scaleType="fitCenter"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <TextView
+                android:id="@+id/fifth_twelfth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/fifth_eleventh_to_twelfth_arrow"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:padding="4dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:text="F"
+                />
+
+
+            <TextView
+                android:id="@+id/fifth_twelfth_to_last"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintStart_toEndOf="@id/fifth_twelfth"
+                android:layout_marginBottom="14sp"
+                android:paddingTop="4dp"
+                android:paddingLeft="2dp"
+                android:paddingRight="2dp"
+                android:textColor="?attr/colorPrimaryFaint"
+                android:textSize="14sp"
+                android:text="1/2 pC"
+                />
+
+            <ImageView
+                android:id="@+id/fifth_twelfth_to_last_stroke"
+                android:layout_width="0dp"
+                android:layout_height="8sp"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_first"
+                app:layout_constraintTop_toTopOf="@id/fifth_first"
+                app:layout_constraintStart_toStartOf="@id/fifth_twelfth_to_last"
+                app:layout_constraintEnd_toEndOf="@id/fifth_twelfth_to_last"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_stroke"
+                android:scaleType="fitXY"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <ImageView
+                android:id="@+id/fifth_twelfth_to_last_arrow"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toEndOf="@id/fifth_twelfth_to_last_stroke"
+                app:layout_constraintTop_toTopOf="@id/fifth_twelfth_to_last_stroke"
+                app:layout_constraintBottom_toBottomOf="@id/fifth_twelfth_to_last_stroke"
+                app:layout_constraintDimensionRatio="43:50"
+                android:padding="0dp"
+                android:src="@drawable/ic_fifths_arrow"
+                android:scaleType="fitCenter"
+                app:tint="?attr/colorPrimaryFaint" />
+
+            <TextView
+                android:id="@+id/fifth_last"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/fifth_twelfth_to_last_arrow"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:padding="4dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:text="C"
+                />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </HorizontalScrollView>
+
+<!--    TODO: We must add a legend for pythagorean comma, syntonic comma, schisma and enable/disable it along with previous scroll view-->
 </androidx.constraintlayout.widget.ConstraintLayout>

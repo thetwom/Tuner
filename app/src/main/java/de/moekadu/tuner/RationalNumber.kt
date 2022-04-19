@@ -15,6 +15,8 @@ data class RationalNumber(var numerator: Int, var denominator: Int) {
         }
     }
 
+    val isZero get() = numerator == 0
+
     init {
         reduce()
     }

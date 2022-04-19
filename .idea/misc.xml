@@ -25,6 +25,8 @@
         <entry key="app/src/main/res/drawable/ic_edit_expand.xml" value="0.178" />
         <entry key="app/src/main/res/drawable/ic_eguitar.xml" value="0.202" />
         <entry key="app/src/main/res/drawable/ic_expand.xml" value="0.217" />
+        <entry key="app/src/main/res/drawable/ic_fifths_arrow.xml" value="0.2405" />
+        <entry key="app/src/main/res/drawable/ic_fifths_stroke.xml" value="0.2405" />
         <entry key="app/src/main/res/drawable/ic_flute.xml" value="0.202" />
         <entry key="app/src/main/res/drawable/ic_frequency_a.xml" value="0.2861111111111111" />
         <entry key="app/src/main/res/drawable/ic_guitar.xml" value="0.2537037037037037" />
@@ -61,6 +63,7 @@
         <entry key="app/src/main/res/layout/instrument_entry_section.xml" value="0.4083333333333333" />
         <entry key="app/src/main/res/layout/instruments.xml" value="0.3333333333333333" />
         <entry key="app/src/main/res/layout/reference_note_preference.xml" value="0.2259963768115942" />
+        <entry key="app/src/main/res/layout/temperament_circle_of_fifth_entry.xml" value="0.2558876811594203" />
         <entry key="app/src/main/res/layout/temperament_preference.xml" value="0.10740740740740741" />
         <entry key="app/src/main/res/layout/temperament_spinner_item.xml" value="0.2275238573581115" />
         <entry key="app/src/main/res/layout/temperament_table_entry.xml" value="0.2558876811594203" />
