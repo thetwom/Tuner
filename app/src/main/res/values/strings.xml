@@ -170,10 +170,13 @@
     <string name="tuning_summary_no_desc">%s, %s</string>
     <string name="test_tuning">Test tuning</string>
     <string name="details">Details</string>
-    <string name="pythagorean_comma" translatable="false">%d\u2044%d&#x200A;pC</string>
-    <string name="syntonic_comma" translatable="false">%d\u2044%d&#x200A;sC</string>
-    <string name="schisma" translatable="false">%d\u2044%d&#x200A;sch</string>
+    <string name="fraction" translatable="false">%d\u2044%d</string>
+    <string name="pythagorean_comma">%d\u2044%d&#x200A;pC</string>
+    <string name="syntonic_comma">%d\u2044%d&#x200A;sC</string>
+    <string name="schisma">%d\u2044%d&#x200A;sch</string>
     <string name="plus_correction" translatable="false">" + "</string>
     <string name="minus_correction" translatable="false">" - "</string>
     <string name="fifth_from_to">%s ➔ %s</string>
+    <string name="pythagorean_comma_desc">pC: Pythagorean Comma, 531441\u2044524288\nsC: Syntonic Comma, 81\u204480\nsch: Schisma, 32805\u204432768</string>
+    <string name="circle_of_fifths">Circle of fifths</string>
 </resources>

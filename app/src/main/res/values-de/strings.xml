@@ -157,4 +157,9 @@
     <string name="tuning_summary_no_desc">%s, %s</string>
     <string name="test_tuning">Teststimmung</string>
     <string name="details">Details</string>
+    <string name="pythagorean_comma_desc">pK: Pythagoreisches Komma, 531441\u2044524288\nsK: Syntonisches Komma, 81\u204480\nsch: Schisma, 32805\u204432768</string>
+    <string name="circle_of_fifths">Quintenzirkel</string>
+    <string name="pythagorean_comma">%d\u2044%d&#x200A;pK</string>
+    <string name="syntonic_comma">%d\u2044%d&#x200A;sK</string>
+    <string name="schisma">%d\u2044%d&#x200A;sch</string>
 </resources>

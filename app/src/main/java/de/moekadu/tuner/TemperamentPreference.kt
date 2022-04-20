@@ -6,14 +6,12 @@ import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
 import android.widget.AdapterView
-import android.widget.HorizontalScrollView
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.preference.DialogPreference
 import androidx.preference.PreferenceDialogFragmentCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlin.math.absoluteValue
 import kotlin.math.log
 import kotlin.math.max
 import kotlin.math.pow
@@ -37,56 +35,6 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
             return log(ratio, centRatio)
         }
 
-        private fun fifthCorrectionString(context: Context, correction: FifthModification): String {
-            val s = StringBuilder()
-
-            var r = correction.pythagoreanComma
-            if (!r.isZero) {
-                if (s.isNotEmpty()) {
-                    if (r.numerator >= 0)
-                        s.append(context.getString(R.string.plus_correction))
-                    else
-                        s.append(context.getString(R.string.minus_correction))
-                } else if (r.numerator < 0) {
-                    s.append("-")
-                }
-                s.append(
-                    context.getString(R.string.pythagorean_comma, r.numerator.absoluteValue, r.denominator)
-                )
-            }
-
-            r = correction.syntonicComma
-            if (!r.isZero) {
-                if (s.isNotEmpty()) {
-                    if (r.numerator >= 0)
-                        s.append(context.getString(R.string.plus_correction))
-                    else
-                        s.append(context.getString(R.string.minus_correction))
-                } else if (r.numerator < 0) {
-                    s.append("-")
-                }
-                s.append(
-                    context.getString(R.string.syntonic_comma, r.numerator.absoluteValue, r.denominator)
-                )
-            }
-
-            r = correction.schisma
-            if (!r.isZero) {
-                if (s.isNotEmpty()) {
-                    if (r.numerator >= 0)
-                        s.append(context.getString(R.string.plus_correction))
-                    else
-                        s.append(context.getString(R.string.minus_correction))
-                } else if (r.numerator < 0) {
-                    s.append("-")
-                }
-                s.append(
-                    context.getString(R.string.schisma, r.numerator.absoluteValue, r.denominator)
-                )
-            }
-
-            return s.toString()
-        }
     }
 
     private var spinner: Spinner? = null
@@ -94,10 +42,10 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
     private var rootNoteTitle: TextView? = null
     private var noteTable: RecyclerView? = null
     private val tableAdapter = TemperamentTableAdapter()
-    private var circleOfFifths: HorizontalScrollView? = null
-
-    private val fifthsNotes = Array<TextView?>(13) { null }
-    private val fifthsCorrections = Array<TextView?>(12) { null }
+    private var circleOfFifths: RecyclerView? = null
+    private var circleOfFifthsAdapter = TemperamentCircleOfFifthsAdapter()
+    private var circleOfFifthsDesc: TextView? = null
+    private var circleOfFifthsTitle: TextView? = null
 
     private var preferFlat = false
 
@@ -138,34 +86,10 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
         rootNoteTitle = view.findViewById(R.id.root_note_title)
         noteTable = view.findViewById(R.id.note_table)
         noteTable?.itemAnimator = null
-        circleOfFifths = view.findViewById(R.id.circle_of_fifth)
-
-        fifthsNotes[0] = view.findViewById(R.id.fifth_first)
-        fifthsNotes[1] = view.findViewById(R.id.fifth_second)
-        fifthsNotes[2] = view.findViewById(R.id.fifth_third)
-        fifthsNotes[3] = view.findViewById(R.id.fifth_forth)
-        fifthsNotes[4] = view.findViewById(R.id.fifth_fifth)
-        fifthsNotes[5] = view.findViewById(R.id.fifth_sixth)
-        fifthsNotes[6] = view.findViewById(R.id.fifth_seventh)
-        fifthsNotes[7] = view.findViewById(R.id.fifth_eighth)
-        fifthsNotes[8] = view.findViewById(R.id.fifth_ninth)
-        fifthsNotes[9] = view.findViewById(R.id.fifth_tenth)
-        fifthsNotes[10] = view.findViewById(R.id.fifth_eleventh)
-        fifthsNotes[11] = view.findViewById(R.id.fifth_twelfth)
-        fifthsNotes[12] = view.findViewById(R.id.fifth_last)
-
-        fifthsCorrections[0] = view.findViewById(R.id.fifth_first_to_second)
-        fifthsCorrections[1] = view.findViewById(R.id.fifth_second_to_third)
-        fifthsCorrections[2] = view.findViewById(R.id.fifth_third_to_forth)
-        fifthsCorrections[3] = view.findViewById(R.id.fifth_forth_to_fifth)
-        fifthsCorrections[4] = view.findViewById(R.id.fifth_fifth_to_sixth)
-        fifthsCorrections[5] = view.findViewById(R.id.fifth_sixth_to_seventh)
-        fifthsCorrections[6] = view.findViewById(R.id.fifth_seventh_to_eighth)
-        fifthsCorrections[7] = view.findViewById(R.id.fifth_eighth_to_ninth)
-        fifthsCorrections[8] = view.findViewById(R.id.fifth_ninth_to_tenth)
-        fifthsCorrections[9] = view.findViewById(R.id.fifth_tenth_to_eleventh)
-        fifthsCorrections[10] = view.findViewById(R.id.fifth_eleventh_to_twelfth)
-        fifthsCorrections[11] = view.findViewById(R.id.fifth_twelfth_to_last)
+        circleOfFifths = view.findViewById(R.id.circle_of_fifths)
+        circleOfFifths?.itemAnimator = null
+        circleOfFifthsDesc = view.findViewById(R.id.circle_of_fifths_desc)
+        circleOfFifthsTitle = view.findViewById(R.id.circle_of_fifths_title)
 
         when (preference) {
             is TemperamentPreference -> {
@@ -190,6 +114,8 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
 
             noteTable?.layoutManager = LinearLayoutManager(ctx, LinearLayoutManager.HORIZONTAL, false)
             noteTable?.adapter = tableAdapter
+            circleOfFifths?.layoutManager = LinearLayoutManager(ctx, LinearLayoutManager.HORIZONTAL, false)
+            circleOfFifths?.adapter = circleOfFifthsAdapter
         }
 
         rootNote?.setActiveTone(restoredRootNote, 0L)
@@ -254,35 +180,21 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
     }
 
     private fun updateCircleOfFifthNoteNames() {
-        val ctx = context ?: return
-        var rootNoteValue = rootNote?.activeToneIndex?: -9
-
-        for (i in 0..12) {
-            fifthsNotes[i]?.text = noteNames12Tone.getNoteName(ctx, rootNoteValue, preferFlat, false)
-            rootNoteValue += 7
-        }
+        val rootNoteValue = rootNote?.activeToneIndex?: -9
+        circleOfFifthsAdapter.setEntries(rootNoteValue, null, preferFlat)
     }
 
-    private fun updateCircleOfFifthCorrections(fifth: TuningCircleOfFifths?) {
-        val ctx = context ?: return
-        if (fifth == null) {
+    private fun updateCircleOfFifthCorrections(fifths: TuningCircleOfFifths?) {
+        if (fifths == null) {
             circleOfFifths?.visibility = View.GONE
+            circleOfFifthsDesc?.visibility = View.GONE
+            circleOfFifthsTitle?.visibility = View.GONE
             return
         }
         circleOfFifths?.visibility = View.VISIBLE
-
-        fifthsCorrections[0]?.text = fifthCorrectionString(ctx, fifth.CG)
-        fifthsCorrections[1]?.text = fifthCorrectionString(ctx, fifth.GD)
-        fifthsCorrections[2]?.text = fifthCorrectionString(ctx, fifth.DA)
-        fifthsCorrections[3]?.text = fifthCorrectionString(ctx, fifth.AE)
-        fifthsCorrections[4]?.text = fifthCorrectionString(ctx, fifth.EB)
-        fifthsCorrections[5]?.text = fifthCorrectionString(ctx, fifth.BFsharp)
-        fifthsCorrections[6]?.text = fifthCorrectionString(ctx, fifth.FsharpCsharp)
-        fifthsCorrections[7]?.text = fifthCorrectionString(ctx, fifth.CsharpGsharp)
-        fifthsCorrections[8]?.text = fifthCorrectionString(ctx, fifth.GsharpEflat)
-        fifthsCorrections[9]?.text = fifthCorrectionString(ctx, fifth.EFlatBflat)
-        fifthsCorrections[10]?.text = fifthCorrectionString(ctx, fifth.BflatF)
-        fifthsCorrections[11]?.text = fifthCorrectionString(ctx, fifth.FC)
+        circleOfFifthsDesc?.visibility = View.VISIBLE
+        circleOfFifthsTitle?.visibility = View.VISIBLE
+        circleOfFifthsAdapter.setEntries(null, fifths, preferFlat)
     }
 }
 
