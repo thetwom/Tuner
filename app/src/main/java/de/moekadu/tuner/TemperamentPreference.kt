@@ -101,6 +101,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
             val tuning = TuningFactory.create(Tuning.EDO12, 0, 0, 440f)
             computeCentAndRatioArrays(tuning)
             updateTable()
+            updateCircleOfFifthNoteNames()
             updateCircleOfFifthCorrections(tuning.getCircleOfFifths())
         }
 
