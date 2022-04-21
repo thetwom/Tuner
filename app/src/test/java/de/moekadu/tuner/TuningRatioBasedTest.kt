@@ -6,7 +6,7 @@ import kotlin.math.pow
 
 class TuningRatioBasedTest {
 
-    fun testOctImpl(
+    private fun testOctImpl(
         ratios: DoubleArray,
         referenceFrequency: Float,
         noteIndexAtReferenceFrequency: Int,
@@ -67,7 +67,7 @@ class TuningRatioBasedTest {
         testOctImpl(doubleArrayOf(1.0, 1.2, 1.4, 1.5, 1.7, 2.0), 130f, 4, 2)
     }
 
-    fun testRatiosImpl(
+    private fun testRatiosImpl(
         ratios: DoubleArray,
         referenceFrequency: Float,
         noteIndexAtReferenceFrequency: Int,

@@ -24,10 +24,10 @@ class TemperamentTableEntryDiffCallback : DiffUtil.ItemCallback<TemperamentTable
 class TemperamentTableAdapter : ListAdapter<TemperamentTableEntry, TemperamentTableAdapter.ViewHolder>(TemperamentTableEntryDiffCallback()) {
 
     class ViewHolder(val view: View): RecyclerView.ViewHolder(view){
-        var noteName: TextView? = null
-        var cent: TextView? = null
-        var numerator: TextView? = null
-        var denominator: TextView? = null
+        private var noteName: TextView? = null
+        private var cent: TextView? = null
+        private var numerator: TextView? = null
+        private var denominator: TextView? = null
         var fractionSeparator: View?= null
         init {
             noteName = view.findViewById(R.id.note_name)

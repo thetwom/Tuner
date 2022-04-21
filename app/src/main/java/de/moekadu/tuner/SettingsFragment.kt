@@ -56,7 +56,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 //    super.onCreate(savedInstanceState)
 //
 //    setFragmentResultListener("reference_note_tag") {key, result ->
-//      Log.v("Tuner", "SettingsFragment: request result: AAAAAA, $key, $result")
+//      Log.v("Tuner", "SettingsFragment: request result: $key, $result")
 //    }
 //
 //  }

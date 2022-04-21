@@ -70,7 +70,7 @@ class NoteNames(private val noteNames: IntArray,
      *   indices give a distance of one half tone.
      * @param preferFlat If the best fitting note is flat or sharp and this parameter is true,
      *   the "flat" version is preferred. Else the sharp version is returned.
-     *  @param withOctaveIndex If true, we return teh standart notation, e.g. A#4, if false
+     *  @param withOctaveIndex If true, we return the standard notation, e.g. A#4, if false
      *   we do not add the octave index, so it would e.g. A#.
      * @return Note name.
      */

@@ -172,7 +172,7 @@ class ReferenceNotePreference(context: Context, attrs: AttributeSet?) // , defSt
         setValueFromString(getPersistedString(defaultValueResolved))
     }
 
-    fun setValueFromString(value: String) {
+    private fun setValueFromString(value: String) {
 //        Log.v("Tuner", "ReferenceNotePreference.onSetValueFromString: $value")
         this.value.fromString(value)
         persistString(value)

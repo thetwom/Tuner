@@ -115,7 +115,7 @@ class TuningFactory {
                 )
 //                Tuning.Neidhardt4 -> TuningRatioBased(
 //                    tuning,
-//                    circleOfFifthsNeidthardt4,
+//                    circleOfFifthsNeidhardt4,
 //                    rootNoteIndex,
 //                    noteIndexAtReferenceFrequency,
 //                    referenceFrequency

@@ -624,7 +624,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 activeToneStyle = scrollViewState.activeToneStyle
                 automaticScrollToSelected = scrollViewState.automaticScrollToSelected
                 showAnchor = scrollViewState.showAnchor
-//                Log.v("Tuner", "StringView.onRestoreInstanceState: stringIndexInViewCenter=${scrollViewState.stringIndexInViewCenter}, automaticScollToSelected=$automaticScrollToSelected")
+//                Log.v("Tuner", "StringView.onRestoreInstanceState: stringIndexInViewCenter=${scrollViewState.stringIndexInViewCenter}, automaticScrollToSelected=$automaticScrollToSelected")
                 stringIndexInViewCenter = if (automaticScrollToSelected) Float.MAX_VALUE else scrollViewState.stringIndexInViewCenter
             }
             state.getParcelable("super state")

@@ -48,7 +48,7 @@ data class FifthModification(
         return FifthModification(-pythagoreanComma, -syntonicComma, -schisma)
     }
 
-    fun simplify() {
+    private fun simplify() {
         when {
             syntonicComma == schisma -> {
                 pythagoreanComma += schisma

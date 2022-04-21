@@ -15,12 +15,10 @@ class IconPickerDialogFragment(private val iconResourceSelectedListener: IconRes
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        return activity?.let {
+        return activity?.let { act ->
             // Use the Builder class for convenient dialog construction
-            val builder = AlertDialog.Builder(it)
-
+            val builder = AlertDialog.Builder(act)
             val view = requireActivity().layoutInflater.inflate(R.layout.icon_picker_layout, null)
-
             val icons = IntArray(instrumentIcons.size) {
                 instrumentIcons[it].resourceId
             }

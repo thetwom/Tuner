@@ -72,24 +72,16 @@ class TemperamentCircleOfFifthsEntryDiffCallback: DiffUtil.ItemCallback<Temperam
     override fun areContentsTheSame(oldItem: TemperamentCircleOfFifthsEntry, newItem: TemperamentCircleOfFifthsEntry): Boolean {
         return oldItem == newItem
     }
-
-    private fun charSequenceEquals(a: CharSequence?, b: CharSequence?): Boolean {
-        if (a == null && b == null)
-            return true
-        else if (b == null || a == null)
-            return false
-        return a.contentEquals(b)
-    }
 }
 
 class TemperamentCircleOfFifthsAdapter
     : ListAdapter<TemperamentCircleOfFifthsEntry, TemperamentCircleOfFifthsAdapter.ViewHolder>(TemperamentCircleOfFifthsEntryDiffCallback()) {
 
     class ViewHolder(val view: View): RecyclerView.ViewHolder(view){
-        var noteName: TextView? = null
-        var arrowStroke: ImageView? = null
-        var arrowHead: ImageView? = null
-        var fifthsModification: TextView? = null
+        private var noteName: TextView? = null
+        private var arrowStroke: ImageView? = null
+        private var arrowHead: ImageView? = null
+        private var fifthsModification: TextView? = null
         init {
             noteName = view.findViewById(R.id.note_name)
             arrowStroke = view.findViewById(R.id.arrow_stroke)

@@ -94,7 +94,7 @@ class PlotRange(private val allowTouchControl: Boolean = true)  {
     enum class AnimationStrategy {Direct, ExtendShrink}
     /// Range which was set manually using setRange.
     /**
-     * If this is not AUTO  and if no touchbased range is on, this is the range, to be used
+     * If this is not AUTO  and if no touch-based range is on, this is the range, to be used
      */
     private val fixedRange = FloatArray(2) {AUTO}
     /// Range which was set by touch input
