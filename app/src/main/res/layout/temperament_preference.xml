@@ -17,35 +17,35 @@
         android:layout_margin="8dp"
         />
 
-    <View
-        android:id="@+id/separator_spinner_root_note"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/spinner"
-        android:background="?attr/colorPrimaryFaint"
-        />
+<!--    <View-->
+<!--        android:id="@+id/separator_spinner_root_note"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="1dp"-->
+<!--        android:layout_marginLeft="16dp"-->
+<!--        android:layout_marginRight="16dp"-->
+<!--        android:layout_marginTop="8dp"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/spinner"-->
+<!--        android:background="?attr/colorPrimaryFaint"-->
+<!--        />-->
 
-    <TextView
-        android:id="@+id/root_note_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="12sp"
-        android:layout_marginTop="8dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginLeft="16dp"
-        app:layout_constraintTop_toBottomOf="@id/separator_spinner_root_note"
-        app:layout_constraintLeft_toLeftOf="parent"
-        android:text="@string/root_note"
-        />
+<!--    <TextView-->
+<!--        android:id="@+id/root_note_title"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:textSize="12sp"-->
+<!--        android:layout_marginTop="8dp"-->
+<!--        android:layout_marginRight="16dp"-->
+<!--        android:layout_marginLeft="16dp"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/separator_spinner_root_note"-->
+<!--        app:layout_constraintLeft_toLeftOf="parent"-->
+<!--        android:text="@string/root_note"-->
+<!--        />-->
 
     <de.moekadu.tuner.NoteSelector
         android:id="@+id/root_note"
         android:layout_width="match_parent"
         android:layout_height="35dp"
-        app:layout_constraintTop_toBottomOf="@id/root_note_title"
+        app:layout_constraintTop_toBottomOf="@id/spinner"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:layout_marginTop="8dp"
@@ -56,16 +56,28 @@
         app:rectangleRadius="3dp"
         />
 
-    <View
-        android:id="@+id/separator_root_note_details"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/reset"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
-        android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@id/root_note"
-        android:background="?attr/colorPrimaryFaint"
+        android:text="@string/set_default"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         />
+
+<!--    <View-->
+<!--        android:id="@+id/separator_root_note_details"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="1dp"-->
+<!--        android:layout_marginLeft="16dp"-->
+<!--        android:layout_marginRight="16dp"-->
+<!--        android:layout_marginTop="0dp"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/reset"-->
+<!--        android:background="?attr/colorPrimaryFaint"-->
+<!--        />-->
 
     <TextView
         android:id="@+id/details"
@@ -75,7 +87,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginRight="16dp"
         android:layout_marginLeft="16dp"
-        app:layout_constraintTop_toBottomOf="@id/separator_root_note_details"
+        app:layout_constraintTop_toBottomOf="@id/reset"
         app:layout_constraintLeft_toLeftOf="parent"
         android:text="@string/details"
         />

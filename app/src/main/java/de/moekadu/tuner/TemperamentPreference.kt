@@ -12,6 +12,7 @@ import androidx.preference.DialogPreference
 import androidx.preference.PreferenceDialogFragmentCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.button.MaterialButton
 import kotlin.math.log
 import kotlin.math.max
 import kotlin.math.pow
@@ -39,13 +40,14 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
 
     private var spinner: Spinner? = null
     private var rootNote: NoteSelector? = null
-    private var rootNoteTitle: TextView? = null
+//    private var rootNoteTitle: TextView? = null
     private var noteTable: RecyclerView? = null
     private val tableAdapter = TemperamentTableAdapter()
     private var circleOfFifths: RecyclerView? = null
     private var circleOfFifthsAdapter = TemperamentCircleOfFifthsAdapter()
     private var circleOfFifthsDesc: TextView? = null
     private var circleOfFifthsTitle: TextView? = null
+    private var resetToDefaultButton: MaterialButton? = null
 
     private var preferFlat = false
 
@@ -83,13 +85,24 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
 
         spinner = view.findViewById(R.id.spinner)
         rootNote = view.findViewById(R.id.root_note)
-        rootNoteTitle = view.findViewById(R.id.root_note_title)
+//        rootNoteTitle = view.findViewById(R.id.root_note_title)
         noteTable = view.findViewById(R.id.note_table)
         noteTable?.itemAnimator = null
         circleOfFifths = view.findViewById(R.id.circle_of_fifths)
         circleOfFifths?.itemAnimator = null
         circleOfFifthsDesc = view.findViewById(R.id.circle_of_fifths_desc)
         circleOfFifthsTitle = view.findViewById(R.id.circle_of_fifths_title)
+        resetToDefaultButton = view.findViewById(R.id.reset)
+
+        resetToDefaultButton?.setOnClickListener {
+            val spinnerIndex = max(0, Tuning.values().indexOfFirst { it == Tuning.EDO12 })
+            spinner?.setSelection(spinnerIndex)
+            rootNote?.setActiveTone(-9, 200L)
+            val tuning = TuningFactory.create(Tuning.EDO12, 0, 0, 440f)
+            computeCentAndRatioArrays(tuning)
+            updateTable()
+            updateCircleOfFifthCorrections(tuning.getCircleOfFifths())
+        }
 
         when (preference) {
             is TemperamentPreference -> {

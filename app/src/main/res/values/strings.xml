@@ -176,7 +176,7 @@
     <string name="schisma">%d\u2044%d&#x200A;sch</string>
     <string name="plus_correction" translatable="false">" + "</string>
     <string name="minus_correction" translatable="false">" - "</string>
-    <string name="fifth_from_to">%s ➔ %s</string>
     <string name="pythagorean_comma_desc">pC: Pythagorean Comma, 531441\u2044524288\nsC: Syntonic Comma, 81\u204480\nsch: Schisma, 32805\u204432768</string>
     <string name="circle_of_fifths">Circle of fifths</string>
+    <string name="set_default">Reset to default</string>
 </resources>
