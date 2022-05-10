@@ -25,7 +25,6 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContract
-import androidx.appcompat.app.AlertDialog
 import androidx.core.database.getStringOrNull
 
 class InstrumentArchiving(private val instrumentsFragment: InstrumentsFragment) {
@@ -131,20 +130,8 @@ class InstrumentArchiving(private val instrumentsFragment: InstrumentsFragment) 
                 }
                 else -> {
         //            Log.v("Tuner", "InstrumentArchiving.loadInstruments: filename = $filename")
-                    val builder = AlertDialog.Builder(context).apply {
-                        setTitle(context.resources.getQuantityString(R.plurals.load_instruments, instruments.size, instruments.size))
-                        setNegativeButton(R.string.abort) { dialog, _ -> dialog.dismiss() }
-                        setItems(R.array.load_instruments_list) { _, which ->
-                            val array = context.resources.getStringArray(R.array.load_instruments_list)
-                            val task = when (array[which]) {
-                                context.getString(R.string.prepend_current_list) -> InstrumentDatabase.InsertMode.Prepend
-                                context.getString(R.string.append_current_list) -> InstrumentDatabase.InsertMode.Append
-                                else -> InstrumentDatabase.InsertMode.Replace
-                            }
-                            database.loadInstruments(instruments, task)
-                        }
-                    }
-                    builder.show()
+                    val dialog = ImportInstrumentsDialog.createInstance(databaseString)
+                    dialog.show(instrumentsFragment.parentFragmentManager, ImportInstrumentsDialog.REQUEST_KEY)
                 }
             }
         }

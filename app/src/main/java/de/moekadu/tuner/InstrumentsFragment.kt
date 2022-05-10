@@ -120,6 +120,15 @@ class InstrumentsFragment : Fragment() {
 
         val view = inflater.inflate(R.layout.instruments, container, false)
 
+        parentFragmentManager.setFragmentResultListener(ImportInstrumentsDialog.REQUEST_KEY, viewLifecycleOwner) {
+                _, bundle ->
+            val instrumentsString = bundle.getString(ImportInstrumentsDialog.INSTRUMENTS_KEY, "")
+            val instruments = InstrumentDatabase.stringToInstruments(instrumentsString).instruments
+            val taskString = bundle.getString(ImportInstrumentsDialog.INSERT_MODE_KEY, InstrumentDatabase.InsertMode.Append.toString())
+            val task = InstrumentDatabase.InsertMode.valueOf(taskString)
+            instrumentsViewModel.customInstrumentDatabase.loadInstruments(instruments, task)
+        }
+
         recyclerView = view.findViewById(R.id.instrument_list)
         recyclerView?.setHasFixedSize(false)
         recyclerView?.layoutManager = LinearLayoutManager(requireContext())
