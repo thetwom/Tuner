@@ -1,7 +1,9 @@
 package de.moekadu.tuner
 
+import de.moekadu.tuner.notedetection.RealFFT
+import de.moekadu.tuner.notedetection.getFrequency
+import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.junit.Assert.*
 import kotlin.math.cos
 import kotlin.math.sin
 

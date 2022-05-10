@@ -43,7 +43,7 @@
         <item quantity="other">Mittelung über %d Ton-Ergebnisse</item>
     </plurals>
     <string name="max_noise">Maximal zulässiges Hintergrundrauschen</string>
-    <string name="max_noise_summary">Keine Töne finden, wenn Rauschen über %d&#x200A;%%.</string>
+     <string name="max_noise_summary">Keine Töne finden, wenn Rauschen über %d&#x200A;%%.</string>
     <string name="scientific_mode">Wissenschaftlicher Modus</string>
     <string name="tolerance_in_cents">Toleranz</string>
     <string name="expert">Experten</string>

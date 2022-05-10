@@ -29,7 +29,7 @@
 <!--        app:icon="@drawable/ic_frequency_a"-->
 <!--        />-->
 
-        <de.moekadu.tuner.ReferenceNotePreference
+        <de.moekadu.tuner.preferences.ReferenceNotePreference
             app:key="reference_note"
             app:title="@string/reference_frequency"
             app:icon="@drawable/ic_frequency_a"
@@ -64,7 +64,7 @@
             app:icon="@drawable/ic_baseline_developer_board"
             />
 
-        <de.moekadu.tuner.TemperamentPreference
+        <de.moekadu.tuner.preferences.TemperamentPreference
             app:key="temperament"
             app:title="@string/temperament"
             app:icon="@drawable/ic_temperament"

@@ -31,6 +31,9 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
 import androidx.preference.PreferenceManager
+import de.moekadu.tuner.fragments.*
+import de.moekadu.tuner.preferences.AppPreferences
+import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 
 class MainActivity : AppCompatActivity() {
 
@@ -155,7 +158,7 @@ class MainActivity : AppCompatActivity() {
 //        Log.v("Tuner", "MainActivity.loadTuningEditorFragment")
         supportFragmentManager.commit {
             setReorderingAllowed(true)
-            replace<TuningEditorFragment>(R.id.main_content)
+            replace<InstrumentEditorFragment>(R.id.main_content)
             if (!isCurrentFragmentATunerFragment())
                 addToBackStack(null)
         }

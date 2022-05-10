@@ -1,5 +1,6 @@
 package de.moekadu.tuner
 
+import de.moekadu.tuner.notedetection.SampleData
 import org.junit.Assert.*
 import org.junit.Test
 import kotlin.math.roundToInt

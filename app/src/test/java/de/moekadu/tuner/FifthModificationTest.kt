@@ -1,5 +1,7 @@
 package de.moekadu.tuner
 
+import de.moekadu.tuner.temperaments.FifthModification
+import de.moekadu.tuner.temperaments.RationalNumber
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

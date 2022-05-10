@@ -22,7 +22,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent" android:layout_height="match_parent">
 
-    <de.moekadu.tuner.PlotView
+    <de.moekadu.tuner.views.PlotView
         android:id="@+id/spectrum_plot"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -43,7 +43,7 @@
         app:title="@string/spectrum"
         app:yTickLabelWidth="0sp" />
 
-    <de.moekadu.tuner.PlotView
+    <de.moekadu.tuner.views.PlotView
         android:id="@+id/correlation_plot"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -63,7 +63,7 @@
         app:title="@string/autocorrelation"
         app:yTickLabelWidth="0sp" />
 
-    <de.moekadu.tuner.PlotView
+    <de.moekadu.tuner.views.PlotView
         android:id="@+id/pitch_plot"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -115,7 +115,7 @@
         app:enableTouchX="false"
         />
 
-    <de.moekadu.tuner.VolumeMeter
+    <de.moekadu.tuner.views.VolumeMeter
         android:id="@+id/volume_meter"
         android:layout_width="0dp"
         android:layout_height="3dp"
