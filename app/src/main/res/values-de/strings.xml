@@ -163,4 +163,5 @@
     <string name="syntonic_comma">%d\u2044%d&#x200A;sK</string>
     <string name="schisma">%d\u2044%d&#x200A;sch</string>
     <string name="set_default">Zurücksetzen</string>
+    <string name="acknowledged">Verstanden</string>
 </resources>

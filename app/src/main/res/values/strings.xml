@@ -179,4 +179,5 @@
     <string name="pythagorean_comma_desc">pC: Pythagorean Comma, 531441\u2044524288\nsC: Syntonic Comma, 81\u204480\nsch: Schisma, 32805\u204432768</string>
     <string name="circle_of_fifths">Circle of fifths</string>
     <string name="set_default">Reset to default</string>
+    <string name="acknowledged">Acknowledged</string>
 </resources>

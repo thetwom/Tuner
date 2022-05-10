@@ -19,12 +19,9 @@
 
 package de.moekadu.tuner
 
-import android.app.AlertDialog
-import android.content.res.Resources
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.view.*
-import android.widget.TextView
 import androidx.preference.*
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -193,36 +190,16 @@ class SettingsFragment : PreferenceFragmentCompat() {
     val resetSettings = findPreference<Preference>("setdefault") ?: throw RuntimeException("No reset settings preference")
 
     resetSettings.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-      (activity as MainActivity?)?.let { act ->
-        val builder = AlertDialog.Builder(act)
-                        .setTitle(R.string.reset_settings_prompt)
-                        .setPositiveButton(R.string.yes) { _, _ ->
-                          val preferenceEditor = PreferenceManager.getDefaultSharedPreferences(act).edit()
-                          preferenceEditor.clear()
-                          PreferenceManager.setDefaultValues(act, R.xml.preferences, true)
-                          preferenceEditor.apply()
-                          act.recreate()
-                        }
-                        .setNegativeButton(R.string.no) { dialog, _ -> dialog?.cancel() }
-                builder.show()
-            }
-            false
-        }
-
+        val dialog = ResetSettingsDialog()
+        dialog.show(parentFragmentManager, "tag")
+        false
+    }
 
     val aboutPreference = findPreference<Preference>("about") ?: throw RuntimeException("no about preference available")
     aboutPreference.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-      val textView = TextView(context)
-      textView.text = getString(R.string.about_message, BuildConfig.VERSION_NAME)
-      val pad = (20f * Resources.getSystem().displayMetrics.density).toInt()
-      textView.setPadding(pad, pad, pad, pad)
-      context?.let { ctx ->
-        val builder = AlertDialog.Builder(ctx)
-          .setTitle(R.string.about)
-          .setView(textView)
-        builder.show()
-      }
-      false
+        val dialog = AboutDialog()
+            dialog.show(parentFragmentManager, "tag")
+            false
     }
 
     return super.onCreateView(inflater, container, savedInstanceState)
