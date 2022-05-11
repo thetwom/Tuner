@@ -180,4 +180,8 @@
     <string name="circle_of_fifths">Circle of fifths</string>
     <string name="set_default">Reset to default</string>
     <string name="acknowledged">Acknowledged</string>
+    <string name="no_instruments_selected">No instruments selected.</string>
+    <string name="select_instruments">Select instruments</string>
+    <string name="share2">Share</string>
+    <string name="select_all">Select all</string>
 </resources>

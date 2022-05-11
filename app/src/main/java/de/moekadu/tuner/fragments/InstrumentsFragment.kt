@@ -1,6 +1,5 @@
 package de.moekadu.tuner.fragments
 
-import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Canvas
 import android.os.Bundle
@@ -8,7 +7,6 @@ import android.view.*
 import android.widget.Toast
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.ConcatAdapter
@@ -17,8 +15,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
-import de.moekadu.tuner.*
+import de.moekadu.tuner.MainActivity
+import de.moekadu.tuner.R
 import de.moekadu.tuner.dialogs.ImportInstrumentsDialog
+import de.moekadu.tuner.dialogs.InstrumentsSharingDialog
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentArchiving
 import de.moekadu.tuner.instruments.InstrumentDatabase
@@ -27,7 +27,6 @@ import de.moekadu.tuner.preferences.AppPreferences
 import de.moekadu.tuner.viewmodels.InstrumentEditorViewModel
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 import de.moekadu.tuner.viewmodels.TunerViewModel
-import java.io.File
 import kotlin.math.absoluteValue
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -91,30 +90,40 @@ class InstrumentsFragment : Fragment() {
                 return true
             }
             R.id.action_share -> {
-                val numInstruments = instrumentsViewModel.customInstrumentDatabase.size
-
                 if (instrumentsViewModel.customInstrumentDatabase.size == 0) {
                     Toast.makeText(requireContext(), R.string.no_instruments_for_sharing, Toast.LENGTH_LONG).show()
                 } else {
-                    val content = instrumentsViewModel.customInstrumentDatabase.getInstrumentsString(context)
-
-                    val sharePath = File(context?.cacheDir, "share").also { it.mkdir() }
-                    val sharedFile = File(sharePath.path, "tuner.txt")
-                    sharedFile.writeBytes(content.toByteArray())
-
-                    val uri = FileProvider.getUriForFile(requireContext(), requireContext().packageName, sharedFile)
-
-                    val shareIntent = Intent().apply {
-                        action = Intent.ACTION_SEND
-                        putExtra(Intent.EXTRA_STREAM, uri)
-                        putExtra(Intent.EXTRA_EMAIL, "")
-                        putExtra(Intent.EXTRA_CC, "")
-                        putExtra(Intent.EXTRA_TITLE, resources.getQuantityString(R.plurals.sharing_num_instruments, numInstruments, numInstruments))
-                        type = "text/plain"
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    startActivity(Intent.createChooser(shareIntent, getString(R.string.share)))
+                    val dialogFragment = InstrumentsSharingDialog(
+                        requireContext(),
+                        instrumentsViewModel.customInstrumentDatabase.instruments
+                    )
+                    dialogFragment.show(parentFragmentManager, "tag")
                 }
+
+//                val numInstruments = instrumentsViewModel.customInstrumentDatabase.size
+//
+//                if (instrumentsViewModel.customInstrumentDatabase.size == 0) {
+//                    Toast.makeText(requireContext(), R.string.no_instruments_for_sharing, Toast.LENGTH_LONG).show()
+//                } else {
+//                    val content = instrumentsViewModel.customInstrumentDatabase.getInstrumentsString(context)
+//
+//                    val sharePath = File(context?.cacheDir, "share").also { it.mkdir() }
+//                    val sharedFile = File(sharePath.path, "tuner.txt")
+//                    sharedFile.writeBytes(content.toByteArray())
+//
+//                    val uri = FileProvider.getUriForFile(requireContext(), requireContext().packageName, sharedFile)
+//
+//                    val shareIntent = Intent().apply {
+//                        action = Intent.ACTION_SEND
+//                        putExtra(Intent.EXTRA_STREAM, uri)
+//                        putExtra(Intent.EXTRA_EMAIL, "")
+//                        putExtra(Intent.EXTRA_CC, "")
+//                        putExtra(Intent.EXTRA_TITLE, resources.getQuantityString(R.plurals.sharing_num_instruments, numInstruments, numInstruments))
+//                        type = "text/plain"
+//                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+//                    }
+//                    startActivity(Intent.createChooser(shareIntent, getString(R.string.share)))
+//                }
             }
         }
 

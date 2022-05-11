@@ -86,25 +86,10 @@ class InstrumentDatabase {
         databaseChangedListener?.onChanged(this)
     }
 
-    private fun getSingleInstrumentString(context: Context?, instrument: Instrument): String {
-        val name = instrument.getNameString(context)
-        val iconName = instrumentIconId2Name(instrument.iconResource)
-        return "Instrument ${instrument.stableId}\n" +
-                "Length of name=${name.length}\n" +
-                "Name=$name\n" +
-                "Icon=$iconName\n" +
-                "String indices=${
-                    instrument.strings.joinToString(
-                        separator = ",",
-                        prefix = "[",
-                        postfix = "]"
-                    )
-                }\n"
-    }
-
     fun getInstrumentsString(context: Context?) : String {
 //        Log.v("Metronome", "SceneDatabase.getSceneString: string= ${stringBuilder}")
-        return "Version=${BuildConfig.VERSION_NAME}\n\n" + instruments.joinToString(separator = "\n\n"){ getSingleInstrumentString(context, it)}
+//        return "Version=${BuildConfig.VERSION_NAME}\n\n" + instruments.joinToString(separator = "\n\n"){ getSingleInstrumentString(context, it)}
+        return getInstrumentsString(context, instruments)
     }
 
     fun loadInstruments(newInstruments: List<Instrument>, mode: InsertMode = InsertMode.Replace): FileCheck {
@@ -234,6 +219,27 @@ class InstrumentDatabase {
                 "String indices=" -> Keyword.Indices
                 else -> Keyword.Invalid
             }
+        }
+
+        private fun getSingleInstrumentString(context: Context?, instrument: Instrument): String {
+            val name = instrument.getNameString(context)
+            val iconName = instrumentIconId2Name(instrument.iconResource)
+            return "Instrument ${instrument.stableId}\n" +
+                    "Length of name=${name.length}\n" +
+                    "Name=$name\n" +
+                    "Icon=$iconName\n" +
+                    "String indices=${
+                        instrument.strings.joinToString(
+                            separator = ",",
+                            prefix = "[",
+                            postfix = "]"
+                        )
+                    }\n"
+        }
+
+        fun getInstrumentsString(context: Context?, instruments: List<Instrument>) : String {
+//        Log.v("Metronome", "SceneDatabase.getSceneString: string= ${stringBuilder}")
+            return "Version=${BuildConfig.VERSION_NAME}\n\n" + instruments.joinToString(separator = "\n\n"){ getSingleInstrumentString(context, it)}
         }
 
         fun stringToInstruments(instrumentsString: String): InstrumentsAndFileCheckResult {

@@ -164,4 +164,8 @@
     <string name="schisma">%d\u2044%d&#x200A;sch</string>
     <string name="set_default">Zurücksetzen</string>
     <string name="acknowledged">Verstanden</string>
+    <string name="share2">Teilen</string>
+    <string name="select_all">Alle auswählen</string>
+    <string name="select_instruments">Instrumente auswählen</string>
+    <string name="no_instruments_selected">Keine Instrumente ausgewählt.</string>
 </resources>
