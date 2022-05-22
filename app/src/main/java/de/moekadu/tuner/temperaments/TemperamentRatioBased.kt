@@ -3,14 +3,14 @@ package de.moekadu.tuner.temperaments
 import kotlin.math.*
 
 open class TemperamentRatioBased(
-    private val _temperament: Temperament,
+    private val _temperamentType: TemperamentType,
     private val ratios: DoubleArray,
     private val rootNoteIndex: Int = -9, // the first ratio of ratios is set at this index (-9 for 12-tone is c)
     private val noteIndexAtReferenceFrequency: Int = 0, // 0 for 12-tone is a4
     private val _referenceFrequency: Float = 440f,
     frequencyMin: Float = 16.0f, // this would be c0 if the noteIndexAtReferenceFrequency is 0 (~16.4Hz for equal temperament)
     frequencyMax: Float = 17000.0f) // this would be c10 if the noteIndexAtReferenceFrequency is 0 (~16744Hz for equal temperament)
-    : TemperamentFrequencies {
+    : MusicalScale {
 
     private var noteIndexBegin = Int.MAX_VALUE
     private var noteIndexEnd = Int.MIN_VALUE
@@ -20,13 +20,13 @@ open class TemperamentRatioBased(
     private var rationalNumberRatios: Array<RationalNumber>? = null
 
     constructor(
-        temperament: Temperament,
+        temperamentType: TemperamentType,
         circleOfFifths: TemperamentCircleOfFifths,
         rootNoteIndex: Int,
         noteIndexAtReferenceFrequency: Int,
         referenceFrequency: Float
     ) : this(
-        temperament,
+        temperamentType,
         circleOfFifths.getRatios(),
         rootNoteIndex,
         noteIndexAtReferenceFrequency,
@@ -36,13 +36,13 @@ open class TemperamentRatioBased(
     }
 
     constructor(
-        temperament: Temperament,
+        temperamentType: TemperamentType,
         rationalNumbers: Array<RationalNumber>,
         rootNoteIndex: Int,
         noteIndexAtReferenceFrequency: Int,
         referenceFrequency: Float
     ) : this(
-        temperament,
+        temperamentType,
         rationalNumbers.map {it.toDouble()}.toDoubleArray(),
         rootNoteIndex,
         noteIndexAtReferenceFrequency,
@@ -114,8 +114,8 @@ open class TemperamentRatioBased(
         return rationalNumberRatios
     }
 
-    override fun getTemperament(): Temperament {
-        return _temperament
+    fun getTemperamentType(): TemperamentType {
+        return _temperamentType
     }
 
     override fun getRootNote(): Int {

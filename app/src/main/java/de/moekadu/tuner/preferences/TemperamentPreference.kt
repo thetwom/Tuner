@@ -58,17 +58,17 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
     private var ratioArray: Array<RationalNumber>? = null
 
     private var restoredRootNote = Int.MAX_VALUE
-    private var restoredTemperament: Temperament? = null
+    private var restoredTemperamentType: TemperamentType? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         if (savedInstanceState != null) {
             restoredRootNote = savedInstanceState.getInt("root note", Int.MAX_VALUE)
             val restoredTemperamentString = savedInstanceState.getString("temperament")
-            restoredTemperament = if (restoredTemperamentString == null)
+            restoredTemperamentType = if (restoredTemperamentString == null)
                 null
             else
-                Temperament.valueOf(restoredTemperamentString)
+                TemperamentType.valueOf(restoredTemperamentString)
         }
 
         preferFlat = arguments?.getBoolean(PREFER_FLAT_KEY) ?: false
@@ -79,7 +79,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
         // save current settings of preference
         val spinnerItem = spinner?.selectedItem
         if (spinnerItem is TemperamentProperties)
-            outState.putString("temperament", spinnerItem.temperament.toString())
+            outState.putString("temperament", spinnerItem.temperamentType.toString())
         outState.putInt("root note", rootNote?.activeToneIndex ?: -9)
         super.onSaveInstanceState(outState)
     }
@@ -98,10 +98,10 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
         resetToDefaultButton = view.findViewById(R.id.reset)
 
         resetToDefaultButton?.setOnClickListener {
-            val spinnerIndex = max(0, Temperament.values().indexOfFirst { it == Temperament.EDO12 })
+            val spinnerIndex = max(0, TemperamentType.values().indexOfFirst { it == TemperamentType.EDO12 })
             spinner?.setSelection(spinnerIndex)
             rootNote?.setActiveTone(-9, 200L)
-            val tuning = TemperamentFactory.create(Temperament.EDO12, 0, 0, 440f)
+            val tuning = TemperamentFactory.create(TemperamentType.EDO12, 0, 0, 440f)
             computeCentAndRatioArrays(tuning)
             updateTable()
             updateCircleOfFifthNoteNames()
@@ -112,15 +112,15 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
             is TemperamentPreference -> {
                 if (restoredRootNote == Int.MAX_VALUE)
                     restoredRootNote = (preference as TemperamentPreference).value.rootNote
-                if (restoredTemperament == null)
-                    restoredTemperament = (preference as TemperamentPreference).value.temperament
+                if (restoredTemperamentType == null)
+                    restoredTemperamentType = (preference as TemperamentPreference).value.temperamentType
             }
         }
 
         if (restoredRootNote == Int.MAX_VALUE)
             restoredRootNote = -9
-        if (restoredTemperament == null)
-            restoredTemperament = Temperament.EDO12
+        if (restoredTemperamentType == null)
+            restoredTemperamentType = TemperamentType.EDO12
 
         context?.let { ctx ->
             spinner?.adapter = TemperamentSpinnerAdapter(ctx)
@@ -140,11 +140,11 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
             updateTable()
             updateCircleOfFifthNoteNames()
         }
-        val spinnerIndex = max(0, Temperament.values().indexOfFirst { it == restoredTemperament })
+        val spinnerIndex = max(0, TemperamentType.values().indexOfFirst { it == restoredTemperamentType })
         spinner?.setSelection(spinnerIndex)
         spinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val tuningType = Temperament.values()[position]
+                val tuningType = TemperamentType.values()[position]
                 val tuning = TemperamentFactory.create(tuningType, 0, 0, 440f)
                 computeCentAndRatioArrays(tuning)
                 updateTable()
@@ -156,7 +156,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
             }
         }
 
-        val tuningType = restoredTemperament ?: Temperament.EDO12
+        val tuningType = restoredTemperamentType ?: TemperamentType.EDO12
         val tuning = TemperamentFactory.create(tuningType, 0, 0, 440f)
         computeCentAndRatioArrays(tuning)
         updateTable()
@@ -168,7 +168,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
         if (positiveResult) {
             arguments?.getString(REQUEST_KEY)?.let {
                 val rootNote = rootNote?.activeToneIndex ?: -9
-                val tuning = (spinner?.selectedItem as TemperamentProperties?)?.temperament ?: Temperament.EDO12
+                val tuning = (spinner?.selectedItem as TemperamentProperties?)?.temperamentType ?: TemperamentType.EDO12
 
                 (preference as TemperamentPreference).setValueFromData(tuning, rootNote)
                 // setFragmentResult(it, bundle)
@@ -176,7 +176,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
         }
     }
 
-    private fun computeCentAndRatioArrays(temperament: TemperamentFrequencies) {
+    private fun computeCentAndRatioArrays(temperament: MusicalScale) {
         centArray =  Array(temperament.getNumberOfNotesPerOctave() + 1) {
             computeCent(temperament.getNoteFrequency(it) / temperament.getNoteFrequency(0))
         }
@@ -218,17 +218,17 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
 class TemperamentPreference(context: Context, attrs: AttributeSet?)
     : DialogPreference(context, attrs, R.attr.dialogPreferenceStyle) {
     companion object {
-        fun getTemperamentFromValue(string: String?): Temperament {
-            val value = Value(Temperament.EDO12, -9).apply { fromString(string) }
-            return value.temperament
+        fun getTemperamentFromValue(string: String?): TemperamentType {
+            val value = Value(TemperamentType.EDO12, -9).apply { fromString(string) }
+            return value.temperamentType
         }
         fun getRootNoteIndexFromValue(string: String?): Int {
-            val value = Value(Temperament.EDO12, -9).apply { fromString(string) }
+            val value = Value(TemperamentType.EDO12, -9).apply { fromString(string) }
             return value.rootNote
         }
     }
     fun interface OnTemperamentChangedListener {
-        fun onTemperamentChanged(preference: TemperamentPreference, temperament: Temperament, rootNote: Int)
+        fun onTemperamentChanged(preference: TemperamentPreference, temperamentType: TemperamentType, rootNote: Int)
     }
 
     private var onTemperamentChangedListener: OnTemperamentChangedListener? = null
@@ -237,9 +237,9 @@ class TemperamentPreference(context: Context, attrs: AttributeSet?)
         this.onTemperamentChangedListener = onTemperamentChangedListener
     }
 
-    class Value (var temperament: Temperament, var rootNote: Int) {
+    class Value (var temperamentType: TemperamentType, var rootNote: Int) {
         override fun toString(): String {
-            return "$temperament $rootNote"
+            return "$temperamentType $rootNote"
         }
         fun fromString(string: String?) {
             if (string == null)
@@ -247,12 +247,12 @@ class TemperamentPreference(context: Context, attrs: AttributeSet?)
             val values = string.split(" ")
             if (values.size != 2)
                 return
-            temperament = Temperament.valueOf(values[0])
+            temperamentType = TemperamentType.valueOf(values[0])
             rootNote = values[1].toIntOrNull() ?: -9
         }
     }
 
-    var value = Value(Temperament.EDO12, -9)
+    var value = Value(TemperamentType.EDO12, -9)
         private set
 
     init {
@@ -276,15 +276,15 @@ class TemperamentPreference(context: Context, attrs: AttributeSet?)
         this.value.fromString(value)
         persistString(value)
 //        Log.v("Tuner", "TemperamentPreference.onSetValueFromString: $value, f=${this.value.frequency}, t=${this.value.toneIndex}")
-        onTemperamentChangedListener?.onTemperamentChanged(this, this.value.temperament, this.value.rootNote)
+        onTemperamentChangedListener?.onTemperamentChanged(this, this.value.temperamentType, this.value.rootNote)
         // summary = "my new summary"
     }
 
-    fun setValueFromData(temperament: Temperament, rootNote: Int) {
-        value.temperament = temperament
+    fun setValueFromData(temperamentType: TemperamentType, rootNote: Int) {
+        value.temperamentType = temperamentType
         value.rootNote = rootNote
         persistString(value.toString())
-        onTemperamentChangedListener?.onTemperamentChanged(this, this.value.temperament, this.value.rootNote)
+        onTemperamentChangedListener?.onTemperamentChanged(this, this.value.temperamentType, this.value.rootNote)
         // summary = "my new summary"
     }
 

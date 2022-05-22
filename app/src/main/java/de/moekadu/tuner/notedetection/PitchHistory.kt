@@ -21,7 +21,7 @@ package de.moekadu.tuner.notedetection
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import de.moekadu.tuner.temperaments.TemperamentFrequencies
+import de.moekadu.tuner.temperaments.MusicalScale
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -51,7 +51,7 @@ fun pitchHistoryDurationToPitchSamples(duration: Float, sampleRate: Int, windowS
     return (duration / (windowSize.toFloat() / sampleRate.toFloat() * (1.0f - overlap))).roundToInt()
 }
 
-class PitchHistory(size : Int, var temperamentFrequencies : TemperamentFrequencies) {
+class PitchHistory(size : Int, var musicalScale : MusicalScale) {
 
     var size = size
         set(value) {
@@ -318,9 +318,9 @@ class PitchHistory(size : Int, var temperamentFrequencies : TemperamentFrequenci
 //    }
 
     private fun checkIfValueIsWithinAllowedRange(value: Float, previousValue: Float) : Boolean {
-        val toneIndex = temperamentFrequencies.getToneIndex(previousValue)
-        val validFrequencyMin = temperamentFrequencies.getNoteFrequency(toneIndex - allowedDeltaNoteToBeValid)
-        val validFrequencyMax = temperamentFrequencies.getNoteFrequency(toneIndex + allowedDeltaNoteToBeValid)
+        val toneIndex = musicalScale.getToneIndex(previousValue)
+        val validFrequencyMin = musicalScale.getNoteFrequency(toneIndex - allowedDeltaNoteToBeValid)
+        val validFrequencyMax = musicalScale.getNoteFrequency(toneIndex + allowedDeltaNoteToBeValid)
         return !(value >= validFrequencyMax || value < validFrequencyMin)
     }
 }

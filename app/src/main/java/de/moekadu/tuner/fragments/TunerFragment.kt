@@ -164,7 +164,7 @@ class TunerFragment : Fragment() {
 //            volumeMeter?.volume = log10(max(1e-12f, standardDeviation))
 //        }
 
-        viewModel.temperamentFrequencies.observe(viewLifecycleOwner) { tuningFrequencies ->
+        viewModel.musicalScale.observe(viewLifecycleOwner) { tuningFrequencies ->
             updatePitchPlotNoteNames()
             // TODO: should we extend the limits slightly, that the whole mark is visible?
             val firstFrequencyIndex = tuningFrequencies.getToneIndexBegin()
@@ -358,7 +358,7 @@ class TunerFragment : Fragment() {
 
         pitchPlot?.setYMark(
             targetNote.frequency,
-            noteNames.getNoteName(requireContext(), targetNote.toneIndex, preferFlat = preferFlat),
+            noteNames.getNoteName(requireContext(), targetNote.noteIndex, preferFlat = preferFlat),
             MARK_ID_FREQUENCY,
             MarkAnchor.East,
             if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
@@ -370,7 +370,7 @@ class TunerFragment : Fragment() {
     private fun updatePitchPlotNoteNames(redraw: Boolean = true) {
         val noteNames = viewModel.noteNames.value ?: return
         val preferFlat = viewModel.preferFlat.value ?: return
-        val tuningFrequencies = viewModel.temperamentFrequencies.value ?: return
+        val tuningFrequencies = viewModel.musicalScale.value ?: return
 
         val numNotes = tuningFrequencies.getToneIndexEnd() - tuningFrequencies.getToneIndexBegin()
         val noteFrequencies = FloatArray(numNotes) {
@@ -387,7 +387,7 @@ class TunerFragment : Fragment() {
         viewModel.targetNote.value?.let { targetNote ->
             pitchPlot?.setYMark(
                 targetNote.frequency,
-                noteNames.getNoteName(requireContext(), targetNote.toneIndex, preferFlat),
+                noteNames.getNoteName(requireContext(), targetNote.noteIndex, preferFlat),
                 MARK_ID_FREQUENCY,
                 MarkAnchor.East,
                 if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,

@@ -9,14 +9,14 @@ class TargetNote {
     enum class TuningStatus {TooLow, TooHigh, InTune, Unknown}
 
     /// Tuning frequency class which connects tone indices with frequencies
-    var temperamentFrequencies: TemperamentFrequencies = TemperamentFactory.create(Temperament.EDO12, -9, 0, 440f)
+    var musicalScale: MusicalScale = TemperamentFactory.create(TemperamentType.EDO12, -9, 0, 440f)
         set(value) {
             field = value
             if (frequencyRange[1] > frequencyRange[0]) {
                 // this will already call "recomputeTargetNoteProperties"
                 setTargetNoteBasedOnFrequency(frequencyForLastTargetNoteDetection, ignoreFrequencyRange = true)
             } else {
-                recomputeTargetNoteProperties(toneIndex, toleranceInCents, field)
+                recomputeTargetNoteProperties(noteIndex, toleranceInCents, field)
             }
         }
 
@@ -37,7 +37,7 @@ class TargetNote {
     var toleranceInCents = 5
         set(value) {
             field = value
-            recomputeTargetNoteProperties(toneIndex, value, temperamentFrequencies)
+            recomputeTargetNoteProperties(noteIndex, value, musicalScale)
         }
 
     /** Current auto-detect frequency range
@@ -52,7 +52,7 @@ class TargetNote {
     private var frequencyForLastTargetNoteDetection = -1f
 
     /// Current target note index
-    var toneIndex = 0
+    var noteIndex = 0
         private set
 
     /// String index of target note
@@ -95,9 +95,9 @@ class TargetNote {
     fun setToneIndexExplicitly(toneIndex: Int) {
         frequencyRange[0] = 100f
         frequencyRange[1] = -100f
-        if (toneIndex != this.toneIndex) {
-            this.toneIndex = toneIndex
-            recomputeTargetNoteProperties(toneIndex, toleranceInCents, temperamentFrequencies)
+        if (toneIndex != this.noteIndex) {
+            this.noteIndex = toneIndex
+            recomputeTargetNoteProperties(toneIndex, toleranceInCents, musicalScale)
         }
     }
 
@@ -115,59 +115,59 @@ class TargetNote {
         }
 
         if (frequency == null)
-            return toneIndex
+            return noteIndex
 
         frequencyForLastTargetNoteDetection = frequency
 
         if (frequency in frequencyRange[0] .. frequencyRange[1] && !ignoreFrequencyRange)
-            return toneIndex
+            return noteIndex
 
         val numStrings = instrument.strings.size
         when {
             numStrings == 1 -> {
                 frequencyRange[0] = Float.NEGATIVE_INFINITY
                 frequencyRange[1] = Float.POSITIVE_INFINITY
-                toneIndex = instrument.strings[0]
+                noteIndex = instrument.strings[0]
             }
             instrument.isChromatic -> {
-                toneIndex = temperamentFrequencies.getClosestToneIndex(frequency)
-                frequencyRange[0] = temperamentFrequencies.getNoteFrequency(toneIndex - allowedHalfToneDeviationBeforeChangingTarget)
-                frequencyRange[1] = temperamentFrequencies.getNoteFrequency(toneIndex + allowedHalfToneDeviationBeforeChangingTarget)
+                noteIndex = musicalScale.getClosestNoteIndex(frequency)
+                frequencyRange[0] = musicalScale.getNoteFrequency(noteIndex - allowedHalfToneDeviationBeforeChangingTarget)
+                frequencyRange[1] = musicalScale.getNoteFrequency(noteIndex + allowedHalfToneDeviationBeforeChangingTarget)
             }
             else -> {
-                val exactToneIndex = temperamentFrequencies.getToneIndex(frequency)
-                var index = instrument.stringsSorted.binarySearch(exactToneIndex)
+                val exactNoteIndex = musicalScale.getNoteIndex(frequency)
+                var index = instrument.stringsSorted.binarySearch(exactNoteIndex)
                 if (index < 0)
                     index = -(index + 1)
 
                 val stringIndex = when {
                     index == 0 -> 0
                     index == numStrings -> numStrings - 1
-                    exactToneIndex - instrument.stringsSorted[index - 1] < instrument.stringsSorted[index] - exactToneIndex -> index - 1
+                    exactNoteIndex - instrument.stringsSorted[index - 1] < instrument.stringsSorted[index] - exactNoteIndex -> index - 1
                     else -> index
                 }
 
                 frequencyRange[0] = if (stringIndex == 0)
                     Float.NEGATIVE_INFINITY
                 else
-                    temperamentFrequencies.getNoteFrequency(0.4f * instrument.stringsSorted[stringIndex] + 0.6f * instrument.stringsSorted[stringIndex - 1])
+                    musicalScale.getNoteFrequency(0.4f * instrument.stringsSorted[stringIndex] + 0.6f * instrument.stringsSorted[stringIndex - 1])
 
                 frequencyRange[1] = if (stringIndex == numStrings - 1)
                     Float.POSITIVE_INFINITY
                 else
-                    temperamentFrequencies.getNoteFrequency(0.4f * instrument.stringsSorted[stringIndex] + 0.6f * instrument.stringsSorted[stringIndex + 1])
-                toneIndex = instrument.stringsSorted[stringIndex].roundToInt()
+                    musicalScale.getNoteFrequency(0.4f * instrument.stringsSorted[stringIndex] + 0.6f * instrument.stringsSorted[stringIndex + 1])
+                noteIndex = instrument.stringsSorted[stringIndex].roundToInt()
             }
         }
 
-        recomputeTargetNoteProperties(toneIndex, toleranceInCents, temperamentFrequencies)
+        recomputeTargetNoteProperties(noteIndex, toleranceInCents, musicalScale)
 
-        return toneIndex
+        return noteIndex
     }
 
     /// Recompute current target status.
-    private fun recomputeTargetNoteProperties(toneIndex: Int, toleranceInCents: Int, temperamentFrequencies: TemperamentFrequencies) {
-        frequency = temperamentFrequencies.getNoteFrequency(toneIndex)
+    private fun recomputeTargetNoteProperties(noteIndex: Int, toleranceInCents: Int, musicalScale: MusicalScale) {
+        frequency = musicalScale.getNoteFrequency(noteIndex)
         val toleranceRatio = (2.0.pow(toleranceInCents / 1200.0)).toFloat()
         frequencyLowerTolerance = frequency / toleranceRatio
         frequencyUpperTolerance = frequency * toleranceRatio

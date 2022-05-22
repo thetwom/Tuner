@@ -7,15 +7,15 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.TemperamentType
 import de.moekadu.tuner.temperaments.getTuningDescriptionResourceId
 import de.moekadu.tuner.temperaments.getTuningNameResourceId
 
-data class TemperamentProperties(val temperament: Temperament, val nameId: Int, val descriptionId: Int?)
+data class TemperamentProperties(val temperamentType: TemperamentType, val nameId: Int, val descriptionId: Int?)
 
 class TemperamentSpinnerAdapter(context: Context) : ArrayAdapter<TemperamentProperties>(context, 0){
     private val inflater = LayoutInflater.from(context)
-    private val tunings = Temperament.values()
+    private val tunings = TemperamentType.values()
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view = convertView ?: inflater.inflate(R.layout.temperament_spinner_item, parent, false)
