@@ -49,8 +49,8 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:layout_marginTop="8dp"
-        app:labelTextColor="?attr/colorPrimary"
-        app:labelTextColor2="?attr/colorPrimaryFaint"
+        app:labelTextColor="?attr/colorOnSurface"
+        app:labelTextColor2="?attr/colorSurfaceVariant"
         app:scaleText="1.0"
         app:textStyle="bold"
         app:rectangleRadius="3dp"
@@ -64,8 +64,11 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         app:layout_constraintTop_toBottomOf="@id/root_note"
+        app:cornerRadius="3dp"
+        android:textColor="?attr/colorOnSurface"
+        app:strokeColor="?attr/colorOnSurface"
         android:text="@string/set_default"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
         />
 
 <!--    <View-->
@@ -89,6 +92,7 @@
         android:layout_marginLeft="16dp"
         app:layout_constraintTop_toBottomOf="@id/reset"
         app:layout_constraintLeft_toLeftOf="parent"
+        android:textColor="?attr/colorOnSurface"
         android:text="@string/details"
         />
 
@@ -112,6 +116,7 @@
         android:layout_marginLeft="16dp"
         app:layout_constraintTop_toBottomOf="@id/note_table"
         app:layout_constraintLeft_toLeftOf="parent"
+        android:textColor="?attr/colorOnSurface"
         android:text="@string/circle_of_fifths"
         />
 
@@ -134,6 +139,7 @@
         android:textSize="11sp"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
+        android:textColor="?attr/colorOnSurfaceVariant"
         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

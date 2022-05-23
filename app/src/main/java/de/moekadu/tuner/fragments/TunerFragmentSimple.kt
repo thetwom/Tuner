@@ -33,8 +33,8 @@ import com.google.android.material.button.MaterialButton
 import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.instrumentDatabase
-import de.moekadu.tuner.temperaments.TargetNote
 import de.moekadu.tuner.preferences.AppPreferences
+import de.moekadu.tuner.temperaments.TargetNote
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 import de.moekadu.tuner.viewmodels.TunerViewModel
 import de.moekadu.tuner.views.*
@@ -273,8 +273,8 @@ class TunerFragmentSimple : Fragment() {
         }
 
         when (tuningStatus) {
-            TargetNote.TuningStatus.InTune -> stringView?.activeToneStyle = 1
-            else -> stringView?.activeToneStyle = 2
+            TargetNote.TuningStatus.InTune -> stringView?.activeToneStyle = 2
+            else -> stringView?.activeToneStyle = 3
         }
         if (redraw)
             pitchPlot?.invalidate()

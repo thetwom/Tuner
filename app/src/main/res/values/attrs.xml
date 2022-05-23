@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <attr name="colorPrimaryFaint" format="color"/>
+    <attr name="colorPositive" format="color"/>
+    <attr name="colorOnPositive" format="color"/>
+    <attr name="colorNegative" format="color"/>
+    <attr name="colorOnNegative" format="color"/>
 </resources>
