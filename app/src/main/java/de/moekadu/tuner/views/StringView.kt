@@ -32,12 +32,18 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     )
 
     class StringInfo(val toneIndex: Int, val label: CharSequence?) {
-        val layouts = Array<StaticLayout?>(3) { null }
+        val layouts = Array<StaticLayout?>(4) { null }
     }
 
     enum class HighlightBy { StringIndex, ToneIndex, Off }
 
     private val stringPaint = arrayOf(
+        Paint().apply {
+            color = Color.BLACK
+            style = Paint.Style.STROKE
+            strokeWidth = 3f
+            isAntiAlias = true
+        },
         Paint().apply {
             color = Color.BLACK
             style = Paint.Style.STROKE
@@ -73,12 +79,22 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             color = Color.BLACK
             style = Paint.Style.FILL
             isAntiAlias = true
+        },
+        Paint().apply {
+            color = Color.BLACK
+            style = Paint.Style.FILL
+            isAntiAlias = true
         }
     )
 
     private val labelPaint = arrayOf(
         TextPaint().apply {
             color = Color.GREEN
+            textSize = 12f
+            isAntiAlias = true
+        },
+        TextPaint().apply {
+            color = Color.BLUE
             textSize = 12f
             isAntiAlias = true
         },
@@ -286,8 +302,9 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
     private var anchorDrawablePosition = 1 // 0 -> left, 1 -> right
 
-    private var scrollCenterDrawable: TouchControlDrawable
-    private var scrollCenterDrawableRed: TouchControlDrawable
+    private var scrollCenterDrawablePositive: TouchControlDrawable
+    private var scrollCenterDrawableNegative: TouchControlDrawable
+    private var scrollCenterDrawableNeutral: TouchControlDrawable
     //private var scrollUpDrawable: TouchControlDrawable
     //private var scrollDownDrawable: TouchControlDrawable
 
@@ -337,6 +354,11 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             labelPaint[2].color =
                 ta.getColor(R.styleable.StringView_labelTextColor3, labelPaint[2].color)
 
+            labelPaint[3].textSize =
+                ta.getDimension(R.styleable.StringView_labelTextSize4, labelPaint[3].textSize)
+            labelPaint[3].color =
+                ta.getColor(R.styleable.StringView_labelTextColor4, labelPaint[3].color)
+
             stringPaint[0].color =
                 ta.getColor(R.styleable.StringView_stringColor, stringPaint[0].color)
             stringPaint[0].strokeWidth =
@@ -352,9 +374,15 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             stringPaint[2].strokeWidth =
                 ta.getDimension(R.styleable.StringView_stringLineWidth3, stringPaint[2].strokeWidth)
 
+            stringPaint[3].color =
+                ta.getColor(R.styleable.StringView_stringColor4, stringPaint[3].color)
+            stringPaint[3].strokeWidth =
+                ta.getDimension(R.styleable.StringView_stringLineWidth4, stringPaint[3].strokeWidth)
+
             labelBackgroundPaint[0].color = stringPaint[0].color
             labelBackgroundPaint[1].color = stringPaint[1].color
             labelBackgroundPaint[2].color = stringPaint[2].color
+            labelBackgroundPaint[3].color = stringPaint[3].color
 
             frameColor = ta.getColor(R.styleable.StringView_frameColor, frameColor)
             frameColorOnTouch =
@@ -407,10 +435,12 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 //        scrollDownDrawable.setSize(width = 0.5f * anchorDrawableWidth)scrollUpDrawable = TouchControlDrawable(context, frameColor, null, R.drawable.ic_scroll_up)
 //        scrollUpDrawable.setSize(width = 0.5f * anchorDrawableWidth)
 
-        scrollCenterDrawable = TouchControlDrawable(context, null, null, R.drawable.ic_scroll_center)
-        scrollCenterDrawable.setSize(width = 0.5f * anchorDrawableWidth)
-        scrollCenterDrawableRed = TouchControlDrawable(context, null, null, R.drawable.ic_scroll_center_red)
-        scrollCenterDrawableRed.setSize(width = 0.5f * anchorDrawableWidth)
+        scrollCenterDrawablePositive = TouchControlDrawable(context, null, null, R.drawable.ic_scroll_center_positive)
+        scrollCenterDrawablePositive.setSize(width = 0.5f * anchorDrawableWidth)
+        scrollCenterDrawableNegative = TouchControlDrawable(context, null, null, R.drawable.ic_scroll_center_negative)
+        scrollCenterDrawableNegative.setSize(width = 0.5f * anchorDrawableWidth)
+        scrollCenterDrawableNeutral = TouchControlDrawable(context, null, null, R.drawable.ic_scroll_center)
+        scrollCenterDrawableNeutral.setSize(width = 0.5f * anchorDrawableWidth)
 
     }
 
@@ -552,9 +582,9 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             // val yOffsetTarget = getYOffsetAutoScroll(activeStringIndex)
             var yPosition = 0.5f * (paddingTop + height - paddingBottom)
             if (showAnchor && anchorYPos != NO_ANCHOR && anchorYPos >= yPosition){ //draw above anchor
-                yPosition = min(yPosition, anchorYPos - 0.5f * (anchorDrawable.height + scrollCenterDrawable.height) - framePaint.strokeWidth)
+                yPosition = min(yPosition, anchorYPos - 0.5f * (anchorDrawable.height + scrollCenterDrawablePositive.height) - framePaint.strokeWidth)
             } else if (showAnchor && anchorYPos != NO_ANCHOR && anchorYPos < yPosition) { //draw below anchor
-                yPosition = max(yPosition, anchorYPos + 0.5f * (anchorDrawable.height + scrollCenterDrawable.height) + framePaint.strokeWidth)
+                yPosition = max(yPosition, anchorYPos + 0.5f * (anchorDrawable.height + scrollCenterDrawablePositive.height) + framePaint.strokeWidth)
             }
 
             val xPositionScrollDrawable = if (anchorDrawablePosition == 0) { // left
@@ -564,13 +594,19 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             }
 
             if (activeToneStyle == 1) {
-                scrollCenterDrawable.drawToCanvas(
+                scrollCenterDrawableNeutral.drawToCanvas(
                     xPositionScrollDrawable,
                     yPosition,
                     MarkAnchor.Center, canvas
                 )
             } else if (activeToneStyle == 2) {
-                scrollCenterDrawableRed.drawToCanvas(
+                scrollCenterDrawablePositive.drawToCanvas(
+                    xPositionScrollDrawable,
+                    yPosition,
+                    MarkAnchor.Center, canvas
+                )
+            } else if (activeToneStyle == 3) {
+                scrollCenterDrawableNegative.drawToCanvas(
                     xPositionScrollDrawable,
                     yPosition,
                     MarkAnchor.Center, canvas
@@ -646,6 +682,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             strings.last().layouts[0] = buildLabelLayout(strings.last().label, 0)
             strings.last().layouts[1] = buildLabelLayout(strings.last().label, 1)
             strings.last().layouts[2] = buildLabelLayout(strings.last().label, 2)
+            strings.last().layouts[3] = buildLabelLayout(strings.last().label, 3)
 
             labelWidth = max(labelWidth, strings.last().layouts[0]?.width ?: 0)
             labelHeight = max(labelHeight, strings.last().layouts[0]?.height ?: 0)

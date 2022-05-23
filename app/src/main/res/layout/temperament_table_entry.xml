@@ -32,7 +32,7 @@
         android:layout_marginRight="4dp"
         android:textSize="12sp"
         android:text="1200c"
-        android:textColor="?attr/colorPrimaryFaint"
+        android:textColor="?attr/colorOnSurfaceVariant"
         />
 
     <TextView
@@ -41,7 +41,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/cent"
         android:layout_margin="4dp"
-        android:textColor="?attr/colorPrimaryFaint"
+        android:textColor="?attr/colorOnSurfaceVariant"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         android:textSize="11sp"
@@ -55,7 +55,7 @@
         android:layout_marginTop="0dp"
         android:layout_marginLeft="4dp"
         android:layout_marginRight="4dp"
-        android:textColor="?attr/colorPrimaryFaint"
+        android:textColor="?attr/colorOnSurfaceVariant"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         android:textSize="11sp"
@@ -79,7 +79,7 @@
         android:id="@+id/ratio_separator"
         android:layout_width="0dp"
         android:layout_height="1dp"
-        android:background="?attr/colorPrimaryFaint"
+        android:background="?attr/colorOnSurfaceVariant"
         app:layout_constraintStart_toStartOf="@id/fraction_start"
         app:layout_constraintEnd_toEndOf="@id/fraction_end"
         app:layout_constraintTop_toBottomOf="@id/ratio_numerator"
