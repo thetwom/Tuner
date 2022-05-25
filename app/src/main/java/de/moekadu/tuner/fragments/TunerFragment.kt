@@ -167,8 +167,8 @@ class TunerFragment : Fragment() {
         viewModel.musicalScale.observe(viewLifecycleOwner) { tuningFrequencies ->
             updatePitchPlotNoteNames()
             // TODO: should we extend the limits slightly, that the whole mark is visible?
-            val firstFrequencyIndex = tuningFrequencies.getToneIndexBegin()
-            val lastFrequencyIndex = tuningFrequencies.getToneIndexEnd() - 1
+            val firstFrequencyIndex = tuningFrequencies.getNoteIndexBegin()
+            val lastFrequencyIndex = tuningFrequencies.getNoteIndexEnd() - 1
             val firstFrequency = tuningFrequencies.getNoteFrequency(firstFrequencyIndex)
             val lastFrequency = tuningFrequencies.getNoteFrequency(lastFrequencyIndex)
             pitchPlot?.setYTouchLimits(firstFrequency, lastFrequency, 0L)
