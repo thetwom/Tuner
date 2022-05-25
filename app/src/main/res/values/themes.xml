@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <style name="AppTheme" parent="AppThemeBase">
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">@color/md_theme_surface</item>
+    </style>
+
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="AppThemeBase" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/md_theme_primary</item>
         <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
         <item name="colorPrimaryContainer">@color/md_theme_primaryContainer</item>
@@ -34,11 +39,10 @@
         <item name="colorNegative">@color/md_theme_negative</item>
         <item name="colorOnNegative">@color/md_theme_onNegative</item>
 
-        <item name="android:statusBarColor">#000000</item>
         <item name="plotViewStyle">@style/PlotViewStyle</item>
         <item name="stringViewStyle">@style/StringViewStyle</item>
         <item name="noteSelectorStyle">@style/NoteSelectorStyle</item>
-        <item name="detectedNoteViewerStyle">@style/DetectedNoteViewerStyle</item>a
+        <item name="detectedNoteViewerStyle">@style/DetectedNoteViewerStyle</item>
         <item name="volumeMeterStyle">@style/VolumeMeterStyle</item>
 
         <item name="windowActionModeOverlay">true</item>
