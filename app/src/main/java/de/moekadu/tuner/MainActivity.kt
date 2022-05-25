@@ -90,6 +90,7 @@ class MainActivity : AppCompatActivity() {
 
         if (savedInstanceState == null)
             handleFileLoadingIntent(intent)
+//        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
     }
 
     override fun onStop() {
