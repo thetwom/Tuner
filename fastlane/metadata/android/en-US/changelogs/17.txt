@@ -4,5 +4,5 @@ v3.1.0
 
 v3.2.0
 - Different 12-tone temperaments
-- Reference note must not be A4, which means easy transpose
+- Reference note does not need to be A4, which means easy transpose
 - Option to unselect instruments to be shared
