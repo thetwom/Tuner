@@ -63,7 +63,7 @@ private fun fifthCorrectionString(context: Context, correction: FifthModificatio
     return s.toString()
 }
 
-data class TemperamentCircleOfFifthsEntry(var noteIndex: Int?, var fifthsModification: FifthModification?, var preferFlat: Boolean, val stableId: Long)
+data class TemperamentCircleOfFifthsEntry(var note: MusicalNote?, var fifthsModification: FifthModification?, val stableId: Long)
 
 class TemperamentCircleOfFifthsEntryDiffCallback: DiffUtil.ItemCallback<TemperamentCircleOfFifthsEntry>() {
     override fun areItemsTheSame(oldItem: TemperamentCircleOfFifthsEntry, newItem: TemperamentCircleOfFifthsEntry): Boolean {
@@ -71,7 +71,7 @@ class TemperamentCircleOfFifthsEntryDiffCallback: DiffUtil.ItemCallback<Temperam
     }
 
     override fun areContentsTheSame(oldItem: TemperamentCircleOfFifthsEntry, newItem: TemperamentCircleOfFifthsEntry): Boolean {
-        return oldItem == newItem
+        return oldItem.note == newItem.note && oldItem.fifthsModification == newItem.fifthsModification
     }
 }
 
@@ -93,14 +93,14 @@ class TemperamentCircleOfFifthsAdapter
         }
 
         fun setEntry(entry: TemperamentCircleOfFifthsEntry) {
-            val noteIndex = entry.noteIndex
+            val note = entry.note
             val circleOfFifths = entry.fifthsModification
-            if (noteIndex != null) {
+            if (note != null) {
                 noteName?.visibility = View.VISIBLE
                 arrowStroke?.visibility = View.GONE
                 arrowHead?.visibility = View.GONE
                 fifthsModification?.visibility = View.GONE
-                noteName?.text = noteNames12Tone.getNoteName(view.context, noteIndex, entry.preferFlat, false)
+                noteName?.text = note.toCharSequence(view.context, withOctave = false)
             } else if (circleOfFifths != null){
                 noteName?.visibility = View.GONE
                 arrowStroke?.visibility = View.VISIBLE
@@ -111,18 +111,18 @@ class TemperamentCircleOfFifthsAdapter
         }
     }
 
-    private val entries =  Array(25) {
-        TemperamentCircleOfFifthsEntry(null, null, preferFlat = false, it.toLong())
+    private val entries = Array(25) {
+        TemperamentCircleOfFifthsEntry(null, null, it.toLong())
     }
 
-    fun setEntries(rootNoteIndex: Int?, circleOfFifths: TemperamentCircleOfFifths?, preferFlat: Boolean) {
-        entries.forEach { it.preferFlat = preferFlat }
+    fun setEntries(rootNote: MusicalNote?, noteNameScale: NoteNameScale?, circleOfFifths: TemperamentCircleOfFifths?) {
+        if (rootNote != null && noteNameScale != null) {
+            val rootNoteIndex = noteNameScale.getIndexOfNote(rootNote)
 //        Log.v("Tuner", "TemperamentCircleOfFifthsAdapter.setEntries: rootNoteIndex=$rootNoteIndex")
-        if (rootNoteIndex != null) {
             var noteIndex = rootNoteIndex
-            for (i in 0 .. 12) {
+            for (i in 0..12) {
 //                Log.v("Tuner", "TemperamentCircleOfFifthsAdapter.setEntries: i=$i, noteIndex=$noteIndex")
-                entries[2 * i].noteIndex = noteIndex
+                entries[2 * i].note = noteNameScale.getNoteOfIndex(noteIndex)
                 noteIndex += 7
             }
         }

@@ -12,6 +12,9 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.core.graphics.withTranslation
 import de.moekadu.tuner.R
+import de.moekadu.tuner.temperaments.BaseNote
+import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments.NoteModifier
 import kotlin.math.*
 
 class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
@@ -20,13 +23,13 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
         private const val NO_TONE_INDEX = Int.MAX_VALUE
     }
     fun interface NoteClickedListener {
-        fun onNoteClicked(toneIndex: Int)
+        fun onNoteClicked(note: MusicalNote)
     }
 
     var noteClickedListener: NoteClickedListener? = null
 
     class DetectedNote(private var hitCountMin: Int, private var hitCountMax: Int) {
-        var toneIndex = 0
+        var note = MusicalNote(BaseNote.A, NoteModifier.None, 4)
             private set
         var isEnabled = false
             private set
@@ -41,8 +44,8 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
         private var textStyle = -1
         private var textColor = Color.BLACK
 
-        fun setNewTone(toneIndex: Int, label: CharSequence) {
-            this.toneIndex = toneIndex
+        fun setNewNote(note: MusicalNote, label: CharSequence) {
+            this.note = note
             this.label = label
             hitCount = hitCountMax
             isEnabled = true
@@ -120,14 +123,14 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
     private var toneIndexBegin = 0
     private var toneIndexEnd = 0
 
-    private var toneIndexToLabel: ((Int) -> CharSequence)? = null
+    private var noteToLabel: ((MusicalNote) -> CharSequence)? = null
 
     private var notes = Array(1) { DetectedNote((hitCountMax * ratioMinSizeToMaxSize).roundToInt(), hitCountMax) }
-    private var leastRecentlyUsedTones = Array(1){ NO_TONE_INDEX }
+    private var leastRecentlyUsedNotes = Array<MusicalNote?>(1){ null }
 
     private var minimumLabelSpace = 0f
 
-    private var clickedToneIndex = NO_TONE_INDEX
+    private var clickedNote: MusicalNote? = null
 
     private var title: String? = null
     private var titleLayout: StaticLayout? = null
@@ -199,7 +202,7 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
         val numNotes = computeNumNotes(w.toFloat(), h.toFloat())
         if (notes.size != numNotes) {
             notes = Array(numNotes) { DetectedNote((hitCountMax * ratioMinSizeToMaxSize).roundToInt(), hitCountMax) }
-            leastRecentlyUsedTones = Array(numNotes) { NO_TONE_INDEX }
+            leastRecentlyUsedNotes = Array(numNotes) { null }
         }
         maximumTextSize = computePaintTextSize(width, height, aspectRatioMax)
 
@@ -220,12 +223,12 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
                 val xPosCenter = paddingLeft + boxPaint.strokeWidth + 0.5f * minimumLabelSpace + (0.5f + index) * horizontalSpacePerNote
                 //labelPaint.textSize = if (note.toneIndex == clickedToneIndex) maximumTextSize else note.getTextSizeInPercentOfMax() * maximumTextSize
                 var textHeightPercent = note.getTextSizeInPercentOfMax()
-                if (note.toneIndex == clickedToneIndex)
+                if (note.note == clickedNote)
                     textHeightPercent = min(1f, textHeightPercent + 0.2f)
 
                 labelPaint.textSize = textHeightPercent * maximumTextSize
 //                Log.v("Tuner", "DetectedNoteViewer.onDraw: drawing note ${note.toneIndex}, clicked=$clickedToneIndex, x=$xPosCenter, y=$yPosCenter, w=$width, h=$height, maxText=$maximumTextSize")
-                labelPaint.typeface = if (note.toneIndex == clickedToneIndex) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+                labelPaint.typeface = if (note.note == clickedNote) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
                 note.drawToCanvas(canvas, xPosCenter, yPosCenter, labelPaint)
             }
         }
@@ -249,35 +252,35 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
             return super.onTouchEvent(event)
         val action = event.actionMasked
 //        Log.v("Tuner", "DetectedNoteViewer.onTouchEvent: action=$action")
-        val toneIndex = xPositionToToneIndex(event.x)
-        val clickedToneIndexOld = clickedToneIndex
+        val note = xPositionToNote(event.x)
+        val clickedNoteOld = clickedNote
 
         when (action) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
-                clickedToneIndex = toneIndex
+                clickedNote = note
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                clickedToneIndex = NO_TONE_INDEX
+                clickedNote = null
 //                Log.v("Tuner", "DetectedNoteViewer.onTouchEvent: ACTION_UP, toneIndex= $toneIndex, x=${event.x}")
-                if (toneIndex != NO_TONE_INDEX) {
+                if (note != null) {
                     if (isSoundEffectsEnabled)
                         playSoundEffect(android.view.SoundEffectConstants.CLICK)
                     performClick()
-                    noteClickedListener?.onNoteClicked(toneIndex)
+                    noteClickedListener?.onNoteClicked(note)
                 }
             }
         }
 
 //        Log.v("Tuner", "DetectedNoteViewer.onTouchEvent: clickedToneIndex= $clickedToneIndex")
-        if (clickedToneIndex != clickedToneIndexOld)
+        if (clickedNote != clickedNoteOld)
             invalidate()
 
         super.onTouchEvent(event)
         return true
     }
 
-    fun setNotes(toneIndexBegin: Int, toneIndexEnd: Int, toneIndexToLabel: (Int) -> CharSequence) {
-        this.toneIndexToLabel = toneIndexToLabel
+    fun setNotes(toneIndexBegin: Int, toneIndexEnd: Int, noteToLabel: (MusicalNote) -> CharSequence) {
+        this.noteToLabel = noteToLabel
         this.toneIndexBegin = toneIndexBegin
         this.toneIndexEnd = toneIndexEnd
         computeAspectRatioMinMax()
@@ -305,41 +308,41 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
         invalidate()
     }
 
-    fun hitNote(toneIndex: Int) {
-        if (notes.isEmpty())
+    fun hitNote(note: MusicalNote?) {
+        if (notes.isEmpty() || note == null)
             return
 
-        val index = notes.indexOfFirst { it.toneIndex == toneIndex && it.isEnabled}
+        val index = notes.indexOfFirst { it.note == note && it.isEnabled}
 
         if (index >= 0) {
-            val lruIndex = leastRecentlyUsedTones.indexOfFirst { it == toneIndex }
+            val lruIndex = leastRecentlyUsedNotes.indexOfFirst { it == note }
             require(lruIndex >= 0)
-            for (i in lruIndex until leastRecentlyUsedTones.size - 1)
-                leastRecentlyUsedTones[i] = leastRecentlyUsedTones[i + 1]
+            for (i in lruIndex until leastRecentlyUsedNotes.size - 1)
+                leastRecentlyUsedNotes[i] = leastRecentlyUsedNotes[i + 1]
             notes[index].hit(2)
         } else {
-            val leastRecentlyToneIndex = leastRecentlyUsedTones[0]
+            val leastRecentlyNote = leastRecentlyUsedNotes[0]
 //            Log.v("Tuner", "DetectedNoteViewer.hitTone: Creating new label label=${toneIndexToLabel?.let { it(toneIndex) }}")
-            val indexOfLeastRecentlyTone = notes.indexOfFirst { it.toneIndex == leastRecentlyToneIndex || !it.isEnabled}
-            require(indexOfLeastRecentlyTone >= 0)
-            notes[indexOfLeastRecentlyTone].setNewTone(toneIndex, toneIndexToLabel?.let { it(toneIndex) } ?: "")
-            for (i in 0 until leastRecentlyUsedTones.size - 1)
-                leastRecentlyUsedTones[i] = leastRecentlyUsedTones[i + 1]
+            val indexOfLeastRecentlyNote = notes.indexOfFirst { it.note == leastRecentlyNote || !it.isEnabled}
+            require(indexOfLeastRecentlyNote >= 0)
+            notes[indexOfLeastRecentlyNote].setNewNote(note, noteToLabel?.let { it(note) } ?: "")
+            for (i in 0 until leastRecentlyUsedNotes.size - 1)
+                leastRecentlyUsedNotes[i] = leastRecentlyUsedNotes[i + 1]
         }
 
-        leastRecentlyUsedTones[leastRecentlyUsedTones.size - 1] = toneIndex
-        notes.forEach { if (it.toneIndex != toneIndex) it.hit(-2)}
+        leastRecentlyUsedNotes[leastRecentlyUsedNotes.size - 1] = note
+        notes.forEach { if (it.note != note) it.hit(-2)}
         invalidate()
     }
 
     private fun computeAspectRatioMinMax() {
-        val toneIndexToLabelLocal = toneIndexToLabel ?: return
+        val noteToLabelLocal = noteToLabel ?: return
 
         aspectRatioMin = Float.MAX_VALUE
         aspectRatioMax = 0f
         labelPaint.textSize = 10f
         for (toneIndex in toneIndexBegin until toneIndexEnd) {
-            val label = toneIndexToLabelLocal(toneIndex)
+            val label = noteToLabelLocal(toneIndex)
             val desiredWidth = ceil(StaticLayout.getDesiredWidth(label, labelPaint)).toInt()
             val layout = StaticLayout.Builder.obtain(label, 0, label.length, labelPaint, desiredWidth).build()
             if (layout.height > 0f) {
@@ -369,14 +372,14 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
         return floor(0.8f * maximumAllowedHeight * maximumAllowedHeight / (fontMetrics.bottom - fontMetrics.top))
     }
 
-    private fun xPositionToToneIndex(x: Float): Int {
+    private fun xPositionToNote(x: Float): MusicalNote? {
         val horizontalSpacePerNote = computeHorizontalSpacePerNote()
         // x  = paddingLeft + boxStrokeWidth +  0.5f * minimumLabelSpace + (0.5f + index) * horizontalSpacePerNote
         val index = ((x - paddingLeft - boxPaint.strokeWidth - 0.5f * minimumLabelSpace) / horizontalSpacePerNote - 0.5f).roundToInt()
         if (index in notes.indices && notes[index].isEnabled) {
-            return notes[index].toneIndex
+            return notes[index].note
         }
-        return NO_TONE_INDEX
+        return null
     }
 
     private fun computeBoxTop(): Float {

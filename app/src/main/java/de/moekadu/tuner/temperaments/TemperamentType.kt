@@ -42,7 +42,7 @@ fun getTuningNameResourceId(temperamentType: TemperamentType) = when(temperament
     TemperamentType.Neidhardt3 -> R.string.neidhardt3
     TemperamentType.Valotti -> R.string.valotti
     TemperamentType.Young2 -> R.string.young2
-     TemperamentType.Test -> R.string.test_tuning
+    TemperamentType.Test -> R.string.test_tuning
 }
 
 fun getTuningDescriptionResourceId(temperamentType: TemperamentType) = when(temperamentType) {

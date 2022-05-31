@@ -179,7 +179,7 @@ class InstrumentEditorFragment : Fragment() {
             viewModel.deleteSelectedString()
         }
 
-        noteSelector?.toneChangedListener = NoteSelector.ToneChangedListener {
+        noteSelector?.noteChangedListener = NoteSelector.NoteChangedListener {
             viewModel.setSelectedStringTo(it)
         }
 

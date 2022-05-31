@@ -9,7 +9,7 @@ class TargetNote {
     enum class TuningStatus {TooLow, TooHigh, InTune, Unknown}
 
     /// Tuning frequency class which connects tone indices with frequencies
-    var musicalScale: MusicalScale = TemperamentFactory.create(TemperamentType.EDO12, -9, 0, 440f)
+    var musicalScale: MusicalScale = MusicalScaleFactory.create(TemperamentType.EDO12, null, null, 440f, false)
         set(value) {
             field = value
             if (frequencyRange[1] > frequencyRange[0]) {

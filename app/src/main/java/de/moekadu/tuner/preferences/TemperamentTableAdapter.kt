@@ -58,7 +58,7 @@ class TemperamentTableAdapter : ListAdapter<TemperamentTableEntry, TemperamentTa
         }
     }
 
-    fun setEntries(notes: Array<CharSequence>, cents: Array<Float>, ratios: Array<RationalNumber>?) {
+    fun setEntries(notes: Array<CharSequence>, cents: FloatArray, ratios: Array<RationalNumber>?) {
         require(notes.size == cents.size)
         if (ratios != null) {
             require(notes.size == ratios.size)

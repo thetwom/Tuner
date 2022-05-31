@@ -99,22 +99,25 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     private val _pitchHistoryUpdateInterval = MutableLiveData(windowSize.toFloat() * (1f - overlap) / sampleSource.sampleRate)
     val pitchHistoryUpdateInterval: LiveData<Float> = _pitchHistoryUpdateInterval
 
-    private var temperamentFrequencyValues: MusicalScale =
-        TemperamentFactory.create(TemperamentType.EDO12, -9, 0, 440f)
+    private val _preferFlat = MutableLiveData(false)
+    val preferFlat: LiveData<Boolean> get() = _preferFlat
+
+    private var musicalScaleValue: MusicalScale =
+        MusicalScaleFactory.create(TemperamentType.EDO12, null, null, 440f, preferFlat.value ?: false)
         set(value) {
             field = value
             pitchHistory.musicalScale = value
             changeTargetNoteSettings(musicalScale = value)
-            _temperamentFrequencies.value = value
+            _musicalScale.value = value
         }
 
 //    private var _instrument = MutableLiveData<Instrument>().apply { value = instrumentDatabase[1] }
 //    val instrument: LiveData<Instrument>
 //        get() = _instrument
 
-    private val _temperamentFrequencies = MutableLiveData<MusicalScale>().apply { value = temperamentFrequencyValues }
+    private val _musicalScale = MutableLiveData<MusicalScale>().apply { value = musicalScaleValue }
     val musicalScale: LiveData<MusicalScale>
-        get() = _temperamentFrequencies
+        get() = _musicalScale
 
     private val _noteNames = MutableLiveData<NoteNames>().apply { value = noteNames12Tone }
     val noteNames: LiveData<NoteNames> get() = _noteNames
@@ -122,7 +125,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     private val _standardDeviation = MutableLiveData(0f)
     val standardDeviation: LiveData<Float> get() = _standardDeviation
 
-    val pitchHistory = PitchHistory(pitchHistorySize, temperamentFrequencyValues)
+    val pitchHistory = PitchHistory(pitchHistorySize, musicalScaleValue)
 
     private val correlationAndSpectrumComputer = CorrelationAndSpectrumComputer()
     private val pitchChooserAndAccuracyIncreaser = PitchChooserAndAccuracyIncreaser()
@@ -150,9 +153,6 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     val frequencyPlotRange: LiveData<FloatArray>
         get() = _frequencyPlotRange
 
-    private val _preferFlat = MutableLiveData(false)
-    val preferFlat: LiveData<Boolean> get() = _preferFlat
-
     private val pref = PreferenceManager.getDefaultSharedPreferences(application)
     
     private val onPreferenceChangedListener = object : SharedPreferences.OnSharedPreferenceChangeListener {
@@ -170,17 +170,16 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 //                    Log.v("Tuner", "TunerViewModel.setupPreferenceListener: reference_note changed: $referenceFrequencyString")
                     val referenceFrequency =
                         ReferenceNotePreference.getFrequencyFromValue(referenceFrequencyString)
-                    val indexOfReferenceNote =
-                        ReferenceNotePreference.getToneIndexFromValue(referenceFrequencyString)
-                    changeTemperament(indexOfReferenceNote = indexOfReferenceNote, referenceFrequency = referenceFrequency)
+                    val referenceNote =
+                        ReferenceNotePreference.getReferenceNoteFromValue(referenceFrequencyString)
+                    changeMusicalScale(referenceNote = referenceNote, referenceFrequency = referenceFrequency)
                 }
                 "temperament" -> {
                     val temperamentString = sharedPreferences.getString("temperament", null)
 //                    Log.v("Tuner", "TunerViewModel.setupPreferenceListener: temperament changed: temperamentString")
-                    val temperament = TemperamentPreference.getTemperamentFromValue(temperamentString)
-                    val indexOfRootNote =
-                        TemperamentPreference.getRootNoteIndexFromValue(temperamentString)
-                    changeTemperament(temperamentType = temperament, rootNote = indexOfRootNote)
+                    val temperamentType = TemperamentPreference.getTemperamentFromValue(temperamentString)
+                    val rootNote = TemperamentPreference.getRootNoteFromValue(temperamentString)
+                    changeMusicalScale(temperamentType = temperamentType, rootNote = rootNote)
                 }
                 "prefer_flat" -> {
                     _preferFlat.value = sharedPreferences.getBoolean(key, false)
@@ -245,7 +244,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
             _pitchHistoryUpdateInterval.value = windowSize.toFloat() * (1f - overlap) / sampleRate
         }
 
-        changeTargetNoteSettings(musicalScale = temperamentFrequencyValues)
+        changeTargetNoteSettings(musicalScale = musicalScaleValue)
 
         viewModelScope.launch {
             sampleSource.flow
@@ -380,11 +379,11 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         val minOld = frequencyPlotRangeValues[0]
         val maxOld = frequencyPlotRangeValues[1]
 
-        val frequencyToneIndex = temperamentFrequencyValues.getClosestToneIndex(currentFrequency)
+        val frequencyToneIndex = musicalScaleValue.getClosestNoteIndex(currentFrequency)
         val minIndex = min(frequencyToneIndex - 0.55f, targetNoteIndex - 1.55f)
         val maxIndex = max(frequencyToneIndex + 0.55f, targetNoteIndex + 1.55f)
-        frequencyPlotRangeValues[0] = temperamentFrequencyValues.getNoteFrequency(minIndex)
-        frequencyPlotRangeValues[1] = temperamentFrequencyValues.getNoteFrequency(maxIndex)
+        frequencyPlotRangeValues[0] = musicalScaleValue.getNoteFrequency(minIndex)
+        frequencyPlotRangeValues[1] = musicalScaleValue.getNoteFrequency(maxIndex)
         if (frequencyPlotRangeValues[0] != minOld || frequencyPlotRangeValues[1] != maxOld)
             _frequencyPlotRange.value = frequencyPlotRangeValues
     }
@@ -418,32 +417,33 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun changeTemperament(rootNote: Int? = null, indexOfReferenceNote: Int? = null,
-                                  referenceFrequency: Float? = null, temperamentType: TemperamentType? = null) {
-        val temperamentResolved = temperamentType ?: temperamentFrequencyValues.getTemperament()
-        val rootNoteResolved = rootNote ?: temperamentFrequencyValues.getRootNote()
-        val indexOfReferenceNoteResolved = indexOfReferenceNote ?: temperamentFrequencyValues.getIndexOfReferenceNote()
-        val referenceFrequencyResolved = referenceFrequency ?: temperamentFrequencyValues.getReferenceFrequency()
-        temperamentFrequencyValues = TemperamentFactory.create(
-            temperamentResolved,
+    private fun changeMusicalScale(rootNote: MusicalNote? = null, referenceNote: MusicalNote? = null,
+                                   referenceFrequency: Float? = null, temperamentType: TemperamentType? = null,
+                                   preferFlat: Boolean = false) {
+        val temperamentTypeResolved = temperamentType ?: musicalScaleValue.temperamentType
+        val rootNoteResolved = rootNote ?: musicalScaleValue.rootNote
+        val referenceNoteResolved = referenceNote ?: musicalScaleValue.referenceNote
+        val referenceFrequencyResolved = referenceFrequency ?: musicalScaleValue.referenceFrequency
+        musicalScaleValue = MusicalScaleFactory.create(
+            temperamentTypeResolved,
+            referenceNoteResolved,
             rootNoteResolved,
-            indexOfReferenceNoteResolved,
-            referenceFrequencyResolved
+            referenceFrequencyResolved,
+            preferFlat = preferFlat
         )
-        _temperamentFrequencies.value = temperamentFrequencyValues
+        _musicalScale.value = musicalScaleValue
     }
 
     private fun loadSettingsFromSharedPreferences() {
         val referenceFrequencyString = pref.getString("reference_note", null)
         val referenceFrequency =
             ReferenceNotePreference.getFrequencyFromValue(referenceFrequencyString)
-        val indexOfReferenceNote =
-            ReferenceNotePreference.getToneIndexFromValue(referenceFrequencyString)
+        val referenceNote = ReferenceNotePreference.getReferenceNoteFromValue(referenceFrequencyString)
 
         val temperamentString = pref.getString("temperament", null)
-        val temperament = TemperamentPreference.getTemperamentFromValue(temperamentString)
-        val indexOfRootNote = TemperamentPreference.getRootNoteIndexFromValue(temperamentString)
-        changeTemperament(temperamentType = temperament, rootNote = indexOfRootNote, indexOfReferenceNote = indexOfReferenceNote, referenceFrequency = referenceFrequency)
+        val temperamentType = TemperamentPreference.getTemperamentFromValue(temperamentString)
+        val rootNote = TemperamentPreference.getRootNoteFromValue(temperamentString)
+        changeMusicalScale(temperamentType = temperamentType, rootNote = rootNote, referenceNote = referenceNote, referenceFrequency = referenceFrequency)
 
         // a4Frequency = pref.getString("a4_frequency", "440")?.toFloat() ?: 440f
         _preferFlat.value = pref.getBoolean("prefer_flat", false)

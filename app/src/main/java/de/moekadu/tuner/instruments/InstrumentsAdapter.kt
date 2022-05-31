@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.NoteNames
 
 class InstrumentDiffCallback : DiffUtil.ItemCallback<Instrument>() {
     override fun areItemsTheSame(oldItem: Instrument, newItem: Instrument): Boolean {
@@ -61,7 +60,6 @@ class InstrumentsAdapter(val mode: Mode) : ListAdapter<Instrument, InstrumentsAd
         fun onCopyIconClicked(instrument: Instrument, stableId: Long)
     }
 
-    private var noteNames: NoteNames? = null
     private var preferFlat = false
 
     private var activatedStableId = Instrument.NO_STABLE_ID
@@ -71,10 +69,9 @@ class InstrumentsAdapter(val mode: Mode) : ListAdapter<Instrument, InstrumentsAd
         setHasStableIds(true)
     }
 
-    fun setNoteNames(noteNames: NoteNames?, preferFlat: Boolean, recyclerView: RecyclerView?) {
-        this.noteNames = noteNames
+    fun setPreferFlat(preferFlat: Boolean, recyclerView: RecyclerView?) {
         this.preferFlat = preferFlat
-        if (recyclerView == null || noteNames == null)
+        if (recyclerView == null)
             return
 
         recyclerView.forEachViewHolder { holder ->
@@ -82,7 +79,7 @@ class InstrumentsAdapter(val mode: Mode) : ListAdapter<Instrument, InstrumentsAd
                 val position = holder.bindingAdapterPosition
                 if (position >= 0) {
                     val instrument = getItem(position)
-                    holder.stringText?.text = instrument.getStringsString(holder.view.context, noteNames, preferFlat = preferFlat)
+                    holder.stringText?.text = instrument.getStringsString(holder.view.context, preferFlat = preferFlat)
                 }
             }
         }
@@ -185,13 +182,7 @@ class InstrumentsAdapter(val mode: Mode) : ListAdapter<Instrument, InstrumentsAd
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val instrument = getItem(position)
         holder.titleView?.text = instrument.getNameString(holder.view.context)
-        noteNames?.let {
-            holder.stringText?.text = instrument.getStringsString(
-                holder.view.context,
-                it,
-                preferFlat = preferFlat
-            )
-        }
+        holder.stringText?.text = instrument.getStringsString(holder.view.context, preferFlat = preferFlat)
         holder.icon?.setImageResource(instrument.iconResource)
         holder.isActivated = (instrument.stableId == activatedStableId)
         holder.instrument = instrument
@@ -208,13 +199,7 @@ class InstrumentsAdapter(val mode: Mode) : ListAdapter<Instrument, InstrumentsAd
         val position = holder.bindingAdapterPosition
         val instrument = getItem(position)
         holder.titleView?.text = instrument.getNameString(holder.view.context)
-        noteNames?.let {
-            holder.stringText?.text = instrument.getStringsString(
-                holder.view.context,
-                it,
-                preferFlat = preferFlat
-            )
-        }
+        holder.stringText?.text = instrument.getStringsString(holder.view.context, preferFlat = preferFlat)
         holder.icon?.setImageResource(instrument.iconResource)
         holder.isActivated = (instrument.stableId == activatedStableId)
         holder.instrument = instrument

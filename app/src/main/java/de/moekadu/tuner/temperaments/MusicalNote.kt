@@ -37,6 +37,10 @@ enum class NoteModifier {
  */
 data class MusicalNote(val base: BaseNote, val modifier: NoteModifier, val octave: Int = Int.MAX_VALUE,
                        val enharmonicBase: BaseNote = BaseNote.None, val enharmonicModifier: NoteModifier = NoteModifier.None) {
+    // TODO: write tests for member functions
+    fun asString(): String {
+        return "MusicalNote(base=$base,modifier=$modifier,octave=$octave,enharmonicBase=$enharmonicBase,enharmonicModifier=$enharmonicModifier)"
+    }
 
     fun switchEnharmonic(): MusicalNote {
         if (enharmonicBase == BaseNote.None)
@@ -44,6 +48,32 @@ data class MusicalNote(val base: BaseNote, val modifier: NoteModifier, val octav
         return this.copy(base = enharmonicBase, modifier = enharmonicModifier, enharmonicBase = base, enharmonicModifier = modifier)
     }
     companion object {
+        fun fromString(string: String): MusicalNote {
+            val className = "MusicalNote"
+            if (string.length < className.length + 2 || string.substring(0, className.length + 1) != "$className(" || string.substring(string.length-1, string.length) != ")")
+                throw RuntimeException("$className.fromString: $string cannot be parsed")
+            val contentString = string.substring(className.length + 1, string.length-1)
+            var base: BaseNote = BaseNote.None
+            var modifier = NoteModifier.None
+            var octave: Int = Int.MAX_VALUE
+            var enharmonicBase = BaseNote.None
+            var enharmonicModifier = NoteModifier.None
+
+            contentString.split(",").forEach {
+                val keyAndValue = it.split("=")
+                if (keyAndValue.size != 2) {
+                    throw RuntimeException("$className.fromString: $it is no valid key-value pair")
+                }
+                when (keyAndValue[0]) {
+                    "base" -> base = BaseNote.valueOf(keyAndValue[1])
+                    "modifier" -> modifier = NoteModifier.valueOf(keyAndValue[1])
+                    "octave" -> octave = keyAndValue[1].toInt()
+                    "enharmonicBase" -> enharmonicBase = BaseNote.valueOf(keyAndValue[1])
+                    "enharmonicModifier" -> enharmonicModifier = NoteModifier.valueOf(keyAndValue[1])
+                }
+            }
+            return MusicalNote(base, modifier, octave, enharmonicBase, enharmonicModifier)
+        }
         /** Check if two notes are equal, where we also take enharmonics into account.
          * E.g. if the base values of one note are the same as the enharmonic of the other note
          *   we also return true.
@@ -60,74 +90,35 @@ data class MusicalNote(val base: BaseNote, val modifier: NoteModifier, val octav
         fun notesEqual(first: MusicalNote?, second: MusicalNote?): Boolean {
             if (first == null && second == null)
                 return true
-            else if (notesEqualIgnoreOctave(first, second) && first?.octave == second?.octave)
+            else if (first?.octave == second?.octave && notesEqualIgnoreOctave(first, second))
                 return true
             return false
         }
 
         /** Check if two notes are the same, while ignoring the octave.
-         * We will also return true, if the enharmonic matches the note.
+         * We will also return true, if note of first not matches the enharmonic of the second note
+         * and via verse:
+         * True if (all conditons in one item must be met):
+         *   - base, modifier, enharmonic base, enharmonic modifier match
+         *   - base, modifier of first and enharmonic base, enharmonic modifier of second match,
+         *     enharmonic base, enharmonic moidifier of first and base, modifier of second note match.
          * @param first First note to compare.
          * @param second Second note to compare.
-         * @return True if base and modifier are the same or if base and modifier are the same
-         *   as the base of modifier of the enharmonic of the other note. If both notes are null
-         *   we also return false.
+         * @return True if notes are the same (ignoring the octave), if both notes are null, we return
+         *   false.
          */
         fun notesEqualIgnoreOctave(first: MusicalNote?, second: MusicalNote?): Boolean {
-            if (first == null || second == null)
+            if (first == null || second == null) {
                 return false
-            else if (first.base == second.base && first.modifier == second.modifier)
+            } else if (first.base == second.base && first.modifier == second.modifier
+                && first.enharmonicBase == second.enharmonicBase
+                && first.enharmonicModifier == second.enharmonicModifier) {
                 return true
-            else if (first.base == second.enharmonicBase && first.modifier == second.enharmonicModifier)
+            } else if (first.base == second.enharmonicBase && first.modifier == second.enharmonicModifier
+                && first.enharmonicBase == second.base && first.enharmonicModifier == second.modifier) {
                 return true
-            else if (first.enharmonicBase == second.base && first.enharmonicModifier == second.modifier)
-                return true
-            else if (first.enharmonicBase == second.enharmonicBase && first.enharmonicModifier == second.enharmonicModifier)
-                return true
+            }
             return false
         }
     }
 }
-
-class NoteNameScale(
-    val referenceNote: MusicalNote,
-    val notes: Array<MusicalNote>
-) {
-    // TODO: test getNoteOfIndex and getIndexOfNote
-    private val referenceNoteIndexWithinOctave = notes.indexOfFirst { MusicalNote.notesEqualIgnoreOctave(it, referenceNote) }
-
-    fun getNoteOfIndex(noteIndex: Int): MusicalNote {
-        val octave = (noteIndex + referenceNoteIndexWithinOctave) / notes.size
-        val localNoteIndex = (noteIndex + referenceNoteIndexWithinOctave) % notes.size
-        return notes[localNoteIndex].copy(octave = octave)
-    }
-
-    fun getIndexOfNote(musicalNote: MusicalNote): Int {
-        val localNoteIndex = notes.indexOfFirst { MusicalNote.notesEqualIgnoreOctave(it, musicalNote) }
-        return (musicalNote.octave - referenceNote.octave) * notes.size + localNoteIndex - referenceNoteIndexWithinOctave
-    }
-
-    fun switchEnharmonic(): NoteNameScale {
-        return NoteNameScale(referenceNote.switchEnharmonic(), notes.map {it.switchEnharmonic()}.toTypedArray())
-    }
-}
-
-val noteNameScale12ToneSharp = NoteNameScale(
-    MusicalNote(BaseNote.A, NoteModifier.None, 4),
-    arrayOf(
-        MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
-        MusicalNote(base = BaseNote.C, modifier = NoteModifier.Sharp, enharmonicBase = BaseNote.D, enharmonicModifier = NoteModifier.Flat),
-        MusicalNote(base = BaseNote.D, modifier = NoteModifier.None),
-        MusicalNote(base = BaseNote.D, modifier = NoteModifier.Sharp, enharmonicBase = BaseNote.E, enharmonicModifier = NoteModifier.Flat),
-        MusicalNote(base = BaseNote.E, modifier = NoteModifier.None),
-        MusicalNote(base = BaseNote.F, modifier = NoteModifier.None),
-        MusicalNote(base = BaseNote.F, modifier = NoteModifier.Sharp, enharmonicBase = BaseNote.G, enharmonicModifier = NoteModifier.Flat),
-        MusicalNote(base = BaseNote.G, modifier = NoteModifier.None),
-        MusicalNote(base = BaseNote.G, modifier = NoteModifier.Sharp, enharmonicBase = BaseNote.A, enharmonicModifier = NoteModifier.Flat),
-        MusicalNote(base = BaseNote.A, modifier = NoteModifier.None),
-        MusicalNote(base = BaseNote.A, modifier = NoteModifier.Sharp, enharmonicBase = BaseNote.B, enharmonicModifier = NoteModifier.Flat),
-        MusicalNote(base = BaseNote.B, modifier = NoteModifier.None)
-    )
-)
-
-val noteNameScale12ToneFlat = noteNameScale12ToneSharp.switchEnharmonic()

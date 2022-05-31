@@ -25,21 +25,30 @@ import kotlin.math.roundToInt
 
 /** Class containing notes for equal temperament.
  *
- * @param numNotesPerOctave Number of notes per octave
- * @param noteIndexAtReferenceFrequency Index of note which should have the reference frequency
- * @param _referenceFrequency Frequency of note at given index (noteIndexAtReferenceFrequency)
+ * @param noteNameScale Note names of the scale, which also maps note indices to note names.
+ * @param referenceNote Note which should have the referenceFrequency.
+ * @param referenceFrequency Frequency of reference note.
+ * @param rootNote Root note of temperament, this is not needed for equal temperaments, but
+ *   we still store it, so that if one switches between different temperaments, we don't loose
+ *   the info of which rootNote was used before.
+ * @param frequencyMin Minimum frequency to be covered by the scale.
+ * @param frequencyMax Maximum frequency to be covered by the scale.
  */
-class TemperamentEqualTemperament(
-    private val musicalNotes: Array<MusicalNote> = noteSet12ToneSharp,
-    override val numberOfNotesPerOctave: Int = 12,
-    override val rootNote: MusicalNote = MusicalNote(BaseNote.C, NoteModifier.None, 4),
-    override val referenceNote: MusicalNote = MusicalNote(BaseNote.A, NoteModifier.None, 4),
+class MusicalScaleEqualTemperament(
+    override val noteNameScale: NoteNameScale,
+    override val referenceNote: MusicalNote,
     override val referenceFrequency: Float = 440f,
+    override val rootNote: MusicalNote = MusicalNote(BaseNote.C, NoteModifier.None),
     private val frequencyMin: Float = 16.0f,  // 16.4Hz would be c0 if the a4 is 440Hz
     private val frequencyMax: Float = 17000f, //16744.1f  // 16744Hz would be c10 if the a4 is 440Hz
 ) : MusicalScale {
-    /// Ratio between two neighboring half tones
+    override val numberOfNotesPerOctave: Int = noteNameScale.size
+
+    /** Ratio between two neighboring half tones. */
     private val halfToneRatio = 2.0f.pow(1.0f / numberOfNotesPerOctave)
+
+    /** Note index of reference note. */
+    private val noteIndexOfReferenceNote = noteNameScale.getIndexOfNote(referenceNote)
 
     override val circleOfFifths: TemperamentCircleOfFifths?
         get() {
@@ -58,13 +67,15 @@ class TemperamentEqualTemperament(
             }
         }
 
-    private val noteIndexOfReferenceNote = -getNoteIndexRelativeToReferenceNote(frequencyMin).roundToInt()
+    override val noteIndexBegin: Int = getNoteIndex(frequencyMin).roundToInt()
+    override val noteIndexEnd: Int = getNoteIndex(frequencyMax).roundToInt() + 1
 
-    override val numberOfNotes: Int =
-        (getNoteIndexRelativeToReferenceNote(frequencyMax).roundToInt() + 1 + noteIndexOfReferenceNote)
-
-    override fun getNoteIndex(frequency: Float)  : Float {
+    override fun getNoteIndex(frequency: Float) : Float {
         return getNoteIndexRelativeToReferenceNote(frequency) + noteIndexOfReferenceNote
+    }
+
+    override fun getNoteIndex(note: MusicalNote): Int {
+        return noteNameScale.getIndexOfNote(note)
     }
 
     override fun getClosestNoteIndex(frequency : Float)  : Int {
@@ -80,13 +91,12 @@ class TemperamentEqualTemperament(
     }
 
     override fun getClosestNote(frequency: Float): MusicalNote {
-        val i = getClosestNoteIndex(frequency)
-
+        val noteIndex = getClosestNoteIndex(frequency)
+        return noteNameScale.getNoteOfIndex(noteIndex)
     }
 
     override fun getNote(noteIndex: Int): MusicalNote {
-        val noteIndexRelativeToReferenceNote = noteIndex - noteIndexOfReferenceNote
-
+        return noteNameScale.getNoteOfIndex(noteIndex)
     }
 
     private fun getNoteIndexRelativeToReferenceNote(frequency: Float): Float {

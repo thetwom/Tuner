@@ -18,6 +18,8 @@ import androidx.core.view.ViewCompat
 import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
 import de.moekadu.tuner.R
+import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments.NoteNameScale
 import kotlin.math.*
 
 class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
@@ -26,13 +28,13 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         private const val NUM_STYLES = 2
     }
 
-    fun interface ToneChangedListener {
-        fun onToneChanged(newTone: Int)
+    fun interface NoteChangedListener {
+        fun onNoteChanged(newNote: MusicalNote)
     }
 
-    var toneChangedListener: ToneChangedListener? = null
+    var noteChangedListener: NoteChangedListener? = null
 
-    class NoteLabel(val toneIndex: Int, private val label: CharSequence, labelPaint: Array<TextPaint>) {
+    class NoteLabel(val note: MusicalNote, private val label: CharSequence, labelPaint: Array<TextPaint>) {
         val layouts = Array<StaticLayout?>(NUM_STYLES) {null}
         var maxLabelWidth = 0
             private set
@@ -125,13 +127,13 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 return true
 
             val x = e.x
-            val noteIndex = noteIndexFromX(x)
+            val noteIndex = arrayIndexFromX(x)
             if (noteIndex < 0)
                 return false
 
             if (noteIndex != activeNoteArrayIndex) {
                 activeNoteArrayIndex = noteIndex
-                toneChangedListener?.onToneChanged(noteLabels[noteIndex].toneIndex)
+                noteChangedListener?.onNoteChanged(noteLabels[noteIndex].note)
                 scrollToActiveNote(150L)
 //                Log.v("Tuner", "NoteSelector.onSingleTapUp: performingClick")
                 if (isSoundEffectsEnabled)
@@ -171,13 +173,18 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private val widthFactor = 1.2f
 
     private var activeNoteArrayIndex = 0
-    val activeToneIndex: Int
+    val activeNote: MusicalNote?
         get() {
             return if (activeNoteArrayIndex in noteLabels.indices)
-                noteLabels[activeNoteArrayIndex].toneIndex
+                noteLabels[activeNoteArrayIndex].note
             else
-                Int.MAX_VALUE
+                null
         }
+
+    private var noteNameScale: NoteNameScale? = null
+    private var noteIndexBegin = Int.MAX_VALUE
+    private var noteIndexEnd = Int.MAX_VALUE
+
     private var horizontalScrollPosition = 0f
 
     constructor(context: Context, attrs: AttributeSet? = null) : this(context, attrs,
@@ -304,15 +311,30 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         )
     }
 
-    fun setNotes(toneIndexBegin: Int, toneIndexEnd: Int, labels: (Int) -> CharSequence) {
-        val oldToneIndex = if (activeNoteArrayIndex in noteLabels.indices)
-            noteLabels[activeNoteArrayIndex].toneIndex
+    /** Set notes of selector.
+     * @param noteIndexBegin Index which is used to extract the first note of the selector from
+     *   the note name scale.
+     * @param noteIndexEnd Index after (excluded) which is used to extract the last note of the
+     *   selector from the note name scale.
+     * @param noteNameScale Note names.
+     * @param newActiveNote Set the new note to this value if possible. If this is null, we
+     *   keep the selected value. If it is not part of the new scale, we choose something.
+     * @param labelsFormatter Formatter how a note name should be printed.
+     */
+    fun setNotes(noteIndexBegin: Int, noteIndexEnd: Int, noteNameScale: NoteNameScale,
+                 newActiveNote: MusicalNote?, labelsFormatter: (MusicalNote) -> CharSequence) {
+        val activeNoteBackup = activeNote
+        val activeNoteIndexBackupPercent = if (this.noteIndexEnd - this.noteIndexBegin > 0)
+            (activeNoteArrayIndex).toDouble() / (this.noteIndexEnd - this.noteIndexBegin).toDouble()
         else
-            0
+            0.5
 
         noteLabels.clear()
-        val numLabels = toneIndexEnd - toneIndexBegin
+        val numLabels = noteIndexEnd - noteIndexBegin
         maxLabelWidth = 0
+        this.noteNameScale = noteNameScale
+        this.noteIndexBegin = noteIndexBegin
+        this.noteIndexEnd = noteIndexEnd
 
         if (isLaidOut) {
             val s = computeLabelTextSize(height)
@@ -321,27 +343,46 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
 
         for (i in 0 until numLabels) {
-            val toneIndex = toneIndexBegin + i
-            noteLabels.add(NoteLabel(toneIndex, labels(toneIndex), labelPaint))
+            val noteIndex = noteIndexBegin + i
+            val note = noteNameScale.getNoteOfIndex(noteIndex)
+            noteLabels.add(NoteLabel(note, labelsFormatter(note), labelPaint))
             maxLabelWidth = max(maxLabelWidth, noteLabels.last().maxLabelWidth)
         }
 
-        activeNoteArrayIndex = if (oldToneIndex in toneIndexBegin until toneIndexEnd)
-            oldToneIndex - noteLabels[0].toneIndex
+        activeNoteArrayIndex = if (newActiveNote != null && noteNameScale.getIndexOfNote(newActiveNote) >= 0)
+            noteNameScale.getIndexOfNote(newActiveNote) - noteIndexBegin
+        else if (activeNoteBackup != null && noteNameScale.getIndexOfNote(activeNoteBackup) >= 0)
+            noteNameScale.getIndexOfNote(activeNoteBackup) - noteIndexBegin
+        else if (activeNoteBackup != null)
+            (activeNoteIndexBackupPercent * (noteIndexEnd - noteIndexBegin)).toInt()
         else
-            0
+            (noteIndexEnd - noteIndexBegin) / 2
+
         if (isLaidOut)
             scrollToActiveNote(0L)
     }
 
-    fun setActiveTone(toneIndex: Int, animationDuration: Long) {
-        if (noteLabels.size == 0)
-            return
-        val index = toneIndex - noteLabels[0].toneIndex
-        if (index != activeNoteArrayIndex && index in 0 until noteLabels.size) {
+    /** Set new active note.
+     * @param note Note which should become active.
+     * @param animationDuration Animation duration for scrolling to note in ms.
+     * @return True if scrolling successful (or rather if given note is part of the selector)
+     *   or false otherwise (meaning, that the given note is not part of the selector)
+     */
+    fun setActiveNote(note: MusicalNote, animationDuration: Long): Boolean {
+        if (noteLabels.size == 0) // this might not be needed anymore due to the next check of note_index < 0
+            return false
+
+        val noteIndex = noteNameScale?.getIndexOfNote(note) ?: -1
+        if (noteIndex < 0)
+            return false
+
+        val index = noteIndex - noteIndexBegin
+        if (index != activeNoteArrayIndex && index in noteLabels.indices) {
             activeNoteArrayIndex = index
             scrollToActiveNote(animationDuration)
+            return true
         }
+        return false
     }
 
     private fun computeLabelTextSize(totalHeight: Int): Float {
@@ -374,7 +415,7 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         val noteIndex = getActiveIndexByScrollPosition(horizontalScrollPosition)
         if (noteIndex != activeNoteArrayIndex) {
             activeNoteArrayIndex = noteIndex
-            toneChangedListener?.onToneChanged(noteLabels[noteIndex].toneIndex)
+            noteChangedListener?.onNoteChanged(noteLabels[noteIndex].note)
         }
         ViewCompat.postInvalidateOnAnimation(this@NoteSelector)
     }
@@ -402,14 +443,19 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         return min(noteLabels.size - 1, index)
     }
 
-    private fun noteIndexFromX(x: Float): Int {
+    /** Return array index from given x-position.
+     *
+     * @param x x-position.
+     * @return Array index or -1 if x-position is out of range.
+     */
+    private fun arrayIndexFromX(x: Float): Int {
         val rectangleCenter = getRectangleCenter()
         // notePositionCenter = rectangleCenter + i * (widthFactor * maxLabelWidth + textPadding) + horizontalScrollPosition
         // | x - notePositionCenter | = min
         val i = ((x - rectangleCenter - horizontalScrollPosition) / (widthFactor * maxLabelWidth + textPadding)).roundToInt()
 
 //        Log.v("Tuner", "NoteSelector.noteIndexFromX: $i")
-        return if (i in 0 until noteLabels.size)
+        return if (i in noteLabels.indices)
             i
         else
             -1

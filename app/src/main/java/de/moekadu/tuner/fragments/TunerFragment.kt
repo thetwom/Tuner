@@ -167,8 +167,8 @@ class TunerFragment : Fragment() {
         viewModel.musicalScale.observe(viewLifecycleOwner) { tuningFrequencies ->
             updatePitchPlotNoteNames()
             // TODO: should we extend the limits slightly, that the whole mark is visible?
-            val firstFrequencyIndex = tuningFrequencies.getNoteIndexBegin()
-            val lastFrequencyIndex = tuningFrequencies.getNoteIndexEnd() - 1
+            val firstFrequencyIndex = tuningFrequencies.noteIndexBegin
+            val lastFrequencyIndex = tuningFrequencies.noteIndexEnd - 1
             val firstFrequency = tuningFrequencies.getNoteFrequency(firstFrequencyIndex)
             val lastFrequency = tuningFrequencies.getNoteFrequency(lastFrequencyIndex)
             pitchPlot?.setYTouchLimits(firstFrequency, lastFrequency, 0L)
@@ -372,14 +372,15 @@ class TunerFragment : Fragment() {
         val preferFlat = viewModel.preferFlat.value ?: return
         val tuningFrequencies = viewModel.musicalScale.value ?: return
 
-        val numNotes = tuningFrequencies.getToneIndexEnd() - tuningFrequencies.getToneIndexBegin()
+        val numNotes = tuningFrequencies.noteIndexEnd - tuningFrequencies.noteIndexBegin
         val noteFrequencies = FloatArray(numNotes) {
-            tuningFrequencies.getNoteFrequency(tuningFrequencies.getToneIndexBegin() + it)
+            tuningFrequencies.getNoteFrequency(tuningFrequencies.noteIndexBegin + it)
         }
 
         // Update ticks in pitch history plot
         pitchPlot?.setYTicks(noteFrequencies, false) { _, f ->
-            val toneIndex = tuningFrequencies.getClosestToneIndex(f)
+            val toneIndex = tuningFrequencies.getClosestNoteIndex(f)
+            // TODO: replace noteNames with the musicalScale.noteNameScale  and additional code, also in other fragment
             noteNames.getNoteName(requireContext(), toneIndex, preferFlat = preferFlat)
         }
 

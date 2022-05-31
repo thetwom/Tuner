@@ -1,12 +1,12 @@
 package de.moekadu.tuner
 
 import de.moekadu.tuner.temperaments.TemperamentType
-import de.moekadu.tuner.temperaments.TemperamentRatioBased
+import de.moekadu.tuner.temperaments.MusicalScaleRatioBasedTemperaments
 import org.junit.Assert.*
 import org.junit.Test
 import kotlin.math.pow
 
-class TemperamentRatioBasedTest {
+class MusicalScaleRatioBasedTemperamentsTest {
 
     private fun testOctImpl(
         ratios: DoubleArray,
@@ -16,7 +16,7 @@ class TemperamentRatioBasedTest {
     ) {
         val numNotesPerOctave = ratios.size - 1
         val octRatio = (ratios.last() / ratios.first()).toFloat()
-        val temperament = TemperamentRatioBased(
+        val temperament = MusicalScaleRatioBasedTemperaments(
             TemperamentType.EDO12, // not important here
             ratios,
             rootNoteIndex,
@@ -76,7 +76,7 @@ class TemperamentRatioBasedTest {
         rootNoteIndex: Int,
         testNoteIndex: Int
     ) {
-        val temperament = TemperamentRatioBased(
+        val temperament = MusicalScaleRatioBasedTemperaments(
             TemperamentType.EDO12, // not important here
             ratios,
             rootNoteIndex,
@@ -132,7 +132,7 @@ class TemperamentRatioBasedTest {
         val noteIndexAtReferenceFrequency = 0
         val freqMin = ratios[0].toFloat() * referenceFrequency -0.001f
         val freqMax = ratios.last().toFloat() * referenceFrequency + 0.001f
-        val temperament = TemperamentRatioBased(
+        val temperament = MusicalScaleRatioBasedTemperaments(
             TemperamentType.EDO12, // not important here
             ratios,
             rootNoteIndex, noteIndexAtReferenceFrequency, referenceFrequency,
@@ -170,14 +170,14 @@ class TemperamentRatioBasedTest {
         val numNotesPerOctave = ratios.size - 1
 
         for (rootNote in -20 .. 20) {
-            val temperament = TemperamentRatioBased(
+            val temperament = MusicalScaleRatioBasedTemperaments(
                 TemperamentType.EDO12, // not important here
                 ratios, rootNote, referenceNoteIndex, fRef // , fMin, fMax
             )
 
             // check that the resulting frequencies are independent on which octave the reference note is
             for (r in -5..-5) {
-                val temperament2 = TemperamentRatioBased(
+                val temperament2 = MusicalScaleRatioBasedTemperaments(
                     TemperamentType.EDO12, // not important here
                     ratios, rootNote, referenceNoteIndex + r * numNotesPerOctave, fRef // , fMin, fMax
                 )

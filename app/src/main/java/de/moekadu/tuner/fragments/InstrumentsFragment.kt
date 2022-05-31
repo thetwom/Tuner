@@ -342,14 +342,14 @@ class InstrumentsFragment : Fragment() {
 
         tunerViewModel.noteNames.observe(viewLifecycleOwner) {
             val preferFlat = tunerViewModel.preferFlat.value ?: false
-            instrumentsPredefinedAdapter.setNoteNames(it, preferFlat = preferFlat, recyclerView)
-            instrumentsCustomAdapter.setNoteNames(it, preferFlat = preferFlat, recyclerView)
+            instrumentsPredefinedAdapter.setPreferFlat(it, preferFlat = preferFlat, recyclerView)
+            instrumentsCustomAdapter.setPreferFlat(it, preferFlat = preferFlat, recyclerView)
         }
 
         tunerViewModel.preferFlat.observe(viewLifecycleOwner) {
             val noteNames = tunerViewModel.noteNames.value
-            instrumentsPredefinedAdapter.setNoteNames(noteNames, preferFlat = it, recyclerView)
-            instrumentsCustomAdapter.setNoteNames(noteNames, preferFlat = it, recyclerView)
+            instrumentsPredefinedAdapter.setPreferFlat(noteNames, preferFlat = it, recyclerView)
+            instrumentsCustomAdapter.setPreferFlat(noteNames, preferFlat = it, recyclerView)
         }
 
         instrumentsViewModel.instrument.observe(viewLifecycleOwner) {

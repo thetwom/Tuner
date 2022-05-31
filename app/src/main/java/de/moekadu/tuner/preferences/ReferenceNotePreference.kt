@@ -11,17 +11,20 @@ import androidx.preference.DialogPreference
 import androidx.preference.PreferenceDialogFragmentCompat
 import com.google.android.material.button.MaterialButton
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.noteNames12Tone
+import de.moekadu.tuner.temperaments.*
 import de.moekadu.tuner.views.NoteSelector
 
 class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
     companion object {
         private const val REQUEST_KEY = "reference_note_preference_dialog.request_key"
+        private const val TEMPERAMENT_TYPE_KEY = "reference_note_preference_dialog.temperament_type"
         private const val PREFER_FLAT_KEY = "reference_note_preference_dialog.prefer_flat"
-        fun newInstance(key: String, requestCode: String, preferFlat: Boolean): ReferenceNotePreferenceDialog {
+
+        fun newInstance(key: String, requestCode: String, temperamentType: TemperamentType, preferFlat: Boolean): ReferenceNotePreferenceDialog {
             val args = Bundle(3)
             args.putString(ARG_KEY, key)
             args.putString(REQUEST_KEY, requestCode)
+            args.putString(TEMPERAMENT_TYPE_KEY, temperamentType.toString())
             args.putBoolean(PREFER_FLAT_KEY, preferFlat)
             val fragment = ReferenceNotePreferenceDialog()
             fragment.arguments = args
@@ -32,8 +35,9 @@ class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
     private var referenceNoteView: NoteSelector? = null
     private var editTextView: AppCompatEditText? = null
     private var standardPitch: MaterialButton? = null
-    private var restoredToneIndex = Int.MAX_VALUE
+    private var restoredReferenceNoteString: String? = null
     private var restoredFrequencyString: String? = null
+    private var temperamentType = TemperamentType.EDO12
     private var preferFlat = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,10 +45,12 @@ class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
 //
         // restore saved state
         if (savedInstanceState != null) {
-            restoredToneIndex = savedInstanceState.getInt("tone index", Int.MAX_VALUE)
+            restoredReferenceNoteString = savedInstanceState.getString("reference note")
             restoredFrequencyString = savedInstanceState.getString("reference frequency")
         }
 
+        val temperamentTypeString = arguments?.getString(TEMPERAMENT_TYPE_KEY) ?: TemperamentType.EDO12.toString()
+        temperamentType = TemperamentType.valueOf(temperamentTypeString)
         preferFlat = arguments?.getBoolean(PREFER_FLAT_KEY) ?: false
         super.onCreate(savedInstanceState)
     }
@@ -52,45 +58,59 @@ class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
     override fun onSaveInstanceState(outState: Bundle) {
         // save current settings of preference
         outState.putString("reference frequency", editTextView?.text?.toString() ?: "")
-        outState.putInt("tone index", referenceNoteView?.activeToneIndex ?: 0)
+        outState.putString("reference note", referenceNoteView?.activeNote?.asString() ?: "")
         super.onSaveInstanceState(outState)
     }
 
     override fun onBindDialogView(view: View) {
         super.onBindDialogView(view)
-        var activeToneIndex = restoredToneIndex
+        val referenceNoteString = restoredReferenceNoteString
+
+        var activeReferenceNote = if (referenceNoteString == null) {
+            null
+        } else {
+            try {
+                MusicalNote.fromString(referenceNoteString)
+            } catch (ex: RuntimeException) {
+                null
+            }
+        }
+
         var currentFrequency = restoredFrequencyString?.toFloatOrNull()
+
+        val noteNameScale = NoteNameScaleFactory.create(temperamentType, preferFlat)
 
         referenceNoteView = view.findViewById(R.id.reference_note)
         editTextView = view.findViewById(R.id.reference_frequency)
         standardPitch = view.findViewById(R.id.standard_pitch)
-
-        context?.let {ctx ->
-            referenceNoteView?.setNotes(-50, 50) {
-                noteNames12Tone.getNoteName(ctx, it, preferFlat = preferFlat)
-            }
-        }
-
         standardPitch?.setOnClickListener {
-            referenceNoteView?.setActiveTone(0, 200L)
+            referenceNoteView?.setActiveNote(noteNameScale.defaultReferenceNote, 200L)
             editTextView?.setText(440f.toString())
         }
 
         when (preference) {
             is ReferenceNotePreference -> {
-                if (restoredToneIndex == Int.MAX_VALUE)
-                    activeToneIndex = (preference as ReferenceNotePreference).value.toneIndex
+                if (activeReferenceNote == null)
+                    activeReferenceNote = (preference as ReferenceNotePreference).value.referenceNote
                 if (restoredFrequencyString == null)
                     currentFrequency = (preference as ReferenceNotePreference).value.frequency
             }
         }
 
-        if (activeToneIndex == Int.MAX_VALUE)
-            activeToneIndex = 0
+        if (activeReferenceNote == null)
+            activeReferenceNote = noteNameScale.defaultReferenceNote
         if (currentFrequency == null)
             currentFrequency = 440f
 
-        referenceNoteView?.setActiveTone(activeToneIndex, 0L)
+        context?.let { ctx ->
+            // present notes from C0 to C10 (or something similar for non-standard 12-tone scales)
+            val noteIndexBegin = noteNameScale.getIndexOfNote(noteNameScale.notes[0].copy(octave = 0))
+            val noteIndexEnd = noteNameScale.getIndexOfNote(noteNameScale.notes[0].copy(octave = 10)) + 1
+            referenceNoteView?.setNotes(noteIndexBegin, noteIndexEnd, noteNameScale, activeReferenceNote) {
+                it.toCharSequence(ctx)
+            }
+        }
+
         editTextView?.setText(currentFrequency.toString())
         editTextView?.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
     }
@@ -99,14 +119,14 @@ class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
         if (positiveResult) {
             arguments?.getString(REQUEST_KEY)?.let {
                 // val bundle = Bundle(2)
-                val toneIndex = referenceNoteView?.activeToneIndex ?: 0
+                val referenceNote = referenceNoteView?.activeNote
                 val frequency = editTextView?.text.toString().toFloatOrNull()
 
-                if (frequency != null) {
+                if (frequency != null && referenceNote != null) {
                     // bundle.putInt("tone index", toneIndex)
                     // bundle.putFloat("reference frequency", frequency)
 //                    Log.v("Tuner", "ReferenceNotePreference.onDialogClosed (Settings), posres=$positiveResult, bundle=$bundle, requestKey=$it")
-                    (preference as ReferenceNotePreference).setValueFromData(frequency, toneIndex)
+                    (preference as ReferenceNotePreference).setValueFromData(frequency, referenceNote)
                     // setFragmentResult(it, bundle)
                 }
             }
@@ -118,16 +138,16 @@ class ReferenceNotePreference(context: Context, attrs: AttributeSet?) // , defSt
     : DialogPreference(context, attrs, R.attr.dialogPreferenceStyle) { // , defStyleAttr, defStyleRef) {
     companion object {
         fun getFrequencyFromValue(string: String?): Float {
-            val value = Value(440f, 0).apply { fromString(string) }
+            val value = Value(440f, null).apply { fromString(string) }
             return value.frequency
         }
-        fun getToneIndexFromValue(string: String?): Int {
-            val value = Value(440f, 0).apply { fromString(string) }
-            return value.toneIndex
+        fun getReferenceNoteFromValue(string: String?): MusicalNote? {
+            val value = Value(440f, null).apply { fromString(string) }
+            return value.referenceNote
         }
     }
     fun interface OnReferenceNoteChangedListener {
-        fun onReferenceNoteChanged(preference: ReferenceNotePreference, frequency: Float, toneIndex: Int)
+        fun onReferenceNoteChanged(preference: ReferenceNotePreference, frequency: Float, referenceNote: MusicalNote)
     }
 
     private var onReferenceNoteChangedListener: OnReferenceNoteChangedListener? = null
@@ -136,9 +156,9 @@ class ReferenceNotePreference(context: Context, attrs: AttributeSet?) // , defSt
         this.onReferenceNoteChangedListener = onReferenceNoteChangedListener
     }
 
-    class Value(var frequency: Float, var toneIndex: Int) {
+    class Value(var frequency: Float, var referenceNote: MusicalNote?) {
         override fun toString(): String {
-            return "$frequency $toneIndex"
+            return "$frequency ${referenceNote?.asString()}"
         }
         fun fromString(string: String?) {
             if (string == null)
@@ -147,10 +167,21 @@ class ReferenceNotePreference(context: Context, attrs: AttributeSet?) // , defSt
             if (values.size != 2)
                 return
             frequency = values[0].toFloatOrNull() ?: 440f
-            toneIndex = values[1].toIntOrNull() ?: 0
+            referenceNote = try {
+                MusicalNote.fromString(values[1])
+            } catch (ex: RuntimeException) {
+                // old versions used the note index to store the reference note,
+                // we use the following code to keep compatibility
+                val noteIndex = values[1].toIntOrNull()
+                if (noteIndex != null) {
+                    legacyNoteIndexToNote(noteIndex)
+                } else {
+                    null
+                }
+            }
         }
     }
-    var value = Value(440.0f, 0)
+    var value = Value(440.0f, null)
         private set
 
     init {
@@ -178,17 +209,19 @@ class ReferenceNotePreference(context: Context, attrs: AttributeSet?) // , defSt
     private fun setValueFromString(value: String) {
 //        Log.v("Tuner", "ReferenceNotePreference.onSetValueFromString: $value")
         this.value.fromString(value)
-        persistString(value)
+        this.value.referenceNote?.let { referenceNote ->
+            persistString(value)
 //        Log.v("Tuner", "ReferenceNotePreference.onSetValueFromString: $value, f=${this.value.frequency}, t=${this.value.toneIndex}")
-        onReferenceNoteChangedListener?.onReferenceNoteChanged(this, this.value.frequency, this.value.toneIndex)
-        // summary = "my new summary"
+            onReferenceNoteChangedListener?.onReferenceNoteChanged(this, this.value.frequency, referenceNote)
+            // summary = "my new summary"
+        }
     }
 
-    fun setValueFromData(frequency: Float, toneIndex: Int) {
+    fun setValueFromData(frequency: Float, referenceNote: MusicalNote) {
         value.frequency = frequency
-        value.toneIndex = toneIndex
+        value.referenceNote = referenceNote
         persistString(value.toString())
-        onReferenceNoteChangedListener?.onReferenceNoteChanged(this, this.value.frequency, this.value.toneIndex)
+        onReferenceNoteChangedListener?.onReferenceNoteChanged(this, this.value.frequency, referenceNote)
         // summary = "my new summary"
     }
 }

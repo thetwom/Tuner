@@ -3,12 +3,13 @@ package de.moekadu.tuner.instruments
 import android.content.Context
 import android.text.SpannableStringBuilder
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.NoteNames
+import de.moekadu.tuner.temperaments.*
 
-data class Instrument(private val name: CharSequence?, private val nameResource: Int?, val strings: IntArray,
+data class Instrument(private val name: CharSequence?, private val nameResource: Int?, val strings: Array<MusicalNote>,
                       val iconResource: Int, val stableId: Long, val isChromatic: Boolean = false) {
-    val stringsSorted = strings.map { it.toFloat() }.toFloatArray().sortedArray()
+    //val stringsSorted = strings.map { it.toFloat() }.toFloatArray().sortedArray()
 
+    /** Get instrument name as a char sequence. */
     fun getNameString(context: Context?): CharSequence {
         return when {
             nameResource != null && context != null -> context.getString(nameResource)
@@ -17,16 +18,21 @@ data class Instrument(private val name: CharSequence?, private val nameResource:
         }
     }
 
-    fun getStringsString(context: Context, noteNames: NoteNames, preferFlat: Boolean): CharSequence {
+    /** Get readable representation of all strings (e.g. "A#4 - C5 - G5")
+     * @param context Context for obtaining string resources.
+     * @param preferFlat Prefer flat representation if available.
+     */
+    fun getStringsString(context: Context, preferFlat: Boolean): CharSequence {
         return if (isChromatic) {
             context.getString(R.string.chromatic)
         } else {
+            val printOption = if (preferFlat) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferFlat
             val builder = SpannableStringBuilder()
             if (strings.isNotEmpty())
-                builder.append(noteNames.getNoteName(context, strings[0], preferFlat))
+                builder.append(strings[0].toCharSequence(context, printOption = printOption))
             for (i in 1 until strings.size) {
                 builder.append(" - ")
-                builder.append(noteNames.getNoteName(context, strings[i], preferFlat))
+                builder.append(strings[i].toCharSequence(context, printOption = printOption))
             }
             builder
 //            strings.joinToString(" - ", "", "") {
@@ -46,18 +52,22 @@ data class Instrument(private val name: CharSequence?, private val nameResource:
         other as Instrument
 
         if (name != other.name) return false
+        if (nameResource != other.nameResource) return false
         if (!strings.contentEquals(other.strings)) return false
         if (iconResource != other.iconResource) return false
         if (stableId != other.stableId) return false
+        if (isChromatic != other.isChromatic) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = name.hashCode()
+        var result = name?.hashCode() ?: 0
+        result = 31 * result + (nameResource ?: 0)
         result = 31 * result + strings.contentHashCode()
         result = 31 * result + iconResource
         result = 31 * result + stableId.hashCode()
+        result = 31 * result + isChromatic.hashCode()
         return result
     }
 }
@@ -70,7 +80,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
         Instrument(
             name = null,
             nameResource = R.string.chromatic,
-            strings = intArrayOf(),
+            strings = arrayOf(),
             iconResource = R.drawable.ic_piano,
             stableId = -1 - instruments.size.toLong(), // this should be set by a id generator
             isChromatic = true
@@ -80,7 +90,14 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
         Instrument(
             name = null,
             nameResource = R.string.guitar_eadgbe,
-            strings = intArrayOf(-29, -24, -19, -14, -10, -5),
+            strings = arrayOf(
+                MusicalNote(BaseNote.E, NoteModifier.None, 2),
+                MusicalNote(BaseNote.A, NoteModifier.None, 2),
+                MusicalNote(BaseNote.D, NoteModifier.None, 3),
+                MusicalNote(BaseNote.G, NoteModifier.None, 3),
+                MusicalNote(BaseNote.B, NoteModifier.None, 3),
+                MusicalNote(BaseNote.E, NoteModifier.None, 4)
+            ),
             iconResource = R.drawable.ic_guitar,
             stableId = -1 - instruments.size.toLong()
         )
@@ -89,7 +106,12 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
         Instrument(
             name = null,
             nameResource = R.string.bass_eadg,
-            strings = intArrayOf(-41, -36, -31, -26),
+            strings = arrayOf(
+                MusicalNote(BaseNote.E, NoteModifier.None, 1),
+                MusicalNote(BaseNote.A, NoteModifier.None, 1),
+                MusicalNote(BaseNote.D, NoteModifier.None, 2),
+                MusicalNote(BaseNote.G, NoteModifier.None, 2),
+            ),
             iconResource = R.drawable.ic_bass,
             stableId = -1 - instruments.size.toLong()
         )
@@ -98,7 +120,13 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
         Instrument(
             name = null,
             nameResource = R.string.bass_beadg,
-            strings = intArrayOf(-46, -41, -36, -31, -26),
+            strings = arrayOf(
+                MusicalNote(BaseNote.B, NoteModifier.None, 0),
+                MusicalNote(BaseNote.E, NoteModifier.None, 1),
+                MusicalNote(BaseNote.A, NoteModifier.None, 1),
+                MusicalNote(BaseNote.D, NoteModifier.None, 2),
+                MusicalNote(BaseNote.G, NoteModifier.None, 2),
+            ),
             iconResource = R.drawable.ic_bass,
             stableId = -1 - instruments.size.toLong()
         )
@@ -107,7 +135,12 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
         Instrument(
             name = null,
             nameResource = R.string.ukulele_gcea,
-            strings = intArrayOf(-2, -9, -5, 0),
+            strings = arrayOf(
+                MusicalNote(BaseNote.G, NoteModifier.None, 4),
+                MusicalNote(BaseNote.C, NoteModifier.None, 4),
+                MusicalNote(BaseNote.E, NoteModifier.None, 4),
+                MusicalNote(BaseNote.A, NoteModifier.None, 4)
+            ),
             iconResource = R.drawable.ic_ukulele,
             stableId = -1 - instruments.size.toLong()
         )
@@ -116,7 +149,12 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
         Instrument(
             name = null,
             nameResource = R.string.violin_gdae,
-            strings = intArrayOf(-14, -7, 0, 7),
+            strings = arrayOf(
+                MusicalNote(BaseNote.G, NoteModifier.None, 3),
+                MusicalNote(BaseNote.D, NoteModifier.None, 4),
+                MusicalNote(BaseNote.A, NoteModifier.None, 4),
+                MusicalNote(BaseNote.E, NoteModifier.None, 5),
+            ),
             iconResource = R.drawable.ic_violin,
             stableId = -1 - instruments.size.toLong()
         )
@@ -125,7 +163,12 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
         Instrument(
             name = null,
             nameResource = R.string.viola_cgda,
-            strings = intArrayOf(-21, -14, -7, 0),
+            strings = arrayOf(
+                MusicalNote(BaseNote.C, NoteModifier.None, 3),
+                MusicalNote(BaseNote.G, NoteModifier.None, 3),
+                MusicalNote(BaseNote.D, NoteModifier.None, 4),
+                MusicalNote(BaseNote.A, NoteModifier.None, 4),
+            ),
             iconResource = R.drawable.ic_violin,
             stableId = -1 - instruments.size.toLong()
         )
@@ -134,7 +177,12 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
         Instrument(
             name = null,
             nameResource = R.string.cello_cgda,
-            strings = intArrayOf(-33, -26, -19, -12),
+            strings = arrayOf(
+                MusicalNote(BaseNote.C, NoteModifier.None, 2),
+                MusicalNote(BaseNote.G, NoteModifier.None, 2),
+                MusicalNote(BaseNote.D, NoteModifier.None, 3),
+                MusicalNote(BaseNote.A, NoteModifier.None, 3),
+            ),
             iconResource = R.drawable.ic_cello,
             stableId = -1 - instruments.size.toLong()
         )
@@ -143,7 +191,12 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
         Instrument(
             name = null,
             nameResource = R.string.double_bass_eadg,
-            strings = intArrayOf(-41, -36, -31, -26),
+            strings = arrayOf(
+                MusicalNote(BaseNote.E, NoteModifier.None, 1),
+                MusicalNote(BaseNote.A, NoteModifier.None, 1),
+                MusicalNote(BaseNote.D, NoteModifier.None, 2),
+                MusicalNote(BaseNote.G, NoteModifier.None, 2),
+            ),
             iconResource = R.drawable.ic_double_bass,
             stableId = -1 - instruments.size.toLong()
         )
@@ -152,7 +205,18 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
 //        Instrument(
 //            name = "Test instrument",
 //            nameResource = null,
-//            strings = intArrayOf(0, 1, 2, 0, 2, 2, 3, 4, 5, 0),
+//            strings = arrayOf(
+//                MusicalNote(BaseNote.A, NoteModifier.None, 4),
+//                MusicalNote(BaseNote.A, NoteModifier.Sharp, 4, BaseNote.B, NoteModifier.Flat),
+//                MusicalNote(BaseNote.B, NoteModifier.None, 4),
+//                MusicalNote(BaseNote.A, NoteModifier.None, 4),
+//                MusicalNote(BaseNote.B, NoteModifier.None, 4),
+//                MusicalNote(BaseNote.B, NoteModifier.None, 4),
+//                MusicalNote(BaseNote.C, NoteModifier.None, 5),
+//                MusicalNote(BaseNote.C, NoteModifier.Sharp, 5, BaseNote.D, NoteModifier.Flat),
+//                MusicalNote(BaseNote.D, NoteModifier.None, 5),
+//                MusicalNote(BaseNote.A, NoteModifier.None, 4)
+//            ),
 //            iconResource = R.drawable.ic_violin,
 //            stableId = -1 - instruments.size.toLong()
 //        )
@@ -161,7 +225,10 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
 //        Instrument(
 //            name = "Test instrument 2",
 //            nameResource = null,
-//            strings = intArrayOf(0, 1, 1),
+//            strings = arrayOf(
+//                MusicalNote(BaseNote.A, NoteModifier.None, 4),
+//                MusicalNote(BaseNote.A, NoteModifier.Sharp, 4, BaseNote.B, NoteModifier.Flat),
+//                MusicalNote(BaseNote.A, NoteModifier.Sharp, 4, BaseNote.B, NoteModifier.Flat),
 //            iconResource = R.drawable.ic_violin,
 //            stableId = -1 - instruments.size.toLong()
 //        )

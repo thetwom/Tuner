@@ -4,6 +4,8 @@ import android.content.Context
 import android.widget.Toast
 import de.moekadu.tuner.BuildConfig
 import de.moekadu.tuner.R
+import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments.legacyNoteIndexToNote
 import kotlin.math.min
 
 class InstrumentDatabase {
@@ -83,7 +85,8 @@ class InstrumentDatabase {
             _instruments[index] = instrument
         else
             add(instrument, false)
-        databaseChangedListener?.onChanged(this)
+        if (callDatabaseChangedListener)
+            databaseChangedListener?.onChanged(this)
     }
 
     fun getInstrumentsString(context: Context?) : String {
@@ -125,9 +128,10 @@ class InstrumentDatabase {
     data class InstrumentsAndFileCheckResult(val fileCheck: FileCheck, val instruments: List<Instrument>)
 
     companion object {
-        private val keywords = arrayOf("Version=", "Instrument", "Length of name=", "Name=", "Icon=", "String indices=")
-        private enum class Keyword {Version, Instrument, NameLength, Name, Icon, Indices, Invalid}
+        private val keywords = arrayOf("Version=", "Instrument", "Length of name=", "Name=", "Icon=", "String indices=", "Strings=")
+        private enum class Keyword {Version, Instrument, NameLength, Name, Icon, Indices, Strings, Invalid}
         private class SimpleStream(val string: String, var pos: Int) {
+            /** Advance to next character which is not a white space. */
             fun advance() {
                 while (pos < string.length && string[pos].isWhitespace())
                     ++pos
@@ -140,6 +144,7 @@ class InstrumentDatabase {
             }
             fun isEos() = pos >= string.length
 
+            /** Read next coming string ended by a whitespace character. */
             fun readString(): String {
                 advance()
                 val posStart = pos
@@ -150,6 +155,7 @@ class InstrumentDatabase {
                 else
                     ""
             }
+            /** Read string where the exat number of characters is given. */
             fun readString(numCharacters: Int): String {
                 val posStart = pos
                 val res = if (numCharacters >= 0) {
@@ -178,6 +184,12 @@ class InstrumentDatabase {
                 val longAsString = readString()
                 return longAsString.toLongOrNull()
             }
+
+            /** Read an array of integers.
+             * The array is expected to be enclosed in "[" and "]" and the int numbers should be
+             * separated by ",".
+             * * @return Int array of numbers or null if no array available.
+             */
             fun readIntArray(): IntArray? {
                 advance()
                 if (pos >= string.length || string[pos] != '[')
@@ -194,6 +206,32 @@ class InstrumentDatabase {
                 val intArrayAsString = string.substring(posStart + 1, pos - 1)
                 return try {
                     intArrayAsString.split(",").map { it.trim().toInt() }.toIntArray()
+                } catch (e: NumberFormatException) {
+                    null
+                }
+            }
+            /** Read an array of musical notes.
+             * The array is expected to be enclosed in "[" and "]", the string representation
+             * of the notes must be created with MusicalNote.asString(), and the different
+             * notes must be separated by ";".
+             * @return Array of musical notes or null if no array available.
+             */
+            fun readMusicalNoteArray(): Array<MusicalNote>? {
+                advance()
+                if (pos >= string.length || string[pos] != '[')
+                    return null
+//                Log.v("Tuner", "InstrumentDatabase.readIntArray. string[pos]=${string[pos]}")
+                val posStart = pos
+                while (pos < string.length && string[pos] != '\n' && string[pos] != ']')
+                    ++pos
+                if (string[pos] != ']')
+                    return null
+                ++pos
+                if (pos - 1 <= posStart + 1) // allow empty int lists
+                    return arrayOf()
+                val musicalNoteArrayAsString = string.substring(posStart + 1, pos - 1)
+                return try {
+                    musicalNoteArrayAsString.split(";").map { MusicalNote.fromString(it.trim()) }.toTypedArray()
                 } catch (e: NumberFormatException) {
                     null
                 }
@@ -216,6 +254,7 @@ class InstrumentDatabase {
                 "Length of name=" -> Keyword.NameLength
                 "Name=" -> Keyword.Name
                 "Icon=" -> Keyword.Icon
+                "Strings=" -> Keyword.Strings
                 "String indices=" -> Keyword.Indices
                 else -> Keyword.Invalid
             }
@@ -228,12 +267,12 @@ class InstrumentDatabase {
                     "Length of name=${name.length}\n" +
                     "Name=$name\n" +
                     "Icon=$iconName\n" +
-                    "String indices=${
+                    "Strings=${
                         instrument.strings.joinToString(
-                            separator = ",",
+                            separator = ";",
                             prefix = "[",
                             postfix = "]"
-                        )
+                        ) { it.asString() }
                     }\n"
         }
 
@@ -255,7 +294,8 @@ class InstrumentDatabase {
             var numInstrumentsRead = 0
             var nameLength = -1
             var instrumentName = ""
-            var strings: IntArray? = null
+            var stringIndices: IntArray? = null
+            var strings: Array<MusicalNote>? = null
             var iconId = instrumentIcons[0].resourceId
             var stableId = Instrument.NO_STABLE_ID
 
@@ -279,12 +319,18 @@ class InstrumentDatabase {
                         iconId = instrumentIconName2Id(stream.readString())
 //                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading icon id: $iconId")
                     }
+                    Keyword.Strings -> {
+                        strings = stream.readMusicalNoteArray()
+//                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading strings: ${strings?.joinToString(separator=";", prefix="[", postfix="]"){it.asString()}}")
+                    }
                     Keyword.Indices -> {
-                        strings = stream.readIntArray()
-//                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading strings: ${strings?.joinToString(separator=",", prefix="[", postfix="]")}")
+                        stringIndices = stream.readIntArray()
+//                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading string indices: ${stringIndices?.joinToString(separator=",", prefix="[", postfix="]")}")
                     }
                     Keyword.Instrument -> {
-                        strings?.let {
+                        // string indices were used in older versions, we still allow reading them ....
+                        val stringsResolved = strings ?: stringIndices?.map { legacyNoteIndexToNote(it) }?.toTypedArray()
+                        stringsResolved?.let {
                             val instrument = Instrument(instrumentName, null, it, iconId, stableId)
                             instruments.add(instrument)
                             numInstrumentsRead += 1
@@ -292,6 +338,7 @@ class InstrumentDatabase {
                         nameLength = -1
                         instrumentName = ""
                         strings = null
+                        stringIndices = null
                         iconId = instrumentIcons[0].resourceId
                         stableId = stream.readLong() ?: Instrument.NO_STABLE_ID
 //                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading next instrument")
@@ -301,7 +348,9 @@ class InstrumentDatabase {
                 stream.goToNextLine()
             }
 
-            strings?.let {
+            // string indices were used in older versions, we still allow reading them ....
+            val stringsResolved = strings ?: stringIndices?.map { legacyNoteIndexToNote(it) }?.toTypedArray()
+            stringsResolved?.let {
                 val instrument = Instrument(instrumentName, null, it, iconId, stableId)
                 instruments.add(instrument)
                 numInstrumentsRead += 1

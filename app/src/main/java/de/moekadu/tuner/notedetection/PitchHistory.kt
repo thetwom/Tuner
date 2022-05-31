@@ -318,9 +318,9 @@ class PitchHistory(size : Int, var musicalScale : MusicalScale) {
 //    }
 
     private fun checkIfValueIsWithinAllowedRange(value: Float, previousValue: Float) : Boolean {
-        val toneIndex = musicalScale.getToneIndex(previousValue)
-        val validFrequencyMin = musicalScale.getNoteFrequency(toneIndex - allowedDeltaNoteToBeValid)
-        val validFrequencyMax = musicalScale.getNoteFrequency(toneIndex + allowedDeltaNoteToBeValid)
+        val noteIndex = musicalScale.getNoteIndex(previousValue)
+        val validFrequencyMin = musicalScale.getNoteFrequency(noteIndex - allowedDeltaNoteToBeValid)
+        val validFrequencyMax = musicalScale.getNoteFrequency(noteIndex + allowedDeltaNoteToBeValid)
         return !(value >= validFrequencyMax || value < validFrequencyMin)
     }
 }

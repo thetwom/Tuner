@@ -21,30 +21,37 @@ package de.moekadu.tuner.temperaments
 
 interface MusicalScale {
     val temperamentType: TemperamentType
+    val noteNameScale: NoteNameScale
     val rootNote: MusicalNote
     val referenceNote: MusicalNote
     val referenceFrequency: Float
     val numberOfNotesPerOctave: Int
-    /// Total number of notes contained in this temperament
-    val numberOfNotes: Int
+    /// Smallest note index (included).
+    val noteIndexBegin: Int
+    /// Last note index (excluded).
+    val noteIndexEnd: Int
     /// Return circle of fifth instance if the underlying tuning can provide one.
     val circleOfFifths: TemperamentCircleOfFifths?
     /// Return the ratios as rational numbers (first one 1/1 and octave 2/1 must be included) if possible
     val rationalNumberRatios: Array<RationalNumber>?
 
     /** Obtain note representation based on class internal note index.
-     * @param noteIndex Local index of note 0 <= noteIndex < numberOfNotes.
+     * @param noteIndex Local index of note (noteIndexBegin <= noteIndex < noteIndexEnd).
      * @return Musical note representation.
      */
-    fun getNote(noteIndex: Int): MusicalNote
+    fun getNote(noteIndex: Int): MusicalNote {
+        return noteNameScale.getNoteOfIndex(noteIndex)
+    }
+
     /** Obtain note frequency based on class internal note index for noteIndex type Int.
-     * @param noteIndex Local index of note 0 <= noteIndex < numberOfNotes.
+     * @param noteIndex Local index of note (noteIndexBegin <= noteIndex < noteIndexEnd).
      * @return Note frequency.
      */
     fun getNoteFrequency(noteIndex: Int): Float
+
     /** Obtain note frequency based on class internal note index for noteIndex type Float.
      * This method allows using "odd" note indices.
-     * @param noteIndex Local index as float of note 0 <= noteIndex < numberOfNotes.
+     * @param noteIndex Local index as float of note (noteIndexBegin <= noteIndex < noteIndexEnd).
      * @return Note frequency.
      */
     fun getNoteFrequency(noteIndex: Float): Float
@@ -56,12 +63,13 @@ interface MusicalScale {
     fun getClosestNote(frequency: Float): MusicalNote
 
     /** Get local note index of a given frequency.
-     * This method can return odd note indices, so if the frequency is between two notes
+     * This method can return non-integer note indices, so if the frequency is between two notes
      * we still return a meaningful index as a value between the two notes.
      * @param frequency Frequency.
      * @return Note index as float.
      */
     fun getNoteIndex(frequency: Float): Float
+
     /** Get local note index which si closest to a given frequency.
      * @param frequency Frequency.
      * @return Note index.

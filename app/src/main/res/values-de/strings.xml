@@ -57,17 +57,13 @@
     <string name="ukulele_gcea">Ukulele</string>
 
     <string name="c_note_name">C</string>
-    <string name="csharp_note_name">-</string>
     <string name="d_note_name">D</string>
-    <string name="dsharp_note_name">-</string>
     <string name="e_note_name">E</string>
     <string name="f_note_name">F</string>
-    <string name="fsharp_note_name">-</string>
     <string name="g_note_name">G</string>
-    <string name="gsharp_note_name">-</string>
     <string name="a_note_name">A</string>
-    <string name="asharp_note_name">-</string>
     <string name="b_note_name">H</string>
+    <string name="asharp_bflat_note_name">B</string>
     <string name="violin_gdae">Geige</string>
     <string name="abort">Abbrechen</string>
     <string name="instrument_name">Instrumentname</string>

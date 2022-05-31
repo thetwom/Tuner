@@ -3,7 +3,7 @@ package de.moekadu.tuner
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import de.moekadu.tuner.notedetection.PitchHistory
 import de.moekadu.tuner.temperaments.TemperamentType
-import de.moekadu.tuner.temperaments.TemperamentEqualTemperament
+import de.moekadu.tuner.temperaments.MusicalScaleEqualTemperament
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -16,7 +16,7 @@ class PitchHistoryTest {
 
     @Test
     fun addData() {
-        val pitchHistory = PitchHistory(10, TemperamentEqualTemperament(TemperamentType.EDO12))
+        val pitchHistory = PitchHistory(10, MusicalScaleEqualTemperament(TemperamentType.EDO12))
         pitchHistory.maxNumFaultyValues = 2
 
         pitchHistory.appendValue(440f, 0.0f)
