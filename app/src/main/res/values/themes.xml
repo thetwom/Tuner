@@ -2,8 +2,7 @@
 <resources>
     <style name="AppTheme" parent="AppThemeBase">
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:statusBarColor">@color/md_theme_surface</item>
-
+        <item name="android:statusBarColor">@color/md_theme_background</item>
         <item name="android:colorBackground">@color/md_theme_background</item>
     </style>
 
