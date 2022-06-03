@@ -20,10 +20,11 @@
 package de.moekadu.tuner
 
 import android.content.Intent
+import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
-import android.view.WindowManager
+import android.util.TypedValue
+import android.view.*
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -66,7 +67,7 @@ class MainActivity : AppCompatActivity() {
         AppCompatDelegate.setDefaultNightMode(nightMode)
 
         val screenOn = sharedPreferences.getBoolean("screenon", false)
-        if(screenOn)
+        if (screenOn)
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         else
             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -87,6 +88,8 @@ class MainActivity : AppCompatActivity() {
             //if (supportFragmentManager.backStackEntryCount == 0)
             //    loadSimpleOrScientificFragment()
         }
+
+        setStatusAndNavigationBarColors()
 
         if (savedInstanceState == null)
             handleFileLoadingIntent(intent)
@@ -242,6 +245,52 @@ class MainActivity : AppCompatActivity() {
                 supportFragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
                 instrumentsViewModel.loadInstrumentsFromFile(uri)
                 loadInstrumentsFragment()
+            }
+        }
+    }
+
+    private fun setStatusAndNavigationBarColors() {
+        val uiMode = resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
+        if (uiMode == null || uiMode == Configuration.UI_MODE_NIGHT_UNDEFINED)
+            return
+
+        val typedValue = TypedValue()
+        theme.resolveAttribute(android.R.attr.colorBackground, typedValue, true)
+        val backgroundColor = typedValue.data
+
+        // set status bar color
+        window.statusBarColor = backgroundColor
+
+        // set status bar icon colors to dark if dark-mode is off
+        if(uiMode == Configuration.UI_MODE_NIGHT_NO) {
+            if (Build.VERSION.SDK_INT < 30) {
+                val view = window.decorView
+                view.systemUiVisibility = view.systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+            } else {
+                window.insetsController?.setSystemBarsAppearance(
+                    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                )
+            }
+        }
+
+        // set navigation bar color to background color only
+        // - if we are in dark mode
+        // - we have SDK >= 27
+        // since for light mode and SDK < 27 we cannot set dark icons
+        if (uiMode == Configuration.UI_MODE_NIGHT_YES || Build.VERSION.SDK_INT >= 27)
+            window.navigationBarColor = backgroundColor
+
+        // set dark icons in navigation bar if navigation bar is light color
+        if (Build.VERSION.SDK_INT >= 27 && uiMode == Configuration.UI_MODE_NIGHT_NO) {
+            if (Build.VERSION.SDK_INT < 30) {
+                val view = window.decorView
+                view.systemUiVisibility = view.systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+            } else {
+                window.insetsController?.setSystemBarsAppearance(
+                    WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                    WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+                )
             }
         }
     }
