@@ -182,6 +182,7 @@
     <string name="acknowledged">Acknowledged</string>
     <string name="no_instruments_selected">No instruments selected.</string>
     <string name="select_instruments">Select instruments</string>
+    <string name="select_instrument">Instruments</string>
     <string name="share2">Share</string>
     <string name="select_all">Select all</string>
 </resources>

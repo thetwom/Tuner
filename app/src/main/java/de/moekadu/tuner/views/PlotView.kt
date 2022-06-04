@@ -855,10 +855,10 @@ private class PlotMarks(transformation: PlotTransformation,
         }
 
         for (i in 0 until numMarks) {
-            val x = if (i < xPositions?.size ?: 0) xPositions?.get(i) ?: DRAW_LINE else DRAW_LINE
-            val y = if (i < yPositions?.size ?: 0) yPositions?.get(i) ?: DRAW_LINE else DRAW_LINE
+            val x = if (i < (xPositions?.size ?: 0)) xPositions?.get(i) ?: DRAW_LINE else DRAW_LINE
+            val y = if (i < (yPositions?.size ?: 0)) yPositions?.get(i) ?: DRAW_LINE else DRAW_LINE
             val s = format?.let { it(i, if (x == DRAW_LINE) null else x, if (y == DRAW_LINE) null else y) }
-            val a = if (i < anchors?.size ?: 0) anchors?.get(i) ?: MarkAnchor.Center else MarkAnchor.Center
+            val a = if (i < (anchors?.size ?: 0)) anchors?.get(i) ?: MarkAnchor.Center else MarkAnchor.Center
             marks.add(Mark(x, y, s, a))
 //            Log.v("Tuner", "PlotMarks.setMarks: Mark: x=$x, y=$y, s=$s, a=$a")
             if (x != DRAW_LINE) {

@@ -9,7 +9,7 @@
         android:id="@+id/instrument_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingBottom="48dp"
+        android:paddingBottom="64dp"
         android:clipToPadding="false"
         android:scrollbars="vertical"
         />
@@ -18,8 +18,7 @@
         android:id="@+id/tuning_editor_fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_margin="16dp"
         android:contentDescription="@string/add_new_tuning"
         android:src="@drawable/ic_plus"
         app:fabSize="normal"
