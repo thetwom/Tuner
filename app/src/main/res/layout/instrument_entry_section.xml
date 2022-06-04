@@ -10,23 +10,31 @@
         android:layout_height="2dp"
         app:layout_constraintBottom_toBottomOf="parent"
         />
+
     <View
-        android:id="@+id/background"
+        android:id="@+id/top_separator"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:background="?attr/colorPrimary"
+        android:layout_height="1dp"
+        android:background="?attr/colorSurfaceVariant"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottom_spacing"
         />
+<!--    <View-->
+<!--        android:id="@+id/background"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:background="?attr/colorPrimary"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        app:layout_constraintBottom_toTopOf="@id/bottom_spacing"-->
+<!--        />-->
     <TextView
         android:id="@+id/section_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textSize="16sp"
-        android:textColor="?attr/colorOnPrimary"
+        android:textColor="?attr/colorSecondary"
         android:layout_marginStart="12dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintTop_toBottomOf="@id/top_separator"
+        app:layout_constraintBottom_toTopOf="@id/bottom_spacing"
         app:layout_constraintStart_toEndOf="@id/expand_collapse"
         app:layout_constraintEnd_toEndOf="parent"
         />
@@ -35,12 +43,13 @@
         android:id="@+id/expand_collapse"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="@id/background"
+        app:layout_constraintTop_toTopOf="@id/top_separator"
+        app:layout_constraintBottom_toTopOf="@id/bottom_spacing"
         app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="12dp"
         android:layout_marginEnd="12dp"
         app:srcCompat="@drawable/ic_expand"
-        app:tint="?attr/colorOnPrimary"
+        app:tint="?attr/colorSecondary"
         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

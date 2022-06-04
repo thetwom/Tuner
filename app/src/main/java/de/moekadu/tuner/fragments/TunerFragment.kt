@@ -248,6 +248,11 @@ class TunerFragment : Fragment() {
         viewModel.setTargetNote(-1, TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
     }
 
+    override fun onResume() {
+        super.onResume()
+        activity?.setTitle(R.string.app_name)
+    }
+
     override fun onStop() {
         viewModel.stopSampling()
         super.onStop()

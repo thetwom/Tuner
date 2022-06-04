@@ -220,6 +220,11 @@ class TunerFragmentSimple : Fragment() {
         viewModel.setInstrument(instrumentsViewModel.instrument.value?.instrument ?: instrumentDatabase[0])
     }
 
+    override fun onResume() {
+        super.onResume()
+        activity?.setTitle(R.string.app_name)
+    }
+
     override fun onStop() {
         viewModel.stopSampling()
         super.onStop()

@@ -167,5 +167,6 @@
     <string name="share2">Teilen</string>
     <string name="select_all">Alle auswählen</string>
     <string name="select_instruments">Instrumente auswählen</string>
+    <string name="select_instrument">Instrumente</string>
     <string name="no_instruments_selected">Keine Instrumente ausgewählt.</string>
 </resources>

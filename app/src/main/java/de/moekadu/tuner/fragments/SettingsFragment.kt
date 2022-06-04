@@ -237,6 +237,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
       else -> super.onDisplayPreferenceDialog(preference)
     }
   }
+
+  override fun onResume() {
+      super.onResume()
+      activity?.setTitle(R.string.settings)
+  }
+
   private fun getWindowSizeSummary(windowSizeIndex: Int): String {
     val s = indexToWindowSize(windowSizeIndex)
     // the factor 2 in the next line is used since only one wave inside the window is not enough for
