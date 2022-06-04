@@ -10,7 +10,7 @@
         android:layout_height="50dp"
         android:layout_margin="8dp"
         app:labelTextColor="?attr/colorOnSurface"
-        app:labelTextColor2="?attr/colorSurfaceVariant"
+        app:labelTextColor2="?attr/colorOnSurfaceVariant"
         app:textStyle="bold"
         app:rectangleRadius="3dp"
         app:layout_constraintTop_toTopOf="parent"

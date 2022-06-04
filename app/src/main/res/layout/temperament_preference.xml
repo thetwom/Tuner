@@ -50,7 +50,7 @@
         android:layout_marginRight="16dp"
         android:layout_marginTop="8dp"
         app:labelTextColor="?attr/colorOnSurface"
-        app:labelTextColor2="?attr/colorSurfaceVariant"
+        app:labelTextColor2="?attr/colorOnSurfaceVariant"
         app:scaleText="1.0"
         app:textStyle="bold"
         app:rectangleRadius="3dp"

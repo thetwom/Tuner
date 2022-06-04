@@ -19,7 +19,9 @@
 
 <resources>
 
-
+    <style name="ThemeOverlay.BlackNight" parent="">
+        <item name="android:colorBackground">@color/pure_black</item>
+    </style>
 
 <!--    <style name="Widget.App.ActionMode" parent="Widget.AppCompat.ActionMode">-->
 <!--        <item name="background">@color/colorBackground</item>-->

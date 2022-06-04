@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity() {
     // private var scientificMode = TunerMode.Unknown
 
     override fun onCreate(savedInstanceState: Bundle?) {
+//        overlayTheme()
         super.onCreate(savedInstanceState)
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
@@ -294,4 +295,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun overlayTheme() {
+        val uiMode = resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
+        if (uiMode == Configuration.UI_MODE_NIGHT_YES)
+            theme.applyStyle(R.style.ThemeOverlay_BlackNight, true)
+    }
+
 }
