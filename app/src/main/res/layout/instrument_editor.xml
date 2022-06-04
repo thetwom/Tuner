@@ -114,7 +114,7 @@
         app:layout_constraintBottom_toTopOf="@id/detected_note_viewer"
         app:textPadding="2dp"
         app:labelTextColor="?attr/colorOnSurface"
-        app:labelTextColor2="?attr/colorSurfaceVariant"
+        app:labelTextColor2="?attr/colorOnSurfaceVariant"
         android:paddingLeft="0dp"
         android:paddingRight="0dp"
         android:layout_marginBottom="8dp"
