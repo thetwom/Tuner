@@ -44,8 +44,8 @@
     <string name="about_message">Tuner app\nVersion: %s\nLicense: GPLv3</string>
     <string name="reset_all_settings">Reset all settings</string>
     <string name="reset_settings_prompt">Do you really want to reset all settings?</string>
-    <string name="yes">yes</string>
-    <string name="no">no</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
     <string name="autocorrelation">autocorrelation</string>
     <string name="pitch_history">pitch history</string>
     <string name="spectrum">spectrum</string>
@@ -90,8 +90,8 @@
     <string name="lately_detected_notes">Lately detected tones</string>
     <string name="done">Done</string>
     <string name="edit_instrument">Edit instrument</string>
-    <string name="predefined_instruments">Predefined instruments</string>
-    <string name="custom_instruments">Custom instruments</string>
+    <string name="predefined_instruments">Default</string>
+    <string name="custom_instruments">Custom</string>
     <string name="file_empty">File is empty: %s</string>
     <string name="file_invalid">File is invalid: %s</string>
     <string name="instrument_deleted">Instrument deleted</string>
