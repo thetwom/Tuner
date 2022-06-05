@@ -38,6 +38,7 @@ class InstrumentsAdapter(val mode: Mode) : ListAdapter<Instrument, InstrumentsAd
         var titleView: TextView? = null
         var icon: ImageView? = null
         var editIcon: ImageView? = null
+        var extendedEditClickArea: View? = null
         var copyIcon: ImageView? = null
         var closeExpansionIcon: ImageView? = null
         var stringText: TextView? = null
@@ -106,10 +107,20 @@ class InstrumentsAdapter(val mode: Mode) : ListAdapter<Instrument, InstrumentsAd
             stringText = view.findViewById(R.id.string_list)
             icon = view.findViewById(R.id.instrument_icon)
             editIcon = view.findViewById(R.id.edit_instrument)
-            editIcon?.setOnClickListener {
+//            editIcon?.setOnClickListener {
+//                onInstrumentClickedListener?.onEditIconClicked(getItem(bindingAdapterPosition), itemId)
+//            }
+//            editIcon?.setOnLongClickListener {
+//                closeExpansionIcon?.visibility = View.VISIBLE
+//                copyIcon?.visibility = View.VISIBLE
+//                editIcon?.setImageResource(R.drawable.ic_edit)
+//                true
+//            }
+            extendedEditClickArea = view.findViewById(R.id.extended_edit_instrument_click_area)
+            extendedEditClickArea?.setOnClickListener {
                 onInstrumentClickedListener?.onEditIconClicked(getItem(bindingAdapterPosition), itemId)
             }
-            editIcon?.setOnLongClickListener {
+            extendedEditClickArea?.setOnLongClickListener {
                 closeExpansionIcon?.visibility = View.VISIBLE
                 copyIcon?.visibility = View.VISIBLE
                 editIcon?.setImageResource(R.drawable.ic_edit)
@@ -135,11 +146,13 @@ class InstrumentsAdapter(val mode: Mode) : ListAdapter<Instrument, InstrumentsAd
                 Mode.Copy -> {
                     closeExpansionIcon?.visibility = View.GONE
                     editIcon?.visibility = View.GONE
+                    extendedEditClickArea?.visibility = View.GONE
                     copyIcon?.visibility = View.VISIBLE
                 }
                 Mode.EditCopy -> {
                     closeExpansionIcon?.visibility = View.GONE
                     editIcon?.visibility = View.VISIBLE
+                    extendedEditClickArea?.visibility = View.VISIBLE
                     editIcon?.setImageResource(R.drawable.ic_edit_expand)
                     copyIcon?.visibility = View.GONE
                 }

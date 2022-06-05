@@ -47,6 +47,16 @@
         <item name="actionBarTheme">@style/ThemeOverlay.Material3.ActionBar</item>
 
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+
+        <item name="alertDialogTheme">@style/AppTheme.M3LikeAlertDialog</item>
+        <item name="dialogCornerRadius">28dp</item>
+    </style>
+
+    <style name="AppTheme.M3LikeAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="dialogCornerRadius">28dp</item>
+        <item name="cornerFamily">rounded</item>
+        <item name="android:colorBackground">?attr/colorSurface</item>
+        <item name="android:layout">@layout/m3_alert_dialog</item>
     </style>
 
 </resources>
