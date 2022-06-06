@@ -50,6 +50,7 @@
 
         <item name="alertDialogTheme">@style/AppTheme.M3LikeAlertDialog</item>
         <item name="dialogCornerRadius">28dp</item>
+
     </style>
 
     <style name="AppTheme.M3LikeAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
