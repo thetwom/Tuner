@@ -53,7 +53,7 @@
         android:layout_marginRight="12dp"
         android:paddingTop="0dp"
         android:paddingBottom="3dp"
-        android:paddingRight="60sp"
+        android:paddingRight="37sp"
         android:paddingLeft="12dp"
         app:frameColor="?attr/colorOnSurface"
         app:frameColorOnTouch="?attr/colorPrimary"

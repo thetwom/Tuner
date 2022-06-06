@@ -52,7 +52,7 @@
         app:layout_constraintWidth_percent="0.45"
         android:paddingBottom="12dp"
         android:paddingRight="0dp"
-        android:paddingLeft="60sp"
+        android:paddingLeft="37sp"
         app:frameColor="?attr/colorOnSurface"
         app:frameColorOnTouch="?attr/colorPrimary"
         app:stringColor="?attr/colorOnSurface"
