@@ -116,6 +116,8 @@ class InstrumentsAdapter(val mode: Mode) : ListAdapter<Instrument, InstrumentsAd
 //                editIcon?.setImageResource(R.drawable.ic_edit)
 //                true
 //            }
+            // TODO: extendedClickArea does not really work, find a more reliable way
+            // e.g. by reserving a region in the complete entry for showing the different modes
             extendedEditClickArea = view.findViewById(R.id.extended_edit_instrument_click_area)
             extendedEditClickArea?.setOnClickListener {
                 onInstrumentClickedListener?.onEditIconClicked(getItem(bindingAdapterPosition), itemId)

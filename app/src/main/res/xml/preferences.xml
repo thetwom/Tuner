@@ -3,16 +3,25 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory android:title="@string/basic">
-    <ListPreference
-        app:key="appearance"
-        app:title="@string/appearance"
-        android:entries="@array/appearanceNames"
-        android:entryValues="@array/appearanceList"
-        android:dialogTitle="@string/appearance"
-        android:defaultValue="auto"
-        app:icon="@drawable/ic_appearance"
-        android:summary="@string/system_appearance"
-        />
+        <de.moekadu.tuner.preferences.AppearancePreference
+            app:key="appearance"
+            app:title="@string/appearance"
+            android:dialogTitle="@string/appearance"
+            app:icon="@drawable/ic_appearance"
+            android:summary="@string/system_appearance"
+            android:defaultValue="auto"
+            />
+
+<!--        <ListPreference-->
+<!--        app:key="appearance"-->
+<!--        app:title="@string/appearance"-->
+<!--        android:entries="@array/appearanceNames"-->
+<!--        android:entryValues="@array/appearanceList"-->
+<!--        android:dialogTitle="@string/appearance"-->
+<!--        android:defaultValue="auto"-->
+<!--        app:icon="@drawable/ic_appearance"-->
+<!--        android:summary="@string/system_appearance"-->
+<!--        />-->
 
         <SwitchPreferenceCompat
             app:key="screenon"

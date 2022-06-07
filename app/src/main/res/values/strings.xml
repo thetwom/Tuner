@@ -185,4 +185,6 @@
     <string name="select_instrument">Instruments</string>
     <string name="share2">Share</string>
     <string name="select_all">Select all</string>
+    <string name="black_night_mode">Black background in dark mode</string>
+    <string name="system_color_accents">Color accents from system</string>
 </resources>
