@@ -19,19 +19,18 @@
 
 package de.moekadu.tuner.fragments
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.view.*
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.*
 import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
 import de.moekadu.tuner.dialogs.AboutDialog
 import de.moekadu.tuner.dialogs.ResetSettingsDialog
 import de.moekadu.tuner.notedetection.percentToPitchHistoryDuration
-import de.moekadu.tuner.preferences.ReferenceNotePreference
-import de.moekadu.tuner.preferences.ReferenceNotePreferenceDialog
-import de.moekadu.tuner.preferences.TemperamentPreference
-import de.moekadu.tuner.preferences.TemperamentPreferenceDialog
+import de.moekadu.tuner.preferences.*
 import de.moekadu.tuner.temperaments.Temperament
 import de.moekadu.tuner.temperaments.getTuningNameResourceId
 import de.moekadu.tuner.temperaments.noteNames12Tone
@@ -56,11 +55,18 @@ fun indexToTolerance(index: Int): Int {
   }
 }
 
+fun nightModeStringToID(string: String) = when(string){
+    "dark" -> AppCompatDelegate.MODE_NIGHT_YES
+    "light" -> AppCompatDelegate.MODE_NIGHT_NO
+    else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+}
+
 class SettingsFragment : PreferenceFragmentCompat() {
 
   private var preferFlatPreference: SwitchPreferenceCompat? = null
   private var referenceNotePreference: ReferenceNotePreference? = null
   private var temperamentPreference: TemperamentPreference? = null
+  private var appearancePreference: AppearancePreference? = null
 //  override fun onCreate(savedInstanceState: Bundle?) {
 //    super.onCreate(savedInstanceState)
 //
@@ -82,23 +88,23 @@ class SettingsFragment : PreferenceFragmentCompat() {
   }
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-    val appearance = findPreference<ListPreference?>("appearance")
-      ?: throw RuntimeException("No appearance preference")
 
-    appearance.summaryProvider =
-      Preference.SummaryProvider<ListPreference> { preference ->
-        when (preference.value) {
-          "dark" -> getString(R.string.dark_appearance)
-          "light" -> getString(R.string.light_appearance)
-          else -> getString(R.string.system_appearance)
-        }
+      appearancePreference = findPreference("appearance")
+          ?: throw RuntimeException("No appearance preference")
+
+      appearancePreference?.setOnAppearanceChangedListener { _, newValue, modeChanged, blackNightChanged, useSystemColorsChanged ->
+          setAppearanceSummary(newValue.mode)
+          AppCompatDelegate.setDefaultNightMode(newValue.mode)
+          var recreate = useSystemColorsChanged
+          if (blackNightChanged) {
+              val uiMode = resources.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
+              if (uiMode == Configuration.UI_MODE_NIGHT_YES || uiMode == Configuration.UI_MODE_NIGHT_UNDEFINED)
+                  recreate = true
+          }
+          if (recreate)
+              (activity as MainActivity?)?.recreate()
       }
-
-    appearance.setOnPreferenceChangeListener { _, _ ->
-      val act = activity as MainActivity?
-      act?.recreate()
-      true
-    }
+      setAppearanceSummary(appearancePreference?.value?.mode)
 
     val screenOnPreference = findPreference<SwitchPreferenceCompat?>("screenon")
       ?: throw RuntimeException("No screenon preference")
@@ -111,14 +117,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
         activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
       true
     }
-
-//    val a4Frequency = findPreference<EditTextPreference?>("a4_frequency")
-//    a4Frequency?.setOnBindEditTextListener { editText ->
-//      editText.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
-//    }
-//    a4Frequency?.summaryProvider = Preference.SummaryProvider<EditTextPreference> { preference ->
-//      getString(R.string.hertz_str, preference.text ?: "440")
-//    }
 
     preferFlatPreference = findPreference("prefer_flat") ?: throw RuntimeException("No prefer_flat preference")
     preferFlatPreference?.setOnPreferenceChangeListener { _, newValue ->
@@ -234,6 +232,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
         dialog.show(parentFragmentManager, "temperament_tag")
         dialog.setTargetFragment(this, 0)
       }
+      is AppearancePreference -> {
+          val dialog = AppearancePreferenceDialog.newInstance(preference.key, "appearance_tag")
+          dialog.show(parentFragmentManager, "appearance_tag")
+          dialog.setTargetFragment(this, 0)
+      }
       else -> super.onDisplayPreferenceDialog(preference)
     }
   }
@@ -257,6 +260,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
   private fun getMaxNoiseSummary(percent: Int): String {
     return getString(R.string.max_noise_summary, percent)
+  }
+
+  private fun setAppearanceSummary(mode: Int?) {
+      val summary = when (mode) {
+          AppCompatDelegate.MODE_NIGHT_YES -> getString(R.string.dark_appearance)
+          AppCompatDelegate.MODE_NIGHT_NO -> getString(R.string.light_appearance)
+          else -> getString(R.string.system_appearance)
+      }
+      appearancePreference?.summary = summary
   }
 
   private fun setReferenceNoteSummary(frequency: Float = Float.MAX_VALUE, toneIndex: Int = Int.MAX_VALUE, preferFlat: Boolean? = null) {

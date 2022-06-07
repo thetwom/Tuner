@@ -169,4 +169,6 @@
     <string name="select_instruments">Instrumente auswählen</string>
     <string name="select_instrument">Instrumente</string>
     <string name="no_instruments_selected">Keine Instrumente ausgewählt.</string>
+    <string name="black_night_mode">Schwarzer Hintergrund im dunklen Modus</string>
+    <string name="system_color_accents">System-Akzentfarben verwenden</string>
 </resources>

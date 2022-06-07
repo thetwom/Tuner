@@ -27,13 +27,14 @@ import android.util.TypedValue
 import android.view.*
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
 import androidx.preference.PreferenceManager
+import com.google.android.material.color.DynamicColors
 import de.moekadu.tuner.fragments.*
 import de.moekadu.tuner.preferences.AppPreferences
+import de.moekadu.tuner.preferences.AppearancePreference
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 
 class MainActivity : AppCompatActivity() {
@@ -54,18 +55,16 @@ class MainActivity : AppCompatActivity() {
     // private var scientificMode = TunerMode.Unknown
 
     override fun onCreate(savedInstanceState: Bundle?) {
-//        overlayTheme()
-        super.onCreate(savedInstanceState)
-
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val nightMode = when (sharedPreferences.getString("appearance", "auto")) {
-            "dark" -> AppCompatDelegate.MODE_NIGHT_YES
-            "light" -> AppCompatDelegate.MODE_NIGHT_NO
-            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-        }
+        val appearanceString = sharedPreferences.getString("appearance", "auto") ?: "auto"
+//        Log.v("Tuner", "MainActivity.onCreate: appearanceString: $appearanceString, systemAccents=${AppearancePreference.getUseSystemColorAccents(appearanceString)}, blackNight=${AppearancePreference.getBlackNightEnabledFromValue(appearanceString)}")
+        if (AppearancePreference.getUseSystemColorAccents(appearanceString))
+            DynamicColors.applyToActivityIfAvailable(this)
+        if (AppearancePreference.getBlackNightEnabledFromValue(appearanceString))
+            overlayThemeForBlackNight()
 
-        AppCompatDelegate.setDefaultNightMode(nightMode)
+        super.onCreate(savedInstanceState)
 
         val screenOn = sharedPreferences.getBoolean("screenon", false)
         if (screenOn)
@@ -252,6 +251,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setStatusAndNavigationBarColors() {
         val uiMode = resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
+//        Log.v("Tuner", "MainActivity.setStatusAndNavigationBarColors: uiMode = $uiMode")
         if (uiMode == null || uiMode == Configuration.UI_MODE_NIGHT_UNDEFINED)
             return
 
@@ -296,8 +296,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun overlayTheme() {
+    private fun overlayThemeForBlackNight() {
         val uiMode = resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
+//        Log.v("Tuner", "MainActivity.overlayTheme: uiMode = $uiMode")
         if (uiMode == Configuration.UI_MODE_NIGHT_YES)
             theme.applyStyle(R.style.ThemeOverlay_BlackNight, true)
     }
