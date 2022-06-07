@@ -1,4 +1,4 @@
-package de.moekadu.tuner.fragments
+package de.moekadu.tuner.instruments
 
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
