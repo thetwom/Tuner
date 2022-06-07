@@ -19,10 +19,7 @@ import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
 import de.moekadu.tuner.dialogs.ImportInstrumentsDialog
 import de.moekadu.tuner.dialogs.InstrumentsSharingDialog
-import de.moekadu.tuner.instruments.Instrument
-import de.moekadu.tuner.instruments.InstrumentArchiving
-import de.moekadu.tuner.instruments.InstrumentDatabase
-import de.moekadu.tuner.instruments.InstrumentsAdapter
+import de.moekadu.tuner.instruments.*
 import de.moekadu.tuner.preferences.AppPreferences
 import de.moekadu.tuner.viewmodels.InstrumentEditorViewModel
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
@@ -235,15 +232,14 @@ class InstrumentsFragment : Fragment() {
                     R.drawable.instrument_below_background
                 )
             }
-            val deleteIcon =
-                activity?.let { ContextCompat.getDrawable(it, R.drawable.ic_delete_instrument) }
+            val deleteIcon = activity?.let { ContextCompat.getDrawable(it, R.drawable.ic_delete_instrument) }
 
             override fun getDragDirs(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder
             ): Int {
                 //Log.v("Tuner", "InstrumentFragment.simpleTouchHelper.getDragDirs")
-                return if (viewHolder is InstrumentsAdapter.ViewHolder && viewHolder.instrument?.stableId ?: -1 >= 0)
+                return if (viewHolder is InstrumentsAdapter.ViewHolder && (viewHolder.instrument?.stableId ?: -1) >= 0)
                     ItemTouchHelper.UP or ItemTouchHelper.DOWN
                 else
                     0
@@ -254,7 +250,7 @@ class InstrumentsFragment : Fragment() {
                 viewHolder: RecyclerView.ViewHolder
             ): Int {
                 //Log.v("Tuner", "InstrumentFragment.simpleTouchHelper.getSwipeDirs: itemId=${viewHolder.itemId}")
-                return if (viewHolder is InstrumentsAdapter.ViewHolder && viewHolder.instrument?.stableId ?: -1 >= 0)
+                return if (viewHolder is InstrumentsAdapter.ViewHolder && (viewHolder.instrument?.stableId ?: -1) >= 0)
                     ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                 else
                     0
@@ -266,7 +262,7 @@ class InstrumentsFragment : Fragment() {
                 target: RecyclerView.ViewHolder
             ): Boolean {
                 if (viewHolder is InstrumentsAdapter.ViewHolder && target is InstrumentsAdapter.ViewHolder
-                    && viewHolder.instrument?.stableId ?: -1 >= 0 && target.instrument?.stableId ?: -1 >= 0
+                    && (viewHolder.instrument?.stableId ?: -1) >= 0 && (target.instrument?.stableId ?: -1) >= 0
                 ) {
 
                     val fromPos = viewHolder.bindingAdapterPosition
@@ -280,7 +276,7 @@ class InstrumentsFragment : Fragment() {
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                if (viewHolder is InstrumentsAdapter.ViewHolder && viewHolder.instrument?.stableId ?: -1 >= 0) {
+                if (viewHolder is InstrumentsAdapter.ViewHolder && (viewHolder.instrument?.stableId ?: -1) >= 0) {
                     lastRemovedInstrumentIndex = viewHolder.bindingAdapterPosition
 //                    Log.v("Tuner", "InstrumentsFragment:onSwiped removing index $lastRemovedInstrumentIndex")
                     lastRemovedInstrument =
@@ -320,7 +316,7 @@ class InstrumentsFragment : Fragment() {
                 actionState: Int,
                 isCurrentlyActive: Boolean
             ) {
-                if (viewHolder is InstrumentsAdapter.ViewHolder && viewHolder.instrument?.stableId ?: -1 >= 0) {
+                if (viewHolder is InstrumentsAdapter.ViewHolder && (viewHolder.instrument?.stableId ?: -1) >= 0) {
                     val itemView = viewHolder.itemView
 
                     // not sure why, but this method gets called for view holder that are already swiped away

@@ -1,8 +1,6 @@
 package de.moekadu.tuner.instruments
 
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
@@ -38,7 +36,6 @@ class InstrumentsAdapter(val mode: Mode) : ListAdapter<Instrument, InstrumentsAd
         var titleView: TextView? = null
         var icon: ImageView? = null
         var editIcon: ImageView? = null
-        var extendedEditClickArea: View? = null
         var copyIcon: ImageView? = null
         var closeExpansionIcon: ImageView? = null
         var stringText: TextView? = null
@@ -107,27 +104,46 @@ class InstrumentsAdapter(val mode: Mode) : ListAdapter<Instrument, InstrumentsAd
             stringText = view.findViewById(R.id.string_list)
             icon = view.findViewById(R.id.instrument_icon)
             editIcon = view.findViewById(R.id.edit_instrument)
-//            editIcon?.setOnClickListener {
-//                onInstrumentClickedListener?.onEditIconClicked(getItem(bindingAdapterPosition), itemId)
-//            }
-//            editIcon?.setOnLongClickListener {
-//                closeExpansionIcon?.visibility = View.VISIBLE
-//                copyIcon?.visibility = View.VISIBLE
-//                editIcon?.setImageResource(R.drawable.ic_edit)
-//                true
-//            }
-            // TODO: extendedClickArea does not really work, find a more reliable way
-            // e.g. by reserving a region in the complete entry for showing the different modes
-            extendedEditClickArea = view.findViewById(R.id.extended_edit_instrument_click_area)
-            extendedEditClickArea?.setOnClickListener {
-                onInstrumentClickedListener?.onEditIconClicked(getItem(bindingAdapterPosition), itemId)
-            }
-            extendedEditClickArea?.setOnLongClickListener {
-                closeExpansionIcon?.visibility = View.VISIBLE
-                copyIcon?.visibility = View.VISIBLE
-                editIcon?.setImageResource(R.drawable.ic_edit)
-                true
-            }
+
+            // we cant use onLongPress since the recyclerview might compete with its long click
+            // and if the recycler view first detects the long click, the editIcon-long click is canceled
+            // so we must define a custom long click with a shorter long click time
+            editIcon?.setOnTouchListener(object : View.OnTouchListener {
+                val longPressTimeout = (0.7 * ViewConfiguration.getLongPressTimeout()).toLong()
+                val longPressRunnable = Runnable {
+                    longPressCalled = true
+                    editIcon?.performLongClick()
+                    closeExpansionIcon?.visibility = View.VISIBLE
+                    copyIcon?.visibility = View.VISIBLE
+                    editIcon?.setImageResource(R.drawable.ic_edit)
+                }
+                var longPressCalled = false
+
+                override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+                    if (event == null || v == null)
+                        return false
+                    when (event.actionMasked) {
+                        MotionEvent.ACTION_DOWN ->  {
+                            longPressCalled = false
+                            v.isPressed = true
+                            v.handler?.postDelayed(longPressRunnable, longPressTimeout)
+                        }
+                        MotionEvent.ACTION_UP -> {
+                            v.isPressed = false
+                            v.handler?.removeCallbacks(longPressRunnable)
+                            if (!longPressCalled) {
+                                onInstrumentClickedListener?.onEditIconClicked(getItem(bindingAdapterPosition), itemId)
+                                v.performClick()
+                            }
+                        }
+                        MotionEvent.ACTION_CANCEL -> {
+                            v.isPressed = false
+                            v.handler?.removeCallbacks(longPressRunnable)
+                        }
+                    }
+                    return true
+                }
+            })
             copyIcon = view.findViewById(R.id.copy_instrument)
             copyIcon?.setOnClickListener {
                 if (mode == Mode.EditCopy) {
@@ -148,13 +164,11 @@ class InstrumentsAdapter(val mode: Mode) : ListAdapter<Instrument, InstrumentsAd
                 Mode.Copy -> {
                     closeExpansionIcon?.visibility = View.GONE
                     editIcon?.visibility = View.GONE
-                    extendedEditClickArea?.visibility = View.GONE
                     copyIcon?.visibility = View.VISIBLE
                 }
                 Mode.EditCopy -> {
                     closeExpansionIcon?.visibility = View.GONE
                     editIcon?.visibility = View.VISIBLE
-                    extendedEditClickArea?.visibility = View.VISIBLE
                     editIcon?.setImageResource(R.drawable.ic_edit_expand)
                     copyIcon?.visibility = View.GONE
                 }
