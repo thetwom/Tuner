@@ -19,8 +19,32 @@
 
 <resources>
 
-    <style name="ThemeOverlay.BlackNight" parent="">
-        <item name="android:colorBackground">@color/pure_black</item>
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryFaint">@color/colorPrimaryFaint</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorSecondary">@color/colorAccent</item>
+        <item name="android:colorBackground">@color/colorBackground</item>
+        <item name="colorBackgroundFloating">@color/colorBackgroundFloating</item>
+
+        <item name="colorControlNormal">@color/colorPrimary</item>
+
+        <item name="android:statusBarColor">#000000</item>
+        <item name="plotViewStyle">@style/PlotViewStyle</item>
+        <item name="stringViewStyle">@style/StringViewStyle</item>
+        <item name="noteSelectorStyle">@style/NoteSelectorStyle</item>
+        <item name="detectedNoteViewerStyle">@style/DetectedNoteViewerStyle</item>
+        <item name="volumeMeterStyle">@style/VolumeMeterStyle</item>
+
+        <item name="windowActionModeOverlay">true</item>
+<!--        <item name="actionModeStyle">@style/Widget.App.ActionMode</item>-->
+        <item name="actionModeCloseDrawable">@drawable/ic_close</item>
+<!--        <item name="actionBarTheme">@style/ThemeOverlay.MaterialComponents.Dark.ActionBar</item>-->
+        <item name="actionBarTheme">@style/ThemeOverlay.MaterialComponents.ActionBar</item>
+
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
 
 <!--    <style name="Widget.App.ActionMode" parent="Widget.AppCompat.ActionMode">-->
@@ -34,7 +58,7 @@
         <attr name="detectedNoteViewerStyle" format="reference"/>
         <attr name="volumeMeterStyle" format="reference"/>
     </declare-styleable>
-    
+
     <declare-styleable name="PlotView">
         <attr name="plotLineColor" format="color"/>
         <attr name="plotLineColor2" format="color"/>
