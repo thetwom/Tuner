@@ -20,7 +20,7 @@
         android:paddingLeft="12dp"
         android:layout_marginRight="0dp"
         android:layout_marginTop="8dp"
-        app:boxStrokeColor="?attr/colorOnSurface"
+        app:boxStrokeColor="@color/text_field_outline_color"
         app:helperTextTextColor="?attr/colorOnSurface"
         app:counterTextColor="?attr/colorOnSurface"
         app:hintTextColor="?attr/colorOnSurface"
