@@ -21,7 +21,7 @@
         android:paddingEnd="12dp"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
-        app:boxStrokeColor="?attr/colorOnSurface"
+        app:boxStrokeColor="@color/text_field_outline_color"
         app:helperTextTextColor="?attr/colorOnSurface"
         app:counterTextColor="?attr/colorOnSurface"
         app:hintTextColor="?attr/colorOnSurface"

@@ -34,6 +34,8 @@
         <item name="colorNegative">@color/md_theme_negative</item>
         <item name="colorOnNegative">@color/md_theme_onNegative</item>
 
+        <item name="colorAccent">?attr/colorPrimary</item>
+
         <item name="plotViewStyle">@style/PlotViewStyle</item>
         <item name="stringViewStyle">@style/StringViewStyle</item>
         <item name="noteSelectorStyle">@style/NoteSelectorStyle</item>
