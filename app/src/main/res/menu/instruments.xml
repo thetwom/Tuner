@@ -8,7 +8,7 @@
         android:orderInCategory="98"
         android:title="@string/share"
         android:icon="@drawable/ic_share"
-        app:showAsAction="ifRoom"
+        app:showAsAction="never"
         />
 
 
@@ -17,7 +17,7 @@
         android:orderInCategory="96"
         android:title="@string/save_to_disk"
         android:icon="@drawable/ic_archive"
-        app:showAsAction="ifRoom"
+        app:showAsAction="never"
         />
 
     <item
@@ -25,7 +25,7 @@
         android:orderInCategory="97"
         android:title="@string/load_from_disk"
         android:icon="@drawable/ic_unarchive"
-        app:showAsAction="ifRoom"
+        app:showAsAction="never"
         />
 
 

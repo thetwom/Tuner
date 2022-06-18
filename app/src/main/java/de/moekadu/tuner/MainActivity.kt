@@ -38,7 +38,6 @@ import de.moekadu.tuner.preferences.AppearancePreference
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 
 class MainActivity : AppCompatActivity() {
-
     enum class TunerMode {Simple, Scientific, Unknown}
 
     private val instrumentsViewModel: InstrumentsViewModel by viewModels {
@@ -249,9 +248,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setStatusAndNavigationBarColors() {
+    fun setStatusAndNavigationBarColors() {
         val uiMode = resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
-//        Log.v("Tuner", "MainActivity.setStatusAndNavigationBarColors: uiMode = $uiMode")
+//        Log.v("Tuner", "MainActivity.setStatusAndNavigationBarColors: uiMode = $uiMode, ${if(uiMode==Configuration.UI_MODE_NIGHT_YES) "NIGHT_MODE_YES" else if (uiMode==Configuration.UI_MODE_NIGHT_NO) "NIGHT_MODE_NO" else "OTHER_UI_MODE"}")
         if (uiMode == null || uiMode == Configuration.UI_MODE_NIGHT_UNDEFINED)
             return
 
@@ -268,6 +267,7 @@ class MainActivity : AppCompatActivity() {
                 val view = window.decorView
                 view.systemUiVisibility = view.systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
             } else {
+//                Log.v("Tuner", "MainActivity: set light appearance status bars")
                 window.insetsController?.setSystemBarsAppearance(
                     WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
                     WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
