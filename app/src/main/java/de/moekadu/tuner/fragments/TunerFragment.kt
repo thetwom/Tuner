@@ -29,6 +29,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.instrumentDatabase
 import de.moekadu.tuner.temperaments.TargetNote
@@ -250,7 +251,11 @@ class TunerFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        activity?.setTitle(R.string.app_name)
+        activity?.let {
+            it.setTitle(R.string.app_name)
+            if (it is MainActivity)
+                it.setStatusAndNavigationBarColors()
+        }
     }
 
     override fun onStop() {

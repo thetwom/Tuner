@@ -453,6 +453,10 @@ class InstrumentsFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        activity?.setTitle(R.string.select_instrument)
+        activity?.let {
+            it.setTitle(R.string.select_instrument)
+            if (it is MainActivity)
+                it.setStatusAndNavigationBarColors()
+        }
     }
 }

@@ -222,7 +222,11 @@ class TunerFragmentSimple : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        activity?.setTitle(R.string.app_name)
+        activity?.let {
+            it.setTitle(R.string.app_name)
+            if (it is MainActivity)
+                it.setStatusAndNavigationBarColors()
+        }
     }
 
     override fun onStop() {

@@ -224,6 +224,14 @@ class InstrumentEditorFragment : Fragment() {
         super.onStop()
     }
 
+    override fun onResume() {
+        super.onResume()
+        activity?.let {
+            if (it is MainActivity)
+                it.setStatusAndNavigationBarColors()
+        }
+    }
+
     private fun updateNoteNamesInAllViews() {
         val noteNames = tunerViewModel.noteNames.value ?: return
         val preferFlat = tunerViewModel.preferFlat.value ?: false

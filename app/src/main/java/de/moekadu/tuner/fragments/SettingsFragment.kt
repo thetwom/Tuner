@@ -115,6 +115,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
       else
         activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+      activity?.let {
+          if (it is MainActivity)
+              it.setStatusAndNavigationBarColors()
+      }
       true
     }
 
@@ -243,7 +247,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
   override fun onResume() {
       super.onResume()
-      activity?.setTitle(R.string.settings)
+      activity?.let {
+          it.setTitle(R.string.settings)
+          if (it is MainActivity)
+              it.setStatusAndNavigationBarColors()
+      }
   }
 
   private fun getWindowSizeSummary(windowSizeIndex: Int): String {
