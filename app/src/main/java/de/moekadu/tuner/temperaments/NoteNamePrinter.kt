@@ -6,15 +6,6 @@ import android.text.SpannableStringBuilder
 import android.text.style.SuperscriptSpan
 import de.moekadu.tuner.R
 
-private data class NoteNameStem(val baseNote: BaseNote, val modifier: NoteModifier,
-                                val enharmonicBaseNote: BaseNote, val enharmonicModifier: NoteModifier) {
-    companion object {
-        fun fromMusicalNote(note: MusicalNote): NoteNameStem {
-            return NoteNameStem(note.base, note.modifier, note.enharmonicBase, note.enharmonicModifier)
-        }
-    }
-}
-
 private val baseNoteResourceIds = mapOf(
     BaseNote.C to R.string.c_note_name,
     BaseNote.D to R.string.d_note_name,
@@ -47,10 +38,13 @@ fun MusicalNote.toCharSequence(context: Context, printOption: MusicalNotePrintOp
     else
         context.getString(specialNoteNameResourceId)
 
+    val octaveToPrintIfEnabled: Int
+
     // if the special note name is "-", it means that for the given translation there actually
     // is not special note name.
     if (specialNoteName != null && specialNoteName != "") {
         spannableStringBuilder.append(specialNoteName)
+        octaveToPrintIfEnabled = this.octave
     } else {
         val baseToPrint: BaseNote
         val modifierToPrint: NoteModifier
@@ -58,9 +52,11 @@ fun MusicalNote.toCharSequence(context: Context, printOption: MusicalNotePrintOp
             || (printOption == MusicalNotePrintOptions.PreferSharp && this.enharmonicBase != BaseNote.None && this.enharmonicModifier == NoteModifier.Sharp)) {
             baseToPrint = this.enharmonicBase
             modifierToPrint = this.enharmonicModifier
+            octaveToPrintIfEnabled = if (this.octave == Int.MAX_VALUE) Int.MAX_VALUE else this.octave + this.enharmonicOctaveOffset
         } else {
             baseToPrint = this.base
             modifierToPrint = this.modifier
+            octaveToPrintIfEnabled = this.octave
         }
 
         spannableStringBuilder.append(context.getString(baseNoteResourceIds[baseToPrint]!!))
@@ -73,20 +69,12 @@ fun MusicalNote.toCharSequence(context: Context, printOption: MusicalNotePrintOp
     }
 
     if (this.octave != Int.MAX_VALUE && withOctave) {
+
         spannableStringBuilder.append(
-            SpannableString(this.octave.toString()).apply {
+            SpannableString(octaveToPrintIfEnabled.toString()).apply {
                 setSpan(SuperscriptSpan(),0, length,0)
             }
         )
     }
     return spannableStringBuilder
 }
-
-data class NoteNameMeasures(val minWidth: Float, val maxWidth: Float, val minHeight: Float, val maxHeight: Float)
-
-//fun NoteNameScale.getNoteNameMeasures(context: Context, octaveBegin: Int, octaveEnd: Int, paint: TextPaint? = null, printOption: MusicalNotePrintOptions = MusicalNotePrintOptions.None): NoteNameMeasures {
-//    val label = notes[0].toCharSequence(context, printOption, withOctave = false)
-//    val paintResolved = paint ?: TextPaint()
-//    val desiredWidth = ceil(StaticLayout.getDesiredWidth(label, paint)).toInt()
-//    val layout = StaticLayout.Builder.obtain(label, 0, label.length, paintResolved, desiredWidth).build()
-//}

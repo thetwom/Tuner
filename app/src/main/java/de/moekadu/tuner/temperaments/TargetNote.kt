@@ -63,7 +63,6 @@ class TargetNote {
         private set
     /// Upper frequency bound for a note to be in tune
     var frequencyUpperTolerance = 0f
-
         private set
     /// Lower frequency bound for a note to be in tune
     var frequencyLowerTolerance = 0f

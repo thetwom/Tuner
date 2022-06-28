@@ -69,18 +69,20 @@ class TouchControlDrawable(context: Context, private var tint: Int?, private var
         }
     }
 
-    fun drawToCanvas(xPosition: Float, yPosition: Float, anchor: MarkAnchor, canvas: Canvas?) {
+    fun drawToCanvas(xPosition: Float, yPosition: Float, anchor: LabelAnchor, canvas: Canvas?) {
         if (height != 0f && width != 0f) {
             val x = when (anchor) {
-                MarkAnchor.West, MarkAnchor.SouthWest, MarkAnchor.NorthWest -> xPosition
-                MarkAnchor.Center, MarkAnchor.South, MarkAnchor.North -> xPosition - 0.5f * width
-                MarkAnchor.East, MarkAnchor.SouthEast, MarkAnchor.NorthEast -> xPosition - width
+                LabelAnchor.West, LabelAnchor.SouthWest, LabelAnchor.NorthWest -> xPosition
+                LabelAnchor.Center, LabelAnchor.South, LabelAnchor.North -> xPosition - 0.5f * width
+                LabelAnchor.East, LabelAnchor.SouthEast, LabelAnchor.NorthEast -> xPosition - width
+                else -> xPosition
             }
 
             val y = when (anchor) {
-                MarkAnchor.North, MarkAnchor.NorthWest, MarkAnchor.NorthEast -> yPosition
-                MarkAnchor.Center, MarkAnchor.West, MarkAnchor.East -> yPosition - 0.5f * height
-                MarkAnchor.South, MarkAnchor.SouthWest, MarkAnchor.SouthEast -> yPosition - height
+                LabelAnchor.North, LabelAnchor.NorthWest, LabelAnchor.NorthEast -> yPosition
+                LabelAnchor.Center, LabelAnchor.West, LabelAnchor.East -> yPosition - 0.5f * height
+                LabelAnchor.South, LabelAnchor.SouthWest, LabelAnchor.SouthEast -> yPosition - height
+                else -> yPosition
             }
 
             boundingBox.left = x

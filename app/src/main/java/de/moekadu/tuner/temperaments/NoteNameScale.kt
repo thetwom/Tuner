@@ -14,6 +14,7 @@ class NoteNameScale(
     private val referenceNoteIndexWithinOctave = notes.indexOfFirst {
         MusicalNote.notesEqualIgnoreOctave(it, defaultReferenceNote)
     }
+    private val referenceNoteOctave = defaultReferenceNote.octave
 
     /** Number of notes contained in the scale. */
     val size = notes.size
@@ -23,8 +24,13 @@ class NoteNameScale(
      * @return Note belonging to index.
      */
     fun getNoteOfIndex(noteIndex: Int): MusicalNote {
-        val octave = (noteIndex + referenceNoteIndexWithinOctave) / notes.size
-        val localNoteIndex = (noteIndex + referenceNoteIndexWithinOctave) % notes.size
+        var octave = (noteIndex + referenceNoteIndexWithinOctave) / notes.size + referenceNoteOctave
+        var localNoteIndex = (noteIndex + referenceNoteIndexWithinOctave) % notes.size
+        if (localNoteIndex < 0) {
+            octave -= 1
+            localNoteIndex += notes.size
+        }
+//        Log.v("StaticLayoutTest", "NoteNameScale.getNoteOfIndex: noteIndex=$noteIndex, octave=$octave, localNoteIndex=$localNoteIndex, referenceNoteIndexWithinOctave=$referenceNoteIndexWithinOctave")
         return notes[localNoteIndex].copy(octave = octave)
     }
 
@@ -37,7 +43,7 @@ class NoteNameScale(
         return if (localNoteIndex < 0)
             Int.MAX_VALUE
         else
-            (musicalNote.octave - defaultReferenceNote.octave) * notes.size + localNoteIndex - referenceNoteIndexWithinOctave
+            (musicalNote.octave - referenceNoteOctave) * notes.size + localNoteIndex - referenceNoteIndexWithinOctave
     }
 
     /** Return a scale where the note names and modifiers are switch with their enharmonics.
@@ -86,4 +92,3 @@ fun createNoteNameScale12Tone(referenceNote: MusicalNote?, preferFlat: Boolean):
         )
     }
 }
-

@@ -5,26 +5,28 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
-import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
-import androidx.core.graphics.withTranslation
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
-import kotlin.math.*
+import de.moekadu.tuner.temperaments.NoteNameScale
+import kotlin.math.ceil
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
 
 class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr) {
-    companion object {
-        private const val NO_TONE_INDEX = Int.MAX_VALUE
-    }
+
     fun interface NoteClickedListener {
         fun onNoteClicked(note: MusicalNote)
     }
+
+    private class LabelSetSize(var width: Float, var height: Float)
 
     var noteClickedListener: NoteClickedListener? = null
 
@@ -34,25 +36,23 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
         var isEnabled = false
             private set
 
-        private var layout: StaticLayout? = null
-        private var label: CharSequence? = null
+        private var label: MusicalNoteLabel? = null
 
-        var hitCount = hitCountMax
-            private set
+        private var hitCount = hitCountMax
 
         private var textSize = -1f
         private var textStyle = -1
         private var textColor = Color.BLACK
 
-        fun setNewNote(note: MusicalNote, label: CharSequence) {
+        fun setNewNote(note: MusicalNote) {
             this.note = note
-            this.label = label
+            this.label = null
             hitCount = hitCountMax
             isEnabled = true
         }
-        fun clear() {
-            isEnabled = false
-        }
+//        fun clear() {
+//            isEnabled = false
+//        }
 
         fun setHitCountRange(minValue: Int, maxValue: Int) {
             hitCountMin = minValue
@@ -67,86 +67,82 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
             hitCount = min(hitCountMax, hitCount)
         }
 
-        fun drawToCanvas(canvas: Canvas, x: Float, y: Float, labelPaint: TextPaint) {
+        fun drawToCanvas(canvas: Canvas, x: Float, y: Float, labelPaint: TextPaint, context: Context?) {
             if (!isEnabled)
                 return
             val newTextStyle = labelPaint.typeface?.style ?: -1
             if (labelPaint.textSize != textSize || newTextStyle != textStyle || labelPaint.color != textColor) {
+                label = null
 //                Log.v("Tuner", "DetectedNoteViewer.DetectedNote.drawToCanvas: create label for note with toneIndex $toneIndex")
-                layout = buildLabelLayout(labelPaint)
                 textSize = labelPaint.textSize
                 textStyle = newTextStyle
                 textColor = labelPaint.color
             }
-            val layoutLocal = layout ?: return
-            canvas.withTranslation(
-                x - 0.5f * layoutLocal.width,
-                //y - 0.5f * layoutLocal.height + 0.5f * (layoutLocal.topPadding + layoutLocal.bottomPadding)) {
-                y - 0.5f * layoutLocal.height + layoutLocal.topPadding
-            ) {
-//                Log.v("Tuner", "DetectedNoteViewer.DetectedNote.drawToCanvas: toneIndex $toneIndex, drawing label=$label, x=$x, y=$y")
-                //labelPaint.alpha = 100
-                //canvas.drawRect(0f, 0f, layoutLocal.width.toFloat(), layoutLocal.height.toFloat(), labelPaint)
-                //canvas.drawRect(0f, -layoutLocal.topPadding.toFloat(), layoutLocal.width.toFloat(), layoutLocal.height.toFloat() - layoutLocal.bottomPadding, labelPaint)
-                //canvas.drawRect(0f, -layoutLocal.topPadding.toFloat(), 10f, -layoutLocal.topPadding + 3f, labelPaint)
-                //canvas.drawRect(0f, -layoutLocal.getLineTop(0).toFloat(), 10f, layoutLocal.getLineTop(0) + 3f, labelPaint)
-                //canvas.drawRect(0f, layoutLocal.height - layoutLocal.bottomPadding.toFloat(), 10f, layoutLocal.height - layoutLocal.bottomPadding.toFloat()- 3f, labelPaint)
-                //labelPaint.alpha = 255
-                layoutLocal.draw(canvas)
+
+            if (label == null && context != null) {
+                label = MusicalNoteLabel(note, labelPaint, context)
             }
+
+            label?.drawToCanvas(x, y, LabelAnchor.Center, canvas)
         }
 
         fun getTextSizeInPercentOfMax(): Float {
             return hitCount.toFloat() / hitCountMax.toFloat()
         }
 
-        private fun buildLabelLayout(labelPaint: TextPaint): StaticLayout? {
-            label?.let { l ->
-                val desiredWidth = ceil(StaticLayout.getDesiredWidth(l, labelPaint)).toInt()
-                return StaticLayout.Builder.obtain(l, 0, l.length, labelPaint, desiredWidth).build()
-            }
-            return null
-        }
     }
 
+    /** Paint for drawing the notes. */
     private val labelPaint = TextPaint().apply {
         isAntiAlias = true
     }
-    private val fontMetrics = Paint.FontMetrics()
+
+    /** Maximum text size of labels. */
     private var maximumTextSize = 0f
 
-    private val minimumAspectPerNote = 1.2f
+    /** Note name scale of the notes which can be hit (for measuring the max label size). */
+    private var noteNameScale: NoteNameScale? = null
+    /** First possible note index. */
+    private var noteIndexBegin = 0
+    /** End note index (excluded). */
+    private var noteIndexEnd = 0
 
-    private var aspectRatioMin = -1f
-    private var aspectRatioMax = -1f
-
-    private var toneIndexBegin = 0
-    private var toneIndexEnd = 0
-
-    private var noteToLabel: ((MusicalNote) -> CharSequence)? = null
-
+    /** Notes for the available spaces of this viewer. */
     private var notes = Array(1) { DetectedNote((hitCountMax * ratioMinSizeToMaxSize).roundToInt(), hitCountMax) }
+    /** Array of notes which were recently hit in the according order (least hit note is the last one). */
     private var leastRecentlyUsedNotes = Array<MusicalNote?>(1){ null }
 
+    /** Minimum space between two neigbhoring notes. */
     private var minimumLabelSpace = 0f
 
+    /** Note which is currently pressed or null if now note ist pressed. */
     private var clickedNote: MusicalNote? = null
 
-    private var title: String? = null
-    private var titleLayout: StaticLayout? = null
+    /** Title label. */
+    private var title: StringLabel? = null
+    /** Paint for drawing the title. */
     private val titlePaint = TextPaint().apply {
         isAntiAlias = true
         textSize = 10f
         color = Color.BLACK
     }
+
+    /** Paint for drawing the background of the title.
+     * This would normally use the background color.
+     */
     private val titleBackgroundPaint = Paint().apply {
         style = Paint.Style.FILL
         color = Color.WHITE
     }
+    /** Left and right padding around the title. */
     private var titlePadding = 4f
 
+    /** Text size of the notes or 0f if it should be determined such that it fits into the box. */
+    private var textSize = 0f
+    /** Corner radius of the surrounding rectangle. */
     private var boxCornerRadius = 0f
-    private var notePadding = 4f // minimum space between note top box lines
+    private var notePadding = 4f // minimum space between note top/bottom and title (or top line if title does not exist) and bottom line
+    /** Paint for drawing the surrounding rectangle. */
     private val boxPaint = Paint().apply {
         isAntiAlias = true
         strokeWidth = 1f
@@ -163,6 +159,7 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
     )
 
     init {
+        var titleString: String? = null
         // var numNotes = 4
         attrs?.let {
             val ta = context.obtainStyledAttributes(
@@ -173,10 +170,9 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
             )
 
             labelPaint.color = ta.getColor(R.styleable.DetectedNoteViewer_labelTextColor, Color.BLACK)
-            // numNotes = ta.getInt(R.styleable.DetectedNoteViewer_noteNumber, numNotes)
             minimumLabelSpace = ta.getDimension(R.styleable.DetectedNoteViewer_minimumLabelSpace, minimumLabelSpace)
 
-            title = ta.getString(R.styleable.DetectedNoteViewer_title)
+            titleString = ta.getString(R.styleable.DetectedNoteViewer_title)
             titlePaint.textSize = ta.getDimension(R.styleable.DetectedNoteViewer_titleSize, titlePaint.textSize)
             titlePaint.color = ta.getColor(R.styleable.DetectedNoteViewer_titleColor, titlePaint.color)
             titlePaint.alpha = (255 * ta.getFloat(R.styleable.DetectedNoteViewer_titleOpacity, 1.0f)).roundToInt()
@@ -187,24 +183,72 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
             boxPaint.alpha = (255 * ta.getFloat(R.styleable.DetectedNoteViewer_boxStrokeOpacity, 1.0f)).roundToInt()
             boxCornerRadius = ta.getDimension(R.styleable.DetectedNoteViewer_boxCornerRadius, boxCornerRadius)
             notePadding = ta.getDimension(R.styleable.DetectedNoteViewer_notePadding, notePadding)
+            textSize = ta.getDimension(R.styleable.DetectedNoteViewer_textSize, textSize)
             ta.recycle()
         }
 
-        title?.let {
-            val desiredWidth = ceil(StaticLayout.getDesiredWidth(it, titlePaint)).toInt()
-            titleLayout = StaticLayout.Builder.obtain(it, 0, it.length, titlePaint, desiredWidth).build()
+        titleString?.let {
+            title = StringLabel(it, titlePaint, titleBackgroundPaint, paddingLeft = titlePadding, paddingRight = titlePadding)
         }
-//        notes = Array(numNotes) { DetectedNote() }
-//        leastRecentlyUsedTones = Array(numNotes) {-1}
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val heightMode = MeasureSpec.getMode(heightMeasureSpec)
+        val widthMode = MeasureSpec.getMode(widthMeasureSpec)
+//        Log.v("StaticLayoutTest", "NoteSelector.onMeasure: heightMode = $heightMode, widthMode = $widthMode")
+//        Log.v("StaticLayoutTest", "NoteSelector.onMeasure: unspec = ${MeasureSpec.UNSPECIFIED}, most = ${MeasureSpec.AT_MOST}, exact = ${MeasureSpec.EXACTLY}")
+        var proposedHeight = max(MeasureSpec.getSize(heightMeasureSpec), suggestedMinimumHeight)
+        var proposedWidth = max(MeasureSpec.getSize(widthMeasureSpec), suggestedMinimumWidth)
+
+        if (heightMode != MeasureSpec.EXACTLY || widthMode != MeasureSpec.EXACTLY) {
+            val maxSize = getMaximumLabelSize()
+            val titleHeight = title?.labelHeight ?: 0f
+//            Log.v("StaticLayoutTest", "DetectedNoteViewer.onMeasure: maxLabelHeight = ${maxSize.height}")
+            if (heightMode != MeasureSpec.EXACTLY) {
+//                Log.v("StaticLayoutTest", "NoteSelector.onMeasure: setting proposed height to $proposedHeight")
+                proposedHeight =
+                    (maxSize.height + paddingBottom + paddingTop
+                            + 2 * notePadding + boxPaint.strokeWidth
+                            + max(boxPaint.strokeWidth, titleHeight)).roundToInt()
+            }
+            if (widthMode != MeasureSpec.EXACTLY)
+                proposedWidth = ceil(4 * (maxSize.width + minimumLabelSpace + 2 * boxPaint.strokeWidth) + 2 * notePadding + notePadding + paddingLeft + paddingRight - minimumLabelSpace).toInt()
+        }
+//        Log.v("StaticLayoutTest", "NoteSelector.onMeasure: proposedHeight=$proposedHeight")
+        val h = resolveSize(proposedHeight, heightMeasureSpec)
+        val w = resolveSize(proposedWidth, widthMeasureSpec)
+        setMeasuredDimension(w, h)
+    }
+
+    /** Compute maximum size of labels for use during onMeasure.
+     * If no noteNameScale is set, this will be set to an arbitrary value.
+     * @return Class with maximum width and height of the labels.
+     */
+    private fun getMaximumLabelSize(): LabelSetSize {
+        val noteNameScaleLocal = noteNameScale ?: return LabelSetSize(60f, 30f)
+        val octaveBegin = noteNameScaleLocal.getNoteOfIndex(noteIndexBegin).octave
+        val octaveEnd = noteNameScaleLocal.getNoteOfIndex(noteIndexEnd - 1).octave + 1
+
+        labelPaint.textSize = if (textSize == 0f) 30f else textSize
+            val measures = MusicalNoteLabel.getLabelSetBounds(
+                noteNameScaleLocal.notes,
+                octaveBegin,
+                octaveEnd,
+                labelPaint,
+                context,
+                enableOctaveIndex = true
+            )
+
+        return LabelSetSize(measures.maxWidth, measures.maxHeight)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        val numNotes = computeNumNotes(w.toFloat(), h.toFloat())
+        val numNotes = setMaximumTextSizeAndReturnNumNotes(w, h)
+
         if (notes.size != numNotes) {
             notes = Array(numNotes) { DetectedNote((hitCountMax * ratioMinSizeToMaxSize).roundToInt(), hitCountMax) }
             leastRecentlyUsedNotes = Array(numNotes) { null }
         }
-        maximumTextSize = computePaintTextSize(width, height, aspectRatioMax)
 
         super.onSizeChanged(w, h, oldw, oldh)
     }
@@ -215,13 +259,11 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
         if (canvas == null)
             return
 
-        //val yPosCenter = 0.5f * (paddingTop + height - paddingBottom)
         val yPosCenter = 0.5f * (computeBoxContentTop() + computeBoxContentBottom(height))
         val horizontalSpacePerNote = computeHorizontalSpacePerNote()
         notes.forEachIndexed { index, note ->
             if (note.isEnabled) {
-                val xPosCenter = paddingLeft + boxPaint.strokeWidth + 0.5f * minimumLabelSpace + (0.5f + index) * horizontalSpacePerNote
-                //labelPaint.textSize = if (note.toneIndex == clickedToneIndex) maximumTextSize else note.getTextSizeInPercentOfMax() * maximumTextSize
+                val xPosCenter = paddingLeft + boxPaint.strokeWidth + notePadding - 0.5f * minimumLabelSpace + (0.5f + index) * (horizontalSpacePerNote + minimumLabelSpace)
                 var textHeightPercent = note.getTextSizeInPercentOfMax()
                 if (note.note == clickedNote)
                     textHeightPercent = min(1f, textHeightPercent + 0.2f)
@@ -229,22 +271,21 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
                 labelPaint.textSize = textHeightPercent * maximumTextSize
 //                Log.v("Tuner", "DetectedNoteViewer.onDraw: drawing note ${note.toneIndex}, clicked=$clickedToneIndex, x=$xPosCenter, y=$yPosCenter, w=$width, h=$height, maxText=$maximumTextSize")
                 labelPaint.typeface = if (note.note == clickedNote) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
-                note.drawToCanvas(canvas, xPosCenter, yPosCenter, labelPaint)
+//                Log.v("StaticLayoutTest", "DetectedNoteViewer.onDraw: drawing note to $xPosCenter, $yPosCenter")
+                note.drawToCanvas(canvas, xPosCenter, yPosCenter, labelPaint, context)
             }
         }
 
-        canvas.drawRoundRect(paddingLeft + 0.5f * boxPaint.strokeWidth, computeBoxTop(),
+        canvas.drawRoundRect(
+            paddingLeft + 0.5f * boxPaint.strokeWidth, computeBoxTop(),
         width - paddingRight - 0.5f * boxPaint.strokeWidth, computeBoxBottom(height),
             boxCornerRadius, boxCornerRadius, boxPaint)
-        titleLayout?.let { layout ->
-            canvas.withTranslation(
-                paddingLeft + 0.5f * boxPaint.strokeWidth + 3 * boxCornerRadius + titlePadding,
-                computeBoxTop() - 0.5f * layout.height
-            ) {
-                canvas.drawRect(-titlePadding, 0f, layout.width + titlePadding, layout.height.toFloat(), titleBackgroundPaint)
-                layout.draw(canvas)
-            }
-        }
+        title?.drawToCanvasWithPaddedBackground(
+            paddingLeft + 0.5f * boxPaint.strokeWidth + 3 * boxCornerRadius,
+            computeBoxTop(),
+            LabelAnchor.West,
+            canvas
+        )
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
@@ -279,20 +320,26 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
         return true
     }
 
-    fun setNotes(toneIndexBegin: Int, toneIndexEnd: Int, noteToLabel: (MusicalNote) -> CharSequence) {
-        this.noteToLabel = noteToLabel
-        this.toneIndexBegin = toneIndexBegin
-        this.toneIndexEnd = toneIndexEnd
-        computeAspectRatioMinMax()
-//        Log.v("Tuner", "DetectedNoteViewer.setNotes: Check toneIndex 0: label=${this.toneIndexToLabel?.let { it(0) }}")
+    /** Set the possible notes.
+     * This is needed to compute the maximum extents of the note labels.
+     * @param noteNameScale Note name scale of notes which can be shown.
+     * @param noteIndexBegin Index of first note.
+     * @param noteIndexEnd End index of note (excluded).
+     */
+    fun setNotes(noteNameScale: NoteNameScale, noteIndexBegin: Int, noteIndexEnd: Int) {
+        this.noteNameScale = noteNameScale
+        this.noteIndexBegin = noteIndexBegin
+        this.noteIndexEnd = noteIndexEnd
+
         if (isLaidOut) {
-            maximumTextSize = computePaintTextSize(width, height, aspectRatioMax)
-            notes.forEach { it.clear() }
+            val numNotes = setMaximumTextSizeAndReturnNumNotes(width, height)
+            notes = Array(numNotes) { DetectedNote((hitCountMax * ratioMinSizeToMaxSize).roundToInt(), hitCountMax) }
+            leastRecentlyUsedNotes = Array(numNotes) { null }
         }
+        requestLayout()
     }
 
-    /// Set approximate update interval with which you are going to call hitNote()
-    /**
+    /** Set approximate update interval with which you are going to call hitNote()
      * @param durationInSeconds Update duration in seconds
      */
     fun setApproximateHitNoteUpdateInterval(durationInSeconds: Float) {
@@ -308,6 +355,11 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
         invalidate()
     }
 
+    /** Tell that a note was hit.
+     * This will either show the note in the viewer or increase size. Also the size of the
+     * other notes will be decreased.
+     * @param note Note which was hit.
+     */
     fun hitNote(note: MusicalNote?) {
         if (notes.isEmpty() || note == null)
             return
@@ -325,90 +377,117 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
 //            Log.v("Tuner", "DetectedNoteViewer.hitTone: Creating new label label=${toneIndexToLabel?.let { it(toneIndex) }}")
             val indexOfLeastRecentlyNote = notes.indexOfFirst { it.note == leastRecentlyNote || !it.isEnabled}
             require(indexOfLeastRecentlyNote >= 0)
-            notes[indexOfLeastRecentlyNote].setNewNote(note, noteToLabel?.let { it(note) } ?: "")
+            notes[indexOfLeastRecentlyNote].setNewNote(note)
             for (i in 0 until leastRecentlyUsedNotes.size - 1)
                 leastRecentlyUsedNotes[i] = leastRecentlyUsedNotes[i + 1]
         }
 
         leastRecentlyUsedNotes[leastRecentlyUsedNotes.size - 1] = note
         notes.forEach { if (it.note != note) it.hit(-2)}
+//        Log.v("StaticLayoutText", "DetectedNoteViewer.hitNote")
         invalidate()
     }
 
-    private fun computeAspectRatioMinMax() {
-        val noteToLabelLocal = noteToLabel ?: return
-
-        aspectRatioMin = Float.MAX_VALUE
-        aspectRatioMax = 0f
-        labelPaint.textSize = 10f
-        for (toneIndex in toneIndexBegin until toneIndexEnd) {
-            val label = noteToLabelLocal(toneIndex)
-            val desiredWidth = ceil(StaticLayout.getDesiredWidth(label, labelPaint)).toInt()
-            val layout = StaticLayout.Builder.obtain(label, 0, label.length, labelPaint, desiredWidth).build()
-            if (layout.height > 0f) {
-                // topPadding is a negative number, that's why we add it, ...
-                val aspect = layout.width.toFloat() / (layout.height.toFloat() + layout.topPadding - layout.bottomPadding)
-                aspectRatioMin = min(aspect, aspectRatioMin)
-                aspectRatioMax = max(aspect, aspectRatioMax)
-            }
-        }
-    }
-
-    private fun computePaintTextSize(w: Int, h: Int, aspectMax: Float): Float {
-        val effectiveLabelWidth = (w - paddingLeft - paddingRight
-                - (notes.size + 1) * minimumLabelSpace
-                - 2 * boxPaint.strokeWidth )
-//        val effectiveLabelHeight = (h - paddingBottom - paddingTop
-//                - 2 * (boxPaint.strokeWidth + notePadding))
-        val effectiveLabelHeight = computeBoxContentBottom(h) - computeBoxContentTop()
-        if (effectiveLabelHeight <= 0f || effectiveLabelWidth <= 0f)
-            return 0f
-
-        val heightFromAspectMax = effectiveLabelWidth / aspectMax
-        val maximumAllowedHeight = min(effectiveLabelHeight, heightFromAspectMax)
-
-        labelPaint.textSize = maximumAllowedHeight
-        labelPaint.getFontMetrics(fontMetrics)
-        return floor(0.8f * maximumAllowedHeight * maximumAllowedHeight / (fontMetrics.bottom - fontMetrics.top))
-    }
-
+    /** With the x-position within the view given, this tells the underlying note.
+     * @param x x-position inside the view.
+     * @return Underlying musical note or null if no note available.
+     */
     private fun xPositionToNote(x: Float): MusicalNote? {
         val horizontalSpacePerNote = computeHorizontalSpacePerNote()
-        // x  = paddingLeft + boxStrokeWidth +  0.5f * minimumLabelSpace + (0.5f + index) * horizontalSpacePerNote
-        val index = ((x - paddingLeft - boxPaint.strokeWidth - 0.5f * minimumLabelSpace) / horizontalSpacePerNote - 0.5f).roundToInt()
+        val index = ((x - paddingLeft - notePadding - boxPaint.strokeWidth - 0.5f * minimumLabelSpace) / (horizontalSpacePerNote + minimumLabelSpace) - 0.5f).roundToInt()
         if (index in notes.indices && notes[index].isEnabled) {
             return notes[index].note
         }
         return null
     }
 
+    /** Compute top of surrounding rectangle.
+     * The top is defined at the center of stroke.
+     * @return Box top.
+     */
     private fun computeBoxTop(): Float {
-        val titleHeight = titleLayout?.height?.toFloat() ?: 0f
-        return paddingTop + max(0.5f * titleHeight, 0.5f * boxPaint.strokeWidth)
+        val titleHeight = title?.labelHeight ?: 0f
+        return paddingTop + max(0.5f * titleHeight,0.5f * boxPaint.strokeWidth)
     }
 
+    /** Compute bottom of surrounding rectangle.
+     * The bottom is defined at the center of stroke.
+     * @param h Total height of the view.
+     * @return Box bottom.
+     */
     private fun computeBoxBottom(h: Int): Float {
         return h - paddingBottom - 0.5f * boxPaint.strokeWidth
     }
 
+    /** Compute the top of the content (note labels) inside the box.
+     * This takes into account the box stroke width, the note padding and the title size
+     * if it exists.
+     * @return Top of box content.
+     */
     private fun computeBoxContentTop(): Float {
-        val titleHeight = titleLayout?.height?.toFloat() ?: 0f
+        val titleHeight = title?.labelHeight ?: 0f
         return computeBoxTop() + max(0.5f * titleHeight, 0.5f * boxPaint.strokeWidth) + notePadding
     }
 
+    /** Compute the bottom of the content (note labels) inside the box.
+     * This takes into account the box stroke width and the note padding.
+     * @return Bottom of box content.
+     */
     private fun computeBoxContentBottom(h: Int): Float {
         return computeBoxBottom(h) - 0.5f * boxPaint.strokeWidth - notePadding
     }
 
+    /** Compute the width of each rectangle where a note can be printed.
+     *  This is the total note space within the box divided by the number of notes.
+     *  @return Width of note rectangle.
+     */
     private fun computeHorizontalSpacePerNote(): Float {
-        return (width - paddingLeft - paddingRight - 2 * boxPaint.strokeWidth - minimumLabelSpace) / notes.size
+        return (width - paddingLeft - paddingRight - 2 * (boxPaint.strokeWidth + notePadding) + minimumLabelSpace) / notes.size - minimumLabelSpace
     }
 
-    private fun computeNumNotes(w: Float, h: Float): Int {
-        val minimumWidthPerNote = minimumAspectPerNote * h
-        return if (minimumWidthPerNote == 0f)
-            1
-        else
-            floor(w / minimumWidthPerNote).toInt()
+    /** Compute and set the maximumTextSize and return the number of notes.
+     * If the input textSize is not 0f, this will be the maximumTextSize, otherwise we
+     * compute the text size based on the available space.
+     * @note The maximumTextSize will be set within this function.
+     * @param w Total height of the view.
+     * @param h Total width of the view.
+     * @return Number of notes
+     */
+    private fun setMaximumTextSizeAndReturnNumNotes(w: Int, h: Int): Int {
+
+        val allowedMaxHeight = computeBoxContentBottom(h) - computeBoxContentTop()
+
+        val noteNameScaleLocal = noteNameScale
+        if (noteNameScaleLocal == null) {
+            maximumTextSize = allowedMaxHeight
+            return 1
+        }
+
+        val octaveBegin = noteNameScaleLocal.getNoteOfIndex(noteIndexBegin).octave
+        val octaveEnd = noteNameScaleLocal.getNoteOfIndex(noteIndexEnd - 1).octave + 1
+
+        labelPaint.textSize = if (textSize == 0f) allowedMaxHeight else textSize
+
+        val measures = MusicalNoteLabel.getLabelSetBounds(
+            noteNameScaleLocal.notes,
+            octaveBegin,
+            octaveEnd,
+            labelPaint,
+            context,
+        )
+
+        val maximumLabelWidth: Float
+        if (textSize == 0f) {
+            val fontScaling = allowedMaxHeight / measures.maxHeight
+            maximumTextSize = fontScaling * allowedMaxHeight
+            maximumLabelWidth = fontScaling * measures.maxWidth
+        } else {
+            maximumTextSize = textSize
+            maximumLabelWidth = measures.maxWidth
+//            Log.v("StaticLayoutTest", "DetectedNoteViewer.setMaximumTextSizeAndReturnNumNotes: maxLabelHeight = ${measures.maxHeight}")
+        }
+        val numNotes = ((w - paddingLeft - paddingRight - 2 * (labelPaint.strokeWidth + notePadding) + minimumLabelSpace) / (maximumLabelWidth + minimumLabelSpace)).toInt()
+//        Log.v("StaticLayoutTest", "DetectedNoteViewer.setMaximumTextSizeAndReturnNumNotes: maximumTextSize = $maximumTextSize, numNotes = $numNotes")
+        return numNotes
     }
 }

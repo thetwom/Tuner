@@ -148,17 +148,17 @@ class InstrumentEditorFragment : Fragment() {
             }
             val selectedStringIndex = viewModel.selectedStringIndex.value ?: -1
             if (selectedStringIndex in strings.indices)
-                noteSelector?.setActiveTone(strings[selectedStringIndex], 150L)
+                noteSelector?.setActiveNote(strings[selectedStringIndex], 150L)
             else
-                noteSelector?.setActiveTone(strings.lastOrNull() ?: 0, 150L)
+                noteSelector?.setActiveNote(strings.lastOrNull(), 150L)
         }
 
         viewModel.selectedStringIndex.observe(viewLifecycleOwner) { selectedStringIndex ->
             val strings = viewModel.strings.value
             if (strings != null && selectedStringIndex in strings.indices) {
-                val toneIndex = strings[selectedStringIndex]
+                val note = strings[selectedStringIndex]
                 stringView?.highlightSingleString(selectedStringIndex, 300L)
-                noteSelector?.setActiveTone(toneIndex, 150L)
+                noteSelector?.setActiveNote(note, 150L)
             }
         }
 
@@ -172,7 +172,7 @@ class InstrumentEditorFragment : Fragment() {
         }
 
         addButton?.setOnClickListener {
-            viewModel.addStringBelowSelectedAndSelectNewString(noteSelector?.activeToneIndex ?: Int.MAX_VALUE)
+            viewModel.addStringBelowSelectedAndSelectNewString(noteSelector?.activeNote)
         }
 
         deleteButton?.setOnClickListener {
