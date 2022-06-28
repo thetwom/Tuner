@@ -117,7 +117,7 @@ class InstrumentEditorFragment : Fragment() {
 
         tunerViewModel.pitchHistory.historyAveraged.observe(viewLifecycleOwner) {
             tunerViewModel.targetNote.value?.let { targetNote ->
-                detectedNoteViewer?.hitNote(targetNote.noteIndex)
+                detectedNoteViewer?.hitNote(targetNote.note)
             }
         }
 
