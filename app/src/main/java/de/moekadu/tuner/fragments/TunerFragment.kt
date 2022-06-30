@@ -20,7 +20,9 @@
 package de.moekadu.tuner.fragments
 
 import android.Manifest
+import android.graphics.Paint
 import android.os.Bundle
+import android.text.TextPaint
 import android.util.Log
 import android.view.*
 import android.widget.Toast
@@ -34,10 +36,7 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.instrumentDatabase
 import de.moekadu.tuner.temperaments.TargetNote
 import de.moekadu.tuner.viewmodels.TunerViewModel
-import de.moekadu.tuner.views.MarkAnchor
-import de.moekadu.tuner.views.MarkLabelBackgroundSize
-import de.moekadu.tuner.views.PlotView
-import de.moekadu.tuner.views.VolumeMeter
+import de.moekadu.tuner.views.*
 import kotlin.math.floor
 import kotlin.math.max
 
@@ -174,13 +173,13 @@ class TunerFragment : Fragment() {
             pitchPlot?.setYTouchLimits(firstFrequency, lastFrequency, 0L)
         }
 
-        viewModel.noteNames.observe(viewLifecycleOwner) { // noteNames ->
-            updatePitchPlotNoteNames()
-        }
-
-        viewModel.preferFlat.observe(viewLifecycleOwner) {
-            updatePitchPlotNoteNames()
-        }
+//        viewModel.noteNames.observe(viewLifecycleOwner) { // noteNames ->
+//            updatePitchPlotNoteNames()
+//        }
+//        TODO: check, if we should enable this again
+//        viewModel.preferFlat.observe(viewLifecycleOwner) {
+//            updatePitchPlotNoteNames()
+//        }
 
         viewModel.tunerResults.observe(viewLifecycleOwner) { results ->
             if (results.pitchFrequency == null) {
@@ -191,10 +190,10 @@ class TunerFragment : Fragment() {
                 results.pitchFrequency?.let { pitchFrequency ->
                     val label = getString(R.string.hertz, pitchFrequency)
                     correlationPlot?.setXMark(1.0f / pitchFrequency, label,
-                        MARK_ID_FREQUENCY, MarkAnchor.SouthWest,
+                        MARK_ID_FREQUENCY, LabelAnchor.SouthWest,
                         placeLabelsOutsideBoundsIfPossible = false)
                     spectrumPlot?.setXMark(pitchFrequency, label, MARK_ID_FREQUENCY,
-                        MarkAnchor.SouthWest,
+                        LabelAnchor.SouthWest,
                         placeLabelsOutsideBoundsIfPossible = false)
                 }
             }
@@ -265,7 +264,7 @@ class TunerFragment : Fragment() {
         super.onStart()
         askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
         viewModel.setInstrument(instrumentDatabase[0])
-        viewModel.setTargetNote(-1, TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
+        viewModel.setTargetNote(-1, null) // TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
     }
 
     override fun onResume() {
@@ -333,8 +332,9 @@ class TunerFragment : Fragment() {
 
     private fun updatePitchPlotMarks(redraw: Boolean = true) {
         val targetNote = viewModel.targetNote.value ?: return
-        val noteNames = viewModel.noteNames.value ?: return
-        val preferFlat = viewModel.preferFlat.value ?: false
+        //val musicalScale = viewModel.musicalScale.value ?: return
+        //val noteNames = viewModel.noteNames.value ?: return
+        //val preferFlat = viewModel.preferFlat.value ?: false
 
         val nameMinusBound = getString(R.string.cent, -targetNote.toleranceInCents)
         val namePlusBound = getString(R.string.cent, targetNote.toleranceInCents)
@@ -344,23 +344,25 @@ class TunerFragment : Fragment() {
             floatArrayOf(targetNote.frequencyLowerTolerance, targetNote.frequencyUpperTolerance),
             MARK_ID_TOLERANCE,
             1,
-            arrayOf(MarkAnchor.NorthWest, MarkAnchor.SouthWest),
+            arrayOf(LabelAnchor.NorthWest, LabelAnchor.SouthWest),
             MarkLabelBackgroundSize.FitLargest,
             placeLabelsOutsideBoundsIfPossible = false,
-            redraw = false
-        ) { i, _, _ ->
-            when (i) {
+            redraw = false,
+            maxLabelBounds = null
+        ) { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
+            val s = when (index) {
                 0 -> nameMinusBound
                 1 -> namePlusBound
                 else -> ""
             }
+            StringLabel(s, textPaint, backgroundPaint, cornerRadius, gravity, padding, padding, padding, padding)
         }
 
         pitchPlot?.setYMark(
             targetNote.frequency,
-            noteNames.getNoteName(requireContext(), targetNote.noteIndex, preferFlat = preferFlat),
+            targetNote.note,
             MARK_ID_FREQUENCY,
-            MarkAnchor.East,
+            LabelAnchor.East,
             if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
             placeLabelsOutsideBoundsIfPossible = true,
             redraw = redraw
@@ -368,30 +370,33 @@ class TunerFragment : Fragment() {
     }
 
     private fun updatePitchPlotNoteNames(redraw: Boolean = true) {
-        val noteNames = viewModel.noteNames.value ?: return
-        val preferFlat = viewModel.preferFlat.value ?: return
-        val tuningFrequencies = viewModel.musicalScale.value ?: return
+        //val noteNames = viewModel.noteNames.value ?: return
+        //val preferFlat = viewModel.preferFlat.value ?: return
+        val musicalScale = viewModel.musicalScale.value ?: return
 
-        val numNotes = tuningFrequencies.noteIndexEnd - tuningFrequencies.noteIndexBegin
+        val numNotes = musicalScale.noteIndexEnd - musicalScale.noteIndexBegin
         val noteFrequencies = FloatArray(numNotes) {
-            tuningFrequencies.getNoteFrequency(tuningFrequencies.noteIndexBegin + it)
+            musicalScale.getNoteFrequency(musicalScale.noteIndexBegin + it)
         }
 
         // Update ticks in pitch history plot
-        pitchPlot?.setYTicks(noteFrequencies, false) { _, f ->
-            val toneIndex = tuningFrequencies.getClosestNoteIndex(f)
-            // TODO: replace noteNames with the musicalScale.noteNameScale  and additional code, also in other fragment
-            noteNames.getNoteName(requireContext(), toneIndex, preferFlat = preferFlat)
-        }
+        pitchPlot?.setYTicks(noteFrequencies, redraw = false,
+            noteNameScale = musicalScale.noteNameScale, noteIndexBegin = musicalScale.noteIndexBegin
+        )
+//        { _, f ->
+//            val toneIndex = musicalScale.getClosestNoteIndex(f)
+//            noteNames.getNoteName(requireContext(), toneIndex, preferFlat = preferFlat)
+//        }
 
-        // Update active ymark in pitch history plot
+        // Update active y-mark in pitch history plot
         viewModel.targetNote.value?.let { targetNote ->
             pitchPlot?.setYMark(
                 targetNote.frequency,
-                noteNames.getNoteName(requireContext(), targetNote.noteIndex, preferFlat),
+                targetNote.note,
+                //noteNames.getNoteName(requireContext(), targetNote.noteIndex, preferFlat),
                 MARK_ID_FREQUENCY,
-                MarkAnchor.East,
-                if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
+                LabelAnchor.East,
+                style = if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
                 placeLabelsOutsideBoundsIfPossible = true,
                 redraw = redraw
             )

@@ -25,8 +25,8 @@ class TargetNote {
             field = value
             sortStringsAccordingToNoteIndex(value)
         }
-    private class FrequencyAndNote (val noteIndex: Int, val note: MusicalNote)
-    private var sortedStringsWithFrequencies = sortStringsAccordingToNoteIndex(instrument)
+
+    private var sortedAndDistinctNoteIndices = sortStringsAccordingToNoteIndex(instrument)
 //        set(value) {
 //            Log.v("Tuner", "TargetNote.instrument.set: value=$value, field=$field")
 //            if (value.stableId != field.stableId) {
@@ -63,8 +63,6 @@ class TargetNote {
     var note: MusicalNote = musicalScale.getNote(0)
         private set
 
-    ///** String index of target note. */
-    //var stringIndex = -1
 
     /** Frequency of current target note. */
     var frequency = 0f
@@ -130,9 +128,9 @@ class TargetNote {
         if (frequency in frequencyRange[0] .. frequencyRange[1] && !ignoreFrequencyRange)
             return note
 
-        val numStrings = instrument.strings.size
+        val numDifferentNotes = sortedAndDistinctNoteIndices.size
         when {
-            numStrings == 1 -> {
+            numDifferentNotes == 1 -> {
                 frequencyRange[0] = Float.NEGATIVE_INFINITY
                 frequencyRange[1] = Float.POSITIVE_INFINITY
                 note = instrument.strings[0]
@@ -144,39 +142,38 @@ class TargetNote {
                 frequencyRange[1] = musicalScale.getNoteFrequency(noteIndex + allowedHalfToneDeviationBeforeChangingTarget)
             }
             else -> {
-
                 val exactNoteIndex = musicalScale.getNoteIndex(frequency)
-                var index = sortedStringsWithFrequencies.binarySearchBy(exactNoteIndex) { it.noteIndex.toFloat() }
+                var index = sortedAndDistinctNoteIndices.binarySearchBy(exactNoteIndex) { it.toFloat() }
                 //var index = instrument.stringsSorted.binarySearch(exactNoteIndex)
                 if (index < 0)
                     index = -(index + 1)
 
-                val stringIndex = when {
+                val uniqueNoteListIndex = when {
                     index == 0 -> 0
-                    index == numStrings -> numStrings - 1
+                    index == numDifferentNotes -> numDifferentNotes - 1
                     //exactNoteIndex - instrument.stringsSorted[index - 1] < instrument.stringsSorted[index] - exactNoteIndex -> index - 1
-                    exactNoteIndex - sortedStringsWithFrequencies[index - 1].noteIndex < sortedStringsWithFrequencies[index].noteIndex - exactNoteIndex -> index - 1
+                    exactNoteIndex - sortedAndDistinctNoteIndices[index - 1] < sortedAndDistinctNoteIndices[index] - exactNoteIndex -> index - 1
                     else -> index
                 }
 
-                frequencyRange[0] = if (stringIndex == 0) {
+                frequencyRange[0] = if (uniqueNoteListIndex == 0) {
                     Float.NEGATIVE_INFINITY
                 } else {
                     // ok, here the "allowedHalfToneRatio... is rather allowedRatioBetweenTwoNeighboringStrings ...
                     musicalScale.getNoteFrequency(
-                        (1.0f - allowedHalfToneDeviationBeforeChangingTarget) * sortedStringsWithFrequencies[stringIndex].noteIndex
-                                + allowedHalfToneDeviationBeforeChangingTarget * sortedStringsWithFrequencies[stringIndex - 1].noteIndex)
+                        (1.0f - allowedHalfToneDeviationBeforeChangingTarget) * sortedAndDistinctNoteIndices[uniqueNoteListIndex]
+                                + allowedHalfToneDeviationBeforeChangingTarget * sortedAndDistinctNoteIndices[uniqueNoteListIndex - 1])
                 }
 
-                frequencyRange[1] = if (stringIndex == numStrings - 1) {
+                frequencyRange[1] = if (uniqueNoteListIndex == numDifferentNotes - 1) {
                     Float.POSITIVE_INFINITY
                 } else {
                     musicalScale.getNoteFrequency(
-                        (1.0f - allowedHalfToneDeviationBeforeChangingTarget) * sortedStringsWithFrequencies[stringIndex].noteIndex
-                                + allowedHalfToneDeviationBeforeChangingTarget * sortedStringsWithFrequencies[stringIndex + 1].noteIndex
+                        (1.0f - allowedHalfToneDeviationBeforeChangingTarget) * sortedAndDistinctNoteIndices[uniqueNoteListIndex]
+                                + allowedHalfToneDeviationBeforeChangingTarget * sortedAndDistinctNoteIndices[uniqueNoteListIndex + 1]
                     )
                 }
-                note = sortedStringsWithFrequencies[stringIndex].note
+                note = musicalScale.getNote(sortedAndDistinctNoteIndices[uniqueNoteListIndex])
             }
         }
 
@@ -195,16 +192,13 @@ class TargetNote {
     }
 
     //private fun sortStringsAccordingToFrequency(instrument: Instrument): Array<FrequencyAndNote> {
-    private fun sortStringsAccordingToNoteIndex(instrument: Instrument): List<FrequencyAndNote> {
+    private fun sortStringsAccordingToNoteIndex(instrument: Instrument): List<Int> {
         if (instrument.isChromatic)
             return ArrayList()
         val strings = instrument.strings
-        val freqAndNote = strings.map {
-            val noteIndex = musicalScale.getNoteIndex(it)
-            FrequencyAndNote(noteIndex, it)
-        }.sortedBy {it.noteIndex}
+        val noteIndices = strings.map { musicalScale.getNoteIndex(it) }.distinct().sorted()
 
-        return freqAndNote
+        return noteIndices
     }
 //    fun getNoteName(context: Context, preferFlat: Boolean): CharSequence {
 //        return tuningFrequencies.getNoteName(context, toneIndex, preferFlat)

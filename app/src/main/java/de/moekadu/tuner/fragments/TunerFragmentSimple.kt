@@ -20,7 +20,9 @@
 package de.moekadu.tuner.fragments
 
 import android.Manifest
+import android.graphics.Paint
 import android.os.Bundle
+import android.text.TextPaint
 import android.util.Log
 import android.view.*
 import android.widget.Toast
@@ -34,6 +36,7 @@ import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.instrumentDatabase
 import de.moekadu.tuner.preferences.AppPreferences
+import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.TargetNote
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 import de.moekadu.tuner.viewmodels.TunerViewModel
@@ -115,18 +118,18 @@ class TunerFragmentSimple : Fragment() {
         pitchPlot?.yRange(400f, 500f, PlotView.NO_REDRAW)
 
         stringView?.stringClickedListener = object : StringView.StringClickedListener {
-            override fun onStringClicked(stringIndex: Int, toneIndex: Int) {
+            override fun onStringClicked(stringIndex: Int, note: MusicalNote) {
                 if (stringIndex == stringView?.highlightedStringIndex && viewModel.isTargetNoteUserDefined.value == true) {
-                    viewModel.setTargetNote(-1, TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
+                    viewModel.setTargetNote(-1, null)
                     stringView?.setAutomaticControl()
                     //stringView?.showAnchor = false
                 } else if (stringIndex != -1) {
-                    viewModel.setTargetNote(stringIndex, toneIndex)
+                    viewModel.setTargetNote(stringIndex, note)
                 }
             }
 
             override fun onAnchorClicked() {
-                viewModel.setTargetNote(-1, TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
+                viewModel.setTargetNote(-1, null)
                 stringView?.setAutomaticControl()
             }
 
@@ -162,15 +165,16 @@ class TunerFragmentSimple : Fragment() {
                 updateStringViewNoteNames()
         }
 
-        viewModel.noteNames.observe(viewLifecycleOwner) { // noteNames ->
-            updatePitchPlotNoteNames()
-            updateStringViewNoteNames()
-        }
+//        viewModel.noteNames.observe(viewLifecycleOwner) { // noteNames ->
+//            updatePitchPlotNoteNames()
+//            updateStringViewNoteNames()
+//        }
 
-        viewModel.preferFlat.observe(viewLifecycleOwner) {
-            updatePitchPlotNoteNames()
-            updateStringViewNoteNames()
-        }
+        // TODO: check is we must enable this again
+//        viewModel.preferFlat.observe(viewLifecycleOwner) {
+//            updatePitchPlotNoteNames()
+//            updateStringViewNoteNames()
+//        }
 
         instrumentsViewModel.instrument.observe(viewLifecycleOwner) { instrumentAndSection ->
             val instrument = instrumentAndSection.instrument
@@ -215,10 +219,10 @@ class TunerFragmentSimple : Fragment() {
             updatePitchPlotMarks(redraw = true)
 
 //            Log.v("Tuner", "TunerFragmentSimple: target note changed: stringIndex = ${targetNote.stringIndex}, toneIndex=${targetNote.toneIndex}")
-            if (targetNote.stringIndex != -1)
-                stringView?.highlightSingleString(targetNote.stringIndex, 300L)
+            if (viewModel.selectedStringIndex != -1)
+                stringView?.highlightSingleString(viewModel.selectedStringIndex, 300L)
             else
-                stringView?.highlightByToneIndex(targetNote.noteIndex, 300L)
+                stringView?.highlightByNote(targetNote.note, 300L)
             //stringView?.scrollToString(targetNote.toneIndex, 300L)
         }
 
@@ -300,8 +304,8 @@ class TunerFragmentSimple : Fragment() {
         }
 
         when (tuningStatus) {
-            TargetNote.TuningStatus.InTune -> stringView?.activeToneStyle = 2
-            else -> stringView?.activeToneStyle = 3
+            TargetNote.TuningStatus.InTune -> stringView?.activeStyleIndex = 2
+            else -> stringView?.activeStyleIndex = 3
         }
         if (redraw)
             pitchPlot?.invalidate()
@@ -309,8 +313,8 @@ class TunerFragmentSimple : Fragment() {
 
     private fun updatePitchPlotMarks(redraw: Boolean = true) {
         val targetNote = viewModel.targetNote.value ?: return
-        val noteNames = viewModel.noteNames.value ?: return
-        val preferFlat = viewModel.preferFlat.value ?: false
+//        val noteNames = viewModel.noteNames.value ?: return
+//        val preferFlat = viewModel.preferFlat.value ?: false
 
         val nameMinusBound = getString(R.string.cent, -targetNote.toleranceInCents)
         val namePlusBound = getString(R.string.cent, targetNote.toleranceInCents)
@@ -320,23 +324,25 @@ class TunerFragmentSimple : Fragment() {
             floatArrayOf(targetNote.frequencyLowerTolerance, targetNote.frequencyUpperTolerance),
             MARK_ID_TOLERANCE,
             1,
-            arrayOf(MarkAnchor.NorthWest, MarkAnchor.SouthWest),
+            arrayOf(LabelAnchor.NorthWest, LabelAnchor.SouthWest),
             MarkLabelBackgroundSize.FitLargest,
             placeLabelsOutsideBoundsIfPossible = false,
-            redraw = false
-        ) { i, _, _ ->
-            when (i) {
+            redraw = false,
+            maxLabelBounds = null
+        ) { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
+            val s = when (index) {
                 0 -> nameMinusBound
                 1 -> namePlusBound
                 else -> ""
             }
+            StringLabel(s, textPaint, backgroundPaint, cornerRadius, gravity, padding, padding, padding, padding)
         }
 
         pitchPlot?.setYMark(
             targetNote.frequency,
-            noteNames.getNoteName(requireContext(), targetNote.noteIndex, preferFlat = preferFlat),
+            targetNote.note,
             MARK_ID_FREQUENCY,
-            MarkAnchor.East,
+            LabelAnchor.East,
             if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
             placeLabelsOutsideBoundsIfPossible = true,
             redraw = redraw
@@ -344,28 +350,27 @@ class TunerFragmentSimple : Fragment() {
     }
 
     private fun updatePitchPlotNoteNames(redraw: Boolean = true) {
-        val noteNames = viewModel.noteNames.value ?: return
-        val preferFlat = viewModel.preferFlat.value ?: return
-        val tuningFrequencies = viewModel.musicalScale.value ?: return
+//        val noteNames = viewModel.noteNames.value ?: return
+//        val preferFlat = viewModel.preferFlat.value ?: return
+        val musicalScale = viewModel.musicalScale.value ?: return
 
-        val numNotes = tuningFrequencies.noteIndexEnd - tuningFrequencies.noteIndexBegin
+        val numNotes = musicalScale.noteIndexEnd - musicalScale.noteIndexBegin
         val noteFrequencies = FloatArray(numNotes) {
-            tuningFrequencies.getNoteFrequency(tuningFrequencies.noteIndexBegin + it)
+            musicalScale.getNoteFrequency(musicalScale.noteIndexBegin + it)
         }
 
         // Update ticks in pitch history plot
-        pitchPlot?.setYTicks(noteFrequencies, false) { _, f ->
-            val toneIndex = tuningFrequencies.getClosestNoteIndex(f)
-            noteNames.getNoteName(requireContext(), toneIndex, preferFlat = preferFlat)
-        }
+        pitchPlot?.setYTicks(noteFrequencies, redraw = false,
+            noteNameScale = musicalScale.noteNameScale, noteIndexBegin = musicalScale.noteIndexBegin
+        )
 
-        // Update active ymark in pitch history plot
+        // Update active y-mark in pitch history plot
         viewModel.targetNote.value?.let { targetNote ->
             pitchPlot?.setYMark(
                 targetNote.frequency,
-                noteNames.getNoteName(requireContext(), targetNote.noteIndex, preferFlat),
+                targetNote.note,
                 MARK_ID_FREQUENCY,
-                MarkAnchor.East,
+                LabelAnchor.East,
                 if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
                 placeLabelsOutsideBoundsIfPossible = true,
                 redraw = redraw
@@ -374,23 +379,18 @@ class TunerFragmentSimple : Fragment() {
     }
 
     private fun updateStringViewNoteNames() {
+        val musicalScale = viewModel.musicalScale.value ?: return
         val instrument = instrumentsViewModel.instrument.value?.instrument ?: return
-        val noteNames = viewModel.noteNames.value ?: return
-        val preferFlat = viewModel.preferFlat.value ?: false
+//        val noteNames = viewModel.noteNames.value ?: return
+//        val preferFlat = viewModel.preferFlat.value ?: false
         val ctx = context ?: return
 
         if (instrument.isChromatic) {
-            viewModel.musicalScale.value?.let { tuningFrequencies ->
-                val numNotes = tuningFrequencies.noteIndexEnd - tuningFrequencies.noteIndexBegin
-                stringView?.setStrings(IntArray(numNotes) { tuningFrequencies.noteIndexBegin + it }
-                    .reversedArray()) { noteIndex ->
-                    noteNames.getNoteName(ctx, noteIndex, preferFlat = preferFlat)
-                }
-            }
+            stringView?.setStrings(null, true, musicalScale.noteNameScale,
+                musicalScale.noteIndexBegin, musicalScale.noteIndexEnd)
         } else {
-            stringView?.setStrings(instrument.strings) { noteIndex ->
-                noteNames.getNoteName(ctx, noteIndex, preferFlat = preferFlat)
-            }
+            stringView?.setStrings(instrument.strings, false, musicalScale.noteNameScale,
+                musicalScale.noteIndexBegin, musicalScale.noteIndexEnd)
         }
     }
 

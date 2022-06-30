@@ -33,11 +33,11 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.dialogs.AboutDialog
 import de.moekadu.tuner.dialogs.ResetSettingsDialog
 import de.moekadu.tuner.notedetection.percentToPitchHistoryDuration
-import de.moekadu.tuner.preferences.*
-import de.moekadu.tuner.temperaments.Temperament
-import de.moekadu.tuner.temperaments.TemperamentType
-import de.moekadu.tuner.temperaments.getTuningNameResourceId
-import de.moekadu.tuner.temperaments.noteNames12Tone
+import de.moekadu.tuner.preferences.ReferenceNotePreference
+import de.moekadu.tuner.preferences.ReferenceNotePreferenceDialog
+import de.moekadu.tuner.preferences.TemperamentPreference
+import de.moekadu.tuner.preferences.TemperamentPreferenceDialog
+import de.moekadu.tuner.temperaments.*
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
@@ -128,9 +128,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     referenceNotePreference = findPreference("reference_note") ?: throw RuntimeException("no reference_note preference")
-    referenceNotePreference?.setOnReferenceNoteChangedListener { _, frequency, toneIndex ->
+    referenceNotePreference?.setOnReferenceNoteChangedListener { _, frequency, note ->
 //      Log.v("Tuner", "SettingsFragment: referenceNotePreference changed")
-      setReferenceNoteSummary(frequency, toneIndex)
+      setReferenceNoteSummary(frequency, note)
     }
     setReferenceNoteSummary()
 
@@ -223,7 +223,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
     when (preference) {
       is ReferenceNotePreference -> {
         val preferFlat = preferFlatPreference?.isChecked ?: false
-        val dialog = ReferenceNotePreferenceDialog.newInstance(preference.key, "reference_note_tag", preferFlat)
+        val temperamentType = temperamentPreference?.value?.temperamentType ?: TemperamentType.EDO12
+        val dialog = ReferenceNotePreferenceDialog.newInstance(preference.key, "reference_note_tag", temperamentType, preferFlat)
         dialog.show(parentFragmentManager, "reference_note_tag")
         dialog.setTargetFragment(this, 0)
       }
@@ -276,43 +277,38 @@ class SettingsFragment : PreferenceFragmentCompat() {
       appearancePreference?.summary = summary
   }
 
-  private fun setReferenceNoteSummary(frequency: Float = Float.MAX_VALUE, toneIndex: Int = Int.MAX_VALUE, preferFlat: Boolean? = null) {
+  private fun setReferenceNoteSummary(frequency: Float = Float.MAX_VALUE, note: MusicalNote? = null, preferFlat: Boolean? = null) {
 //    Log.v("Tuner", "SettingsFragment.setReferenceNoteSummary: frequency=$frequency, toneIndex=$toneIndex, preferFlat=$preferFlat, f2=${referenceNotePreference?.value?.frequency}, t2=${referenceNotePreference?.value?.toneIndex}")
     context?.let { ctx ->
       val f = if (frequency == Float.MAX_VALUE)
         referenceNotePreference?.value?.frequency ?: 440f
       else
         frequency
-      val t = if (toneIndex == Int.MAX_VALUE)
-        referenceNotePreference?.value?.toneIndex ?: 0
-      else
-        toneIndex
+      val n = note ?: referenceNotePreference?.value?.referenceNote
 
       val pF = preferFlat ?: (preferFlatPreference?.isChecked ?: false)
+      val printOption = if (pF) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
       //val f = referenceFrequency?.value?.frequency ?: 440f
       //val t = referenceFrequency?.value?.noteIndex ?: 0
-      val build = SpannableStringBuilder().append(noteNames12Tone.getNoteName(ctx, t, preferFlat = pF))
+
+      val build = SpannableStringBuilder().append(n?.toCharSequence(ctx, printOption, true) ?: "")
         .append(" = ${getString(R.string.hertz_2f, f)}")
-      // use .toString() to delete the superscript-formatting, since superscripting numbers won't
-      // fit into the vertical space of the summary line
-      referenceNotePreference?.summary = build.toString()
+      referenceNotePreference?.summary = build
     }
   }
 
-    private fun setTemperamentSummary(temperamentType: TemperamentType? = null, rootNote: Int = Int.MAX_VALUE, preferFlat: Boolean? = null) {
+    private fun setTemperamentSummary(temperamentType: TemperamentType? = null, rootNote: MusicalNote? = null, preferFlat: Boolean? = null) {
 //    Log.v("Tuner", "SettingsFragment.setTemperamentSummary")
         context?.let { ctx ->
-            val r = if (rootNote == Int.MAX_VALUE)
-                temperamentPreference?.value?.rootNote ?: -9
-            else
-                rootNote
+            val r = rootNote ?: temperamentPreference?.value?.rootNote
 
             val t = temperamentType ?: temperamentPreference?.value?.temperamentType ?: TemperamentType.EDO12
             val pF = preferFlat ?: (preferFlatPreference?.isChecked ?: false)
+            val printOption = if (pF) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
 
             val n = ctx.getString(getTuningNameResourceId(t))
             // val dId = getTuningDescriptionResourceId(t)
-            val rN = noteNames12Tone.getNoteName(ctx, r, pF, withOctaveIndex = false)
+            val rN = r?.toCharSequence(ctx, printOption, true) ?: ""
 
             temperamentPreference?.summary = ctx.getString(R.string.tuning_summary_no_desc, n, rN)
 //            if (dId != null) {

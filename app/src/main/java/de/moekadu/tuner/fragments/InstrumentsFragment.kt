@@ -340,16 +340,9 @@ class InstrumentsFragment : Fragment() {
         val touchHelper = ItemTouchHelper(simpleTouchHelper)
         touchHelper.attachToRecyclerView(recyclerView)
 
-        tunerViewModel.noteNames.observe(viewLifecycleOwner) {
-            val preferFlat = tunerViewModel.preferFlat.value ?: false
-            instrumentsPredefinedAdapter.setPreferFlat(it, preferFlat = preferFlat, recyclerView)
-            instrumentsCustomAdapter.setPreferFlat(it, preferFlat = preferFlat, recyclerView)
-        }
-
         tunerViewModel.preferFlat.observe(viewLifecycleOwner) {
-            val noteNames = tunerViewModel.noteNames.value
-            instrumentsPredefinedAdapter.setPreferFlat(noteNames, preferFlat = it, recyclerView)
-            instrumentsCustomAdapter.setPreferFlat(noteNames, preferFlat = it, recyclerView)
+            instrumentsPredefinedAdapter.setPreferFlat(preferFlat = it, recyclerView)
+            instrumentsCustomAdapter.setPreferFlat(preferFlat = it, recyclerView)
         }
 
         instrumentsViewModel.instrument.observe(viewLifecycleOwner) {
@@ -419,7 +412,8 @@ class InstrumentsFragment : Fragment() {
 
         tuningEditorFab = view.findViewById(R.id.tuning_editor_fab)
         tuningEditorFab?.setOnClickListener {
-            instrumentEditorViewModel.clear(0)
+            val note = tunerViewModel.musicalScale.value?.getNote(0)
+            instrumentEditorViewModel.clear(note)
             (requireActivity() as MainActivity).loadTuningEditorFragment()
         }
 

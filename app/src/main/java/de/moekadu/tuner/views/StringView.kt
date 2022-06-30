@@ -8,17 +8,17 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.os.Bundle
 import android.os.Parcelable
-import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
-import androidx.core.graphics.withTranslation
 import androidx.core.view.ViewCompat
 import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
 import de.moekadu.tuner.R
+import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments.NoteNameScale
 import kotlinx.parcelize.Parcelize
 import kotlin.math.*
 
@@ -31,11 +31,14 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         R.attr.stringViewStyle
     )
 
-    class StringInfo(val toneIndex: Int, val label: CharSequence?) {
-        val layouts = Array<StaticLayout?>(4) { null }
+    class StringInfo(val note: MusicalNote) {
+        /** This is used to take track of the style index which was used to create the label. */
+        var styleIndex = 0
+        /** Label to be drawn, can be null if it is not yet created. */
+        var label: MusicalNoteLabel? = null
     }
 
-    enum class HighlightBy { StringIndex, ToneIndex, Off }
+    enum class HighlightBy { StringIndex, MusicalNote, Off }
 
     private val stringPaint = arrayOf(
         Paint().apply {
@@ -125,24 +128,14 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var labelSpacing = 2f
 
     private var labelWidth = 0f
-    private var labelWidthExpanded = 0f ///< Expanded label with so that it fills the columns
+    private var labelWidthExpanded = 0f ///< Expanded label width so that it fills the columns
     private var labelHeight = 0f
+    private var labelCornerRadius = 0f
 
     private val strings = ArrayList<StringInfo>()
 
-//    private var activeToneIndex: Int = NO_ACTIVE_TONE_INDEX
-//        set(value) {
-//            if (value != field) {
-//                field = value
-//                updateActiveStringIndex(value)
-//                if (field != NO_ACTIVE_TONE_INDEX && automaticScrollToHighlight)
-//                    scrollToString(value, 200L)
-//                else
-//                    invalidate()
-//            }
-//        }
-
-    var activeToneStyle: Int = 1
+    /** Style index, which is used for showing active notes. */
+    var activeStyleIndex: Int = 1
         set(value) {
             if (value != field) {
                 field = value
@@ -154,9 +147,9 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var highlightBy = HighlightBy.Off
     var highlightedStringIndex: Int = -1
         private set
-    private var toneIndexForHighlighting = NO_ACTIVE_TONE_INDEX
-    private var stringIndexForCenteringToneIndex = -1
-    private var numHighlightedWithToneIndex = 0
+    private var noteForHighlighting: MusicalNote? = null
+    private var stringIndexForCenteringNote = -1
+    private var numHighlightedNotes = 0
 
     private var yOffset = 0f
 
@@ -178,22 +171,22 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
     }
 
-    /// Temporary storage needed for fling animations
+    /** Temporary storage needed for fling animations. */
     var lastFlingValue = 0f
 
-    /// Number of labels which can be placed next to each other
+    /** Number of labels which can be placed next to each other. */
     private var numCols = 1
 
-    /// The total horizontal space each label + equidistant spacing takes
+    /** The total horizontal space each label + equidistant spacing takes. */
     private var colWidth = 1f
 
-    /// Vertical space for needed for each additional string
+    /** Vertical space for needed for each additional string. */
     private var rowHeight = 1f
 
-    /// Current start index of string which is actually visible
+    /** Current start index of string which is actually visible. */
     private var stringStartIndex = 0
 
-    /// Current end index (index is included) of string which is actually visible
+    /** Current end index (index is included) of string which is actually visible. */
     private var stringEndIndex = 0
 
     private val gestureListener = object : GestureDetector.SimpleOnGestureListener() {
@@ -252,16 +245,16 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             }
 //            Log.v("Tuner", "StringView..onSingleTapUp: toneIndex=$toneIndex")
             if (stringIndex >= 0) {
-                stringClickedListener?.onStringClicked(stringIndex, strings[stringIndex].toneIndex)
+                stringClickedListener?.onStringClicked(stringIndex, strings[stringIndex].note)
             } else if (showAnchor && anchorDrawable.contains(x, y)) {
                 stringClickedListener?.onAnchorClicked()
             } else if ((anchorDrawablePosition == 0 && x < paddingLeft) ||
                 (anchorDrawablePosition == 1 && x > width - paddingRight)) {
 //                Log.v("Tuner", "StringView: Center icon clicked, highlightBy=$highlightBy, automaticScrollToSelected=$automaticScrollToSelected")
                 // select next note if we are in automatic scroll mode and highlight by toneIndex
-                if (automaticScrollToSelected && highlightBy == HighlightBy.ToneIndex) {
-                    stringIndexForCenteringToneIndex =
-                        getNextCenteringStringIndexWithToneIndex(stringIndexForCenteringToneIndex, toneIndexForHighlighting)
+                if (automaticScrollToSelected && highlightBy == HighlightBy.MusicalNote) {
+                    stringIndexForCenteringNote =
+                        getNextCenteringStringIndexOfNote(stringIndexForCenteringNote, noteForHighlighting)
 //                    Log.v("Tuner", "StringView: Center icon clicked, centeringStringIndex=$stringIndexForCenteringToneIndex")
                 }
                 setAutomaticControl(200L)
@@ -280,7 +273,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private val gestureDetector = GestureDetector(context, gestureListener)
 
     interface StringClickedListener {
-        fun onStringClicked(stringIndex: Int, toneIndex: Int)
+        fun onStringClicked(stringIndex: Int, note: MusicalNote)
         fun onAnchorClicked()
         fun onBackgroundClicked()
     }
@@ -312,7 +305,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private class SavedState(
         val highlightBy: HighlightBy,
         val highlightedStringIndex: Int,
-        val toneIndexForHighlighting: Int,
+        val noteForHighlighting: String,
         val stringIndexForCenteringToneIndex: Int,
         val activeToneStyle: Int,
         val stringIndexInViewCenter: Float, // for recomputing offset
@@ -338,6 +331,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             labelBackgroundPadding =
                 ta.getDimension(R.styleable.StringView_labelPadding, labelBackgroundPadding)
             labelSpacing = ta.getDimension(R.styleable.StringView_labelSpacing, labelSpacing)
+            labelCornerRadius = ta.getDimension(R.styleable.StringView_labelCornerRadius, labelCornerRadius)
 
             labelPaint[0].textSize =
                 ta.getDimension(R.styleable.StringView_labelTextSize, labelPaint[0].textSize)
@@ -421,8 +415,8 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
         anchorDrawable = TouchControlDrawable(
             context,
-            labelBackgroundPaint[activeToneStyle].color,
-            labelPaint[activeToneStyle].color,
+            labelBackgroundPaint[activeStyleIndex].color,
+            labelPaint[activeStyleIndex].color,
             anchorDrawableId
         )
         anchorDrawable.setSize(width = anchorDrawableWidth)
@@ -519,12 +513,12 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 val xPos = getStringDrawingPositionX(i)
                 val yPos = getStringDrawingPositionY(i)
                 val highlight = (highlightBy == HighlightBy.StringIndex && i == highlightedStringIndex)
-                        || (highlightBy == HighlightBy.ToneIndex && toneIndexForHighlighting == strings[i].toneIndex)
+                        || (highlightBy == HighlightBy.MusicalNote && noteForHighlighting == strings[i].note)
                 drawString(
                     xPos,
                     yPos,
                     strings[i],
-                    if (highlight) activeToneStyle else 0,
+                    if (highlight) activeStyleIndex else 0,
                     canvas
                 )
 
@@ -559,20 +553,20 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 anchorDrawable.drawToCanvas(
                     paddingLeft.toFloat() + framePaint.strokeWidth,
                     anchorYPos,
-                    MarkAnchor.East, canvas
+                    LabelAnchor.East, canvas
                 )
             } else { // right
                 anchorDrawable.drawToCanvas(
                     width - paddingRight.toFloat() - framePaint.strokeWidth,
                     anchorYPos,
-                    MarkAnchor.West, canvas
+                    LabelAnchor.West, canvas
                 )
             }
         }
 
-        var showScrollIcon = !automaticScrollToSelected && highlightBy == HighlightBy.ToneIndex && numHighlightedWithToneIndex > 0
+        var showScrollIcon = !automaticScrollToSelected && highlightBy == HighlightBy.MusicalNote && numHighlightedNotes > 0
         showScrollIcon = showScrollIcon || (!automaticScrollToSelected && highlightBy == HighlightBy.StringIndex && highlightedStringIndex in strings.indices)
-        showScrollIcon = showScrollIcon || (highlightBy == HighlightBy.ToneIndex && numHighlightedWithToneIndex > 1)
+        showScrollIcon = showScrollIcon || (highlightBy == HighlightBy.MusicalNote && numHighlightedNotes > 1)
         showScrollIcon = showScrollIcon && (computeOffsetMin() < computeOffsetMax())
         // TODO: show another icon, if we are in automatic scroll mode and have multiple notes with same tone index
 
@@ -597,37 +591,21 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 scrollCenterDrawableNeutral.drawToCanvas(
                     xPositionScrollDrawable,
                     yPosition,
-                    MarkAnchor.Center, canvas
+                    LabelAnchor.Center, canvas
                 )
             } else if (activeToneStyle == 2) {
                 scrollCenterDrawablePositive.drawToCanvas(
                     xPositionScrollDrawable,
                     yPosition,
-                    MarkAnchor.Center, canvas
+                    LabelAnchor.Center, canvas
                 )
             } else if (activeToneStyle == 3) {
                 scrollCenterDrawableNegative.drawToCanvas(
                     xPositionScrollDrawable,
                     yPosition,
-                    MarkAnchor.Center, canvas
+                    LabelAnchor.Center, canvas
                 )
             }
-
-
-//            if (yOffsetTarget <= yOffset) {
-//                scrollUpDrawable.drawToCanvas(
-//                    xPositionScrollDrawable,
-//                    paddingTop + framePaint.strokeWidth,
-//                    MarkAnchor.North, canvas
-//                )
-//            }
-//            if (yOffsetTarget >= yOffset) {
-//                scrollDownDrawable.drawToCanvas(
-//                    xPositionScrollDrawable,
-//                    height - paddingBottom - framePaint.strokeWidth,
-//                    MarkAnchor.South, canvas
-//                )
-//            }
         }
     }
 
@@ -638,9 +616,9 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         val state = SavedState(
             highlightBy = highlightBy,
             highlightedStringIndex = highlightedStringIndex,
-            toneIndexForHighlighting = toneIndexForHighlighting,
-            stringIndexForCenteringToneIndex = stringIndexForCenteringToneIndex,
-            activeToneStyle = activeToneStyle,
+            noteForHighlighting = noteForHighlighting?.asString() ?: "",
+            stringIndexForCenteringToneIndex = stringIndexForCenteringNote,
+            activeToneStyle = activeStyleIndex,
             stringIndexInViewCenter = getStringIndexAtYCenterAsFloat(),
             automaticScrollToSelected = automaticScrollToSelected,
             showAnchor = showAnchor
@@ -656,9 +634,9 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             state.getParcelable<SavedState>("string view state")?.let { scrollViewState ->
                 highlightBy = scrollViewState.highlightBy
                 highlightedStringIndex = scrollViewState.highlightedStringIndex
-                toneIndexForHighlighting = scrollViewState.toneIndexForHighlighting
-                stringIndexForCenteringToneIndex = scrollViewState.stringIndexForCenteringToneIndex
-                activeToneStyle = scrollViewState.activeToneStyle
+                noteForHighlighting = if (scrollViewState.noteForHighlighting == "") null else MusicalNote.fromString(scrollViewState.noteForHighlighting)
+                stringIndexForCenteringNote = scrollViewState.stringIndexForCenteringToneIndex
+                activeStyleIndex = scrollViewState.activeToneStyle
                 automaticScrollToSelected = scrollViewState.automaticScrollToSelected
                 showAnchor = scrollViewState.showAnchor
 //                Log.v("Tuner", "StringView.onRestoreInstanceState: stringIndexInViewCenter=${scrollViewState.stringIndexInViewCenter}, automaticScrollToSelected=$automaticScrollToSelected")
@@ -671,29 +649,53 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         super.onRestoreInstanceState(superState)
     }
 
-
-    fun setStrings(toneIndices: IntArray, labels: (Int) -> CharSequence?) {
+    /** Set the notes of the strings.
+     * @param notes Notes to be shown or null if no notes or chromatic notes should be shown.
+     * @param isChromatic If true, we will use the chromatic scale and take the notes directly
+     *   from the note name scale instead of the notes-array.
+     * @param noteNameScale Underlying note name scale, which helps to precompute the
+     *   label sizes or getting the notes for a chromatic scale.
+     * @param noteIndexBegin First note index of musical scale which is considered.
+     * @param noteIndexEnd End note index of musical scale which is considered (excluded).
+     */
+    fun setStrings(notes: Array<MusicalNote>?, isChromatic: Boolean, noteNameScale: NoteNameScale, noteIndexBegin: Int, noteIndexEnd: Int) {
         strings.clear()
-        var labelWidth = 0
-        var labelHeight = 0
 
-        for (toneIndex in toneIndices) {
-            strings.add(StringInfo(toneIndex, labels(toneIndex)))
-            strings.last().layouts[0] = buildLabelLayout(strings.last().label, 0)
-            strings.last().layouts[1] = buildLabelLayout(strings.last().label, 1)
-            strings.last().layouts[2] = buildLabelLayout(strings.last().label, 2)
-            strings.last().layouts[3] = buildLabelLayout(strings.last().label, 3)
-
-            labelWidth = max(labelWidth, strings.last().layouts[0]?.width ?: 0)
-            labelHeight = max(labelHeight, strings.last().layouts[0]?.height ?: 0)
+        // create the notes
+        if (notes != null) {
+            for (note in notes)
+                strings.add(StringInfo(note))
+        } else if (isChromatic) {
+            // TODO: should we add the notes reversed?
+            for (noteIndex in noteIndexBegin until noteIndexEnd)
+                strings.add(StringInfo(noteNameScale.getNoteOfIndex(noteIndex)))
         }
-        this.labelWidth = labelWidth.toFloat() + 2 * labelBackgroundPadding
-        this.labelHeight = labelHeight.toFloat() + 2 * labelBackgroundPadding
 
-        if (highlightedStringIndex !in toneIndices.indices)
+        var labelWidth = 0f
+        var labelHeight = 0f
+
+        val octaveBegin = noteNameScale.getNoteOfIndex(noteIndexBegin).octave
+        val octaveEnd = noteNameScale.getNoteOfIndex(noteIndexEnd - 1).octave + 1
+        for (paint in labelPaint) {
+            val bounds = MusicalNoteLabel.getLabelSetBounds(
+                noteNameScale.notes,
+                octaveBegin,
+                octaveEnd,
+                paint,
+                context,
+                true
+            )
+            labelWidth = max(labelWidth, bounds.maxWidth)
+            labelHeight = max(labelHeight, bounds.maxHeight)
+        }
+
+        this.labelWidth = labelWidth + 2 * labelBackgroundPadding
+        this.labelHeight = labelHeight + 2 * labelBackgroundPadding
+
+        if (highlightedStringIndex !in strings.indices)
             highlightedStringIndex = -1
-        numHighlightedWithToneIndex = strings.count { it.toneIndex == toneIndexForHighlighting }
-        stringIndexForCenteringToneIndex = getClosestStringWithToneIndex(stringIndexForCenteringToneIndex, toneIndexForHighlighting)
+        numHighlightedNotes = strings.count { it.note == noteForHighlighting }
+        stringIndexForCenteringNote = getClosestStringWithNote(stringIndexForCenteringNote, noteForHighlighting)
 
         if (isLaidOut) {
             updateStringPositionVariables(width, height)
@@ -722,19 +724,19 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             invalidate()
     }
 
-    fun highlightByToneIndex(toneIndex: Int, animationDuration: Long = 200L) {
+    fun highlightByNote(note: MusicalNote?, animationDuration: Long = 200L) {
 //        Log.v("Tuner", "StringView.highlightByToneIndex: stringIndex=$toneIndex, oldTonIndex=$toneIndexForHighlighting, highlightBy=$highlightBy")
-        if (toneIndex == toneIndexForHighlighting && highlightBy == HighlightBy.ToneIndex)
+        if (note == noteForHighlighting && highlightBy == HighlightBy.MusicalNote)
             return
 
-        highlightBy = HighlightBy.ToneIndex
-        toneIndexForHighlighting = toneIndex
-        numHighlightedWithToneIndex = strings.count { it.toneIndex == toneIndex }
+        highlightBy = HighlightBy.MusicalNote
+        noteForHighlighting = note
+        numHighlightedNotes = strings.count { it.note == note }
 
         val closestStringIndexToCenter = (stringStartIndex + stringEndIndex) / 2
-        stringIndexForCenteringToneIndex = getClosestStringWithToneIndex(closestStringIndexToCenter, toneIndexForHighlighting)
+        stringIndexForCenteringNote = getClosestStringWithNote(closestStringIndexToCenter, noteForHighlighting)
         if (automaticScrollToSelected)
-            scrollToStringIndex(stringIndexForCenteringToneIndex, animationDuration)
+            scrollToStringIndex(stringIndexForCenteringNote, animationDuration)
         else
             invalidate()
     }
@@ -779,7 +781,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         framePaint.color = frameColor
         when (highlightBy) {
             HighlightBy.StringIndex -> scrollToStringIndex(highlightedStringIndex, animationDuration)
-            HighlightBy.ToneIndex -> scrollToStringIndex(stringIndexForCenteringToneIndex, animationDuration)
+            HighlightBy.MusicalNote -> scrollToStringIndex(stringIndexForCenteringNote, animationDuration)
             else -> {}
         }
         invalidate()
@@ -805,27 +807,24 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             paddingLeft.toFloat() + framePaint.strokeWidth, yPos,
             width.toFloat() - paddingRight - framePaint.strokeWidth, yPos, stringPaint[styleIndex]
         )
-        canvas.drawRect(
-            xPos - 0.5f * labelWidthExpanded,
-            yPos - 0.5f * labelHeight,
-            xPos + 0.5f * labelWidthExpanded,
-            yPos + 0.5f * labelHeight,
-            labelBackgroundPaint[styleIndex]
-        )
-
-        stringInfo.layouts[styleIndex]?.let { layout ->
-            canvas.withTranslation(
-                xPos - 0.5f * layout.width, yPos - 0.5f * layout.height
-            ) {
-                layout.draw(this)
-            }
+        if (stringInfo.styleIndex != styleIndex || stringInfo.label == null) {
+            stringInfo.label = MusicalNoteLabel(stringInfo.note, labelPaint[styleIndex], context,
+                labelBackgroundPaint[styleIndex], labelCornerRadius, LabelGravity.Center,
+                enableOctaveIndex = true, labelBackgroundPadding, labelBackgroundPadding,
+                labelBackgroundPadding, labelBackgroundPadding)
+            stringInfo.styleIndex = styleIndex
         }
+        stringInfo.label?.drawToCanvasWithFixedSizeBackground(xPos, yPos, labelWidthExpanded, labelHeight,
+            anchor = LabelAnchor.Center, canvas = canvas)
     }
 
-    private fun getNextCenteringStringIndexWithToneIndex(stringIndex: Int, toneIndex: Int): Int {
+    private fun getNextCenteringStringIndexOfNote(stringIndex: Int, note: MusicalNote?): Int {
+        if (note == null)
+            return stringIndex
+
         var newCenteringStringIndex = -1
         for (i in stringIndex + 1 until strings.size) {
-            if (strings[i].toneIndex == toneIndex) {
+            if (strings[i].note == note) {
                 newCenteringStringIndex = i
                 break
             }
@@ -833,7 +832,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
         if (newCenteringStringIndex == -1) {
             for (i in 0 until min(stringIndex + 1, strings.size)) {
-                if (strings[i].toneIndex == toneIndex) {
+                if (strings[i].note == note) {
                     newCenteringStringIndex = i
                     break
                 }
@@ -842,37 +841,28 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         return newCenteringStringIndex
     }
 
-    private fun getClosestStringWithToneIndex(stringIndexRef: Int, toneIndex: Int): Int {
+    private fun getClosestStringWithNote(stringIndexRef: Int, note: MusicalNote?): Int {
+        if (note == null)
+            return stringIndexRef
         var dist = Int.MAX_VALUE
         var index = 0
         // search positions greater than the reference index
         for (i in max(0, stringIndexRef) until strings.size) {
-            if (strings[i].toneIndex == toneIndex) {
+            if (strings[i].note == note) {
                 dist = i - stringIndexRef
                 index = i
                 break
             }
         }
         // search positions smaller than the reference index
-        for (i in min(strings.size-1, stringIndexRef-1) downTo 0) {
-            if (strings[i].toneIndex == toneIndex) {
+        for (i in min(strings.size - 1, stringIndexRef - 1) downTo 0) {
+            if (strings[i].note == note) {
                 if (stringIndexRef - i < dist)
                     index = i
                 break
             }
         }
         return index
-    }
-
-    private fun buildLabelLayout(label: CharSequence?, index: Int): StaticLayout? {
-        return if (label != null) {
-            val desiredWidth = ceil(StaticLayout.getDesiredWidth(label, labelPaint[index])).toInt()
-            val builder =
-                StaticLayout.Builder.obtain(label, 0, label.length, labelPaint[index], desiredWidth)
-            builder.build()
-        } else {
-            null
-        }
     }
 
     private fun getStringDrawingPositionX(stringIndex: Int): Float {
@@ -910,8 +900,10 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     private fun updateStringPositionVariables(w: Int, h: Int) {
         val effectiveWidth = w - paddingLeft - paddingRight - 2 * framePaint.strokeWidth
+        // Instead of labelWidth we could get a minimum label width and then use max(minimumLabelWidth, labelWidth)
         numCols = (floor((effectiveWidth - labelSpacing) / (labelWidth + labelSpacing))).toInt()
-        numCols = max(1, min(numCols, strings.size))
+        //numCols = max(1, min(numCols, strings.size))
+        numCols = max(1, numCols)
         labelWidthExpanded = (effectiveWidth - labelSpacing) / numCols - labelSpacing
         colWidth = (effectiveWidth - labelSpacing) / numCols
         rowHeight = getRowHeight()
@@ -968,7 +960,6 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     companion object {
-        const val NO_ACTIVE_TONE_INDEX = Int.MAX_VALUE
         const val NO_ANCHOR = Float.MAX_VALUE
     }
 }

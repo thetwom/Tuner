@@ -11,7 +11,10 @@ import androidx.preference.DialogPreference
 import androidx.preference.PreferenceDialogFragmentCompat
 import com.google.android.material.button.MaterialButton
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.*
+import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments.NoteNameScaleFactory
+import de.moekadu.tuner.temperaments.TemperamentType
+import de.moekadu.tuner.temperaments.legacyNoteIndexToNote
 import de.moekadu.tuner.views.NoteSelector
 
 class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
@@ -106,9 +109,7 @@ class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
             // present notes from C0 to C10 (or something similar for non-standard 12-tone scales)
             val noteIndexBegin = noteNameScale.getIndexOfNote(noteNameScale.notes[0].copy(octave = 0))
             val noteIndexEnd = noteNameScale.getIndexOfNote(noteNameScale.notes[0].copy(octave = 10)) + 1
-            referenceNoteView?.setNotes(noteIndexBegin, noteIndexEnd, noteNameScale, activeReferenceNote) {
-                it.toCharSequence(ctx)
-            }
+            referenceNoteView?.setNotes(noteIndexBegin, noteIndexEnd, noteNameScale, activeReferenceNote)
         }
 
         editTextView?.setText(currentFrequency.toString())

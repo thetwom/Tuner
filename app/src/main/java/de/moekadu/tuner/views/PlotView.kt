@@ -2103,7 +2103,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     fun musicalNoteLabelCreator(firstNoteIndex: Int, scale: NoteNameScale)
             : ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, padding: Float, cornerRadius: Float) -> Label?) {
         return { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
-            val noteIndex = index - firstNoteIndex
+            val noteIndex = index + firstNoteIndex
             val note = scale.getNoteOfIndex(noteIndex)
             MusicalNoteLabel(note, textPaint, context, backgroundPaint, cornerRadius, gravity, true, padding, padding, padding, padding)
         }
@@ -2371,7 +2371,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             )
         }
         val labelCreator = { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
-            val note = noteNameScale.getNoteOfIndex(index - noteIndexBegin)
+            val note = noteNameScale.getNoteOfIndex(index + noteIndexBegin)
             MusicalNoteLabel(note, textPaint, context, backgroundPaint, cornerRadius, gravity, true, padding, padding, padding, padding)
         }
         setXTicks(values, redraw, labelBounds, labelCreator)
@@ -2445,7 +2445,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             )
         }
         val labelCreator = { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
-            val note = noteNameScale.getNoteOfIndex(index - noteIndexBegin)
+            val note = noteNameScale.getNoteOfIndex(index + noteIndexBegin)
             MusicalNoteLabel(note, textPaint, context, backgroundPaint, cornerRadius, gravity, true, padding, padding, padding, padding)
         }
         setYTicks(values, redraw, labelBounds, labelCreator)

@@ -22,6 +22,7 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.dialogs.IconPickerDialogFragment
 import de.moekadu.tuner.instruments.instrumentDatabase
 import de.moekadu.tuner.preferences.AppPreferences
+import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.viewmodels.InstrumentEditorViewModel
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 import de.moekadu.tuner.viewmodels.TunerViewModel
@@ -30,6 +31,7 @@ import de.moekadu.tuner.views.NoteSelector
 import de.moekadu.tuner.views.StringView
 
 class InstrumentEditorFragment : Fragment() {
+    // TODO: in layout we should better use wrap content for height of notedetector and detectednoteviewer
     private val tunerViewModel: TunerViewModel by activityViewModels()
     private val viewModel: InstrumentEditorViewModel by activityViewModels()
     private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
@@ -121,13 +123,17 @@ class InstrumentEditorFragment : Fragment() {
             }
         }
 
-        tunerViewModel.noteNames.observe(viewLifecycleOwner) {
+        tunerViewModel.musicalScale.observe(viewLifecycleOwner) {
             updateNoteNamesInAllViews()
         }
 
-        tunerViewModel.preferFlat.observe(viewLifecycleOwner) {
-            updateNoteNamesInAllViews()
-        }
+//        tunerViewModel.noteNames.observe(viewLifecycleOwner) {
+//            updateNoteNamesInAllViews()
+//        }
+//
+//        tunerViewModel.preferFlat.observe(viewLifecycleOwner) {
+//            updateNoteNamesInAllViews()
+//        }
 
         viewModel.instrumentName.observe(viewLifecycleOwner) {
 //            Log.v("Tuner", "InstrumentEditorFragment: observe instrument name: new = |$it|, before = |${instrumentNameEditText?.text?.trim()}|, different? = ${instrumentNameEditText?.text?.trim()?.contentEquals(it)}")
@@ -141,16 +147,22 @@ class InstrumentEditorFragment : Fragment() {
         }
 
         viewModel.strings.observe(viewLifecycleOwner) { strings ->
-            val noteNames = tunerViewModel.noteNames.value
-            val preferFlat = tunerViewModel.preferFlat.value ?: false
-            stringView?.setStrings(strings) { i ->
-                noteNames?.getNoteName(requireContext(), i, preferFlat = preferFlat) ?: i.toString()
+            //val noteNames = tunerViewModel.noteNames.value
+            //val preferFlat = tunerViewModel.preferFlat.value ?: false
+            tunerViewModel.musicalScale.value?.let { musicalScale ->
+                stringView?.setStrings(
+                    strings,
+                    isChromatic = false,
+                    musicalScale.noteNameScale,
+                    musicalScale.noteIndexBegin,
+                    musicalScale.noteIndexEnd
+                )
+                val selectedStringIndex = viewModel.selectedStringIndex.value ?: -1
+                if (selectedStringIndex in strings.indices)
+                    noteSelector?.setActiveNote(strings[selectedStringIndex], 150L)
+                else
+                    noteSelector?.setActiveNote(strings.lastOrNull(), 150L)
             }
-            val selectedStringIndex = viewModel.selectedStringIndex.value ?: -1
-            if (selectedStringIndex in strings.indices)
-                noteSelector?.setActiveNote(strings[selectedStringIndex], 150L)
-            else
-                noteSelector?.setActiveNote(strings.lastOrNull(), 150L)
         }
 
         viewModel.selectedStringIndex.observe(viewLifecycleOwner) { selectedStringIndex ->
@@ -163,7 +175,7 @@ class InstrumentEditorFragment : Fragment() {
         }
 
         stringView?.stringClickedListener = object : StringView.StringClickedListener {
-            override fun onStringClicked(stringIndex: Int, toneIndex: Int) {
+            override fun onStringClicked(stringIndex: Int, note: MusicalNote) {
                 viewModel.selectString(stringIndex)
             }
 
@@ -209,7 +221,7 @@ class InstrumentEditorFragment : Fragment() {
 //        Log.v("Tuner", "InstrumentEditorFragment.onStart()")
         askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
         tunerViewModel.setInstrument(instrumentDatabase[0])
-        tunerViewModel.setTargetNote(-1, TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
+        tunerViewModel.setTargetNote(-1, null)
     }
 
     override fun onStop() {
@@ -227,19 +239,17 @@ class InstrumentEditorFragment : Fragment() {
     }
 
     private fun updateNoteNamesInAllViews() {
-        val noteNames = tunerViewModel.noteNames.value ?: return
-        val preferFlat = tunerViewModel.preferFlat.value ?: false
+        //val noteNames = tunerViewModel.noteNames.value ?: return
+        //val preferFlat = tunerViewModel.preferFlat.value ?: false
+        val musicalScale = tunerViewModel.musicalScale.value ?: return
 
-        noteSelector?.setNotes(-50, 50) { i ->
-            noteNames.getNoteName(requireContext(), i, preferFlat = preferFlat)
-        }
-        detectedNoteViewer?.setNotes(-50, 50) { i ->
-            noteNames.getNoteName(requireContext(), i, preferFlat = preferFlat)
-        }
+        noteSelector?.setNotes(musicalScale.noteIndexBegin, musicalScale.noteIndexEnd,
+            musicalScale.noteNameScale, null)
+        detectedNoteViewer?.setNotes(
+            musicalScale.noteNameScale, musicalScale.noteIndexBegin, musicalScale.noteIndexEnd)
         viewModel.strings.value?.let { strings ->
-            stringView?.setStrings(strings) { i ->
-                noteNames.getNoteName(requireContext(), i, preferFlat = preferFlat)
-            }
+            stringView?.setStrings(strings, false, musicalScale.noteNameScale,
+                musicalScale.noteIndexBegin, musicalScale.noteIndexEnd)
         }
     }
 }

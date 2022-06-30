@@ -8,7 +8,6 @@ import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.StaticLayout
 import android.text.TextPaint
-import android.text.style.MetricAffectingSpan
 import androidx.core.graphics.withTranslation
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.BaseNote
@@ -59,11 +58,15 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint, context: Context
              */
             fun createNoteSubstring(note: MusicalNote, context: Context): String {
                 val specialNoteNameResourceId = specialNoteNameResourceIds[NoteNameStem.fromMusicalNote(note)]
-
-                return if (specialNoteNameResourceId == null)
-                    context.getString(baseNoteResourceIds[note.base]!!) + modifierStrings[note.modifier]!!
-                else
-                    context.getString(specialNoteNameResourceId)
+                val specialNoteName = specialNoteNameResourceId?.let {
+                    val s = context.getString(specialNoteNameResourceId)
+                    if (s == "" || s == "-")
+                        null
+                    else
+                        s
+                }
+                return specialNoteName
+                    ?: (context.getString(baseNoteResourceIds[note.base]!!) + modifierStrings[note.modifier]!!)
             }
 
             /** Create string for octave number.
@@ -84,25 +87,6 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint, context: Context
                 val octaveText = createOctaveSubstring(note.octave)
                 return LabelSubstrings(noteName, octaveText)
             }
-        }
-    }
-
-    /** Span for creating superscripts which are typed with a reduce size.
-     * @param scaleTextSize Scaling factor for making the superscript smaller.
-     * @param moveUpByPartOfAscent Defines how much the superscript should moved up. This is measured
-     *   by as parts of ascent of the font, e.g. 0.5f moves the number up by half of the ascent.
-     */
-    private class SmallSuperScriptSpan(val scaleTextSize: Float = 0.7f, val moveUpByPartOfAscent: Float = 0.4f) : MetricAffectingSpan() {
-        override fun updateDrawState(p0: TextPaint?) {
-            p0?.let { textPaint ->
-                textPaint.baselineShift += (moveUpByPartOfAscent * textPaint.ascent()).roundToInt()
-                textPaint.textSize = scaleTextSize * textPaint.textSize
-            }
-        }
-
-        override fun updateMeasureState(p0: TextPaint) {
-            p0.baselineShift += (moveUpByPartOfAscent * p0.ascent()).roundToInt()
-            p0.textSize = scaleTextSize * p0.textSize
         }
     }
 

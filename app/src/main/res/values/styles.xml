@@ -222,6 +222,7 @@
         <attr name="labelTextColor2" format="color"/>
         <attr name="labelTextColor3" format="color"/>
         <attr name="labelTextColor4" format="color"/>
+        <attr name="labelCornerRadius" format="dimension"/>
         <attr name="stringColor" format="color"/>
         <attr name="stringColor2" format="color"/>
         <attr name="stringColor3" format="color"/>
@@ -256,6 +257,7 @@
         <item name="labelTextColor2">?attr/colorOnSecondary</item>
         <item name="labelTextColor3">?attr/colorOnError</item>
         <item name="labelTextColor4">?attr/colorOnError</item>
+        <item name="labelCornerRadius">2dp</item>
         <item name="stringColor">?attr/colorPrimary</item>
         <item name="stringColor2">?attr/colorSecondary</item>
         <item name="stringColor3">?attr/colorError</item>
@@ -279,7 +281,7 @@
     <declare-styleable name="NoteSelector">
         <attr name="labelTextColor"/>
         <attr name="labelTextColor2"/>
-        <attr name="labelTextSize" format="dimension"/>
+        <attr name="labelTextSize"/>
         <attr name="windowColor" format="color"/>
         <attr name="windowStrokeWidth" format="dimension"/>
         <attr name="textPadding" format="dimension"/>

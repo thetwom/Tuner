@@ -3,8 +3,8 @@ package de.moekadu.tuner.temperaments
 import android.content.Context
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
-import android.text.style.SuperscriptSpan
 import de.moekadu.tuner.R
+import de.moekadu.tuner.views.SmallSuperScriptSpan
 
 private val baseNoteResourceIds = mapOf(
     BaseNote.C to R.string.c_note_name,
@@ -42,7 +42,7 @@ fun MusicalNote.toCharSequence(context: Context, printOption: MusicalNotePrintOp
 
     // if the special note name is "-", it means that for the given translation there actually
     // is not special note name.
-    if (specialNoteName != null && specialNoteName != "") {
+    if (specialNoteName != null && specialNoteName != "" && specialNoteName != "-") {
         spannableStringBuilder.append(specialNoteName)
         octaveToPrintIfEnabled = this.octave
     } else {
@@ -72,7 +72,7 @@ fun MusicalNote.toCharSequence(context: Context, printOption: MusicalNotePrintOp
 
         spannableStringBuilder.append(
             SpannableString(octaveToPrintIfEnabled.toString()).apply {
-                setSpan(SuperscriptSpan(),0, length,0)
+                setSpan(SmallSuperScriptSpan(),0, length,0)
             }
         )
     }

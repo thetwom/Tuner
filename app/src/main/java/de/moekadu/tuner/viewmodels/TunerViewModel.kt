@@ -41,10 +41,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.pow
-import kotlin.math.sqrt
+import kotlin.math.*
 
 class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -119,8 +116,8 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     val musicalScale: LiveData<MusicalScale>
         get() = _musicalScale
 
-    private val _noteNames = MutableLiveData<NoteNames>().apply { value = noteNames12Tone }
-    val noteNames: LiveData<NoteNames> get() = _noteNames
+//    private val _noteNames = MutableLiveData<NoteNames>().apply { value = noteNames12Tone }
+//    val noteNames: LiveData<NoteNames> get() = _noteNames
 
     private val _standardDeviation = MutableLiveData(0f)
     val standardDeviation: LiveData<Float> get() = _standardDeviation
@@ -139,10 +136,14 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     val targetNote: LiveData<TargetNote>
             get() = _targetNote
 
-    private var userDefinedTargetNoteIndex = AUTOMATIC_TARGET_NOTE_DETECTION
+    /** The selected string index in the string view, this is no live data since it is always changed togehter with the target note. */
+    var selectedStringIndex = -1
+        private set
+
+    private var userDefinedTargetNote: MusicalNote? = null
         set(value) {
             field = value
-            _isTargetNoteUserDefined.value = (field != AUTOMATIC_TARGET_NOTE_DETECTION)
+            _isTargetNoteUserDefined.value = (field != null) // null -> AUTOMATIC_TARGET_NOTE_DETECTION
         }
     private val _isTargetNoteUserDefined = MutableLiveData(false)
     val isTargetNoteUserDefined: LiveData<Boolean>
@@ -225,11 +226,12 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     init {
 //        Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
 
-//        sampleSource.testFunction = { t ->
-//            val freq = 400 + 2*t
-//           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
-//            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
-//        }
+        sampleSource.testFunction = { t ->
+            //val freq = 400 + 2*t
+            val freq = 440
+           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
+            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
+        }
 //        sampleSource.testFunction = { t ->
 //            val freq = 440f
 //            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
@@ -292,18 +294,18 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                         _tunerResults.value = results
                         if (pitchFrequency > 0.0f) {
                             pitchHistory.appendValue(pitchFrequency, it.noise)
-                            if (userDefinedTargetNoteIndex == AUTOMATIC_TARGET_NOTE_DETECTION) {
+                            if (userDefinedTargetNote == null) { // null -> AUTOMATIC_TARGET_NOTE_DETECTION
                                 pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
-                                    val oldTargetNoteIndex = targetNoteValue.noteIndex
+                                    val oldTargetNote = targetNoteValue.note
                                     targetNoteValue.setTargetNoteBasedOnFrequency(frequency)
-                                    if (targetNoteValue.noteIndex != oldTargetNoteIndex)
+                                    if (targetNoteValue.note != oldTargetNote)
                                         _targetNote.value = targetNoteValue
                                 }
                                 //changeTargetNoteSettings(toneIndex = pitchHistory.currentEstimatedToneIndex)
                             }
 
                             pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
-                                updateFrequencyPlotRange(targetNoteValue.noteIndex, frequency)
+                                updateFrequencyPlotRange(targetNoteValue.note, frequency)
                             }
                         }
                     }
@@ -322,31 +324,33 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         sampleSource.stopSampling()
     }
 
-    //fun setTargetNote(stringIndex: Int = -1, toneIndex: Int = AUTOMATIC_TARGET_NOTE_DETECTION) {
-    fun setTargetNote(stringIndex: Int, toneIndex: Int) {
+    /** Set a new target note and string index.
+     *  @param stringIndex Index of string to highlight in string view or -1 for no string-based
+     *    highlighting.
+     *  @param note Target note, or note == null for automatic note detection.
+     * */
+    fun setTargetNote(stringIndex: Int, note: MusicalNote?) {
 //        Log.v("Tuner", "TunerViewModel.setTargetNote: toneIndex=$toneIndex")
-        val oldTargetNote = targetNoteValue.noteIndex
-        val oldStringIndex = targetNoteValue.stringIndex
+        val oldTargetNote = targetNoteValue.note
+        selectedStringIndex = stringIndex
 
-        if (toneIndex == AUTOMATIC_TARGET_NOTE_DETECTION) {
-            userDefinedTargetNoteIndex = AUTOMATIC_TARGET_NOTE_DETECTION
+        if (note == null) { // -> AUTOMATIC_TARGET_NOTE_DETECTION
+            userDefinedTargetNote = null
             val frequency = pitchHistory.historyAveraged.value?.lastOrNull()
             targetNoteValue.setTargetNoteBasedOnFrequency(frequency, true)
         } else {
-            userDefinedTargetNoteIndex = toneIndex
-            targetNoteValue.setToneIndexExplicitly(toneIndex)
+            userDefinedTargetNote = note
+            targetNoteValue.setNoteExplicitly(note)
             //changeTargetNoteSettings(toneIndex = toneIndex)
         }
 
-        targetNoteValue.stringIndex = stringIndex
-
-        if (targetNoteValue.noteIndex != oldTargetNote) {
+        if (targetNoteValue.note != oldTargetNote) {
             pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
-                updateFrequencyPlotRange(targetNoteValue.noteIndex, frequency)
+                updateFrequencyPlotRange(targetNoteValue.note, frequency)
             }
         }
 
-        if (targetNoteValue.noteIndex != oldTargetNote || targetNoteValue.stringIndex != oldStringIndex)
+        if (targetNoteValue.note != oldTargetNote)
             _targetNote.value = targetNoteValue
     }
 
@@ -356,7 +360,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         if (targetNoteValue.instrument.stableId != instrument.stableId) {
             //Log.v("Tuner", "TunerViewModel.setInstrument ...")
             targetNoteValue.instrument = instrument
-            setTargetNote(-1, AUTOMATIC_TARGET_NOTE_DETECTION)
+            setTargetNote(-1, null)
         }
 //        userDefinedTargetNoteIndex = AUTOMATIC_TARGET_NOTE_DETECTION
 //        pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
@@ -371,14 +375,15 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 //        }
     }
 
-    fun setNoteNames(noteNames: NoteNames) {
-        _noteNames.value = noteNames
-    }
+//    fun setNoteNames(noteNames: NoteNames) {
+//        _noteNames.value = noteNames
+//    }
 
-    private fun updateFrequencyPlotRange(targetNoteIndex: Int, currentFrequency: Float) {
+    private fun updateFrequencyPlotRange(targetNote: MusicalNote, currentFrequency: Float) {
         val minOld = frequencyPlotRangeValues[0]
         val maxOld = frequencyPlotRangeValues[1]
 
+        val targetNoteIndex = musicalScaleValue.getNoteIndex(targetNote)
         val frequencyToneIndex = musicalScaleValue.getClosestNoteIndex(currentFrequency)
         val minIndex = min(frequencyToneIndex - 0.55f, targetNoteIndex - 1.55f)
         val maxIndex = max(frequencyToneIndex + 0.55f, targetNoteIndex + 1.55f)
@@ -412,7 +417,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         if (changed) {
             _targetNote.value = targetNoteValue
             pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
-                updateFrequencyPlotRange(targetNoteValue.noteIndex, frequency)
+                updateFrequencyPlotRange(targetNoteValue.note, frequency)
             }
         }
     }

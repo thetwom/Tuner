@@ -207,13 +207,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
             null
 
         // set the new note scale in the root note selector and select the required note
-        rootNoteSelector?.setNotes(noteIndexBegin, noteIndexEnd, musicalScaleLocal.noteNameScale, rootNote) {
-            val ctx = context
-            if (ctx == null)
-                ""
-            else
-                it.toCharSequence(ctx, withOctave = false)
-        }
+        rootNoteSelector?.setNotes(noteIndexBegin, noteIndexEnd, musicalScaleLocal.noteNameScale, rootNote)
 
         val selectedRootNote = rootNoteSelector?.activeNote ?: musicalScaleLocal.noteNameScale.notes[0].copy(octave = 4)
         updateCentAndRatioTable(selectedRootNote, musicalScaleLocal.noteNameScale, centArray, ratioArray)
