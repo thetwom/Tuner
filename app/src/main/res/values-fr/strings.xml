@@ -1,13 +1,6 @@
 <resources>
     <string name="app_name">Tuner</string>
 
-    <!--    <string name="percent">%d&#x200A;\%</string>-->
-    <string name="percent" translatable="false">%d&#x200A;%%</string>
-    <string name="hertz" translatable="false">%.0f&#x200A;Hz</string>
-    <string name="hertz_2f" translatable="false">%.2f&#x200A;Hz</string>
-    <string name="hertz_str" translatable="false">%s&#x200A;Hz</string>
-    <string name="seconds" translatable="false">%.2f&#x200A;s</string>
-
     <string name="a4_frequency">Fréquence de la note A<sup><small>4</small></sup></string>
 
     <string name="windowing_function">Fenêtrage</string>
@@ -26,7 +19,7 @@
     <string name="settings">Paramètres</string>
     <string name="overlap">Chevauchement de la fenêtre</string>
     <string name="window_size">Taille de la fenêtre</string>
-    <string name="minimum_frequency">"Fréquence minimale&nbsp;:"</string>
+    <string name="minimum_frequency">Fréquence minimale\u00A0:</string>
     <string name="no_audio_recording_permission">Aucune permission d’enregistrement audio accordée.</string>
     <string name="pitch_history_duration">Durée de l’historique de la hauteur</string>
     <string name="pitch_history_num_faulty_values">Allez à la nouvelle hauteur</string>
@@ -43,21 +36,18 @@
     <string name="about">À propos</string>
     <string name="about_message">Tuner app\nVersion: %s\nLicence: GPLv3</string>
     <string name="reset_all_settings">Réinitialiser tous les paramètres</string>
-    <string name="reset_settings_prompt">Êtes-vous sûr de vouloir réinitialiser tous les paramètres&nbsp;?</string>
+    <string name="reset_settings_prompt">Êtes-vous sûr de vouloir réinitialiser tous les paramètres\u00A0?</string>
     <string name="yes">Oui</string>
     <string name="no">Non</string>
     <string name="autocorrelation">autocorrélation</string>
     <string name="pitch_history">historique des hauteurs</string>
     <string name="spectrum">spectre</string>
-    <string name="cent" translatable="false">%+d&#x200A;&#162;</string>
-    <string name="cent_nosign" translatable="false">%d&#x200A;&#162;</string>
     <string name="keep_screen_on">Maintenir l’écran allumé</string>
     <string name="samples">échantillons</string>
     <string name="max_noise">Bruit ambiant maximum autorisé</string>
     <string name="max_noise_summary">Ignorer l’entrée quand le bruit dépasse %d&#x200A;%%.</string>
     <string name="scientific_mode">Mode scientifique</string>
     <string name="tolerance_in_cents">Tolérance</string>
-    <string name="tolerance_summary" translatable="false">&#177;%d&#x200A;&#162;</string>
     <string name="expert">Expert</string>
     <string name="basic">Basique</string>
     <string name="others">Autres</string>
@@ -92,8 +82,8 @@
     <string name="edit_instrument">Éditer l’instrument</string>
     <string name="predefined_instruments">Défaut</string>
     <string name="custom_instruments">Personnalisé</string>
-    <string name="file_empty">Le fichier est vide&nbsp;: %s</string>
-    <string name="file_invalid">Le fichier est invalide&nbsp;: %s</string>
+    <string name="file_empty">Le fichier est vide\u00A0: %s</string>
+    <string name="file_invalid">Le fichier est invalide\u00A0: %s</string>
     <string name="instrument_deleted">Instrument supprimé</string>
     <string name="undo">Annuler</string>
     <string name="add_new_tuning">Ajouter un nouvel accordage</string>
@@ -170,12 +160,9 @@
     <string name="tuning_summary_no_desc">%s, %s</string>
     <string name="test_tuning">Accordage de test</string>
     <string name="details">Détails</string>
-    <string name="fraction" translatable="false">%d\u2044%d</string>
     <string name="pythagorean_comma">%d\u2044%d&#x200A;pC</string>
     <string name="syntonic_comma">%d\u2044%d&#x200A;sC</string>
     <string name="schisma">%d\u2044%d&#x200A;sch</string>
-    <string name="plus_correction" translatable="false">" + "</string>
-    <string name="minus_correction" translatable="false">" - "</string>
     <string name="pythagorean_comma_desc">pC: Comma pythagoricien, 531441\u2044524288\nsC: Comma syntonique, 81\u204480\nsch: Schisma, 32805\u204432768</string>
     <string name="circle_of_fifths">Cycle des quintes</string>
     <string name="set_default">Réinitialiser aux valeurs par défaut</string>
