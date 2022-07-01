@@ -1,0 +1,190 @@
+<resources>
+    <string name="app_name">Tuner</string>
+
+    <!--    <string name="percent">%d&#x200A;\%</string>-->
+    <string name="percent" translatable="false">%d&#x200A;%%</string>
+    <string name="hertz" translatable="false">%.0f&#x200A;Hz</string>
+    <string name="hertz_2f" translatable="false">%.2f&#x200A;Hz</string>
+    <string name="hertz_str" translatable="false">%s&#x200A;Hz</string>
+    <string name="seconds" translatable="false">%.2f&#x200A;s</string>
+
+    <string name="a4_frequency">Fréquence de la note A<sup><small>4</small></sup></string>
+
+    <string name="windowing_function">Fenêtrage</string>
+    <string name="window_hamming">Fenêtre de Hamming</string>
+    <string name="window_hann">Fenêtre de Hann</string>
+    <string name="no_window">Pas de fenêtrage</string>
+
+    <string name="appearance">Apparence</string>
+    <string name="dark_appearance">Apparence sombre</string>
+    <string name="light_appearance">Apparence claire</string>
+    <string name="system_appearance">Selon les paramètres du système</string>
+
+    <string name="dark_appearance_short">Sombre</string>
+    <string name="light_appearance_short">Clair</string>
+    <string name="system_appearance_short">Auto</string>
+    <string name="settings">Paramètres</string>
+    <string name="overlap">Chevauchement de la fenêtre</string>
+    <string name="window_size">Taille de la fenêtre</string>
+    <string name="minimum_frequency">"Fréquence minimale&nbsp;:"</string>
+    <string name="no_audio_recording_permission">Aucune permission d’enregistrement audio accordée.</string>
+    <string name="pitch_history_duration">Durée de l’historique de la hauteur</string>
+    <string name="pitch_history_num_faulty_values">Allez à la nouvelle hauteur</string>
+    <plurals name="pitch_history_num_faulty_values_summary">
+        <item quantity="one">Aller directement à la nouvelle valeur de la hauteur</item>
+        <item quantity="other">Après %d valeurs similaires de hauteur</item>
+    </plurals>
+    <string name="use_hint">Utiliser les valeurs précédentes pour améliorer l’estimation de la hauteur</string>
+    <string name="num_moving_average">Moyenne glissante</string>
+    <plurals name="num_moving_average_summary">
+        <item quantity="one">Pas de moyenne</item>
+        <item quantity="other">Moyenne sur %d valeurs de hauteur</item>
+    </plurals>
+    <string name="about">À propos</string>
+    <string name="about_message">Tuner app\nVersion: %s\nLicence: GPLv3</string>
+    <string name="reset_all_settings">Réinitialiser tous les paramètres</string>
+    <string name="reset_settings_prompt">Êtes-vous sûr de vouloir réinitialiser tous les paramètres&nbsp;?</string>
+    <string name="yes">Oui</string>
+    <string name="no">Non</string>
+    <string name="autocorrelation">autocorrélation</string>
+    <string name="pitch_history">historique des hauteurs</string>
+    <string name="spectrum">spectre</string>
+    <string name="cent" translatable="false">%+d&#x200A;&#162;</string>
+    <string name="cent_nosign" translatable="false">%d&#x200A;&#162;</string>
+    <string name="keep_screen_on">Maintenir l’écran allumé</string>
+    <string name="samples">échantillons</string>
+    <string name="max_noise">Bruit ambiant maximum autorisé</string>
+    <string name="max_noise_summary">Ignorer l’entrée quand le bruit dépasse %d&#x200A;%%.</string>
+    <string name="scientific_mode">Mode scientifique</string>
+    <string name="tolerance_in_cents">Tolérance</string>
+    <string name="tolerance_summary" translatable="false">&#177;%d&#x200A;&#162;</string>
+    <string name="expert">Expert</string>
+    <string name="basic">Basique</string>
+    <string name="others">Autres</string>
+    <string name="instrument_icon">Icône d’instrument</string>
+
+    <string name="chromatic">Chromatique</string>
+    <string name="guitar_eadgbe">Guitare à 6 cordes</string>
+    <string name="bass_eadg">Basse à 4 cordes</string>
+    <string name="bass_beadg">Basse à 5 cordes</string>
+    <string name="ukulele_gcea">Ukulélé</string>
+
+    <string name="c_note_name">C</string>
+    <string name="csharp_note_name">-</string>
+    <string name="d_note_name">D</string>
+    <string name="dsharp_note_name">-</string>
+    <string name="e_note_name">E</string>
+    <string name="f_note_name">F</string>
+    <string name="fsharp_note_name">-</string>
+    <string name="g_note_name">G</string>
+    <string name="gsharp_note_name">-</string>
+    <string name="a_note_name">A</string>
+    <string name="asharp_note_name">-</string>
+    <string name="b_note_name">B</string>
+    <string name="violin_gdae">Violon</string>
+    <string name="abort">Annuler</string>
+    <string name="instrument_name">Nom d’instrument</string>
+    <string name="clear_instrument_name">Effacer le nom d’instrument</string>
+    <string name="add_note">Ajouter un note</string>
+    <string name="delete_note">Supprimer une note</string>
+    <string name="lately_detected_notes">Dernière notes détectées</string>
+    <string name="done">Fait</string>
+    <string name="edit_instrument">Éditer l’instrument</string>
+    <string name="predefined_instruments">Défaut</string>
+    <string name="custom_instruments">Personnalisé</string>
+    <string name="file_empty">Le fichier est vide&nbsp;: %s</string>
+    <string name="file_invalid">Le fichier est invalide&nbsp;: %s</string>
+    <string name="instrument_deleted">Instrument supprimé</string>
+    <string name="undo">Annuler</string>
+    <string name="add_new_tuning">Ajouter un nouvel accordage</string>
+    <string name="pick_icon">Choisir une icône</string>
+    <string name="copy_instrument">Copier l’instrument</string>
+    <string name="close_expansion">Fermer les icônes dépliées</string>
+    <string name="copy_extension">%s (copie)</string>
+    <string name="failed_to_archive_instruments">Impossible d’enregistrer les instruments dans le fichier</string>
+    <string name="database_saved">Enregistrement des instruments dans \"%s\".</string>
+    <string name="database_empty">Il n’y a pas d’instrument à enregistrer.</string>
+    <plurals name="load_instruments">
+        <item quantity="one">Chargement d’%d instrument</item>
+        <item quantity="other">Chargement de %d instruments</item>
+    </plurals>
+    <string name="replace_current_list">Remplacer la liste actuelle</string>
+    <string name="prepend_current_list">Ajouter en haut de la liste actuelle</string>
+    <string name="append_current_list">Ajouter en bas de la liste actuelle</string>
+    <string name="share">Partager les instruments</string>
+    <plurals name="sharing_num_instruments">
+        <item quantity="one">Partager %d instrument</item>
+        <item quantity="other">Partager %d instruments</item>
+    </plurals>
+    <string name="no_instruments_for_sharing">Il n’y a pas d’instrument à partager.</string>
+    <string name="load_from_disk">Charger les instruments depuis un fichier</string>
+    <string name="save_to_disk">Enregistrer les instruments dans un fichier</string>
+    <string name="dflat_note_name">-</string>
+    <string name="eflat_note_name">-</string>
+    <string name="esharp_note_name">-</string>
+    <string name="gflat_note_name">-</string>
+    <string name="aflat_note_name">-</string>
+    <string name="bflat_note_name">-</string>
+    <string name="bsharp_note_name">-</string>
+    <string name="prefer_flat">Préférer \u266D à \u266F</string>
+    <string name="viola_cgda">Alto</string>
+    <string name="cello_cgda">Violoncelle</string>
+    <string name="double_bass_eadg">Contrebasse</string>
+    <string name="equal_temperament_12">Gamme tempérée</string>
+    <string name="equal_temperament_12_desc">12 notes par octave</string>
+    <string name="pythagorean_tuning">Accord pythagoricien</string>
+    <string name="pure_tuning">Intonation juste</string>
+    <string name="pure_tuning_desc">à quintes et tierces justes</string>
+    <string name="quarter_comma_mean_tone">Mésotonique ¼ comma</string>
+    <string name="quarter_comma_mean_tone_desc">Tierce majeure parfaite</string>
+    <string name="third_comma_mean_tone">Mésotonique ⅓ comma</string>
+    <string name="third_comma_mean_tone_desc">Tierce mineure parfaite</string>
+    <string name="werckmeister_iii">Werckmeister III</string>
+    <string name="werckmeister_iii_desc">Divisions ¼ comma</string>
+    <string name="werckmeister_iv">Werckmeister IV</string>
+    <string name="werckmeister_iv_desc">Divisions ⅓ comma</string>
+    <string name="werckmeister_v">Werckmeister V</string>
+    <string name="werckmeister_v_desc">Autres divisions ¼ comma</string>
+    <string name="werckmeister_vi">Werckmeister VI</string>
+    <string name="werckmeister_vi_desc">Septenarius</string>
+    <string name="kirnberger1">Kirnberger I</string>
+    <string name="kirnberger1_desc">Un comma syntonique</string>
+    <string name="kirnberger2">Kirnberger II</string>
+    <string name="kirnberger2_desc">Divisions ½ comma syntonique</string>
+    <string name="kirnberger3">Kirnberger III</string>
+    <string name="kirnberger3_desc">Divisions ¼ comma syntonique</string>
+    <string name="neidhardt1">Neidhardt 1</string>
+    <string name="neidhardt1_desc">Pour un village, 1732</string>
+    <string name="neidhardt2">Neidhardt 2</string>
+    <string name="neidhardt2_desc">Pour une petite ville, 1732</string>
+    <string name="neidhardt3">Neidhardt 3</string>
+    <string name="neidhardt3_desc">Pour une grande ville, 1732</string>
+    <string name="valotti">Valotti</string>
+    <string name="young2">Young 2</string>
+    <string name="reference_frequency">Fréquence de référence</string>
+    <string name="frequency">Fréquence</string>
+    <string name="standard_pitch">Définir la hauteur standard</string>
+    <string name="temperament">Tempérament</string>
+    <string name="root_note">Note de base</string>
+    <string name="tuning_summary">%s, %s, %s</string>
+    <string name="tuning_summary_no_desc">%s, %s</string>
+    <string name="test_tuning">Accordage de test</string>
+    <string name="details">Détails</string>
+    <string name="fraction" translatable="false">%d\u2044%d</string>
+    <string name="pythagorean_comma">%d\u2044%d&#x200A;pC</string>
+    <string name="syntonic_comma">%d\u2044%d&#x200A;sC</string>
+    <string name="schisma">%d\u2044%d&#x200A;sch</string>
+    <string name="plus_correction" translatable="false">" + "</string>
+    <string name="minus_correction" translatable="false">" - "</string>
+    <string name="pythagorean_comma_desc">pC: Comma pythagoricien, 531441\u2044524288\nsC: Comma syntonique, 81\u204480\nsch: Schisma, 32805\u204432768</string>
+    <string name="circle_of_fifths">Cycle des quintes</string>
+    <string name="set_default">Réinitialiser aux valeurs par défaut</string>
+    <string name="acknowledged">Accepté</string>
+    <string name="no_instruments_selected">Aucun instrument sélectionné.</string>
+    <string name="select_instruments">Sélectionner des instruments</string>
+    <string name="select_instrument">Instruments</string>
+    <string name="share2">Partager</string>
+    <string name="select_all">Tout sélectionner</string>
+    <string name="black_night_mode">Arrière-plan noir en mode sombre</string>
+    <string name="system_color_accents">Couleur d’accentuation du système</string>
+</resources>
