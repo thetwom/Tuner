@@ -2,8 +2,8 @@ package de.moekadu.tuner
 
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteNameScale
 import de.moekadu.tuner.temperaments.NoteModifier
+import de.moekadu.tuner.temperaments.NoteNameScale
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -27,8 +27,8 @@ class MusicalNoteTest {
         )
 
         val scale = NoteNameScale(
-            MusicalNote(BaseNote.A, NoteModifier.None, 4),
-            notes
+            notes,
+            MusicalNote(BaseNote.A, NoteModifier.None, 4)
         )
 
         assertEquals(0, scale.getIndexOfNote(MusicalNote(BaseNote.A, NoteModifier.None, 4)))
