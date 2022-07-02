@@ -587,19 +587,19 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 width - paddingRight.toFloat() - framePaint.strokeWidth + 0.5f * anchorDrawable.width
             }
 
-            if (activeToneStyle == 1) {
+            if (activeStyleIndex == 1) {
                 scrollCenterDrawableNeutral.drawToCanvas(
                     xPositionScrollDrawable,
                     yPosition,
                     LabelAnchor.Center, canvas
                 )
-            } else if (activeToneStyle == 2) {
+            } else if (activeStyleIndex == 2) {
                 scrollCenterDrawablePositive.drawToCanvas(
                     xPositionScrollDrawable,
                     yPosition,
                     LabelAnchor.Center, canvas
                 )
-            } else if (activeToneStyle == 3) {
+            } else if (activeStyleIndex == 3) {
                 scrollCenterDrawableNegative.drawToCanvas(
                     xPositionScrollDrawable,
                     yPosition,

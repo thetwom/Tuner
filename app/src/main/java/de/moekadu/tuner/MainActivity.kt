@@ -40,6 +40,16 @@ import de.moekadu.tuner.preferences.AppearancePreference
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 
 class MainActivity : AppCompatActivity() {
+    // TODO: in reference frequency dialog, the note selector is not correctly initialized
+    // TODO: check if the noteselector-not-initialed problem occurs elsewhere
+    // TODO: accuracyincreaser-test fails
+    // TODO: temperament dialog does not update details when temperament changes
+    //      temperamtn setting shows octave index in setting summary, at start, it does not even show anything for the ref note
+    // TODO: anchor-drawable should use round edges
+    // TODO: prefer flat does not work in most fragments
+    // TODO: text sizes in scientific view are too small, ticks are missing padding, right margin is too much
+    // TODO: baseline-alignment for marks
+    // TODO: plot titles seem to be centered at whole width and not over plot windows (tick padding should be excluded when computing the center)
     enum class TunerMode {Simple, Scientific, Unknown}
 
     private val instrumentsViewModel: InstrumentsViewModel by viewModels {

@@ -234,7 +234,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
                                         centArray: FloatArray, ratioArray: Array<RationalNumber>?) {
         val ctx = context ?: return
         val rootNoteIndex = noteNameScale.getIndexOfNote(rootNote)
-        require(rootNoteIndex >= 0)
+        //require(rootNoteIndex >= 0)
 
         tableAdapter.setEntries(
             Array(centArray.size) {

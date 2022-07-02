@@ -33,10 +33,7 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.dialogs.AboutDialog
 import de.moekadu.tuner.dialogs.ResetSettingsDialog
 import de.moekadu.tuner.notedetection.percentToPitchHistoryDuration
-import de.moekadu.tuner.preferences.ReferenceNotePreference
-import de.moekadu.tuner.preferences.ReferenceNotePreferenceDialog
-import de.moekadu.tuner.preferences.TemperamentPreference
-import de.moekadu.tuner.preferences.TemperamentPreferenceDialog
+import de.moekadu.tuner.preferences.*
 import de.moekadu.tuner.temperaments.*
 import kotlin.math.pow
 import kotlin.math.roundToInt
