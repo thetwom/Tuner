@@ -877,8 +877,6 @@ private class PlotMarks(transformation: PlotTransformation,
     /** The bounding box of all marks (this does not take the label size into account) */
     val boundingBox = RectF(0f, 0f, 0f, 0f)
 
-    private var maxLabelWidth = 0f
-    private var maxLabelHeight = 0f
     /** Current style index, which will be used for drawing marks.
      *   (0 <= styleIndex < numStyles, where numStyles is colors.size)
      */
@@ -1022,7 +1020,7 @@ private class PlotMarks(transformation: PlotTransformation,
             MarkLabelBackgroundSize.FitIndividually -> null
         }
         labelHeight = when (backgroundSizeType) {
-            MarkLabelBackgroundSize.FitLargest -> maxLabelSizes[styleIndex]?.maxWidth
+            MarkLabelBackgroundSize.FitLargest -> maxLabelSizes[styleIndex]?.maxHeight
             MarkLabelBackgroundSize.FitIndividually -> null
         }
 
@@ -1041,11 +1039,14 @@ private class PlotMarks(transformation: PlotTransformation,
         if (hasOnlyYLineMarks) {
             if (marks.size > 1)
                 require(marks[1].xPositionTransformed > marks[0].xPositionTransformed)
+            val maxLabelWidth = (maxLabelSizes[styleIndex]?.maxWidth ?: 0f) + 2 * labelPadding
             startIndex = marks.binarySearchBy(viewBounds.left - maxLabelWidth) {it.xPositionTransformed}
             endIndex = marks.binarySearchBy(viewBounds.right + maxLabelWidth) {it.xPositionTransformed}
         } else if (hasOnlyXLineMarks) {
             if (marks.size > 1)
-                require(marks[1].yPositionTransformed > marks[0].yPositionTransformed)
+                require(marks[1].yPositionTransformed > marks[0].yPositionTransformed) // here we should also take equals, since marks could be at the same position, but then, we must make sure that the binary search finds cor correct one
+            val maxLabelHeight = (maxLabelSizes[styleIndex]?.maxHeight ?: 0f) + 2 * labelPadding
+//             Log.v("StaticLayoutTest", "PlotView.drawToCanvas: maxLabelHeight = $maxLabelHeight")
             startIndex = marks.binarySearchBy(viewBounds.top - maxLabelHeight) {it.yPositionTransformed}
             endIndex = marks.binarySearchBy(viewBounds.bottom + maxLabelHeight) {it.yPositionTransformed}
         }
@@ -1077,7 +1078,7 @@ private class PlotMarks(transformation: PlotTransformation,
 
             // TODO: treat baseline anchor (compute y position from baseline ...)
             var labelAnchorResolved: LabelAnchor
-            getLabelFromMark(mark, i, styleIndex)?.let { layout ->
+            getLabelFromMark(mark, styleIndex)?.let { layout ->
                 // override mark position based on anchor
                 if (x == DRAW_LINE) {
                     x = when (mark.anchor) {
@@ -1220,7 +1221,7 @@ private class PlotMarks(transformation: PlotTransformation,
         var maxDistanceAboveBaseline = 0f
         var maxDistanceBelowBaseline = 0f
         marks.forEachIndexed { index, mark ->
-            val label = getLabelFromMark(mark, index, styleIndex)
+            val label = getLabelFromMark(mark, styleIndex)
             maxWidth = max(label?.labelWidth ?: 0f, maxWidth)
             maxHeight = max(label?.labelHeight ?: 0f, maxHeight)
             maxDistanceAboveBaseline = max(label?.labelBaselineBelowTop ?: 0f, maxDistanceAboveBaseline)
@@ -1229,12 +1230,12 @@ private class PlotMarks(transformation: PlotTransformation,
         return Label.LabelSetBounds(maxWidth, maxHeight, maxDistanceAboveBaseline, maxDistanceBelowBaseline)
     }
 
-    private fun getLabelFromMark(mark: Mark, index: Int, styleIndex: Int): Label? {
+    private fun getLabelFromMark(mark: Mark, styleIndex: Int): Label? {
         if (mark.labelStyle == styleIndex && mark.layout != null)
             return mark.layout
         val creator = labelCreator ?: return null
         val label = creator(
-            index,
+            mark.index,
             if (mark.xPositionRaw == DRAW_LINE) null else mark.xPositionRaw,
             if (mark.yPositionRaw == DRAW_LINE) null else mark.yPositionRaw,
             textPaints[styleIndex],
@@ -1242,6 +1243,7 @@ private class PlotMarks(transformation: PlotTransformation,
             labelPadding, cornerRadius
         )
         mark.layout = label
+        mark.labelStyle = styleIndex
         return label
     }
 

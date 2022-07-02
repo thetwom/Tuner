@@ -359,6 +359,7 @@ class TunerFragmentSimple : Fragment() {
             musicalScale.getNoteFrequency(musicalScale.noteIndexBegin + it)
         }
 
+//        Log.v("Tuner", "TunerFragmentSimple: updatePitchPlotNoteNames: indexBegin=${musicalScale.noteIndexBegin}, noteFreq[57] = ${noteFrequencies[57]}, ${musicalScale.noteNameScale.getNoteOfIndex(musicalScale.noteIndexBegin + 57)}")
         // Update ticks in pitch history plot
         pitchPlot?.setYTicks(noteFrequencies, redraw = false,
             noteNameScale = musicalScale.noteNameScale, noteIndexBegin = musicalScale.noteIndexBegin

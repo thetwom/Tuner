@@ -5,10 +5,10 @@ class MusicalScaleFactory {
 
         fun create(
             temperamentType: TemperamentType,
-            referenceNote: MusicalNote?,
-            rootNote: MusicalNote?,
-            referenceFrequency: Float,
-            preferFlat: Boolean,
+            referenceNote: MusicalNote? = null,
+            rootNote: MusicalNote? = null,
+            referenceFrequency: Float = 440f,
+            preferFlat: Boolean = false,
             frequencyMin: Float = 16.0f,
             frequencyMax: Float = 17000.0f
         ): MusicalScale {

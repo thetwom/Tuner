@@ -92,9 +92,9 @@ open class MusicalScaleRatioBasedTemperaments(
         //require(rootNoteIndex < ratios.size - 1)
         val rootNoteCopy = rootNote.copy(octave = referenceNote.octave)
         val rootNoteIndex = noteNameScale.getIndexOfNote(rootNoteCopy)
-        require(rootNoteIndex >= 0)
+        //require(rootNoteIndex >= 0)
         referenceNoteIndex = noteNameScale.getIndexOfNote(referenceNote)
-        require(referenceNoteIndex >= 0)
+        //require(referenceNoteIndex >= 0)
 
         val octaveRatio = ratios.last() / ratios.first()
         var ratioIndexOfReferenceNote = (referenceNoteIndex - rootNoteIndex) % numberOfNotesPerOctave

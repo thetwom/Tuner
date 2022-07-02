@@ -37,7 +37,6 @@ import de.moekadu.tuner.preferences.TemperamentPreference
 import de.moekadu.tuner.temperaments.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -227,8 +226,8 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 //        Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
 
         sampleSource.testFunction = { t ->
-            //val freq = 400 + 2*t
-            val freq = 440
+            val freq = 400 + 2*t
+            //val freq = 440
            //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
             sin(t * 2 * kotlin.math.PI.toFloat() * freq)
         }

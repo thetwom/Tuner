@@ -1,7 +1,8 @@
 package de.moekadu.tuner
 
-import de.moekadu.tuner.temperaments.TemperamentType
 import de.moekadu.tuner.temperaments.MusicalScaleRatioBasedTemperaments
+import de.moekadu.tuner.temperaments.NoteNameScaleFactory
+import de.moekadu.tuner.temperaments.TemperamentType
 import org.junit.Assert.*
 import org.junit.Test
 import kotlin.math.pow
@@ -15,13 +16,15 @@ class MusicalScaleRatioBasedTemperamentsTest {
         rootNoteIndex: Int
     ) {
         val numNotesPerOctave = ratios.size - 1
+        val noteNameScale = NoteNameScaleFactory.create(TemperamentType.EDO12, false)
         val octRatio = (ratios.last() / ratios.first()).toFloat()
         val temperament = MusicalScaleRatioBasedTemperaments(
             TemperamentType.EDO12, // not important here
             ratios,
-            rootNoteIndex,
-            noteIndexAtReferenceFrequency,
+            noteNameScale,
+            noteNameScale.getNoteOfIndex(noteIndexAtReferenceFrequency),
             referenceFrequency,
+            noteNameScale.getNoteOfIndex(rootNoteIndex),
             referenceFrequency / 4.0f - 0.001f,
             2 * referenceFrequency + 0.001f
         )
@@ -47,12 +50,12 @@ class MusicalScaleRatioBasedTemperamentsTest {
             1e-12f
         )
         assertEquals(
-            temperament.getToneIndexBegin(),
+            temperament.noteIndexBegin,
             noteIndexAtReferenceFrequency - 2 * numNotesPerOctave
         )
         assertEquals(
             noteIndexAtReferenceFrequency + numNotesPerOctave + 1,
-            temperament.getToneIndexEnd()
+            temperament.noteIndexEnd
         )
     }
 
@@ -76,31 +79,33 @@ class MusicalScaleRatioBasedTemperamentsTest {
         rootNoteIndex: Int,
         testNoteIndex: Int
     ) {
+        val noteNameScale = NoteNameScaleFactory.create(TemperamentType.EDO12, false)
         val temperament = MusicalScaleRatioBasedTemperaments(
             TemperamentType.EDO12, // not important here
             ratios,
-            rootNoteIndex,
-            noteIndexAtReferenceFrequency,
+            noteNameScale,
+            noteNameScale.getNoteOfIndex(noteIndexAtReferenceFrequency),
             referenceFrequency,
+            noteNameScale.getNoteOfIndex(rootNoteIndex),
             referenceFrequency / 100,
             100 * referenceFrequency
         )
 
         val noteIndex = testNoteIndex
         val freq = temperament.getNoteFrequency(noteIndex)
-        assertEquals(noteIndex, temperament.getClosestToneIndex(freq))
+        assertEquals(noteIndex, temperament.getClosestNoteIndex(freq))
 
         val noteIndex2 = noteIndex + 1
         val freq2 = temperament.getNoteFrequency(noteIndex2)
-        assertEquals(noteIndex2, temperament.getClosestToneIndex(freq2))
+        assertEquals(noteIndex2, temperament.getClosestNoteIndex(freq2))
 
         val freqBetween = freq * (freq2 / freq).pow(0.5f)
-        assertEquals(noteIndex, temperament.getClosestToneIndex(freqBetween - 0.001f))
-        assertEquals(noteIndex2, temperament.getClosestToneIndex(freqBetween + 0.001f))
+        assertEquals(noteIndex, temperament.getClosestNoteIndex(freqBetween - 0.001f))
+        assertEquals(noteIndex2, temperament.getClosestNoteIndex(freqBetween + 0.001f))
 
         val noteIndexF = noteIndex + 0.3f
         val freqF = temperament.getNoteFrequency(noteIndexF)
-        assertEquals(noteIndexF, temperament.getToneIndex(freqF), 1e-6f)
+        assertEquals(noteIndexF, temperament.getNoteIndex(freqF), 1e-6f)
     }
 
     @Test
@@ -132,62 +137,74 @@ class MusicalScaleRatioBasedTemperamentsTest {
         val noteIndexAtReferenceFrequency = 0
         val freqMin = ratios[0].toFloat() * referenceFrequency -0.001f
         val freqMax = ratios.last().toFloat() * referenceFrequency + 0.001f
+
+        val noteNameScale = NoteNameScaleFactory.create(TemperamentType.EDO12, false)
         val temperament = MusicalScaleRatioBasedTemperaments(
             TemperamentType.EDO12, // not important here
             ratios,
-            rootNoteIndex, noteIndexAtReferenceFrequency, referenceFrequency,
+            noteNameScale,
+            noteNameScale.getNoteOfIndex(noteIndexAtReferenceFrequency),
+            referenceFrequency,
+            noteNameScale.getNoteOfIndex(rootNoteIndex),
             freqMin,
             freqMax
         )
-        assertEquals(0, temperament.getToneIndexBegin())
-        assertEquals(ratios.size, temperament.getToneIndexEnd())
 
-        assertEquals(0.0f, temperament.getToneIndex(0.1f * freqMin), 1e-12f)
-        assertEquals((ratios.size - 1).toFloat(), temperament.getToneIndex(10f * freqMax), 1e-12f)
+        assertEquals(0, temperament.noteIndexBegin)
+        assertEquals(ratios.size, temperament.noteIndexEnd)
 
-        assertEquals(1, temperament.getClosestToneIndex(referenceFrequency * ratios[1].toFloat()))
-        assertEquals(1f, temperament.getToneIndex(referenceFrequency * ratios[1].toFloat()), 1e-12f)
+        assertEquals(0.0f, temperament.getNoteIndex(0.1f * freqMin), 1e-12f)
+        assertEquals((ratios.size - 1).toFloat(), temperament.getNoteIndex(10f * freqMax), 1e-12f)
 
-        assertTrue(temperament.getToneIndex(freqMin + 0.1f) > 0.0001f)
-        assertFalse(temperament.getToneIndex(freqMin - 0.1f) > 0.0001f)
+        assertEquals(1, temperament.getClosestNoteIndex(referenceFrequency * ratios[1].toFloat()))
+        assertEquals(1f, temperament.getNoteIndex(referenceFrequency * ratios[1].toFloat()), 1e-12f)
 
-        assertTrue(temperament.getToneIndex(freqMax - 0.1f) < 1.999f)
-        assertFalse(temperament.getToneIndex(freqMax + 0.1f) < 1.999f)
+        assertTrue(temperament.getNoteIndex(freqMin + 0.1f) > 0.0001f)
+        assertFalse(temperament.getNoteIndex(freqMin - 0.1f) > 0.0001f)
 
-        assertEquals(0, temperament.getClosestToneIndex(0.1f * freqMin))
-        assertEquals(ratios.size - 1, temperament.getClosestToneIndex(10f * freqMax))
+        assertTrue(temperament.getNoteIndex(freqMax - 0.1f) < 1.999f)
+        assertFalse(temperament.getNoteIndex(freqMax + 0.1f) < 1.999f)
+
+        assertEquals(0, temperament.getClosestNoteIndex(0.1f * freqMin))
+        assertEquals(ratios.size - 1, temperament.getClosestNoteIndex(10f * freqMax))
     }
 
     @Test
     fun testTwelveTone() {
 
-        val referenceNoteIndex = 0
+        val noteIndexAtReferenceFrequency = 0
         val ratios = doubleArrayOf(15.0/15.0, 16.0/15.0, 17.0/15.0, 18.0/15.0, 19.0/15.0, 20.0/15.0,
             21.0/15.0, 22.0/15.0, 23.0/15.0, 24.0/15.0, 25.0/15.0, 26.0/15.0, 30.0/15.0)
-        val fRef = 440f
+        val referenceFrequency = 440f
         //val fMin = fRef / 100
         //val fMax = fRef * 100
         val numNotesPerOctave = ratios.size - 1
+        val noteNameScale = NoteNameScaleFactory.create(TemperamentType.EDO12, false)
 
-        for (rootNote in -20 .. 20) {
+        for (rootNoteIndex in -20 .. 20) {
             val temperament = MusicalScaleRatioBasedTemperaments(
                 TemperamentType.EDO12, // not important here
-                ratios, rootNote, referenceNoteIndex, fRef // , fMin, fMax
+                ratios,
+                noteNameScale,
+                noteNameScale.getNoteOfIndex(noteIndexAtReferenceFrequency),
+                referenceFrequency,
+                noteNameScale.getNoteOfIndex(rootNoteIndex)
             )
 
             // check that the resulting frequencies are independent on which octave the reference note is
             for (r in -5..-5) {
                 val temperament2 = MusicalScaleRatioBasedTemperaments(
                     TemperamentType.EDO12, // not important here
-                    ratios, rootNote, referenceNoteIndex + r * numNotesPerOctave, fRef // , fMin, fMax
+                    ratios, noteNameScale, noteNameScale.getNoteOfIndex(noteIndexAtReferenceFrequency + r * numNotesPerOctave),
+                    referenceFrequency, noteNameScale.getNoteOfIndex(rootNoteIndex)
                 )
-                val numNotes = temperament.getToneIndexEnd() - temperament.getToneIndexBegin()
-                val numNotes2 = temperament2.getToneIndexEnd() - temperament2.getToneIndexBegin()
+                val numNotes = temperament.noteIndexEnd - temperament.noteIndexBegin
+                val numNotes2 = temperament2.noteIndexEnd - temperament2.noteIndexBegin
                 assertEquals(numNotes, numNotes2)
 
                 for (i in 0 until numNotes) {
-                    val iNote = temperament.getToneIndexBegin() + i
-                    val iNote2 = temperament2.getToneIndexBegin() + i
+                    val iNote = temperament.noteIndexBegin + i
+                    val iNote2 = temperament2.noteIndexBegin + i
                     val freq = temperament.getNoteFrequency(iNote)
                     val freq2 = temperament2.getNoteFrequency(iNote2)
                     assertEquals(freq, freq2, 1 - 12f)
