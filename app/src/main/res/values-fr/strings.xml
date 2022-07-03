@@ -75,7 +75,7 @@
     <string name="abort">Annuler</string>
     <string name="instrument_name">Nom d’instrument</string>
     <string name="clear_instrument_name">Effacer le nom d’instrument</string>
-    <string name="add_note">Ajouter un note</string>
+    <string name="add_note">Ajouter une note</string>
     <string name="delete_note">Supprimer une note</string>
     <string name="lately_detected_notes">Dernière notes détectées</string>
     <string name="done">Fait</string>
@@ -165,8 +165,8 @@
     <string name="schisma">%d\u2044%d&#x200A;sch</string>
     <string name="pythagorean_comma_desc">pC: Comma pythagoricien, 531441\u2044524288\nsC: Comma syntonique, 81\u204480\nsch: Schisma, 32805\u204432768</string>
     <string name="circle_of_fifths">Cycle des quintes</string>
-    <string name="set_default">Réinitialiser aux valeurs par défaut</string>
-    <string name="acknowledged">Accepté</string>
+    <string name="set_default">Réinitialiser à la valeur par défaut</string>
+    <string name="acknowledged">Vu</string>
     <string name="no_instruments_selected">Aucun instrument sélectionné.</string>
     <string name="select_instruments">Sélectionner des instruments</string>
     <string name="select_instrument">Instruments</string>
