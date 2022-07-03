@@ -1,4 +1,5 @@
 v4.0.0:
-- Material You theming
+- Use mostly MaterialYou theming
 - Dynamic app icon for Android 13
 - Set statusbar color to app background color
+- French translations (thanks to Glandos)
