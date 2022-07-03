@@ -297,15 +297,18 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun setTemperamentSummary(temperamentType: TemperamentType? = null, rootNote: MusicalNote? = null, preferFlat: Boolean? = null) {
 //    Log.v("Tuner", "SettingsFragment.setTemperamentSummary")
         context?.let { ctx ->
-            val r = rootNote ?: temperamentPreference?.value?.rootNote
-
             val t = temperamentType ?: temperamentPreference?.value?.temperamentType ?: TemperamentType.EDO12
             val pF = preferFlat ?: (preferFlatPreference?.isChecked ?: false)
             val printOption = if (pF) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
 
+            val noteNameScale = NoteNameScaleFactory.create(t, pF)
+            var r = rootNote ?: temperamentPreference?.value?.rootNote
+            if (r == null)
+                r = noteNameScale.notes[0]
+
             val n = ctx.getString(getTuningNameResourceId(t))
             // val dId = getTuningDescriptionResourceId(t)
-            val rN = r?.toCharSequence(ctx, printOption, true) ?: ""
+            val rN = r.toCharSequence(ctx, printOption, withOctave = false)
 
             temperamentPreference?.summary = ctx.getString(R.string.tuning_summary_no_desc, n, rN)
 //            if (dId != null) {

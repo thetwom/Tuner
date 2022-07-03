@@ -373,16 +373,14 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             setLabelPaintSizeAndMaximumLabelWidthAndBaseline(s, noteNameScale)
         }
 
-        activeNoteArrayIndex = if (activeNoteArrayIndex < 0) {
-            activeNoteArrayIndex
-        } else if (newActiveNote != null
+        activeNoteArrayIndex = if (newActiveNote != null
             && noteNameScale.getIndexOfNote(newActiveNote) in this.noteIndexBegin until this.noteIndexEnd) {
             noteNameScale.getIndexOfNote(newActiveNote) - noteIndexBegin
         } else if (activeNoteBackup != null
             && noteNameScale.getIndexOfNote(activeNoteBackup) in this.noteIndexBegin until this.noteIndexEnd) {
             noteNameScale.getIndexOfNote(activeNoteBackup) - noteIndexBegin
         } else if (activeNoteBackup != null) {
-            (activeNoteIndexBackupPercent * (numNotes)).toInt()
+            (activeNoteIndexBackupPercent * numNotes).toInt()
         } else {
             (numNotes) / 2
         }

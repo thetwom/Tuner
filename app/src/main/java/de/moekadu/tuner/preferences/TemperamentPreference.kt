@@ -178,7 +178,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
         // reference note are the same
         val defaultReferenceNote = NoteNameScaleFactory.getDefaultReferenceNote(temperamentType)
         val musicalScaleLocal = MusicalScaleFactory.create(
-            TemperamentType.EDO12,
+            temperamentType,
             defaultReferenceNote,
             referenceFrequency = 440f,
             rootNote = defaultReferenceNote,
