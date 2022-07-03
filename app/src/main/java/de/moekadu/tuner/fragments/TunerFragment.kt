@@ -22,13 +22,13 @@ package de.moekadu.tuner.fragments
 import android.Manifest
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.instrumentDatabase
@@ -83,6 +83,23 @@ class TunerFragment : Fragment() {
         }
     }
 
+    private val menuProvider = object : MenuProvider {
+        override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+            menuInflater.inflate(R.menu.toolbar, menu)
+        }
+
+        override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+            when (menuItem.itemId) {
+                R.id.action_settings -> {
+                    // User chose the "Settings" item, show the app settings UI...
+                    (activity as MainActivity?)?.loadSettingsFragment()
+                    return true
+                }
+            }
+            return false
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -90,6 +107,8 @@ class TunerFragment : Fragment() {
     ): View? {
 //        Log.v("Tuner", "TunerFragment.onCreateView")
         val view = inflater.inflate(R.layout.diagrams, container, false)
+
+        activity?.addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         pitchPlot = view.findViewById(R.id.pitch_plot)
         spectrumPlot = view.findViewById(R.id.spectrum_plot)

@@ -24,7 +24,9 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
-import android.view.*
+import android.view.View
+import android.view.WindowInsetsController
+import android.view.WindowManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentManager
@@ -125,38 +127,14 @@ class MainActivity : AppCompatActivity() {
         return super.onSupportNavigateUp()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.toolbar, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.action_settings -> {
-            // User chose the "Settings" item, show the app settings UI...
-            supportFragmentManager.commit {
+    fun loadSettingsFragment() {
+        supportFragmentManager.commit {
                 setReorderingAllowed(true)
                 replace<SettingsFragment>(R.id.main_content)
                 if (!isCurrentFragmentATunerFragment())
                     addToBackStack(null)
             }
-            true
-        }
-//        R.id.action_instruments -> {
-//            supportFragmentManager.commit {
-//                setReorderingAllowed(true)
-//                replace<InstrumentsFragment>(R.id.main_content)
-//                addToBackStack(null)
-//            }
-//            loadInstrumentsFragment()
-//            true
-//        }
-        else -> {
-            // If we got here, the user's action was not recognized.
-            // Invoke the superclass to handle it.
-            super.onOptionsItemSelected(item)
-        }
     }
-
     fun loadTuningEditorFragment() {
 //        Log.v("Tuner", "MainActivity.loadTuningEditorFragment")
         supportFragmentManager.commit {
@@ -165,9 +143,6 @@ class MainActivity : AppCompatActivity() {
             if (!isCurrentFragmentATunerFragment())
                 addToBackStack(null)
         }
-//        tuningEditorViewModel.clear(0)
-//       val actionMode = startSupportActionMode(TuningEditorActionCallback(this, instrumentsViewModel, tuningEditorViewModel))
-//        actionMode?.setTitle(R.string.edit_instrument)
     }
 
     fun loadInstrumentsFragment() {

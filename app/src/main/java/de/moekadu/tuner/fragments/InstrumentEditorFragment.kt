@@ -7,7 +7,6 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
@@ -71,14 +70,14 @@ class InstrumentEditorFragment : Fragment() {
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        setHasOptionsMenu(true)
-        super.onCreate(savedInstanceState)
-    }
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        setHasOptionsMenu(true)
+//        super.onCreate(savedInstanceState)
+//    }
 
-    override fun onPrepareOptionsMenu(menu : Menu) {
-        menu.findItem(R.id.action_settings)?.isVisible = false
-    }
+//    override fun onPrepareOptionsMenu(menu : Menu) {
+//        menu.findItem(R.id.action_settings)?.isVisible = false
+//    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -204,11 +203,6 @@ class InstrumentEditorFragment : Fragment() {
 
         return view
     }
-
-//    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-//        inflater.inflate(R.menu.instrument_editor, menu)
-//        // super.onCreateOptionsMenu(menu, inflater)
-//    }
 
     override fun onStart() {
         super.onStart()

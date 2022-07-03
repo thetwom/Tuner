@@ -7,8 +7,10 @@ import android.view.*
 import android.widget.Toast
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -58,74 +60,46 @@ class InstrumentsFragment : Fragment() {
 
     private val deleteIconSpacing = (12f * Resources.getSystem().displayMetrics.density).toInt()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        setHasOptionsMenu(true)
-        super.onCreate(savedInstanceState)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.instruments, menu)
-    }
-    override fun onPrepareOptionsMenu(menu : Menu) {
-//        super.onPrepareOptionsMenu(menu)
-        menu.findItem(R.id.action_settings)?.isVisible = false
-//        menu.findItem(R.id.action_instruments)?.isVisible = false
-    }
-
-    override fun onOptionsItemSelected(item : MenuItem) : Boolean {
-        when (item.itemId) {
-            R.id.action_archive -> {
-                if (instrumentsViewModel.customInstrumentDatabase.size == 0) {
-                    Toast.makeText(requireContext(), R.string.database_empty, Toast.LENGTH_LONG).show()
-                } else {
-                    instrumentArchiving.archiveInstruments(instrumentsViewModel.customInstrumentDatabase)
-                }
-                return true
-            }
-            R.id.action_unarchive -> {
-                instrumentArchiving.unarchiveInstruments()
-                return true
-            }
-            R.id.action_share -> {
-                if (instrumentsViewModel.customInstrumentDatabase.size == 0) {
-                    Toast.makeText(requireContext(), R.string.no_instruments_for_sharing, Toast.LENGTH_LONG).show()
-                } else {
-                    val dialogFragment = InstrumentsSharingDialog(
-                        requireContext(),
-                        instrumentsViewModel.customInstrumentDatabase.instruments
-                    )
-                    dialogFragment.show(parentFragmentManager, "tag")
-                }
-
-//                val numInstruments = instrumentsViewModel.customInstrumentDatabase.size
-//
-//                if (instrumentsViewModel.customInstrumentDatabase.size == 0) {
-//                    Toast.makeText(requireContext(), R.string.no_instruments_for_sharing, Toast.LENGTH_LONG).show()
-//                } else {
-//                    val content = instrumentsViewModel.customInstrumentDatabase.getInstrumentsString(context)
-//
-//                    val sharePath = File(context?.cacheDir, "share").also { it.mkdir() }
-//                    val sharedFile = File(sharePath.path, "tuner.txt")
-//                    sharedFile.writeBytes(content.toByteArray())
-//
-//                    val uri = FileProvider.getUriForFile(requireContext(), requireContext().packageName, sharedFile)
-//
-//                    val shareIntent = Intent().apply {
-//                        action = Intent.ACTION_SEND
-//                        putExtra(Intent.EXTRA_STREAM, uri)
-//                        putExtra(Intent.EXTRA_EMAIL, "")
-//                        putExtra(Intent.EXTRA_CC, "")
-//                        putExtra(Intent.EXTRA_TITLE, resources.getQuantityString(R.plurals.sharing_num_instruments, numInstruments, numInstruments))
-//                        type = "text/plain"
-//                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-//                    }
-//                    startActivity(Intent.createChooser(shareIntent, getString(R.string.share)))
-//                }
-            }
+    private val menuProvider = object : MenuProvider {
+        override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+            menuInflater.inflate(R.menu.instruments, menu)
         }
 
-        return super.onOptionsItemSelected(item)
+        override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+            when (menuItem.itemId) {
+                R.id.action_archive -> {
+                    if (instrumentsViewModel.customInstrumentDatabase.size == 0) {
+                        Toast.makeText(requireContext(), R.string.database_empty, Toast.LENGTH_LONG)
+                            .show()
+                    } else {
+                        instrumentArchiving.archiveInstruments(instrumentsViewModel.customInstrumentDatabase)
+                    }
+                    return true
+                }
+                R.id.action_unarchive -> {
+                    instrumentArchiving.unarchiveInstruments()
+                    return true
+                }
+                R.id.action_share -> {
+                    if (instrumentsViewModel.customInstrumentDatabase.size == 0) {
+                        Toast.makeText(
+                            requireContext(),
+                            R.string.no_instruments_for_sharing,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        val dialogFragment = InstrumentsSharingDialog(
+                            requireContext(),
+                            instrumentsViewModel.customInstrumentDatabase.instruments
+                        )
+                        dialogFragment.show(parentFragmentManager, "tag")
+                    }
+                }
+            }
+            return false
+        }
     }
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -135,6 +109,8 @@ class InstrumentsFragment : Fragment() {
 //        Log.v("Tuner", "InstrumentsFragment.onCreateView: Start creating view")
 
         val view = inflater.inflate(R.layout.instruments, container, false)
+
+        activity?.addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         parentFragmentManager.setFragmentResultListener(ImportInstrumentsDialog.REQUEST_KEY, viewLifecycleOwner) {
                 _, bundle ->

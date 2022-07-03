@@ -22,7 +22,10 @@ package de.moekadu.tuner.fragments
 import android.content.res.Configuration
 import android.os.Bundle
 import android.text.SpannableStringBuilder
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.*
 import de.moekadu.tuner.MainActivity
@@ -78,13 +81,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     setPreferencesFromResource(R.xml.preferences, rootKey)
-    setHasOptionsMenu(true)
-  }
-
-  override fun onPrepareOptionsMenu(menu : Menu) {
-//        super.onPrepareOptionsMenu(menu)
-    menu.findItem(R.id.action_settings)?.isVisible = false
-//    menu.findItem(R.id.action_instruments)?.isVisible = false
   }
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
