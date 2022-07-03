@@ -1,0 +1,6 @@
+    Accordeur simple pour accorder les instruments de musique avec des fonctionnalités telles que :
+    * Détection de la hauteur grâce à l’autocorrélation et le spectre FFT.
+    * Amélioration de la précision par l’évaluation de l’information de la phase du spectre et ajustement polynomial.
+    * Affichage des variations de la hauteur dans le temps.
+    * Accordage en tempérament égal.
+    * Paramètres pour choisir la hauteur en concert, la taille de la fenêtre FFT, le type de fenêtrage FFT, le chevauchement et plus.
