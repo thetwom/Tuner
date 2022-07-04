@@ -149,7 +149,7 @@ class InstrumentsFragment : Fragment() {
         instrumentsPredefinedAdapter.onInstrumentClickedListener =
             object : InstrumentsAdapter.OnInstrumentClickedListener {
                 override fun onInstrumentClicked(instrument: Instrument, stableId: Long) {
-//                  Log.v("Tuner", "InstrumentsFragment.onCreateView: new instrument: $instrument")
+//                    Log.v("Tuner", "InstrumentsFragment.onCreateView: new instrument: $instrument")
                     instrumentsViewModel.setInstrument(
                         instrument,
                         InstrumentsViewModel.Section.Predefined

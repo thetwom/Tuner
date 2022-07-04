@@ -98,9 +98,9 @@ class InstrumentsViewModel(
     }
 
     fun setInstrument(instrument: Instrument, section: Section) {
+//        Log.v("Tuner", "InstrumentsViewModel.setInstrument: $instrument")
         val currentInstrument = _instrument.value
         if (currentInstrument == null || currentInstrument.instrument.stableId != instrument.stableId || currentInstrument.section != section) {
-//            Log.v("Tuner", "InstrumentsViewModel.setInstrument: $instrument")
             _instrument.value = InstrumentAndSection(instrument, section)
         }
     }

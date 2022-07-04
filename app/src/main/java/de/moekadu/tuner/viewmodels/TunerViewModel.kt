@@ -226,7 +226,8 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 //        Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
 
         sampleSource.testFunction = { t ->
-            val freq = 400 + 2*t
+            //val freq = 400 + 2*t
+            val freq = 200 + 2*t
             //val freq = 440
            //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
             sin(t * 2 * kotlin.math.PI.toFloat() * freq)
@@ -354,7 +355,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setInstrument(instrument: Instrument) {
-        //Log.v("Tuner", "TunerViewModel.setInstrument $instrument, before: ${targetNoteValue.instrument}")
+//        Log.v("Tuner", "TunerViewModel.setInstrument $instrument, before: ${targetNoteValue.instrument}")
         // val oldTargetNote = targetNoteValue.toneIndex
         if (targetNoteValue.instrument.stableId != instrument.stableId) {
             //Log.v("Tuner", "TunerViewModel.setInstrument ...")

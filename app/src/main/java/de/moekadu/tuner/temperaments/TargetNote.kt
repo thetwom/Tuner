@@ -11,7 +11,7 @@ class TargetNote {
     var musicalScale: MusicalScale = MusicalScaleFactory.create(TemperamentType.EDO12, null, null, 440f, false)
         set(value) {
             field = value
-            sortStringsAccordingToNoteIndex(instrument)
+            sortedAndDistinctNoteIndices = sortStringsAccordingToNoteIndex(instrument)
             if (frequencyRange[1] > frequencyRange[0]) { // target note is set automatically, so we check if we must change it
                 // this will already call "recomputeTargetNoteProperties"
                 setTargetNoteBasedOnFrequency(frequencyForLastTargetNoteDetection, ignoreFrequencyRange = true)
@@ -23,7 +23,7 @@ class TargetNote {
     var instrument: Instrument = instrumentDatabase[0]
         set(value) {
             field = value
-            sortStringsAccordingToNoteIndex(value)
+            sortedAndDistinctNoteIndices = sortStringsAccordingToNoteIndex(value)
         }
 
     private var sortedAndDistinctNoteIndices = sortStringsAccordingToNoteIndex(instrument)
