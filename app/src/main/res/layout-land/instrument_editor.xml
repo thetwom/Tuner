@@ -19,7 +19,7 @@
         app:layout_constraintRight_toRightOf="@id/string_view"
         android:paddingLeft="12dp"
         android:layout_marginRight="0dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         app:boxStrokeColor="@color/text_field_outline_color"
         app:helperTextTextColor="?attr/colorOnSurface"
         app:counterTextColor="?attr/colorOnSurface"
