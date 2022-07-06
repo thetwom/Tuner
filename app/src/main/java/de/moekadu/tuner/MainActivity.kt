@@ -40,14 +40,12 @@ import de.moekadu.tuner.preferences.AppearancePreference
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 
 class MainActivity : AppCompatActivity() {
-    // TODO: app crashed when loading an instrument
     // TODO: accuracyincreaser-test fails
     // TODO: anchor-drawable should use round edges
     // TODO: prefer flat does not work in most fragments
     // TODO: text sizes in scientific view are too small, ticks are missing padding, right margin is too much
     // TODO: baseline-alignment for marks
     // TODO: plot titles seem to be centered at whole width and not over plot windows (tick padding should be excluded when computing the center)
-    // TODO: reverse chromatic notes in string view
     enum class TunerMode {Simple, Scientific, Unknown}
 
     private val instrumentsViewModel: InstrumentsViewModel by viewModels {

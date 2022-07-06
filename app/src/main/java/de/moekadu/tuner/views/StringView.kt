@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.text.TextPaint
 import android.util.AttributeSet
+import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -18,6 +19,7 @@ import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
 import de.moekadu.tuner.temperaments.NoteNameScale
 import kotlinx.parcelize.Parcelize
 import kotlin.math.*
@@ -133,6 +135,9 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var labelCornerRadius = 0f
 
     private val strings = ArrayList<StringInfo>()
+
+    /** Defines e.g. if we prefer using a flat modifier or a sharp modifier */
+    private var notePrintOptions = MusicalNotePrintOptions.None
 
     /** Style index, which is used for showing active notes. */
     var activeStyleIndex: Int = 1
@@ -537,6 +542,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
         //canvas.restore()
         if (showAnchor) {
+//            Log.v("Tuner", "StringView.onDraw: showAnchor, anchorYPos=$anchorYPos, highlightBy=$highlightBy")
             val minYPos = paddingTop + 0.5f * anchorDrawable.height + framePaint.strokeWidth
             val maxYPos =
                 height - paddingBottom - 0.5f * anchorDrawable.height - framePaint.strokeWidth
@@ -658,16 +664,16 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param noteIndexBegin First note index of musical scale which is considered.
      * @param noteIndexEnd End note index of musical scale which is considered (excluded).
      */
-    fun setStrings(notes: Array<MusicalNote>?, isChromatic: Boolean, noteNameScale: NoteNameScale, noteIndexBegin: Int, noteIndexEnd: Int) {
+    fun setStrings(notes: Array<MusicalNote>?, isChromatic: Boolean, noteNameScale: NoteNameScale, noteIndexBegin: Int, noteIndexEnd: Int,
+                   notePrintOptions: MusicalNotePrintOptions) {
         strings.clear()
-
+        this.notePrintOptions = notePrintOptions
         // create the notes
         if (notes != null) {
             for (note in notes)
                 strings.add(StringInfo(note))
         } else if (isChromatic) {
-            // TODO: should we add the notes reversed?
-            for (noteIndex in noteIndexBegin until noteIndexEnd)
+            for (noteIndex in noteIndexEnd - 1 downTo noteIndexBegin)
                 strings.add(StringInfo(noteNameScale.getNoteOfIndex(noteIndex)))
         }
 
@@ -683,6 +689,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 octaveEnd,
                 paint,
                 context,
+                notePrintOptions,
                 true
             )
             labelWidth = max(labelWidth, bounds.maxWidth)
@@ -725,7 +732,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun highlightByNote(note: MusicalNote?, animationDuration: Long = 200L) {
-//        Log.v("Tuner", "StringView.highlightByToneIndex: stringIndex=$toneIndex, oldTonIndex=$toneIndexForHighlighting, highlightBy=$highlightBy")
+//        Log.v("Tuner", "StringView.highlightByNote: , note=$note, highlightBy=$highlightBy")
         if (note == noteForHighlighting && highlightBy == HighlightBy.MusicalNote)
             return
 
@@ -810,6 +817,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         if (stringInfo.styleIndex != styleIndex || stringInfo.label == null) {
             stringInfo.label = MusicalNoteLabel(stringInfo.note, labelPaint[styleIndex], context,
                 labelBackgroundPaint[styleIndex], labelCornerRadius, LabelGravity.Center,
+                printOptions = notePrintOptions,
                 enableOctaveIndex = true, labelBackgroundPadding, labelBackgroundPadding,
                 labelBackgroundPadding, labelBackgroundPadding)
             stringInfo.styleIndex = styleIndex

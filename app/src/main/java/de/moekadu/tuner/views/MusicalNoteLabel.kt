@@ -9,88 +9,90 @@ import android.text.SpannableStringBuilder
 import android.text.StaticLayout
 import android.text.TextPaint
 import androidx.core.graphics.withTranslation
-import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.NoteNameStem
+import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
+import de.moekadu.tuner.temperaments.MusicalNoteSubstrings
+import de.moekadu.tuner.temperaments.substrings
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-private val baseNoteResourceIds = mapOf(
-    BaseNote.C to R.string.c_note_name,
-    BaseNote.D to R.string.d_note_name,
-    BaseNote.E to R.string.e_note_name,
-    BaseNote.F to R.string.f_note_name,
-    BaseNote.G to R.string.g_note_name,
-    BaseNote.A to R.string.a_note_name,
-    BaseNote.B to R.string.b_note_name,
-)
+//private val baseNoteResourceIds = mapOf(
+//    BaseNote.C to R.string.c_note_name,
+//    BaseNote.D to R.string.d_note_name,
+//    BaseNote.E to R.string.e_note_name,
+//    BaseNote.F to R.string.f_note_name,
+//    BaseNote.G to R.string.g_note_name,
+//    BaseNote.A to R.string.a_note_name,
+//    BaseNote.B to R.string.b_note_name,
+//)
+//
+//private val modifierStrings = mapOf(
+//    NoteModifier.None to "",
+//    NoteModifier.Sharp to "\u266F",
+//    NoteModifier.Flat to "\u266D"
+//)
+//
+//private val specialNoteNameResourceIds = mapOf(
+//    NoteNameStem(BaseNote.B, NoteModifier.Flat, BaseNote.A, NoteModifier.Sharp) to R.string.asharp_bflat_note_name,
+//    NoteNameStem(BaseNote.A, NoteModifier.Sharp, BaseNote.B, NoteModifier.Flat) to R.string.asharp_bflat_note_name
+//)
 
-private val modifierStrings = mapOf(
-    NoteModifier.None to "",
-    NoteModifier.Sharp to "\u266F",
-    NoteModifier.Flat to "\u266D"
-)
-
-private val specialNoteNameResourceIds = mapOf(
-    NoteNameStem(BaseNote.B, NoteModifier.Flat, BaseNote.A, NoteModifier.Sharp) to R.string.asharp_bflat_note_name,
-    NoteNameStem(BaseNote.A, NoteModifier.Sharp, BaseNote.B, NoteModifier.Flat) to R.string.asharp_bflat_note_name
-)
+// TODO: we must read and use PrintOptions to prefer flat or not
 
 /** Class for creating note labels, where the octave is typed slightly smaller and as superscript. */
 class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint, context: Context,
                        backgroundPaint: Paint? = null, cornerRadius: Float = 0f,
                        gravity: LabelGravity = LabelGravity.Center,
+                       printOptions: MusicalNotePrintOptions = MusicalNotePrintOptions.None,
                        val enableOctaveIndex: Boolean = true,
                        paddingLeft: Float = 0f, paddingRight: Float = 0f,
                        paddingTop: Float = 0f, paddingBottom: Float = 0f)
     : Label(backgroundPaint, cornerRadius, gravity, paddingLeft, paddingRight, paddingTop, paddingBottom) {
 
-    /** Convenience note class storing the note base part (e.g. C#) and the octave as separate strings. */
-    data class LabelSubstrings(val note: String, val octave: String) {
-        companion object {
-            /** Create string for the note base part (e.g. C#)
-             * @param note Musical note .
-             * @param context Context for resolving string resources.
-             * @return String of base part.
-             */
-            fun createNoteSubstring(note: MusicalNote, context: Context): String {
-                val specialNoteNameResourceId = specialNoteNameResourceIds[NoteNameStem.fromMusicalNote(note)]
-                val specialNoteName = specialNoteNameResourceId?.let {
-                    val s = context.getString(specialNoteNameResourceId)
-                    if (s == "" || s == "-")
-                        null
-                    else
-                        s
-                }
-                return specialNoteName
-                    ?: (context.getString(baseNoteResourceIds[note.base]!!) + modifierStrings[note.modifier]!!)
-            }
+//    /** Convenience note class storing the note base part (e.g. C#) and the octave as separate strings. */
+//    data class LabelSubstrings(val note: String, val octave: String) {
+//        companion object {
+//            /** Create string for the note base part (e.g. C#)
+//             * @param note Musical note .
+//             * @param context Context for resolving string resources.
+//             * @return String of base part.
+//             */
+//            fun createNoteSubstring(note: MusicalNote, context: Context): String {
+//                val specialNoteNameResourceId = specialNoteNameResourceIds[NoteNameStem.fromMusicalNote(note)]
+//                val specialNoteName = specialNoteNameResourceId?.let {
+//                    val s = context.getString(specialNoteNameResourceId)
+//                    if (s == "" || s == "-")
+//                        null
+//                    else
+//                        s
+//                }
+//                return specialNoteName
+//                    ?: (context.getString(baseNoteResourceIds[note.base]!!) + modifierStrings[note.modifier]!!)
+//            }
+//
+//            /** Create string for octave number.
+//             * @param octave Octave number.
+//             * @return String of octave number.
+//             */
+//            fun createOctaveSubstring(octave: Int): String {
+//                return octave.toString()
+//            }
+//
+//            /** Factory class to create the LabelSubstrings class.
+//             * @param note Musical note.
+//             * @param context Context for resolving string resources.
+//             * @return LabelSubstrings class for the given note.
+//             */
+//            fun create(note: MusicalNote, context: Context): LabelSubstrings {
+//                val noteName = createNoteSubstring(note, context)
+//                val octaveText = createOctaveSubstring(note.octave)
+//                return LabelSubstrings(noteName, octaveText)
+//            }
+//        }
+//    }
 
-            /** Create string for octave number.
-             * @param octave Octave number.
-             * @return String of octave number.
-             */
-            fun createOctaveSubstring(octave: Int): String {
-                return octave.toString()
-            }
-
-            /** Factory class to create the LabelSubstrings class.
-             * @param note Musical note.
-             * @param context Context for resolving string resources.
-             * @return LabelSubstrings class for the given note.
-             */
-            fun create(note: MusicalNote, context: Context): LabelSubstrings {
-                val noteName = createNoteSubstring(note, context)
-                val octaveText = createOctaveSubstring(note.octave)
-                return LabelSubstrings(noteName, octaveText)
-            }
-        }
-    }
-
-    private val substrings = LabelSubstrings.create(note, context)
+    private val substrings = note.substrings(context, printOptions) // LabelSubstrings.create(note, context)
 
     private val bounds = Rect().apply {
         getBounds(substrings, paint, this, enableOctaveIndex = enableOctaveIndex)
@@ -148,12 +150,12 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint, context: Context
         /** Get bounds of a note, which already is a LabelSubstrings object.
          * Using the substrings object instead of a note avoids extra allocations if this
          * should be called more than one time.
-         * @param substrings LabelSubstrings object, created from a note.
+         * @param substrings MusicalNoteSubstrings object, created from a note.
          * @param paint Paint which should be used for drawing the label text.
          * @param bounds Rectangle bounds object, where we store the bounds.
          * @param enableOctaveIndex Set this to false if you don't want to print the octave index.
          */
-        fun getBounds(substrings: LabelSubstrings, paint: TextPaint, bounds: Rect,
+        fun getBounds(substrings: MusicalNoteSubstrings, paint: TextPaint, bounds: Rect,
                       enableOctaveIndex: Boolean = true) {
             val noteName = substrings.note
 
@@ -184,11 +186,12 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint, context: Context
          * @param paint Paint which should be used for drawing the label text.
          * @param context Context required for accessing string resources.
          * @param bounds Rectangle bounds object, where we store the bounds.
+         * @param printOptions Options for printing the note (prefer flat/sharp, ...)
          * @param enableOctaveIndex Set this to false if you don't want to print the octave index.
          */
         fun getBounds(note: MusicalNote, paint: TextPaint, context: Context, bounds: Rect,
-                      enableOctaveIndex: Boolean = true) {
-            val substrings = LabelSubstrings.create(note, context)
+                      printOptions: MusicalNotePrintOptions = MusicalNotePrintOptions.None, enableOctaveIndex: Boolean = true) {
+            val substrings = note.substrings(context, printOptions)
             getBounds(substrings, paint, bounds, enableOctaveIndex = enableOctaveIndex)
         }
 
@@ -200,11 +203,12 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint, context: Context
          * @param octaveEnd End octave to be considered (excluded).
          * @param paint Paint which will be used for drawing the notes.
          * @param context Context required for accessing string resources.
+         * @param printOptions Options for printing the note (prefer flat/sharp, ...)
          * @param enableOctaveIndex Set this to false if you don't want to print the octave index.
          * @return Bounds of the rectangle which fits around each single note.
          */
         fun getLabelSetBounds(notes: Array<MusicalNote>, octaveBegin: Int, octaveEnd: Int, paint: TextPaint, context: Context,
-                              enableOctaveIndex: Boolean = true): LabelSetBounds {
+                              printOptions: MusicalNotePrintOptions = MusicalNotePrintOptions.None, enableOctaveIndex: Boolean = true): LabelSetBounds {
             val rect = Rect()
 
             // get letter spacing by measuring MM and M
@@ -221,7 +225,7 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint, context: Context
             var maxDistanceAboveBaseline = Int.MIN_VALUE
 
             for (n in notes) {
-                val noteName = LabelSubstrings.createNoteSubstring(n, context)
+                val noteName = n.substrings(context, printOptions).note
                 paint.getTextBounds(noteName, 0, noteName.length, rect)
                 maxWidth = max(maxWidth, rect.width())
                 maxHeight = max(maxHeight, rect.height())
@@ -234,7 +238,7 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint, context: Context
             var maxOctaveDistanceAboveBaseline = Int.MIN_VALUE
 
             for (o in octaveBegin until octaveEnd) {
-                val octaveText = LabelSubstrings.createOctaveSubstring(o)
+                val octaveText = o.toString()
                 paint.getTextBounds(octaveText, 0, octaveText.length, rect)
                 maxOctaveWidth = max(maxOctaveWidth, rect.width())
                 maxOctaveDistanceAboveBaseline = max(maxOctaveDistanceAboveBaseline, -rect.top)

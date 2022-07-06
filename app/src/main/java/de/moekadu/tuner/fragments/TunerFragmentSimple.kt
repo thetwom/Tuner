@@ -119,9 +119,10 @@ class TunerFragmentSimple : Fragment() {
 
         stringView?.stringClickedListener = object : StringView.StringClickedListener {
             override fun onStringClicked(stringIndex: Int, note: MusicalNote) {
-                if (stringIndex == stringView?.highlightedStringIndex && viewModel.isTargetNoteUserDefined.value == true) {
-                    viewModel.setTargetNote(-1, null)
+                //if (stringIndex == stringView?.highlightedStringIndex && viewModel.isTargetNoteUserDefined.value == true) {
+                if (stringIndex == viewModel.selectedStringIndex && viewModel.isTargetNoteUserDefined.value == true) {
                     stringView?.setAutomaticControl()
+                    viewModel.setTargetNote(-1, null)
                     //stringView?.showAnchor = false
                 } else if (stringIndex != -1) {
                     viewModel.setTargetNote(stringIndex, note)
@@ -165,16 +166,11 @@ class TunerFragmentSimple : Fragment() {
                 updateStringViewNoteNames()
         }
 
-//        viewModel.noteNames.observe(viewLifecycleOwner) { // noteNames ->
-//            updatePitchPlotNoteNames()
-//            updateStringViewNoteNames()
-//        }
-
-        // TODO: check is we must enable this again
-//        viewModel.preferFlat.observe(viewLifecycleOwner) {
-//            updatePitchPlotNoteNames()
-//            updateStringViewNoteNames()
-//        }
+        viewModel.preferFlat.observe(viewLifecycleOwner) {
+            updatePitchPlotMarks(redraw = false)
+            updatePitchPlotNoteNames()
+            updateStringViewNoteNames()
+        }
 
         instrumentsViewModel.instrument.observe(viewLifecycleOwner) { instrumentAndSection ->
             val instrument = instrumentAndSection.instrument
@@ -218,7 +214,7 @@ class TunerFragmentSimple : Fragment() {
 
             updatePitchPlotMarks(redraw = true)
 
-//            Log.v("Tuner", "TunerFragmentSimple: target note changed: stringIndex = ${targetNote.stringIndex}, toneIndex=${targetNote.toneIndex}")
+            //Log.v("Tuner", "TunerFragmentSimple: target note changed: stringIndex = ${targetNote.stringIndex}, toneIndex=${targetNote.toneIndex}")
             if (viewModel.selectedStringIndex != -1)
                 stringView?.highlightSingleString(viewModel.selectedStringIndex, 300L)
             else
@@ -341,6 +337,7 @@ class TunerFragmentSimple : Fragment() {
         pitchPlot?.setYMark(
             targetNote.frequency,
             targetNote.note,
+            viewModel.notePrintOptions,
             MARK_ID_FREQUENCY,
             LabelAnchor.East,
             if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
@@ -362,7 +359,8 @@ class TunerFragmentSimple : Fragment() {
 //        Log.v("Tuner", "TunerFragmentSimple: updatePitchPlotNoteNames: indexBegin=${musicalScale.noteIndexBegin}, noteFreq[57] = ${noteFrequencies[57]}, ${musicalScale.noteNameScale.getNoteOfIndex(musicalScale.noteIndexBegin + 57)}")
         // Update ticks in pitch history plot
         pitchPlot?.setYTicks(noteFrequencies, redraw = false,
-            noteNameScale = musicalScale.noteNameScale, noteIndexBegin = musicalScale.noteIndexBegin
+            noteNameScale = musicalScale.noteNameScale, noteIndexBegin = musicalScale.noteIndexBegin,
+            notePrintOptions = viewModel.notePrintOptions
         )
 
         // Update active y-mark in pitch history plot
@@ -370,6 +368,7 @@ class TunerFragmentSimple : Fragment() {
             pitchPlot?.setYMark(
                 targetNote.frequency,
                 targetNote.note,
+                viewModel.notePrintOptions,
                 MARK_ID_FREQUENCY,
                 LabelAnchor.East,
                 if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
@@ -383,15 +382,13 @@ class TunerFragmentSimple : Fragment() {
         val musicalScale = viewModel.musicalScale.value ?: return
         val instrument = instrumentsViewModel.instrument.value?.instrument ?: return
 //        val noteNames = viewModel.noteNames.value ?: return
-//        val preferFlat = viewModel.preferFlat.value ?: false
-        val ctx = context ?: return
 
         if (instrument.isChromatic) {
             stringView?.setStrings(null, true, musicalScale.noteNameScale,
-                musicalScale.noteIndexBegin, musicalScale.noteIndexEnd)
+                musicalScale.noteIndexBegin, musicalScale.noteIndexEnd, viewModel.notePrintOptions)
         } else {
             stringView?.setStrings(instrument.strings, false, musicalScale.noteNameScale,
-                musicalScale.noteIndexBegin, musicalScale.noteIndexEnd)
+                musicalScale.noteIndexBegin, musicalScale.noteIndexEnd, viewModel.notePrintOptions)
         }
     }
 

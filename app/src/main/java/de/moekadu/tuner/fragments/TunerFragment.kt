@@ -176,10 +176,10 @@ class TunerFragment : Fragment() {
 //        viewModel.noteNames.observe(viewLifecycleOwner) { // noteNames ->
 //            updatePitchPlotNoteNames()
 //        }
-//        TODO: check, if we should enable this again
-//        viewModel.preferFlat.observe(viewLifecycleOwner) {
-//            updatePitchPlotNoteNames()
-//        }
+        viewModel.preferFlat.observe(viewLifecycleOwner) {
+            updatePitchPlotMarks(redraw = false)
+            updatePitchPlotNoteNames()
+        }
 
         viewModel.tunerResults.observe(viewLifecycleOwner) { results ->
             if (results.pitchFrequency == null) {
@@ -361,6 +361,7 @@ class TunerFragment : Fragment() {
         pitchPlot?.setYMark(
             targetNote.frequency,
             targetNote.note,
+            viewModel.notePrintOptions,
             MARK_ID_FREQUENCY,
             LabelAnchor.East,
             if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
@@ -381,7 +382,8 @@ class TunerFragment : Fragment() {
 
         // Update ticks in pitch history plot
         pitchPlot?.setYTicks(noteFrequencies, redraw = false,
-            noteNameScale = musicalScale.noteNameScale, noteIndexBegin = musicalScale.noteIndexBegin
+            noteNameScale = musicalScale.noteNameScale, noteIndexBegin = musicalScale.noteIndexBegin,
+            viewModel.notePrintOptions
         )
 //        { _, f ->
 //            val toneIndex = musicalScale.getClosestNoteIndex(f)
@@ -393,6 +395,7 @@ class TunerFragment : Fragment() {
             pitchPlot?.setYMark(
                 targetNote.frequency,
                 targetNote.note,
+                viewModel.notePrintOptions,
                 //noteNames.getNoteName(requireContext(), targetNote.noteIndex, preferFlat),
                 MARK_ID_FREQUENCY,
                 LabelAnchor.East,

@@ -37,6 +37,7 @@ import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
 import de.moekadu.tuner.temperaments.NoteNameScale
 import kotlinx.parcelize.Parcelize
 import kotlin.math.*
@@ -2102,20 +2103,20 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     /** Helper to create a label creator based on note name scales .*/
-    fun musicalNoteLabelCreator(firstNoteIndex: Int, scale: NoteNameScale)
+    fun musicalNoteLabelCreator(firstNoteIndex: Int, scale: NoteNameScale, notePrintOptions: MusicalNotePrintOptions)
             : ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, padding: Float, cornerRadius: Float) -> Label?) {
         return { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
             val noteIndex = index + firstNoteIndex
             val note = scale.getNoteOfIndex(noteIndex)
-            MusicalNoteLabel(note, textPaint, context, backgroundPaint, cornerRadius, gravity, true, padding, padding, padding, padding)
+            MusicalNoteLabel(note, textPaint, context, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
         }
     }
 
     /** Helper to create a label creator for MusicalNoteLabels .*/
-    fun musicalNoteLabelCreator(note: MusicalNote)
+    fun musicalNoteLabelCreator(note: MusicalNote, notePrintOptions: MusicalNotePrintOptions)
             : ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, padding: Float, cornerRadius: Float) -> Label) {
         return { _: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
-            MusicalNoteLabel(note, textPaint, context, backgroundPaint, cornerRadius, gravity, true, padding, padding, padding, padding)
+            MusicalNoteLabel(note, textPaint, context, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
         }
     }
 
@@ -2157,6 +2158,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param xPosition x-position of mark.
      * @param yPosition y-position of mark.
      * @param note Note which will be used for drawing the label.
+     * @param notePrintOptions Options for printint the note (prefer flat/sharp, ...)
      * @param tag Identifier for the mark group. If the identifier was used before
      *   we well overwrite these marks.
      * @param anchor Anchor which defines how to align the label relative to the mark position.
@@ -2166,7 +2168,9 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      *   change something else which also needs to redraw the screen, so you can avoid an
      *   unnecessary redraw.)
      */
-    fun setMark(xPosition: Float, yPosition: Float, note: MusicalNote, tag: Long,
+    fun setMark(xPosition: Float, yPosition: Float, note: MusicalNote,
+                notePrintOptions: MusicalNotePrintOptions,
+                tag: Long,
                 anchor: LabelAnchor = LabelAnchor.Center,
                 placeLabelsOutsideBoundsIfPossible: Boolean = false,
                 style: Int = 0,
@@ -2175,7 +2179,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             arrayOf(anchor), MarkLabelBackgroundSize.FitIndividually,
             placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
             redraw = redraw, null,
-            labelCreator = musicalNoteLabelCreator(note)
+            labelCreator = musicalNoteLabelCreator(note, notePrintOptions)
         )
     }
 
@@ -2206,10 +2210,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         )
     }
 
-    /// Convenience method to set a single note mark with a vertical line.
-    /**
+    /** Convenience method to set a single note mark with a vertical line.
      * @param xPosition x-position of mark.
      * @param note Note which will be used for drawing the label.
+     * @param notePrintOptions Options for printint the note (prefer flat/sharp, ...)
      * @param tag Identifier for the mark group. If the identifier was used before
      *   we well overwrite these marks.
      * @param anchor Anchor which defines how to align the label relative to the mark position.
@@ -2220,7 +2224,9 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      *   unnecessary redraw.)
      */
     // TODO: default anchor should maybe not be Center
-    fun setXMark(xPosition: Float, note: MusicalNote, tag: Long,
+    fun setXMark(xPosition: Float, note: MusicalNote,
+                 notePrintOptions: MusicalNotePrintOptions,
+                 tag: Long,
                  anchor: LabelAnchor = LabelAnchor.Center, style: Int = 0,
                  placeLabelsOutsideBoundsIfPossible: Boolean = false,
                  redraw: Boolean = true) {
@@ -2229,7 +2235,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
             redraw = redraw,
             null,
-            labelCreator = musicalNoteLabelCreator(note)
+            labelCreator = musicalNoteLabelCreator(note, notePrintOptions)
         )
     }
 
@@ -2259,10 +2265,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         )
     }
 
-    /// Convenience method to set a single note mark with a horizontal line.
-    /**
+    /** Convenience method to set a single note mark with a horizontal line.
      * @param yPosition y-position of mark.
      * @param note Note which will be used for drawing the label.
+     * @param notePrintOptions Options for printint the note (prefer flat/sharp, ...)
      * @param tag Identifier for the mark group. If the identifier was used before
      *   we well overwrite these marks.
      * @param anchor Anchor which defines how to align the label relative to the mark position.
@@ -2272,7 +2278,9 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      *   change something else which also needs to redraw the screen, so you can avoid an
      *   unnecessary redraw.)
      */
-    fun setYMark(yPosition: Float, note: MusicalNote, tag: Long,
+    fun setYMark(yPosition: Float, note: MusicalNote,
+                 notePrintOptions: MusicalNotePrintOptions,
+                 tag: Long,
                  anchor: LabelAnchor = LabelAnchor.Center, style: Int = 0,
                  placeLabelsOutsideBoundsIfPossible: Boolean = false,
                  redraw: Boolean = true) {
@@ -2281,7 +2289,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
             redraw = redraw,
             null,
-            labelCreator = musicalNoteLabelCreator(note)
+            labelCreator = musicalNoteLabelCreator(note, notePrintOptions)
         )
     }
 
@@ -2357,7 +2365,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun setXTicks(
-        values: FloatArray?, redraw: Boolean = true, noteNameScale: NoteNameScale, noteIndexBegin: Int) {
+        values: FloatArray?, redraw: Boolean = true, noteNameScale: NoteNameScale, noteIndexBegin: Int, notePrintOptions: MusicalNotePrintOptions) {
         if (values == null)
             return
         val octaveBegin = noteNameScale.getNoteOfIndex(noteIndexBegin).octave
@@ -2369,12 +2377,13 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 octaveEnd,
                 paint,
                 context,
+                notePrintOptions,
                 true
             )
         }
         val labelCreator = { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
             val note = noteNameScale.getNoteOfIndex(index + noteIndexBegin)
-            MusicalNoteLabel(note, textPaint, context, backgroundPaint, cornerRadius, gravity, true, padding, padding, padding, padding)
+            MusicalNoteLabel(note, textPaint, context, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
         }
         setXTicks(values, redraw, labelBounds, labelCreator)
     }
@@ -2431,7 +2440,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     fun setYTicks(
-        values: FloatArray?, redraw: Boolean = true, noteNameScale: NoteNameScale, noteIndexBegin: Int) {
+        values: FloatArray?, redraw: Boolean = true, noteNameScale: NoteNameScale, noteIndexBegin: Int, notePrintOptions: MusicalNotePrintOptions) {
         if (values == null)
             return
         val octaveBegin = noteNameScale.getNoteOfIndex(noteIndexBegin).octave
@@ -2443,12 +2452,13 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 octaveEnd,
                 paint,
                 context,
+                notePrintOptions,
                 true
             )
         }
         val labelCreator = { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
             val note = noteNameScale.getNoteOfIndex(index + noteIndexBegin)
-            MusicalNoteLabel(note, textPaint, context, backgroundPaint, cornerRadius, gravity, true, padding, padding, padding, padding)
+            MusicalNoteLabel(note, textPaint, context, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
         }
         setYTicks(values, redraw, labelBounds, labelCreator)
     }

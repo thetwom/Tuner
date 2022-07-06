@@ -148,14 +148,14 @@ class InstrumentEditorFragment : Fragment() {
 
         viewModel.strings.observe(viewLifecycleOwner) { strings ->
             //val noteNames = tunerViewModel.noteNames.value
-            //val preferFlat = tunerViewModel.preferFlat.value ?: false
             tunerViewModel.musicalScale.value?.let { musicalScale ->
                 stringView?.setStrings(
                     strings,
                     isChromatic = false,
                     musicalScale.noteNameScale,
                     musicalScale.noteIndexBegin,
-                    musicalScale.noteIndexEnd
+                    musicalScale.noteIndexEnd,
+                    tunerViewModel.notePrintOptions
                 )
                 val selectedStringIndex = viewModel.selectedStringIndex.value ?: -1
                 if (selectedStringIndex in strings.indices)
@@ -240,16 +240,17 @@ class InstrumentEditorFragment : Fragment() {
 
     private fun updateNoteNamesInAllViews() {
         //val noteNames = tunerViewModel.noteNames.value ?: return
-        //val preferFlat = tunerViewModel.preferFlat.value ?: false
+        val notePrintOptions =tunerViewModel.notePrintOptions
         val musicalScale = tunerViewModel.musicalScale.value ?: return
 
+        // TODO: notePrintOptions must also go to noteSelector and detectedNoteViewer, but must leave the msical scale
         noteSelector?.setNotes(musicalScale.noteIndexBegin, musicalScale.noteIndexEnd,
             musicalScale.noteNameScale, null)
         detectedNoteViewer?.setNotes(
             musicalScale.noteNameScale, musicalScale.noteIndexBegin, musicalScale.noteIndexEnd)
         viewModel.strings.value?.let { strings ->
             stringView?.setStrings(strings, false, musicalScale.noteNameScale,
-                musicalScale.noteIndexBegin, musicalScale.noteIndexEnd)
+                musicalScale.noteIndexBegin, musicalScale.noteIndexEnd, notePrintOptions)
         }
     }
 }

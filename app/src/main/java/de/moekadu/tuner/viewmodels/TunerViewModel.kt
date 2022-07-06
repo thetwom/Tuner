@@ -97,6 +97,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _preferFlat = MutableLiveData(false)
     val preferFlat: LiveData<Boolean> get() = _preferFlat
+    val notePrintOptions get() = if (preferFlat.value == true) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
 
     private var musicalScaleValue: MusicalScale =
         MusicalScaleFactory.create(TemperamentType.EDO12, null, null, 440f, preferFlat.value ?: false)
@@ -183,6 +184,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 "prefer_flat" -> {
                     _preferFlat.value = sharedPreferences.getBoolean(key, false)
+                    changeMusicalScale(preferFlat = _preferFlat.value)
                 }
                 "windowing" -> {
                     val value = sharedPreferences.getString(key, null)
@@ -330,8 +332,9 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
      *  @param note Target note, or note == null for automatic note detection.
      * */
     fun setTargetNote(stringIndex: Int, note: MusicalNote?) {
-//        Log.v("Tuner", "TunerViewModel.setTargetNote: toneIndex=$toneIndex")
+//        Log.v("Tuner", "TunerViewModel.setTargetNote: stringIndex=$stringIndex")
         val oldTargetNote = targetNoteValue.note
+        val oldStringIndex = selectedStringIndex
         selectedStringIndex = stringIndex
 
         if (note == null) { // -> AUTOMATIC_TARGET_NOTE_DETECTION
@@ -350,7 +353,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
 
-        if (targetNoteValue.note != oldTargetNote)
+        if (targetNoteValue.note != oldTargetNote || stringIndex != oldStringIndex)
             _targetNote.value = targetNoteValue
     }
 
@@ -424,17 +427,18 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun changeMusicalScale(rootNote: MusicalNote? = null, referenceNote: MusicalNote? = null,
                                    referenceFrequency: Float? = null, temperamentType: TemperamentType? = null,
-                                   preferFlat: Boolean = false) {
+                                   preferFlat: Boolean? = null) {
         val temperamentTypeResolved = temperamentType ?: musicalScaleValue.temperamentType
         val rootNoteResolved = rootNote ?: musicalScaleValue.rootNote
         val referenceNoteResolved = referenceNote ?: musicalScaleValue.referenceNote
         val referenceFrequencyResolved = referenceFrequency ?: musicalScaleValue.referenceFrequency
+        val preferFlatResolved = preferFlat ?: _preferFlat.value ?: false
         musicalScaleValue = MusicalScaleFactory.create(
             temperamentTypeResolved,
             referenceNoteResolved,
             rootNoteResolved,
             referenceFrequencyResolved,
-            preferFlat = preferFlat
+            preferFlat = preferFlatResolved
         )
         _musicalScale.value = musicalScaleValue
     }
@@ -448,10 +452,9 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         val temperamentString = pref.getString("temperament", null)
         val temperamentType = TemperamentPreference.getTemperamentFromValue(temperamentString)
         val rootNote = TemperamentPreference.getRootNoteFromValue(temperamentString)
-        changeMusicalScale(temperamentType = temperamentType, rootNote = rootNote, referenceNote = referenceNote, referenceFrequency = referenceFrequency)
-
-        // a4Frequency = pref.getString("a4_frequency", "440")?.toFloat() ?: 440f
         _preferFlat.value = pref.getBoolean("prefer_flat", false)
+        changeMusicalScale(temperamentType = temperamentType, rootNote = rootNote, referenceNote = referenceNote, referenceFrequency = referenceFrequency, preferFlat = preferFlat.value)
+
         windowingFunction = when (pref.getString("windowing", "no_window")) {
             "no_window" -> WindowingFunction.Tophat
             "window_hamming" -> WindowingFunction.Hamming
