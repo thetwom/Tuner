@@ -8,7 +8,7 @@ class TargetNote {
     enum class TuningStatus {TooLow, TooHigh, InTune, Unknown}
 
     /// Tuning frequency class which connects tone indices with frequencies
-    var musicalScale: MusicalScale = MusicalScaleFactory.create(TemperamentType.EDO12, null, null, 440f, false)
+    var musicalScale: MusicalScale = MusicalScaleFactory.create(TemperamentType.EDO12, null, null, 440f)
         set(value) {
             field = value
             sortedAndDistinctNoteIndices = sortStringsAccordingToNoteIndex(instrument)

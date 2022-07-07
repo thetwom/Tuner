@@ -245,7 +245,7 @@ class InstrumentEditorFragment : Fragment() {
 
         // TODO: notePrintOptions must also go to noteSelector and detectedNoteViewer, but must leave the msical scale
         noteSelector?.setNotes(musicalScale.noteIndexBegin, musicalScale.noteIndexEnd,
-            musicalScale.noteNameScale, null)
+            musicalScale.noteNameScale, null, notePrintOptions)
         detectedNoteViewer?.setNotes(
             musicalScale.noteNameScale, musicalScale.noteIndexBegin, musicalScale.noteIndexEnd)
         viewModel.strings.value?.let { strings ->

@@ -220,14 +220,16 @@ class SettingsFragment : PreferenceFragmentCompat() {
     when (preference) {
       is ReferenceNotePreference -> {
         val preferFlat = preferFlatPreference?.isChecked ?: false
+        val printOption = if (preferFlat) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
         val temperamentType = temperamentPreference?.value?.temperamentType ?: TemperamentType.EDO12
-        val dialog = ReferenceNotePreferenceDialog.newInstance(preference.key, "reference_note_tag", temperamentType, preferFlat)
+        val dialog = ReferenceNotePreferenceDialog.newInstance(preference.key, "reference_note_tag", temperamentType, printOption)
         dialog.show(parentFragmentManager, "reference_note_tag")
         dialog.setTargetFragment(this, 0)
       }
       is TemperamentPreference -> {
-          val preferFlat = preferFlatPreference?.isChecked ?: false
-        val dialog = TemperamentPreferenceDialog.newInstance(preference.key, "temperament_tag", preferFlat = preferFlat)
+        val preferFlat = preferFlatPreference?.isChecked ?: false
+        val printOption = if (preferFlat) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
+        val dialog = TemperamentPreferenceDialog.newInstance(preference.key, "temperament_tag", printOption)
         dialog.show(parentFragmentManager, "temperament_tag")
         dialog.setTargetFragment(this, 0)
       }
@@ -301,7 +303,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             val pF = preferFlat ?: (preferFlatPreference?.isChecked ?: false)
             val printOption = if (pF) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
 
-            val noteNameScale = NoteNameScaleFactory.create(t, pF)
+            val noteNameScale = NoteNameScaleFactory.create(t)
             var r = rootNote ?: temperamentPreference?.value?.rootNote
             if (r == null)
                 r = noteNameScale.notes[0]

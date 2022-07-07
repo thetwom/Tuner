@@ -8,11 +8,10 @@ class MusicalScaleFactory {
             referenceNote: MusicalNote? = null,
             rootNote: MusicalNote? = null,
             referenceFrequency: Float = 440f,
-            preferFlat: Boolean = false,
             frequencyMin: Float = 16.0f,
             frequencyMax: Float = 17000.0f
         ): MusicalScale {
-            val noteNameScale = NoteNameScaleFactory.create(temperamentType, preferFlat)
+            val noteNameScale = NoteNameScaleFactory.create(temperamentType)
             val rootNoteResolved = rootNote ?: noteNameScale.notes[0]
             val referenceNoteResolved = referenceNote ?: noteNameScale.defaultReferenceNote
             return when (temperamentType) {

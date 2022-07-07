@@ -100,7 +100,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     val notePrintOptions get() = if (preferFlat.value == true) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
 
     private var musicalScaleValue: MusicalScale =
-        MusicalScaleFactory.create(TemperamentType.EDO12, null, null, 440f, preferFlat.value ?: false)
+        MusicalScaleFactory.create(TemperamentType.EDO12, null, null, 440f)
         set(value) {
             field = value
             pitchHistory.musicalScale = value
@@ -184,7 +184,6 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 "prefer_flat" -> {
                     _preferFlat.value = sharedPreferences.getBoolean(key, false)
-                    changeMusicalScale(preferFlat = _preferFlat.value)
                 }
                 "windowing" -> {
                     val value = sharedPreferences.getString(key, null)
@@ -227,13 +226,13 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     init {
 //        Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
 
-        sampleSource.testFunction = { t ->
-            //val freq = 400 + 2*t
-            val freq = 200 + 2*t
-            //val freq = 440
-           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
-            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
-        }
+//        sampleSource.testFunction = { t ->
+//            //val freq = 400 + 2*t
+//            val freq = 200 + 2*t
+//            //val freq = 440
+//           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
+//            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
+//        }
 //        sampleSource.testFunction = { t ->
 //            val freq = 440f
 //            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
@@ -426,19 +425,16 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun changeMusicalScale(rootNote: MusicalNote? = null, referenceNote: MusicalNote? = null,
-                                   referenceFrequency: Float? = null, temperamentType: TemperamentType? = null,
-                                   preferFlat: Boolean? = null) {
+                                   referenceFrequency: Float? = null, temperamentType: TemperamentType? = null) {
         val temperamentTypeResolved = temperamentType ?: musicalScaleValue.temperamentType
         val rootNoteResolved = rootNote ?: musicalScaleValue.rootNote
         val referenceNoteResolved = referenceNote ?: musicalScaleValue.referenceNote
         val referenceFrequencyResolved = referenceFrequency ?: musicalScaleValue.referenceFrequency
-        val preferFlatResolved = preferFlat ?: _preferFlat.value ?: false
         musicalScaleValue = MusicalScaleFactory.create(
             temperamentTypeResolved,
             referenceNoteResolved,
             rootNoteResolved,
-            referenceFrequencyResolved,
-            preferFlat = preferFlatResolved
+            referenceFrequencyResolved
         )
         _musicalScale.value = musicalScaleValue
     }
@@ -453,7 +449,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         val temperamentType = TemperamentPreference.getTemperamentFromValue(temperamentString)
         val rootNote = TemperamentPreference.getRootNoteFromValue(temperamentString)
         _preferFlat.value = pref.getBoolean("prefer_flat", false)
-        changeMusicalScale(temperamentType = temperamentType, rootNote = rootNote, referenceNote = referenceNote, referenceFrequency = referenceFrequency, preferFlat = preferFlat.value)
+        changeMusicalScale(temperamentType = temperamentType, rootNote = rootNote, referenceNote = referenceNote, referenceFrequency = referenceFrequency)
 
         windowingFunction = when (pref.getString("windowing", "no_window")) {
             "no_window" -> WindowingFunction.Tophat

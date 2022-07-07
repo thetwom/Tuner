@@ -22,13 +22,13 @@ import kotlin.math.pow
 class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
     companion object {
         private const val REQUEST_KEY = "temperament_preference_dialog.request_key"
-        private const val PREFER_FLAT_KEY = "reference_note_preference_dialog.prefer_flat"
+        private const val NOTE_PRINT_OPTIONS_KEY = "reference_note_preference_dialog.note_print_options_key"
 
-        fun newInstance(key: String, requestCode: String, preferFlat: Boolean): TemperamentPreferenceDialog {
+        fun newInstance(key: String, requestCode: String, notePrintOptions: MusicalNotePrintOptions): TemperamentPreferenceDialog {
             val args = Bundle(3)
             args.putString(ARG_KEY, key)
             args.putString(REQUEST_KEY, requestCode)
-            args.putBoolean(PREFER_FLAT_KEY, preferFlat)
+            args.putString(NOTE_PRINT_OPTIONS_KEY, notePrintOptions.toString())
             val fragment = TemperamentPreferenceDialog()
             fragment.arguments = args
             return fragment
@@ -52,7 +52,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
     private var circleOfFifthsTitle: TextView? = null
     private var resetToDefaultButton: MaterialButton? = null
 
-    private var preferFlat = false
+    private var notePrintOptions = MusicalNotePrintOptions.None
 
     private var centArray = FloatArray(0) { 0f }
     private var ratioArray: Array<RationalNumber>? = null
@@ -72,7 +72,8 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
                 TemperamentType.valueOf(restoredTemperamentString)
         }
 
-        preferFlat = arguments?.getBoolean(PREFER_FLAT_KEY) ?: false
+        val notePrintOptionsString = arguments?.getString(NOTE_PRINT_OPTIONS_KEY) ?: MusicalNotePrintOptions.None.toString()
+        notePrintOptions = MusicalNotePrintOptions.valueOf(notePrintOptionsString)
         super.onCreate(savedInstanceState)
     }
 
@@ -182,7 +183,6 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
             defaultReferenceNote,
             referenceFrequency = 440f,
             rootNote = defaultReferenceNote,
-            preferFlat = preferFlat,
             frequencyMin = 440f,
             frequencyMax = 2.5f * 440f) // normally up to 2*440f would be enough for one octave, but lets play safe here
         require(musicalScaleLocal.noteIndexBegin <= 0) // default reference note is index 0 per definition
@@ -207,7 +207,7 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
             null
 
         // set the new note scale in the root note selector and select the required note
-        rootNoteSelector?.setNotes(noteIndexBegin, noteIndexEnd, musicalScaleLocal.noteNameScale, rootNote)
+        rootNoteSelector?.setNotes(noteIndexBegin, noteIndexEnd, musicalScaleLocal.noteNameScale, rootNote, notePrintOptions)
 
         val selectedRootNote = rootNoteSelector?.activeNote ?: musicalScaleLocal.noteNameScale.notes[0].copy(octave = 4)
         updateCentAndRatioTable(selectedRootNote, musicalScaleLocal.noteNameScale, centArray, ratioArray)

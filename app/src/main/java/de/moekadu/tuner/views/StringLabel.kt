@@ -17,7 +17,7 @@ class StringLabel(string: String, paint: TextPaint,
         paint.getTextBounds(string, 0, string.length, this)
     }
 
-    private val desiredWidth = StaticLayout.getDesiredWidth(string, paint).toInt()
+    private val desiredWidth = StaticLayout.getDesiredWidth(string, paint).toInt() + 1
     private val layout = StaticLayout.Builder.obtain(string, 0, string.length, paint, desiredWidth).build()
     private val baselineOfLayout = layout.getLineBaseline(0)
 

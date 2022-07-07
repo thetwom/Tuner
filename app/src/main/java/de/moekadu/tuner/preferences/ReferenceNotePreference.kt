@@ -11,24 +11,21 @@ import androidx.preference.DialogPreference
 import androidx.preference.PreferenceDialogFragmentCompat
 import com.google.android.material.button.MaterialButton
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteNameScaleFactory
-import de.moekadu.tuner.temperaments.TemperamentType
-import de.moekadu.tuner.temperaments.legacyNoteIndexToNote
+import de.moekadu.tuner.temperaments.*
 import de.moekadu.tuner.views.NoteSelector
 
 class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
     companion object {
         private const val REQUEST_KEY = "reference_note_preference_dialog.request_key"
         private const val TEMPERAMENT_TYPE_KEY = "reference_note_preference_dialog.temperament_type"
-        private const val PREFER_FLAT_KEY = "reference_note_preference_dialog.prefer_flat"
+        private const val NOTE_PRINT_OPTIONS_KEY = "reference_note_preference_dialog.note_print_options_key"
 
-        fun newInstance(key: String, requestCode: String, temperamentType: TemperamentType, preferFlat: Boolean): ReferenceNotePreferenceDialog {
+        fun newInstance(key: String, requestCode: String, temperamentType: TemperamentType, notePrintOptions: MusicalNotePrintOptions): ReferenceNotePreferenceDialog {
             val args = Bundle(3)
             args.putString(ARG_KEY, key)
             args.putString(REQUEST_KEY, requestCode)
             args.putString(TEMPERAMENT_TYPE_KEY, temperamentType.toString())
-            args.putBoolean(PREFER_FLAT_KEY, preferFlat)
+            args.putString(NOTE_PRINT_OPTIONS_KEY, notePrintOptions.toString())
             val fragment = ReferenceNotePreferenceDialog()
             fragment.arguments = args
             return fragment
@@ -41,7 +38,7 @@ class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
     private var restoredReferenceNoteString: String? = null
     private var restoredFrequencyString: String? = null
     private var temperamentType = TemperamentType.EDO12
-    private var preferFlat = false
+    private var notePrintOptions = MusicalNotePrintOptions.None
 
     override fun onCreate(savedInstanceState: Bundle?) {
 //        Log.v("Tuner","ReferenceNotePreferenceDialog.onCreate: $preference (setting)")
@@ -54,7 +51,8 @@ class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
 
         val temperamentTypeString = arguments?.getString(TEMPERAMENT_TYPE_KEY) ?: TemperamentType.EDO12.toString()
         temperamentType = TemperamentType.valueOf(temperamentTypeString)
-        preferFlat = arguments?.getBoolean(PREFER_FLAT_KEY) ?: false
+        val notePrintOptionsString = arguments?.getString(NOTE_PRINT_OPTIONS_KEY) ?: MusicalNotePrintOptions.None.toString()
+        notePrintOptions = MusicalNotePrintOptions.valueOf(notePrintOptionsString)
         super.onCreate(savedInstanceState)
     }
 
@@ -81,7 +79,7 @@ class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
 
         var currentFrequency = restoredFrequencyString?.toFloatOrNull()
 
-        val noteNameScale = NoteNameScaleFactory.create(temperamentType, preferFlat)
+        val noteNameScale = NoteNameScaleFactory.create(temperamentType)
 
         referenceNoteView = view.findViewById(R.id.reference_note)
         editTextView = view.findViewById(R.id.reference_frequency)
@@ -105,12 +103,10 @@ class ReferenceNotePreferenceDialog : PreferenceDialogFragmentCompat() {
         if (currentFrequency == null)
             currentFrequency = 440f
 
-        context?.let { ctx ->
-            // present notes from C0 to C10 (or something similar for non-standard 12-tone scales)
-            val noteIndexBegin = noteNameScale.getIndexOfNote(noteNameScale.notes[0].copy(octave = 0))
-            val noteIndexEnd = noteNameScale.getIndexOfNote(noteNameScale.notes[0].copy(octave = 10)) + 1
-            referenceNoteView?.setNotes(noteIndexBegin, noteIndexEnd, noteNameScale, activeReferenceNote)
-        }
+        // present notes from C0 to C10 (or something similar for non-standard 12-tone scales)
+        val noteIndexBegin = noteNameScale.getIndexOfNote(noteNameScale.notes[0].copy(octave = 0))
+        val noteIndexEnd = noteNameScale.getIndexOfNote(noteNameScale.notes[0].copy(octave = 10)) + 1
+        referenceNoteView?.setNotes(noteIndexBegin, noteIndexEnd, noteNameScale, activeReferenceNote, notePrintOptions)
 
         editTextView?.setText(currentFrequency.toString())
         editTextView?.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL

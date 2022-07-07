@@ -1761,7 +1761,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
         title?.let {
             canvas?.drawText(it,
-                0.5f * width,
+                0.5f * (left + right),
                 paddingTop + titleSize,
                 titlePaint)
         }

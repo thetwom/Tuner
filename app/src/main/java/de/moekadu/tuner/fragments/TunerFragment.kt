@@ -114,10 +114,10 @@ class TunerFragment : Fragment() {
         correlationPlot = view.findViewById(R.id.correlation_plot)
         volumeMeter = view.findViewById(R.id.volume_meter)
 
-        spectrumPlot?.xRange(0f, 1760f, PlotView.NO_REDRAW)
+        spectrumPlot?.xRange(0f, 1600f, PlotView.NO_REDRAW)
         spectrumPlot?.setXTicks(
-            floatArrayOf(0f, 200f, 400f, 600f, 800f, 1000f, 1200f, 1400f, 1600f, 1800f, 2000f, 2200f, 2400f,
-                2600f, 2800f, 3000f, 3200f, 3400f, 3600f, 3800f, 4000f, 4500f, 5000f, 5500f, 6000f,
+            floatArrayOf(0f, 250f, 500f, 750f, 1000f, 1250f, 1500f, 1750f, 2000f, 2250f, 2500f,
+                2750f, 3000f, 3250f, 3500f, 3750f, 4000f, 4500f, 5000f, 5500f, 6000f,
                 6500f, 7000f, 7500f, 8000f, 8500f, 9000f, 9500f, 10000f, 11000f, 12000f, 13000f, 14000f,
                 15000f, 16000f, 17000f, 18000f, 19000f, 20000f, 25000f, 30000f, 35000f, 40000f),
             false
@@ -130,7 +130,7 @@ class TunerFragment : Fragment() {
         correlationPlot?.setXTicks(
             floatArrayOf(
                 1 / 1600f,
-                1 / 200f,
+                1 / 150f,
                 1 / 80f,
                 1 / 50f,
                 1 / 38f,
@@ -158,7 +158,6 @@ class TunerFragment : Fragment() {
         correlationPlot?.setYTicks(floatArrayOf(0f), false) { _, _ -> "" }
 
         pitchPlot?.yRange(400f, 500f, PlotView.NO_REDRAW)
-
 //        viewModel.standardDeviation.observe(viewLifecycleOwner) { standardDeviation ->
 //            volumeMeter?.volume = log10(max(1e-12f, standardDeviation))
 //        }
