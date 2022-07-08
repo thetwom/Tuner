@@ -128,6 +128,8 @@
     <string name="double_bass_eadg">Double bass</string>
     <string name="equal_temperament_12">Equal temperament</string>
     <string name="equal_temperament_12_desc">12 notes per octave</string>
+    <string name="equal_temperament_19">Equal temperament 19</string>
+    <string name="equal_temperament_19_desc">19 notes per octave</string>
     <string name="pythagorean_tuning">Pythagorean tuning</string>
     <string name="pure_tuning">Just tuning</string>
     <string name="pure_tuning_desc">5-limit, asymmetric scale</string>

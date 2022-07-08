@@ -113,3 +113,31 @@ fun createNoteNameScale12Tone(referenceNote: MusicalNote?): NoteNameScale {
         referenceNoteResolved
     )
 }
+
+fun createNoteNameScale19Tone(referenceNote: MusicalNote?): NoteNameScale {
+    val referenceNoteResolved = referenceNote ?: MusicalNote(BaseNote.A, NoteModifier.None, 4)
+    return NoteNameScale(
+        arrayOf(
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.Sharp)
+        ),
+        referenceNoteResolved
+    )
+}

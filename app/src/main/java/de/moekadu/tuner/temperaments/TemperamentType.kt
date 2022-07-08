@@ -21,6 +21,7 @@ enum class TemperamentType {
     // Neidhardt4,
     Valotti,
     Young2,
+    EDO19,
     Test
 }
 
@@ -42,6 +43,7 @@ fun getTuningNameResourceId(temperamentType: TemperamentType) = when(temperament
     TemperamentType.Neidhardt3 -> R.string.neidhardt3
     TemperamentType.Valotti -> R.string.valotti
     TemperamentType.Young2 -> R.string.young2
+    TemperamentType.EDO19 -> R.string.equal_temperament_19
     TemperamentType.Test -> R.string.test_tuning
 }
 
@@ -63,6 +65,7 @@ fun getTuningDescriptionResourceId(temperamentType: TemperamentType) = when(temp
     TemperamentType.Neidhardt3 -> R.string.neidhardt3_desc
     TemperamentType.Valotti -> null
     TemperamentType.Young2 -> null
+    TemperamentType.EDO19 -> R.string.equal_temperament_19_desc
     TemperamentType.Test -> null
 }
 

@@ -167,4 +167,6 @@
     <string name="no_instruments_selected">Keine Instrumente ausgewählt.</string>
     <string name="black_night_mode">Schwarzer Hintergrund im dunklen Modus</string>
     <string name="system_color_accents">System-Akzentfarben verwenden</string>
+    <string name="equal_temperament_19">Gleichstufige Stimmung 19</string>
+    <string name="equal_temperament_19_desc">19 Noten pro Oktave</string>
 </resources>
