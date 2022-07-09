@@ -10,10 +10,12 @@ class NoteNameScale(
     val notes: Array<MusicalNote>,
     val defaultReferenceNote: MusicalNote
 ) {
-    // TODO: test getNoteOfIndex and getIndexOfNote
+    /** Reference note index within the octave (index in notes). */
     private val referenceNoteIndexWithinOctave = notes.indexOfFirst {
         MusicalNote.notesEqualIgnoreOctave(it, defaultReferenceNote)
     }
+
+    /** Octave of reference note. */
     private val referenceNoteOctave = defaultReferenceNote.octave
 
     /** Number of notes contained in the scale. */
@@ -51,6 +53,10 @@ class NoteNameScale(
      */
     fun switchEnharmonic(): NoteNameScale {
         return NoteNameScale(notes.map {it.switchEnharmonic()}.toTypedArray(), defaultReferenceNote.switchEnharmonic())
+    }
+
+    fun hasNote(note: MusicalNote): Boolean {
+        return notes.any { MusicalNote.notesEqualIgnoreOctave(it, note) }
     }
 }
 

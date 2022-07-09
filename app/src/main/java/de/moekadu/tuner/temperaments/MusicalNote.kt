@@ -35,11 +35,12 @@ data class MusicalNote(val base: BaseNote, val modifier: NoteModifier, val octav
                        val enharmonicBase: BaseNote = BaseNote.None,
                        val enharmonicModifier: NoteModifier = NoteModifier.None,
                        val enharmonicOctaveOffset: Int = 0) {
-    // TODO: write tests for member functions
+    /** Get string representation of note, which can be later on parsed to get back the note. */
     fun asString(): String {
         return "MusicalNote(base=$base,modifier=$modifier,octave=$octave,enharmonicBase=$enharmonicBase,enharmonicModifier=$enharmonicModifier,enharmonicOctaveOffset=$enharmonicOctaveOffset)"
     }
 
+    /** Return a note, where enharmonic and base represenation are exchanged. */
     fun switchEnharmonic(): MusicalNote {
         if (enharmonicBase == BaseNote.None)
             return this
@@ -57,6 +58,7 @@ data class MusicalNote(val base: BaseNote, val modifier: NoteModifier, val octav
             enharmonicBase = base, enharmonicModifier = modifier, enharmonicOctaveOffset = -enharmonicOctaveOffset)
     }
     companion object {
+        /** Parse a string (which normally is created with "asString" and return the resulting note. */
         fun fromString(string: String): MusicalNote {
             val className = "MusicalNote"
             if (string.length < className.length + 2 || string.substring(0, className.length + 1) != "$className(" || string.substring(string.length-1, string.length) != ")")
