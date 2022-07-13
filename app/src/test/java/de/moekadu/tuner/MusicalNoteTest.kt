@@ -46,4 +46,48 @@ class MusicalNoteTest {
         }
         // TODO: add more tests
     }
+
+    @Test
+    fun testClosestNote() {
+        val notes1 = arrayOf(
+            MusicalNote(BaseNote.C, NoteModifier.None),
+            MusicalNote(BaseNote.E, NoteModifier.None),
+            MusicalNote(BaseNote.G, NoteModifier.None),
+            MusicalNote(BaseNote.D, NoteModifier.Sharp, enharmonicBase = BaseNote.E, enharmonicModifier = NoteModifier.Flat)
+        )
+
+        val notes2 = arrayOf(
+            MusicalNote(BaseNote.E, NoteModifier.Flat, enharmonicBase = BaseNote.D, enharmonicModifier = NoteModifier.Sharp),
+            MusicalNote(BaseNote.A, NoteModifier.None),
+            MusicalNote(BaseNote.F, NoteModifier.Sharp),
+            MusicalNote(BaseNote.C, NoteModifier.None)
+        )
+
+        val scale1 = NoteNameScale(notes1, notes1[0].copy(octave = 4))
+        val scale2 = NoteNameScale(notes2, notes2[0].copy(octave = 4))
+
+        // if equal note exists, take it ...
+        val testNote1 = notes1[0].copy(octave = 2)
+        val closeNote1 = scale2.getClosestNote(testNote1, scale1)
+        assertEquals(testNote1.base, closeNote1.base)
+        assertEquals(testNote1.modifier, closeNote1.modifier)
+        assertEquals(testNote1.octave, closeNote1.octave)
+
+        // if equal note exists but enharmonic, we take it but get the note with enharmoic order of scale2
+        val testNote2 = notes1[3].copy(octave = 2)
+        val testNote2S2 = notes2[0].copy(octave = 2)
+        val closeNote2 = scale2.getClosestNote(testNote2, scale1)
+        assertEquals(testNote2S2.base, closeNote2.base)
+        assertEquals(testNote2S2.modifier, closeNote2.modifier)
+        assertEquals(testNote2S2.octave, closeNote2.octave)
+        assertEquals(testNote2S2.enharmonicBase, closeNote2.enharmonicBase)
+        assertEquals(testNote2S2.enharmonicModifier, closeNote2.enharmonicModifier)
+
+        // use closest relative position
+        val testNote3 = notes1[2].copy(octave = 2)
+        val closeNote3 = scale2.getClosestNote(testNote3, scale1)
+        assertEquals(BaseNote.F, closeNote3.base)
+        assertEquals(NoteModifier.Sharp, closeNote3.modifier)
+        assertEquals(testNote1.octave, closeNote3.octave)
+    }
 }

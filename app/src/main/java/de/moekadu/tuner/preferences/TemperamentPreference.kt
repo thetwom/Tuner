@@ -154,9 +154,9 @@ class TemperamentPreferenceDialog : PreferenceDialogFragmentCompat() {
         if (positiveResult) {
             arguments?.getString(REQUEST_KEY)?.let {
                 val rootNote = rootNoteSelector?.activeNote
-                val tuning = (temperamentSpinner?.selectedItem as TemperamentProperties?)?.temperamentType ?: TemperamentType.EDO12
+                val temperamentType = (temperamentSpinner?.selectedItem as TemperamentProperties?)?.temperamentType ?: TemperamentType.EDO12
 
-                (preference as TemperamentPreference).setValueFromData(tuning, rootNote)
+                (preference as TemperamentPreference).setValueFromData(temperamentType, rootNote)
                 // setFragmentResult(it, bundle)
             }
         }
@@ -278,7 +278,11 @@ class TemperamentPreference(context: Context, attrs: AttributeSet?)
         }
     }
     fun interface OnTemperamentChangedListener {
-        fun onTemperamentChanged(preference: TemperamentPreference, temperamentType: TemperamentType, rootNote: MusicalNote)
+        fun onTemperamentChanged(
+            preference: TemperamentPreference,
+            oldTemperament: TemperamentType,
+            temperamentType: TemperamentType,
+            rootNote: MusicalNote)
     }
 
     private var onTemperamentChangedListener: OnTemperamentChangedListener? = null
@@ -334,21 +338,27 @@ class TemperamentPreference(context: Context, attrs: AttributeSet?)
 
     private fun setValueFromString(value: String) {
 //        Log.v("Tuner", "TemperamentPreference.onSetValueFromString: $value")
+        val oldTemperamentType = this.value.temperamentType
         this.value.fromString(value)
         this.value.rootNote?.let { rootNote ->
             persistString(value)
 //        Log.v("Tuner", "TemperamentPreference.onSetValueFromString: $value, f=${this.value.frequency}, t=${this.value.toneIndex}")
-            onTemperamentChangedListener?.onTemperamentChanged(this, this.value.temperamentType, rootNote)
+            onTemperamentChangedListener?.onTemperamentChanged(
+                this,
+                oldTemperamentType,
+                this.value.temperamentType, rootNote)
             // summary = "my new summary"
         }
     }
 
     fun setValueFromData(temperamentType: TemperamentType, rootNote: MusicalNote?) {
+        val oldTemperamentType = value.temperamentType
         value.temperamentType = temperamentType
         if (rootNote != null) {
             value.rootNote = rootNote
             persistString(value.toString())
-            onTemperamentChangedListener?.onTemperamentChanged(this, this.value.temperamentType, rootNote)
+            onTemperamentChangedListener?.onTemperamentChanged(
+                this, oldTemperamentType, this.value.temperamentType, rootNote)
             // summary = "my new summary"
         }
     }

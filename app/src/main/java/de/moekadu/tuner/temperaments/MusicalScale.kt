@@ -78,7 +78,7 @@ interface MusicalScale {
 
     /** Get note index of a given musical note representation.
      * @param note Musical note representation.
-     * @return Local index of the note. // TODO: what to do if the representation is not contained in this class?
+     * @return Local index of the note or Int.MAX_VALUE if not does not exist in scale.
      */
     fun getNoteIndex(note: MusicalNote): Int
 }

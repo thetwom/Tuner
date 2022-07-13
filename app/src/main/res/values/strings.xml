@@ -185,4 +185,5 @@
     <string name="select_all">Select all</string>
     <string name="black_night_mode">Black background in dark mode</string>
     <string name="system_color_accents">Color accents from system</string>
+    <string name="incorrect_temperament">Incompatible temperament</string>
 </resources>

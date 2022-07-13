@@ -22,6 +22,7 @@ package de.moekadu.tuner.fragments
 import android.content.res.Configuration
 import android.os.Bundle
 import android.text.SpannableStringBuilder
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -126,15 +127,27 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     referenceNotePreference = findPreference("reference_note") ?: throw RuntimeException("no reference_note preference")
     referenceNotePreference?.setOnReferenceNoteChangedListener { _, frequency, note ->
-//      Log.v("Tuner", "SettingsFragment: referenceNotePreference changed")
+      Log.v("Tuner", "SettingsFragment: referenceNotePreference changed")
       setReferenceNoteSummary(frequency, note)
     }
     setReferenceNoteSummary()
 
     temperamentPreference = findPreference("temperament") ?: throw RuntimeException("no temperament preference")
-    temperamentPreference?.setOnTemperamentChangedListener { _, tuning, rootNote ->
-//      Log.v("Tuner", "SettingsFragment: temperament changed")
-          setTemperamentSummary(tuning, rootNote)
+    temperamentPreference?.setOnTemperamentChangedListener { _, oldTemperamentType, temperamentType, rootNote ->
+      Log.v("Tuner", "SettingsFragment: temperament changed")
+        setTemperamentSummary(temperamentType, rootNote)
+
+        // update reference note preference if it is not compatible
+        referenceNotePreference?.value?.referenceNote?.let { oldReferenceNote ->
+            val frequency = referenceNotePreference?.value?.frequency ?: 440f
+            val oldNoteNameScale = NoteNameScaleFactory.create(oldTemperamentType)
+            val newNoteNameScale = NoteNameScaleFactory.create(temperamentType)
+            val newReferenceNote = newNoteNameScale.getClosestNote(oldReferenceNote, oldNoteNameScale)
+            if (oldReferenceNote != newReferenceNote) {
+                referenceNotePreference?.setValueFromData(frequency, newReferenceNote)
+                // TODO: show dialog, about reference note change
+            }
+        }
       }
       setTemperamentSummary()
 

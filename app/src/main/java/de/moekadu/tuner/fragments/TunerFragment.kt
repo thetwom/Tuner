@@ -338,35 +338,52 @@ class TunerFragment : Fragment() {
         val nameMinusBound = getString(R.string.cent, -targetNote.toleranceInCents)
         val namePlusBound = getString(R.string.cent, targetNote.toleranceInCents)
 
-        pitchPlot?.setMarks(
-            null,
-            floatArrayOf(targetNote.frequencyLowerTolerance, targetNote.frequencyUpperTolerance),
-            MARK_ID_TOLERANCE,
-            1,
-            arrayOf(LabelAnchor.NorthWest, LabelAnchor.SouthWest),
-            MarkLabelBackgroundSize.FitLargest,
-            placeLabelsOutsideBoundsIfPossible = false,
-            redraw = false,
-            maxLabelBounds = null
-        ) { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
-            val s = when (index) {
-                0 -> nameMinusBound
-                1 -> namePlusBound
-                else -> ""
+        if (targetNote.isTargetNoteAvailable) {
+            pitchPlot?.setMarks(
+                null,
+                floatArrayOf(
+                    targetNote.frequencyLowerTolerance,
+                    targetNote.frequencyUpperTolerance
+                ),
+                MARK_ID_TOLERANCE,
+                1,
+                arrayOf(LabelAnchor.NorthWest, LabelAnchor.SouthWest),
+                MarkLabelBackgroundSize.FitLargest,
+                placeLabelsOutsideBoundsIfPossible = false,
+                redraw = false,
+                maxLabelBounds = null
+            ) { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius: Float ->
+                val s = when (index) {
+                    0 -> nameMinusBound
+                    1 -> namePlusBound
+                    else -> ""
+                }
+                StringLabel(
+                    s,
+                    textPaint,
+                    backgroundPaint,
+                    cornerRadius,
+                    gravity,
+                    padding,
+                    padding,
+                    padding,
+                    padding
+                )
             }
-            StringLabel(s, textPaint, backgroundPaint, cornerRadius, gravity, padding, padding, padding, padding)
+            pitchPlot?.setYMark(
+                targetNote.frequency,
+                targetNote.note,
+                viewModel.notePrintOptions,
+                MARK_ID_FREQUENCY,
+                LabelAnchor.East,
+                if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
+                placeLabelsOutsideBoundsIfPossible = true,
+                redraw = redraw
+            )
+        } else {
+            pitchPlot?.removePlotMarks(MARK_ID_TOLERANCE, suppressInvalidate = true)
+            pitchPlot?.removePlotMarks(MARK_ID_FREQUENCY, suppressInvalidate = !redraw)
         }
-
-        pitchPlot?.setYMark(
-            targetNote.frequency,
-            targetNote.note,
-            viewModel.notePrintOptions,
-            MARK_ID_FREQUENCY,
-            LabelAnchor.East,
-            if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
-            placeLabelsOutsideBoundsIfPossible = true,
-            redraw = redraw
-        )
     }
 
     private fun updatePitchPlotNoteNames(redraw: Boolean = true) {
@@ -391,17 +408,21 @@ class TunerFragment : Fragment() {
 
         // Update active y-mark in pitch history plot
         viewModel.targetNote.value?.let { targetNote ->
-            pitchPlot?.setYMark(
-                targetNote.frequency,
-                targetNote.note,
-                viewModel.notePrintOptions,
-                //noteNames.getNoteName(requireContext(), targetNote.noteIndex, preferFlat),
-                MARK_ID_FREQUENCY,
-                LabelAnchor.East,
-                style = if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
-                placeLabelsOutsideBoundsIfPossible = true,
-                redraw = redraw
-            )
+            if (targetNote.isTargetNoteAvailable) {
+                pitchPlot?.setYMark(
+                    targetNote.frequency,
+                    targetNote.note,
+                    viewModel.notePrintOptions,
+                    //noteNames.getNoteName(requireContext(), targetNote.noteIndex, preferFlat),
+                    MARK_ID_FREQUENCY,
+                    LabelAnchor.East,
+                    style = if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
+                    placeLabelsOutsideBoundsIfPossible = true,
+                    redraw = redraw
+                )
+            } else {
+                pitchPlot?.removePlotMarks(MARK_ID_FREQUENCY, suppressInvalidate = !redraw)
+            }
         }
     }
 

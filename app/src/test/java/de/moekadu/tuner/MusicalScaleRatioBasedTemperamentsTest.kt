@@ -16,7 +16,7 @@ class MusicalScaleRatioBasedTemperamentsTest {
         rootNoteIndex: Int
     ) {
         val numNotesPerOctave = ratios.size - 1
-        val noteNameScale = NoteNameScaleFactory.create(TemperamentType.EDO12, false)
+        val noteNameScale = NoteNameScaleFactory.create(TemperamentType.EDO12)
         val octRatio = (ratios.last() / ratios.first()).toFloat()
         val temperament = MusicalScaleRatioBasedTemperaments(
             TemperamentType.EDO12, // not important here
@@ -79,7 +79,7 @@ class MusicalScaleRatioBasedTemperamentsTest {
         rootNoteIndex: Int,
         testNoteIndex: Int
     ) {
-        val noteNameScale = NoteNameScaleFactory.create(TemperamentType.EDO12, false)
+        val noteNameScale = NoteNameScaleFactory.create(TemperamentType.EDO12)
         val temperament = MusicalScaleRatioBasedTemperaments(
             TemperamentType.EDO12, // not important here
             ratios,
@@ -138,7 +138,7 @@ class MusicalScaleRatioBasedTemperamentsTest {
         val freqMin = ratios[0].toFloat() * referenceFrequency -0.001f
         val freqMax = ratios.last().toFloat() * referenceFrequency + 0.001f
 
-        val noteNameScale = NoteNameScaleFactory.create(TemperamentType.EDO12, false)
+        val noteNameScale = NoteNameScaleFactory.create(TemperamentType.EDO12)
         val temperament = MusicalScaleRatioBasedTemperaments(
             TemperamentType.EDO12, // not important here
             ratios,
@@ -179,7 +179,7 @@ class MusicalScaleRatioBasedTemperamentsTest {
         //val fMin = fRef / 100
         //val fMax = fRef * 100
         val numNotesPerOctave = ratios.size - 1
-        val noteNameScale = NoteNameScaleFactory.create(TemperamentType.EDO12, false)
+        val noteNameScale = NoteNameScaleFactory.create(TemperamentType.EDO12)
 
         for (rootNoteIndex in -20 .. 20) {
             val temperament = MusicalScaleRatioBasedTemperaments(

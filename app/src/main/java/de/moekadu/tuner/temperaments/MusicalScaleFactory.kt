@@ -5,13 +5,13 @@ class MusicalScaleFactory {
 
         fun create(
             temperamentType: TemperamentType,
+            noteNameScale: NoteNameScale,
             referenceNote: MusicalNote? = null,
             rootNote: MusicalNote? = null,
             referenceFrequency: Float = 440f,
             frequencyMin: Float = 16.0f,
             frequencyMax: Float = 17000.0f
         ): MusicalScale {
-            val noteNameScale = NoteNameScaleFactory.create(temperamentType)
             val rootNoteResolved = rootNote ?: noteNameScale.notes[0]
             val referenceNoteResolved = referenceNote ?: noteNameScale.defaultReferenceNote
             return when (temperamentType) {
@@ -95,6 +95,18 @@ class MusicalScaleFactory {
                     noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
                 )
             }
+        }
+        fun create(
+            temperamentType: TemperamentType,
+            referenceNote: MusicalNote? = null,
+            rootNote: MusicalNote? = null,
+            referenceFrequency: Float = 440f,
+            frequencyMin: Float = 16.0f,
+            frequencyMax: Float = 17000.0f
+        ): MusicalScale {
+            val noteNameScale = NoteNameScaleFactory.create(temperamentType)
+            return create(temperamentType, noteNameScale, referenceNote, rootNote,
+                referenceFrequency, frequencyMin, frequencyMax)
         }
     }
 }

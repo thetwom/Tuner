@@ -1,5 +1,8 @@
 package de.moekadu.tuner.temperaments
 
+import kotlin.math.min
+import kotlin.math.roundToInt
+
 /** Note names, which can map indices between musical notes and via verse.
  * * @param notes Scale of note names, must contain the referenceNote. The octaves of
  *   the notes are not needed and must not be set.
@@ -57,6 +60,28 @@ class NoteNameScale(
 
     fun hasNote(note: MusicalNote): Boolean {
         return notes.any { MusicalNote.notesEqualIgnoreOctave(it, note) }
+    }
+
+    /** Return the note which is closest to another note of another note name scale.
+     * Note: At the moment we either return the same note if it exists (we at least make sure
+     *   that the enharmonic representation is the same) or, we assume equally distributed notes
+     *   and return the note at the closest relative position.
+     * @param note Note in another NoteNameScale
+     * @param noteNameScaleOfNote NoteNameScale of note, which is given as first argument.
+     * @return note which is part of the own note name scale, which is closest to the given note.
+     */
+    fun getClosestNote(note: MusicalNote, noteNameScaleOfNote: NoteNameScale): MusicalNote {
+        // check if note exists in this scale
+        val closeNote = notes.firstOrNull { MusicalNote.notesEqualIgnoreOctave(it, note) }
+        if (closeNote != null && closeNote.base == note.base)
+            return note
+        else if (closeNote != null && closeNote.enharmonicBase == note.base)
+            return note.switchEnharmonic()
+        // find the closest note by using the relative position.
+        val noteIndexOther = noteNameScaleOfNote.notes.indexOfFirst { MusicalNote.notesEqualIgnoreOctave(it, note) }
+        val notePositionPercent = (noteIndexOther).toDouble() / (noteNameScaleOfNote.size).toDouble()
+        val noteIndex = min((notePositionPercent * size).roundToInt(), size - 1)
+        return notes[noteIndex].copy(octave = note.octave)
     }
 }
 

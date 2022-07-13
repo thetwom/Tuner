@@ -60,9 +60,29 @@ class TargetNote {
     private var frequencyForLastTargetNoteDetection = -1f
 
     /** Current target note. */
-    var note: MusicalNote = musicalScale.getNote(0)
+    var note: MusicalNote = musicalScale.referenceNote
         private set
 
+    /** Flag which tells if currently a target note is available.
+     * Even if no target note is available, we set note and there frequency range to
+     * meaningful values, however, if this is true, there are no valid strings.
+     */
+    val isTargetNoteAvailable: Boolean
+        get() = when {
+            instrument.isChromatic -> true
+            sortedAndDistinctNoteIndices.isEmpty() -> false
+            sortedAndDistinctNoteIndices.size == 1 && sortedAndDistinctNoteIndices.last() == Int.MAX_VALUE -> false
+            else -> true
+        }
+
+    /** Flag which tells if there are strings, which are not part of the musical scale. */
+    val hasStringsNotPartOfMusicalScale:Boolean
+        get() = when {
+            instrument.isChromatic -> false
+            sortedAndDistinctNoteIndices.isEmpty() -> false
+            sortedAndDistinctNoteIndices.last() == Int.MAX_VALUE -> true
+            else -> false
+        }
 
     /** Frequency of current target note. */
     var frequency = 0f
@@ -88,6 +108,7 @@ class TargetNote {
      */
     fun getTuningStatus(currentFrequency: Float?) = when {
         currentFrequency == null -> TuningStatus.Unknown
+        !isTargetNoteAvailable -> TuningStatus.InTune
         currentFrequency < frequencyLowerTolerance -> TuningStatus.TooLow
         currentFrequency > frequencyUpperTolerance -> TuningStatus.TooHigh
         else -> TuningStatus.InTune
@@ -128,18 +149,25 @@ class TargetNote {
         if (frequency in frequencyRange[0] .. frequencyRange[1] && !ignoreFrequencyRange)
             return note
 
-        val numDifferentNotes = sortedAndDistinctNoteIndices.size
+        // the last entry of the sorted note indices can be Int.MAX_VALUE if not all notes are
+        // part of the musical scale.
+        val numDifferentNotes = when {
+            sortedAndDistinctNoteIndices.isEmpty() -> 0
+            sortedAndDistinctNoteIndices.last() == Int.MAX_VALUE -> sortedAndDistinctNoteIndices.size - 1
+            else -> sortedAndDistinctNoteIndices.size
+        }
+
         when {
-            numDifferentNotes == 1 -> {
-                frequencyRange[0] = Float.NEGATIVE_INFINITY
-                frequencyRange[1] = Float.POSITIVE_INFINITY
-                note = instrument.strings[0]
-            }
-            instrument.isChromatic -> {
+            instrument.isChromatic || numDifferentNotes == 0 -> {
                 note = musicalScale.getClosestNote(frequency)
                 val noteIndex = musicalScale.getNoteIndex(note)
                 frequencyRange[0] = musicalScale.getNoteFrequency(noteIndex - allowedHalfToneDeviationBeforeChangingTarget)
                 frequencyRange[1] = musicalScale.getNoteFrequency(noteIndex + allowedHalfToneDeviationBeforeChangingTarget)
+            }
+            numDifferentNotes == 1 -> {
+                frequencyRange[0] = Float.NEGATIVE_INFINITY
+                frequencyRange[1] = Float.POSITIVE_INFINITY
+                note = musicalScale.getNote(sortedAndDistinctNoteIndices[0])
             }
             else -> {
                 val exactNoteIndex = musicalScale.getNoteIndex(frequency)
@@ -150,7 +178,7 @@ class TargetNote {
 
                 val uniqueNoteListIndex = when {
                     index == 0 -> 0
-                    index == numDifferentNotes -> numDifferentNotes - 1
+                    index >= numDifferentNotes -> numDifferentNotes - 1
                     //exactNoteIndex - instrument.stringsSorted[index - 1] < instrument.stringsSorted[index] - exactNoteIndex -> index - 1
                     exactNoteIndex - sortedAndDistinctNoteIndices[index - 1] < sortedAndDistinctNoteIndices[index] - exactNoteIndex -> index - 1
                     else -> index
@@ -183,9 +211,13 @@ class TargetNote {
     }
 
     /// Recompute current target status.
-    private fun recomputeTargetNoteProperties(note: MusicalNote, toleranceInCents: Int, musicalScale: MusicalScale) {
-        val noteIndex = musicalScale.getNoteIndex(note)
-        frequency = musicalScale.getNoteFrequency(noteIndex)
+    private fun recomputeTargetNoteProperties(note: MusicalNote?, toleranceInCents: Int, musicalScale: MusicalScale) {
+        frequency = if (note != null) {
+            val noteIndex = musicalScale.getNoteIndex(note)
+            musicalScale.getNoteFrequency(noteIndex)
+        } else {
+            musicalScale.referenceFrequency
+        }
         val toleranceRatio = (2.0.pow(toleranceInCents / 1200.0)).toFloat()
         frequencyLowerTolerance = frequency / toleranceRatio
         frequencyUpperTolerance = frequency * toleranceRatio

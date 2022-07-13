@@ -430,9 +430,18 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         val rootNoteResolved = rootNote ?: musicalScaleValue.rootNote
         val referenceNoteResolved = referenceNote ?: musicalScaleValue.referenceNote
         val referenceFrequencyResolved = referenceFrequency ?: musicalScaleValue.referenceFrequency
+
+        val newNoteNameScale = NoteNameScaleFactory.create(temperamentTypeResolved)
+        // get a reference note, which fits the new note name scale
+        // WARNING: we can get out of sync with the reference note preference here, so this is only
+        //   to avoid undefined states. We expect, that in case we change the scale and a reference
+        //   note change is needed, this will be handled by explicitly setting a new reference note.
+        val referenceNoteInNewNoteNameScale = newNoteNameScale.getClosestNote(referenceNoteResolved, musicalScaleValue.noteNameScale)
+
         musicalScaleValue = MusicalScaleFactory.create(
             temperamentTypeResolved,
-            referenceNoteResolved,
+            newNoteNameScale,
+            referenceNoteInNewNoteNameScale,
             rootNoteResolved,
             referenceFrequencyResolved
         )

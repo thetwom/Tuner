@@ -25,6 +25,7 @@ import android.os.Bundle
 import android.text.TextPaint
 import android.util.Log
 import android.view.*
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.MenuProvider
@@ -61,6 +62,7 @@ class TunerFragmentSimple : Fragment() {
     private var volumeMeter: VolumeMeter? = null
     private var stringView: StringView? = null
     private var instrumentTitle: MaterialButton? = null
+    private var invalidInstrumentWarning: TextView? = null
 
     private var isPitchInactive = false
     private var tuningStatus = TargetNote.TuningStatus.Unknown
@@ -114,6 +116,7 @@ class TunerFragmentSimple : Fragment() {
         volumeMeter = view.findViewById(R.id.volume_meter)
         stringView = view.findViewById(R.id.string_view)
         instrumentTitle = view.findViewById(R.id.instrument_title)
+        invalidInstrumentWarning = view.findViewById(R.id.incorrect_instrument_text)
 
         pitchPlot?.yRange(400f, 500f, PlotView.NO_REDRAW)
 
@@ -164,6 +167,7 @@ class TunerFragmentSimple : Fragment() {
 
             if (instrumentsViewModel.instrument.value?.instrument?.isChromatic == true)
                 updateStringViewNoteNames()
+            updateInvalidStringsAppearance()
         }
 
         viewModel.preferFlat.observe(viewLifecycleOwner) {
@@ -181,6 +185,7 @@ class TunerFragmentSimple : Fragment() {
             instrumentTitle?.text = instrument.getNameString(requireContext())
             updateStringViewNoteNames()
             //stringView?.setAutomaticControl(0L)
+            updateInvalidStringsAppearance()
         }
 
         viewModel.pitchHistory.sizeAsLiveData.observe(viewLifecycleOwner) {
@@ -315,9 +320,12 @@ class TunerFragmentSimple : Fragment() {
         val nameMinusBound = getString(R.string.cent, -targetNote.toleranceInCents)
         val namePlusBound = getString(R.string.cent, targetNote.toleranceInCents)
 
-        pitchPlot?.setMarks(
+        if (targetNote.isTargetNoteAvailable) {pitchPlot?.setMarks(
             null,
-            floatArrayOf(targetNote.frequencyLowerTolerance, targetNote.frequencyUpperTolerance),
+            floatArrayOf(
+                targetNote.frequencyLowerTolerance,
+                targetNote.frequencyUpperTolerance
+            ),
             MARK_ID_TOLERANCE,
             1,
             arrayOf(LabelAnchor.NorthWest, LabelAnchor.SouthWest),
@@ -325,25 +333,39 @@ class TunerFragmentSimple : Fragment() {
             placeLabelsOutsideBoundsIfPossible = false,
             redraw = false,
             maxLabelBounds = null
-        ) { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
+        ) { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius: Float ->
             val s = when (index) {
                 0 -> nameMinusBound
                 1 -> namePlusBound
                 else -> ""
             }
-            StringLabel(s, textPaint, backgroundPaint, cornerRadius, gravity, padding, padding, padding, padding)
+            StringLabel(
+                s,
+                textPaint,
+                backgroundPaint,
+                cornerRadius,
+                gravity,
+                padding,
+                padding,
+                padding,
+                padding
+            )
         }
 
-        pitchPlot?.setYMark(
-            targetNote.frequency,
-            targetNote.note,
-            viewModel.notePrintOptions,
-            MARK_ID_FREQUENCY,
-            LabelAnchor.East,
-            if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
-            placeLabelsOutsideBoundsIfPossible = true,
-            redraw = redraw
-        )
+            pitchPlot?.setYMark(
+                targetNote.frequency,
+                targetNote.note,
+                viewModel.notePrintOptions,
+                MARK_ID_FREQUENCY,
+                LabelAnchor.East,
+                if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
+                placeLabelsOutsideBoundsIfPossible = true,
+                redraw = redraw
+            )
+        } else {
+            pitchPlot?.removePlotMarks(MARK_ID_TOLERANCE, suppressInvalidate = true)
+            pitchPlot?.removePlotMarks(MARK_ID_FREQUENCY, suppressInvalidate = !redraw)
+        }
     }
 
     private fun updatePitchPlotNoteNames(redraw: Boolean = true) {
@@ -365,16 +387,20 @@ class TunerFragmentSimple : Fragment() {
 
         // Update active y-mark in pitch history plot
         viewModel.targetNote.value?.let { targetNote ->
-            pitchPlot?.setYMark(
-                targetNote.frequency,
-                targetNote.note,
-                viewModel.notePrintOptions,
-                MARK_ID_FREQUENCY,
-                LabelAnchor.East,
-                if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
-                placeLabelsOutsideBoundsIfPossible = true,
-                redraw = redraw
-            )
+            if (targetNote.isTargetNoteAvailable) {
+                pitchPlot?.setYMark(
+                    targetNote.frequency,
+                    targetNote.note,
+                    viewModel.notePrintOptions,
+                    MARK_ID_FREQUENCY,
+                    LabelAnchor.East,
+                    if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
+                    placeLabelsOutsideBoundsIfPossible = true,
+                    redraw = redraw
+                )
+            } else {
+                pitchPlot?.removePlotMarks(MARK_ID_FREQUENCY, suppressInvalidate = !redraw)
+            }
         }
     }
 
@@ -389,6 +415,24 @@ class TunerFragmentSimple : Fragment() {
         } else {
             stringView?.setStrings(instrument.strings, false, musicalScale.noteNameScale,
                 musicalScale.noteIndexBegin, musicalScale.noteIndexEnd, viewModel.notePrintOptions)
+        }
+    }
+
+    private fun updateInvalidStringsAppearance() {
+        if (viewModel.targetNote.value?.hasStringsNotPartOfMusicalScale == true) {
+            invalidInstrumentWarning?.visibility = View.VISIBLE
+            instrumentTitle?.setStrokeColorResource(R.color.instrument_button_color_error)
+            instrumentTitle?.setTextColor(context?.getColorStateList(R.color.instrument_button_color_error))
+            instrumentTitle?.setIconTintResource(R.color.instrument_button_color_error)
+            instrumentTitle?.backgroundTintList = context?.getColorStateList(R.color.instrument_button_background_color_error)
+            //instrumentTitle?.isEnabled = true
+        } else {
+            invalidInstrumentWarning?.visibility = View.GONE
+            instrumentTitle?.setStrokeColorResource(R.color.instrument_button_color_normal)
+            instrumentTitle?.setTextColor(context?.getColorStateList(R.color.instrument_button_color_normal))
+            instrumentTitle?.setIconTintResource(R.color.instrument_button_color_normal)
+            instrumentTitle?.backgroundTintList = context?.getColorStateList(R.color.instrument_button_background_color_normal)
+            //instrumentTitle?.isEnabled = false
         }
     }
 

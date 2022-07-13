@@ -388,7 +388,7 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             && noteNameScale.getIndexOfNote(activeNoteBackup) in this.noteIndexBegin until this.noteIndexEnd) {
             noteNameScale.getIndexOfNote(activeNoteBackup) - noteIndexBegin
         } else if (activeNoteBackup != null) {
-            (activeNoteIndexBackupPercent * numNotes).toInt()
+            min((activeNoteIndexBackupPercent * numNotes).roundToInt(), numNotes - 1)
         } else {
             (numNotes) / 2
         }

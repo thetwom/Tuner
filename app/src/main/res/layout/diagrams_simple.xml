@@ -22,11 +22,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent" android:layout_height="match_parent">
 
+    <TextView
+        android:id="@+id/incorrect_instrument_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="12sp"
+        android:layout_marginRight="12sp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toTopOf="parent"
+        android:textColor="?attr/colorNegative"
+        android:text="@string/incorrect_temperament"
+        />
     <com.google.android.material.button.MaterialButton
         android:id="@+id/instrument_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/incorrect_instrument_text"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         android:layout_marginStart="12dp"
@@ -37,14 +48,14 @@
         app:iconPadding="12sp"
         android:textSize="16sp"
         app:iconSize="30sp"
-        app:iconTint="?attr/colorOnSurface"
+        app:iconTint="@color/instrument_button_color_normal"
         android:textAllCaps="false"
         android:textAlignment="textStart"
         android:letterSpacing="0"
         app:cornerRadius="3dp"
         android:ellipsize="end"
-        android:textColor="?attr/colorOnSurface"
-        app:strokeColor="?attr/colorOnSurface"
+        android:textColor="@color/instrument_button_color_normal"
+        app:strokeColor="@color/instrument_button_color_normal"
         style="@style/Widget.Material3.Button.OutlinedButton"
         android:contentDescription="@string/instrument_icon"
         />
