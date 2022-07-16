@@ -159,7 +159,7 @@ fun createAudioRecordJob(sampleRate: Int, overlap: Float, windowSize: Int, chann
 
         if (record?.state == AudioRecord.STATE_UNINITIALIZED) {
             Log.v(
-                "TestRecordFlow",
+                "Tuner",
                 "SoundSource.createAudioRecordJob: Not able to acquire audio resource"
             )
         } else {

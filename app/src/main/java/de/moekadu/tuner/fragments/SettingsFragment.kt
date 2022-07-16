@@ -86,7 +86,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
       val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
 
-      TemperamentPreferenceDialog2.setupFragmentResultListener(parentFragmentManager, viewLifecycleOwner, pref,
+      TemperamentPreferenceDialog.setupFragmentResultListener(parentFragmentManager, viewLifecycleOwner, pref,
           requireContext(),
           printOption = {
               val preferFlat = preferFlatPreference?.isChecked ?: false
@@ -97,7 +97,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
               setTemperamentAndReferenceNoteSummary(it, preferFlat)
           }
       )
-      ReferenceNotePreferenceDialog2.setupFragmentResultListener(parentFragmentManager, viewLifecycleOwner, pref) {
+      ReferenceNotePreferenceDialog.setupFragmentResultListener(parentFragmentManager, viewLifecycleOwner, pref) {
           val preferFlat = preferFlatPreference?.isChecked ?: false
           setTemperamentAndReferenceNoteSummary(it, preferFlat)
       }
@@ -147,7 +147,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val preferFlat = preferFlatPreference?.isChecked ?: false
         val printOption = if (preferFlat) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
         val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
-        val dialog = ReferenceNotePreferenceDialog2.newInstance(
+        val dialog = ReferenceNotePreferenceDialog.newInstance(
             currentPrefs,
             warningMessage = null,
             printOption
@@ -163,7 +163,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val preferFlat = preferFlatPreference?.isChecked ?: false
         val printOption = if (preferFlat) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
         val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
-        val dialog = TemperamentPreferenceDialog2.newInstance(
+        val dialog = TemperamentPreferenceDialog.newInstance(
             currentPrefs,
             printOption
         )

@@ -2,7 +2,6 @@ package de.moekadu.tuner.instruments
 
 import android.content.Context
 import android.text.SpannableStringBuilder
-import android.util.Log
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.*
 
@@ -29,7 +28,7 @@ data class Instrument(private val name: CharSequence?, private val nameResource:
         } else {
             val printOption = if (preferFlat) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
             val builder = SpannableStringBuilder()
-            Log.v("Tuner", "Instrument.getStringsString: printOption=$printOption, preferFlat=$preferFlat")
+//            Log.v("Tuner", "Instrument.getStringsString: printOption=$printOption, preferFlat=$preferFlat")
             if (strings.isNotEmpty())
                 builder.append(strings[0].toCharSequence(context, printOption = printOption))
             for (i in 1 until strings.size) {

@@ -76,7 +76,7 @@ class TunerFragment : Fragment() {
             Toast.makeText(activity, getString(R.string.no_audio_recording_permission), Toast.LENGTH_LONG)
                 .show()
             Log.v(
-                "TestRecordFlow",
+                "Tuner",
                 "TunerFragment.askForPermissionAnNotifyViewModel: No audio recording permission is granted."
             )
         }

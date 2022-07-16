@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.InputType
-import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.Spinner
@@ -136,7 +135,7 @@ class ReferenceNotePreferenceValueLegacy (val referenceNote: MusicalNote, val fr
     }
 }
 
-class ReferenceNotePreferenceDialog2 : DialogFragment() {
+class ReferenceNotePreferenceDialog: DialogFragment() {
     companion object {
         private const val REQUEST_KEY = "reference_note_preference_dialog.request_key"
         private const val CURRENT_VALUE_KEY = "reference_note_preference_dialog.current_value_key"
@@ -145,13 +144,13 @@ class ReferenceNotePreferenceDialog2 : DialogFragment() {
 
         fun newInstance(currentValue: TemperamentAndReferenceNoteValue,
                         warningMessage: String?,
-                        notePrintOptions: MusicalNotePrintOptions): ReferenceNotePreferenceDialog2 {
+                        notePrintOptions: MusicalNotePrintOptions): ReferenceNotePreferenceDialog {
             val args = Bundle(3)
             args.putString(CURRENT_VALUE_KEY, currentValue.toString())
             args.putString(NOTE_PRINT_OPTIONS_KEY, notePrintOptions.toString())
             if (warningMessage != null)
                 args.putString(WARNING_MESSAGE_KEY, warningMessage)
-            val fragment = ReferenceNotePreferenceDialog2()
+            val fragment = ReferenceNotePreferenceDialog()
             fragment.arguments = args
             return fragment
         }
@@ -199,7 +198,7 @@ class ReferenceNotePreferenceDialog2 : DialogFragment() {
 
         val notePrintOptionsString = arguments?.getString(NOTE_PRINT_OPTIONS_KEY) ?: MusicalNotePrintOptions.None.toString()
         notePrintOptions = MusicalNotePrintOptions.valueOf(notePrintOptionsString)
-        Log.v("Tuner", "ReferenceNoteDialog2.onCreate = initialPrefs = $initialPrefs")
+//        Log.v("Tuner", "ReferenceNoteDialog2.onCreate = initialPrefs = $initialPrefs")
 
         super.onCreate(savedInstanceState)
     }
@@ -274,19 +273,19 @@ class ReferenceNotePreferenceDialog2 : DialogFragment() {
     }
 }
 
-class TemperamentPreferenceDialog2 : DialogFragment() {
+class TemperamentPreferenceDialog : DialogFragment() {
     companion object {
         private const val REQUEST_KEY = "temperament_preference_dialog.request_key"
         private const val CURRENT_VALUE_KEY = "reference_note_preference_dialog.current_value_key"
         private const val NOTE_PRINT_OPTIONS_KEY = "reference_note_preference_dialog.note_print_options_key"
 
         fun newInstance(currentValue: TemperamentAndReferenceNoteValue,
-                        notePrintOptions: MusicalNotePrintOptions): TemperamentPreferenceDialog2 {
+                        notePrintOptions: MusicalNotePrintOptions): TemperamentPreferenceDialog {
             val args = Bundle(2)
             args.putString(CURRENT_VALUE_KEY, currentValue.toString())
-            Log.v("Tuner", "TemperamentPreferenceDialog2.newInstance: currentValue = $currentValue")
+//            Log.v("Tuner", "TemperamentPreferenceDialog2.newInstance: currentValue = $currentValue")
             args.putString(NOTE_PRINT_OPTIONS_KEY, notePrintOptions.toString())
-            val fragment = TemperamentPreferenceDialog2()
+            val fragment = TemperamentPreferenceDialog()
             fragment.arguments = args
             return fragment
         }
@@ -319,8 +318,8 @@ class TemperamentPreferenceDialog2 : DialogFragment() {
                     val initialPrefsWithCompatibleReferenceNote = newPrefs.copy(
                         referenceNote = newPrefNoteNameScale.getClosestNote(newPrefs.referenceNote, oldPrefNoteNameScale)
                     )
-                    Log.v("Tuner", "TemperamentPreferenceDialog2.setupFragmentResultListener: initialPrefsWithCompatibleReferenceNote = $initialPrefsWithCompatibleReferenceNote")
-                    val dialog = ReferenceNotePreferenceDialog2.newInstance(
+//                    Log.v("Tuner", "TemperamentPreferenceDialog2.setupFragmentResultListener: initialPrefsWithCompatibleReferenceNote = $initialPrefsWithCompatibleReferenceNote")
+                    val dialog = ReferenceNotePreferenceDialog.newInstance(
                         initialPrefsWithCompatibleReferenceNote,
                         warningMessage = context.getString(R.string.new_temperament_requires_adapting_reference_note),
                         printOption()
@@ -436,7 +435,7 @@ class TemperamentPreferenceDialog2 : DialogFragment() {
             circleOfFifths?.adapter = circleOfFifthsAdapter
         }
 
-        Log.v("Tuner", "TemperamentPreferenceDialog2.onCreateDialog: savedRootNote = $savedRootNote, initialRootNote = ${initialPrefs?.rootNote}")
+//        Log.v("Tuner", "TemperamentPreferenceDialog2.onCreateDialog: savedRootNote = $savedRootNote, initialRootNote = ${initialPrefs?.rootNote}")
         // resetToDefaultRootNote will only take place if initialRootNote is null ...
         setNewMusicalScale(
             savedTemperamentType ?: initialPrefs!!.temperamentType,

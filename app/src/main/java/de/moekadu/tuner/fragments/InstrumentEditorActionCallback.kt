@@ -1,6 +1,5 @@
 package de.moekadu.tuner.fragments
 
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.view.ActionMode
@@ -38,7 +37,7 @@ class InstrumentEditorActionCallback(private val activity: MainActivity,
     }
 
     override fun onDestroyActionMode(mode: ActionMode?) {
-        Log.v("Tuner", "InstrumentEditorActionCallback: onDestroyActionMode")
+//        Log.v("Tuner", "InstrumentEditorActionCallback: onDestroyActionMode")
         activity.onBackPressed()
     }
 }
