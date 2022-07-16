@@ -32,15 +32,17 @@ import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.instrumentDatabase
 import de.moekadu.tuner.misc.SoundSource
 import de.moekadu.tuner.notedetection.*
-import de.moekadu.tuner.preferences.ReferenceNotePreference
-import de.moekadu.tuner.preferences.TemperamentPreference
+import de.moekadu.tuner.preferences.TemperamentAndReferenceNoteValue
 import de.moekadu.tuner.temperaments.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.*
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -162,25 +164,17 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                 return
 //            Log.v("Tuner", "TunerViewModel.setupPreferenceListener: key=$key")
             when (key) {
-//                "a4_frequency" -> {
-////                    Log.v("Tuner", "TunerFragment.setupPreferenceListener: a4_frequency changed")
-//                    a4Frequency = sharedPreferences.getString("a4_frequency", "440")?.toFloat() ?: 440f
-//                }
-                "reference_note" -> {
-                    val referenceFrequencyString = sharedPreferences.getString("reference_note", null)
-//                    Log.v("Tuner", "TunerViewModel.setupPreferenceListener: reference_note changed: $referenceFrequencyString")
-                    val referenceFrequency =
-                        ReferenceNotePreference.getFrequencyFromValue(referenceFrequencyString)
-                    val referenceNote =
-                        ReferenceNotePreference.getReferenceNoteFromValue(referenceFrequencyString)
-                    changeMusicalScale(referenceNote = referenceNote, referenceFrequency = referenceFrequency)
-                }
-                "temperament" -> {
-                    val temperamentString = sharedPreferences.getString("temperament", null)
-//                    Log.v("Tuner", "TunerViewModel.setupPreferenceListener: temperament changed: temperamentString")
-                    val temperamentType = TemperamentPreference.getTemperamentFromValue(temperamentString)
-                    val rootNote = TemperamentPreference.getRootNoteFromValue(temperamentString)
-                    changeMusicalScale(temperamentType = temperamentType, rootNote = rootNote)
+                TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY -> {
+                    val valueString = sharedPreferences.getString(
+                        TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY, null)
+                    val value = TemperamentAndReferenceNoteValue.fromString(valueString)
+                    changeMusicalScale(
+                        rootNote = value?.rootNote,
+                        referenceNote = value?.referenceNote,
+                        referenceFrequency = value?.referenceFrequency?.toFloatOrNull() ?: 440f, // TODO: should we use a globally defined default value?
+                        temperamentType = value?.temperamentType
+                    )
+//                    Log.v("Tuner", "TunerViewModel.setupPreferenceListener: temperament and root note changed: $valueString")
                 }
                 "prefer_flat" -> {
                     _preferFlat.value = sharedPreferences.getBoolean(key, false)
@@ -226,13 +220,13 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     init {
 //        Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
 
-        sampleSource.testFunction = { t ->
-            //val freq = 400 + 2*t
-            val freq = 200 + 2*t
-            //val freq = 440
-           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
-            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
-        }
+//        sampleSource.testFunction = { t ->
+//            //val freq = 400 + 2*t
+//            val freq = 200 + 2*t
+//            //val freq = 440
+//           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
+//            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
+//        }
 //        sampleSource.testFunction = { t ->
 //            val freq = 440f
 //            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
@@ -449,16 +443,14 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun loadSettingsFromSharedPreferences() {
-        val referenceFrequencyString = pref.getString("reference_note", null)
-        val referenceFrequency =
-            ReferenceNotePreference.getFrequencyFromValue(referenceFrequencyString)
-        val referenceNote = ReferenceNotePreference.getReferenceNoteFromValue(referenceFrequencyString)
-
-        val temperamentString = pref.getString("temperament", null)
-        val temperamentType = TemperamentPreference.getTemperamentFromValue(temperamentString)
-        val rootNote = TemperamentPreference.getRootNoteFromValue(temperamentString)
+        val temperamentAndReferenceNote = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
         _preferFlat.value = pref.getBoolean("prefer_flat", false)
-        changeMusicalScale(temperamentType = temperamentType, rootNote = rootNote, referenceNote = referenceNote, referenceFrequency = referenceFrequency)
+        changeMusicalScale(
+            temperamentType = temperamentAndReferenceNote.temperamentType,
+            rootNote = temperamentAndReferenceNote.rootNote,
+            referenceNote = temperamentAndReferenceNote.referenceNote,
+            referenceFrequency = temperamentAndReferenceNote.referenceFrequency.toFloatOrNull() ?: 440f
+        )
 
         windowingFunction = when (pref.getString("windowing", "no_window")) {
             "no_window" -> WindowingFunction.Tophat
@@ -477,8 +469,6 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     companion object {
-        const val NO_NEW_TONE_INDEX = Int.MAX_VALUE
         const val NO_NEW_TOLERANCE = Int.MAX_VALUE
-        const val AUTOMATIC_TARGET_NOTE_DETECTION = Int.MAX_VALUE
     }
 }

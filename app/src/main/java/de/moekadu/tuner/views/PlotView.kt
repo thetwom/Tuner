@@ -871,7 +871,7 @@ private class PlotMarks(transformation: PlotTransformation,
     }
 
     /** The maximum label sizes for each style. This can be null if it is not yet determined. */
-    private val maxLabelSizes = Array<Label.LabelSetBounds?>(colors.size) {_ -> null}
+    private val maxLabelSizes = Array<Label.LabelSetBounds?>(colors.size) { null }
 
     /** Temporary for storing a bounding box. */
     private val oldBoundingBox = RectF(0f, 0f, 0f, 0f)
@@ -2316,7 +2316,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     /// Set x-ticks.
     /**
-     * @param value Values of x-ticks to be drawn.
+     * @param values Values of x-ticks to be drawn.
      * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
      *   change something else which also needs to redraw the screen, so you can avoid an
      *   unnecessary redraw.)
@@ -2390,7 +2390,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     /// Set y-ticks.
     /**
-     * @param value Values of y-ticks to be drawn.
+     * @param values Values of y-ticks to be drawn.
      * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
      *   change something else which also needs to redraw the screen, so you can avoid an
      *   unnecessary redraw.)

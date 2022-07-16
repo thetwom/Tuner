@@ -6,14 +6,15 @@ import android.widget.AdapterView
 import android.widget.GridView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.setFragmentResult
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.instrumentIcons
 
-class IconPickerDialogFragment(private val iconResourceSelectedListener: IconResourceSelectedListener)
-    : DialogFragment() {
+class IconPickerDialogFragment : DialogFragment() {
 
-    fun interface IconResourceSelectedListener {
-        fun onResourceSelected(resourceId: Int)
+    companion object {
+        const val REQUEST_KEY = "IconPickerDialogFragment.request_key"
+        const val ICON_KEY = "IconPickerDialogFragment.icon_key"
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -24,27 +25,16 @@ class IconPickerDialogFragment(private val iconResourceSelectedListener: IconRes
             val icons = IntArray(instrumentIcons.size) {
                 instrumentIcons[it].resourceId
             }
-//            val icons = intArrayOf(
-//                R.drawable.ic_piano,
-//                R.drawable.ic_guitar,
-//                R.drawable.ic_ukulele,
-//                R.drawable.ic_bass,
-//                R.drawable.ic_violin,
-//                R.drawable.ic_double_bass,
-//                R.drawable.ic_trumpet
-//            )
 
             val adapter = IconPickerAdapter(icons)
             //val recyclerView = view.findViewById<RecyclerView>(R.id.icon_list)
             val gridView = view.findViewById<GridView>(R.id.icon_list)
             gridView?.adapter = adapter
             gridView?.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
-                iconResourceSelectedListener.onResourceSelected(icons[position])
+                val bundle = Bundle(1).apply { putInt(ICON_KEY, icons[position]) }
+                setFragmentResult(REQUEST_KEY, bundle)
                 dismiss()
             }
-
-            //recyclerView?.layoutManager = GridLayoutManager(requireContext(), 3)
-            //recyclerView?.adapter = adapter
 
             builder.setView(view)
                 .setMessage(R.string.pick_icon)

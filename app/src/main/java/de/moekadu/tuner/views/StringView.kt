@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.text.TextPaint
 import android.util.AttributeSet
-import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -593,24 +592,28 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 width - paddingRight.toFloat() - framePaint.strokeWidth + 0.5f * anchorDrawable.width
             }
 
-            if (activeStyleIndex == 1) {
-                scrollCenterDrawableNeutral.drawToCanvas(
-                    xPositionScrollDrawable,
-                    yPosition,
-                    LabelAnchor.Center, canvas
-                )
-            } else if (activeStyleIndex == 2) {
-                scrollCenterDrawablePositive.drawToCanvas(
-                    xPositionScrollDrawable,
-                    yPosition,
-                    LabelAnchor.Center, canvas
-                )
-            } else if (activeStyleIndex == 3) {
-                scrollCenterDrawableNegative.drawToCanvas(
-                    xPositionScrollDrawable,
-                    yPosition,
-                    LabelAnchor.Center, canvas
-                )
+            when (activeStyleIndex) {
+                1 -> {
+                    scrollCenterDrawableNeutral.drawToCanvas(
+                        xPositionScrollDrawable,
+                        yPosition,
+                        LabelAnchor.Center, canvas
+                    )
+                }
+                2 -> {
+                    scrollCenterDrawablePositive.drawToCanvas(
+                        xPositionScrollDrawable,
+                        yPosition,
+                        LabelAnchor.Center, canvas
+                    )
+                }
+                3 -> {
+                    scrollCenterDrawableNegative.drawToCanvas(
+                        xPositionScrollDrawable,
+                        yPosition,
+                        LabelAnchor.Center, canvas
+                    )
+                }
             }
         }
     }

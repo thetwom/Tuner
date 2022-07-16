@@ -136,7 +136,7 @@
     <de.moekadu.tuner.views.DetectedNoteViewer
         android:id="@+id/detected_note_viewer"
         android:layout_width="0dp"
-        android:layout_height="60dp"
+        android:layout_height="wrap_content"
         app:layout_constraintLeft_toRightOf="@id/string_view"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"

@@ -31,7 +31,6 @@ import de.moekadu.tuner.views.NoteSelector
 import de.moekadu.tuner.views.StringView
 
 class InstrumentEditorFragment : Fragment() {
-    // TODO: in layout we should better use wrap content for height of notedetector and detectednoteviewer
     private val tunerViewModel: TunerViewModel by activityViewModels()
     private val viewModel: InstrumentEditorViewModel by activityViewModels()
     private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
@@ -72,15 +71,6 @@ class InstrumentEditorFragment : Fragment() {
         }
     }
 
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        setHasOptionsMenu(true)
-//        super.onCreate(savedInstanceState)
-//    }
-
-//    override fun onPrepareOptionsMenu(menu : Menu) {
-//        menu.findItem(R.id.action_settings)?.isVisible = false
-//    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -88,6 +78,10 @@ class InstrumentEditorFragment : Fragment() {
     ): View? {
 
         val view = inflater.inflate(R.layout.instrument_editor, container, false)
+
+        parentFragmentManager.setFragmentResultListener(IconPickerDialogFragment.REQUEST_KEY, viewLifecycleOwner) { _, bundle ->
+            viewModel.setInstrumentIcon(bundle.getInt(IconPickerDialogFragment.ICON_KEY))
+        }
 
         stringView = view.findViewById(R.id.string_view)
         addButton = view.findViewById(R.id.button_add_note)
@@ -99,10 +93,8 @@ class InstrumentEditorFragment : Fragment() {
         instrumentNameEditText = view.findViewById(R.id.instrument_title_edit_text)
 
         instrumentNameLayout?.setStartIconOnClickListener {
-            val dialog = IconPickerDialogFragment {
-                viewModel.setInstrumentIcon(it)
-            }
-            dialog.show(childFragmentManager, null)
+            val dialog = IconPickerDialogFragment()
+            dialog.show(parentFragmentManager, null)
         }
 
         instrumentNameEditText?.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
@@ -126,14 +118,6 @@ class InstrumentEditorFragment : Fragment() {
         tunerViewModel.musicalScale.observe(viewLifecycleOwner) {
             updateNoteNamesInAllViews()
         }
-
-//        tunerViewModel.noteNames.observe(viewLifecycleOwner) {
-//            updateNoteNamesInAllViews()
-//        }
-//
-//        tunerViewModel.preferFlat.observe(viewLifecycleOwner) {
-//            updateNoteNamesInAllViews()
-//        }
 
         viewModel.instrumentName.observe(viewLifecycleOwner) {
 //            Log.v("Tuner", "InstrumentEditorFragment: observe instrument name: new = |$it|, before = |${instrumentNameEditText?.text?.trim()}|, different? = ${instrumentNameEditText?.text?.trim()?.contentEquals(it)}")
@@ -243,11 +227,10 @@ class InstrumentEditorFragment : Fragment() {
         val notePrintOptions =tunerViewModel.notePrintOptions
         val musicalScale = tunerViewModel.musicalScale.value ?: return
 
-        // TODO: notePrintOptions must also go to noteSelector and detectedNoteViewer, but must leave the msical scale
         noteSelector?.setNotes(musicalScale.noteIndexBegin, musicalScale.noteIndexEnd,
             musicalScale.noteNameScale, null, notePrintOptions)
         detectedNoteViewer?.setNotes(
-            musicalScale.noteNameScale, musicalScale.noteIndexBegin, musicalScale.noteIndexEnd)
+            musicalScale.noteNameScale, musicalScale.noteIndexBegin, musicalScale.noteIndexEnd, notePrintOptions)
         viewModel.strings.value?.let { strings ->
             stringView?.setStrings(strings, false, musicalScale.noteNameScale,
                 musicalScale.noteIndexBegin, musicalScale.noteIndexEnd, notePrintOptions)

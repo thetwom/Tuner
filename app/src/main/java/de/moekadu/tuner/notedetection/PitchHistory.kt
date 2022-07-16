@@ -70,7 +70,7 @@ class PitchHistory(size : Int, var musicalScale : MusicalScale) {
         get() = _sizeAsLiveData
 
     /// Current tone estimated tone index based on pitch history
-    var currentEstimatedToneIndex = 0
+    var currentEstimatedNoteIndex = 0
         private set
 
     /// Here we store our pitch history

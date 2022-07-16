@@ -102,13 +102,7 @@
         <item quantity="one">Teile %d Instrument</item>
         <item quantity="other">Teile %d Instrumente</item>
     </plurals>
-    <string name="dflat_note_name">-</string>
-    <string name="eflat_note_name">-</string>
-    <string name="esharp_note_name">-</string>
-    <string name="gflat_note_name">-</string>
-    <string name="aflat_note_name">-</string>
-    <string name="bflat_note_name">-</string>
-    <string name="bsharp_note_name">-</string>
+
     <string name="prefer_flat">Bevorzuge \u266D vor \u266F</string>
     <string name="viola_cgda">Bratsche</string>
     <string name="cello_cgda">Cello</string>
@@ -169,4 +163,7 @@
     <string name="system_color_accents">System-Akzentfarben verwenden</string>
     <string name="equal_temperament_19">Gleichstufige Stimmung 19</string>
     <string name="equal_temperament_19_desc">19 Noten pro Oktave</string>
+    <string name="incorrect_temperament">Temperament inkompatibel!</string>
+    <string name="ok">OK</string>
+    <string name="new_temperament_requires_adapting_reference_note">Neues Temperament verlangt Anpassung der Referenznote!</string>
 </resources>

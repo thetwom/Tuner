@@ -154,15 +154,24 @@ class AppearancePreference(context: Context, attrs: AttributeSet?) // , defStyle
     : DialogPreference(context, attrs, R.attr.dialogPreferenceStyle) { // , defStyleAttr, defStyleRef) {
     companion object {
         fun getUIModeFromValue(string: String?): Int {
-            val value = Value(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM, false, true).apply { fromString(string) }
+            val value = Value(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
+                blackNightEnabled = false,
+                useSystemColorAccents = true
+            ).apply { fromString(string) }
             return value.mode
         }
         fun getBlackNightEnabledFromValue(string: String?): Boolean {
-            val value = Value(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM, false, true).apply { fromString(string) }
+            val value = Value(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
+                blackNightEnabled = false,
+                useSystemColorAccents = true
+            ).apply { fromString(string) }
             return value.blackNightEnabled
         }
         fun getUseSystemColorAccents(string: String?): Boolean {
-            val value = Value(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM, false, true).apply { fromString(string) }
+            val value = Value(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
+                blackNightEnabled = false,
+                useSystemColorAccents = true
+            ).apply { fromString(string) }
             return value.useSystemColorAccents
         }
     }
@@ -201,7 +210,10 @@ class AppearancePreference(context: Context, attrs: AttributeSet?) // , defStyle
             mode = nightModeStringToID(modeString)
         }
     }
-    var value = Value(nightModeStringToID("auto"), false, true)
+    var value = Value(nightModeStringToID("auto"),
+        blackNightEnabled = false,
+        useSystemColorAccents = true
+    )
         private set
 
     init {

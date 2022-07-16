@@ -115,13 +115,6 @@
     <string name="no_instruments_for_sharing">There are no instruments, which can be shared.</string>
     <string name="load_from_disk">Load instruments from file</string>
     <string name="save_to_disk">Save instruments to file</string>
-    <string name="dflat_note_name">-</string>
-    <string name="eflat_note_name">-</string>
-    <string name="esharp_note_name">-</string>
-    <string name="gflat_note_name">-</string>
-    <string name="aflat_note_name">-</string>
-    <string name="bflat_note_name">-</string>
-    <string name="bsharp_note_name">-</string>
     <string name="prefer_flat">Prefer \u266D over \u266F</string>
     <string name="viola_cgda">Viola</string>
     <string name="cello_cgda">Cello</string>
@@ -185,5 +178,7 @@
     <string name="select_all">Select all</string>
     <string name="black_night_mode">Black background in dark mode</string>
     <string name="system_color_accents">Color accents from system</string>
-    <string name="incorrect_temperament">Incompatible temperament</string>
+    <string name="incorrect_temperament">Incompatible temperament!</string>
+    <string name="ok">OK</string>
+    <string name="new_temperament_requires_adapting_reference_note">New temperament requires adapting the reference note!</string>
 </resources>

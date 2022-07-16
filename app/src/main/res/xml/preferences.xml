@@ -38,11 +38,10 @@
 <!--        app:icon="@drawable/ic_frequency_a"-->
 <!--        />-->
 
-        <de.moekadu.tuner.preferences.ReferenceNotePreference
+        <Preference
             app:key="reference_note"
             app:title="@string/reference_frequency"
             app:icon="@drawable/ic_frequency_a"
-            android:defaultValue="440.0 0"
             />
 
      <SeekBarPreference
@@ -73,7 +72,7 @@
             app:icon="@drawable/ic_baseline_developer_board"
             />
 
-        <de.moekadu.tuner.preferences.TemperamentPreference
+        <Preference
             app:key="temperament"
             app:title="@string/temperament"
             app:icon="@drawable/ic_temperament"

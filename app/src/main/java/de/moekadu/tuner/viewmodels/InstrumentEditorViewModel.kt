@@ -8,7 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.preference.PreferenceManager
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
-import de.moekadu.tuner.preferences.TemperamentPreference
+import de.moekadu.tuner.preferences.TemperamentAndReferenceNoteValue
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
@@ -35,10 +35,11 @@ class InstrumentEditorViewModel(application: Application) : AndroidViewModel(app
             if (sharedPreferences == null)
                 return
             when (key) {
-                "temperament" -> {
-                    val temperamentString = sharedPreferences.getString("temperament", null)
-                    val temperamentType = TemperamentPreference.getTemperamentFromValue(temperamentString)
-                    defaultNote = NoteNameScaleFactory.getDefaultReferenceNote(temperamentType)
+                TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY -> {
+                    val valueString = sharedPreferences.getString(
+                        TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY, null)
+                    val value = TemperamentAndReferenceNoteValue.fromString(valueString)
+                    defaultNote = NoteNameScaleFactory.getDefaultReferenceNote(value!!.temperamentType)
                 }
             }
         }
@@ -86,7 +87,7 @@ class InstrumentEditorViewModel(application: Application) : AndroidViewModel(app
     fun setInstrumentName(name: CharSequence?) {
         //Log.v("Tuner", "InstrumentEditorViewModel: Set instrument name: |$name|, current: |${instrumentName.value}|")
         if (name?.contentEquals(instrumentName.value) == false)
-            _instrumentName.value = name ?: ""
+            _instrumentName.value = name
     }
 
     fun setInstrumentIcon(resourceId: Int) {
@@ -163,8 +164,7 @@ class InstrumentEditorViewModel(application: Application) : AndroidViewModel(app
     }
 
     private fun loadSettingsFromSharedPreferences() {
-        val temperamentString = pref.getString("temperament", null)
-        val temperamentType = TemperamentPreference.getTemperamentFromValue(temperamentString)
-        defaultNote = NoteNameScaleFactory.getDefaultReferenceNote(temperamentType)
+        val values = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
+        defaultNote = NoteNameScaleFactory.getDefaultReferenceNote(values.temperamentType)
     }
 }

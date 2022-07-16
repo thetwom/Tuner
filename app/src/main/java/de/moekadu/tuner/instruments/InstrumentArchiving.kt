@@ -86,7 +86,7 @@ class InstrumentArchiving(private val instrumentsFragment: InstrumentsFragment) 
     }
 
     fun archiveInstruments(instrumentDatabase: InstrumentDatabase?) {
-        if (instrumentDatabase?.size ?: 0 == 0) {
+        if ((instrumentDatabase?.size ?: 0) == 0) {
             Toast.makeText(instrumentsFragment.requireContext(), R.string.database_empty, Toast.LENGTH_LONG).show()
         } else {
             _archiveInstruments.launch("")
