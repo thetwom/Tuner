@@ -18,6 +18,7 @@ import androidx.dynamicanimation.animation.FloatValueHolder
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
+import de.moekadu.tuner.temperaments.NoteNamePrinter
 import de.moekadu.tuner.temperaments.NoteNameScale
 import kotlin.math.*
 
@@ -109,6 +110,9 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     private val gestureDetector = GestureDetector(context, gestureListener)
+
+    /** Class for measuring and printing notes. */
+    private val noteNamePrinter = NoteNamePrinter(context)
 
     /** For each style we store the label of all notes.
      *  We use lazy creation, so they are only non-null if needed.
@@ -253,7 +257,7 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 octaveBegin,
                 octaveEnd,
                 textPaint,
-                context,
+                noteNamePrinter,
                 printOptions = this.notePrintOptions,
                 enableOctaveIndex = enableOctaveIndex
             )
@@ -326,7 +330,7 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                     existingLabel
                 } else {
                     val newLabel = noteNameScale?.let { scale ->
-                        MusicalNoteLabel(scale.getNoteOfIndex(arrayIndex + noteIndexBegin), labelPaint[styleIndex], context,
+                        MusicalNoteLabel(scale.getNoteOfIndex(arrayIndex + noteIndexBegin), labelPaint[styleIndex], noteNamePrinter,
                             printOptions = notePrintOptions, enableOctaveIndex = enableOctaveIndex)
                     }
                     noteLabels[styleIndex][arrayIndex] = newLabel
@@ -446,7 +450,7 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 octaveBegin,
                 octaveEnd,
                 textPaint,
-                context,
+                noteNamePrinter,
                 printOptions = notePrintOptions,
                 enableOctaveIndex = enableOctaveIndex
             )

@@ -19,6 +19,7 @@ import androidx.dynamicanimation.animation.FloatValueHolder
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
+import de.moekadu.tuner.temperaments.NoteNamePrinter
 import de.moekadu.tuner.temperaments.NoteNameScale
 import kotlinx.parcelize.Parcelize
 import kotlin.math.*
@@ -40,6 +41,8 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     enum class HighlightBy { StringIndex, MusicalNote, Off }
+
+    private val noteNamePrinter = NoteNamePrinter(context)
 
     private val stringPaint = arrayOf(
         Paint().apply {
@@ -691,7 +694,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 octaveBegin,
                 octaveEnd,
                 paint,
-                context,
+                noteNamePrinter,
                 notePrintOptions,
                 true
             )
@@ -818,7 +821,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             width.toFloat() - paddingRight - framePaint.strokeWidth, yPos, stringPaint[styleIndex]
         )
         if (stringInfo.styleIndex != styleIndex || stringInfo.label == null) {
-            stringInfo.label = MusicalNoteLabel(stringInfo.note, labelPaint[styleIndex], context,
+            stringInfo.label = MusicalNoteLabel(stringInfo.note, labelPaint[styleIndex], noteNamePrinter,
                 labelBackgroundPaint[styleIndex], labelCornerRadius, LabelGravity.Center,
                 printOptions = notePrintOptions,
                 enableOctaveIndex = true, labelBackgroundPadding, labelBackgroundPadding,

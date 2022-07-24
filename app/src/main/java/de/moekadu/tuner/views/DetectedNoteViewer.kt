@@ -19,6 +19,7 @@ import kotlin.math.roundToInt
 class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr) {
 
+    // TODO: if typeface is bold, the note modifiers should maybe also bold?
     fun interface NoteClickedListener {
         fun onNoteClicked(note: MusicalNote)
     }
@@ -64,7 +65,7 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
             hitCount = min(hitCountMax, hitCount)
         }
 
-        fun drawToCanvas(canvas: Canvas, x: Float, y: Float, labelPaint: TextPaint, context: Context?) {
+        fun drawToCanvas(canvas: Canvas, x: Float, y: Float, labelPaint: TextPaint, noteNamePrinter: NoteNamePrinter) {
             if (!isEnabled)
                 return
             val newTextStyle = labelPaint.typeface?.style ?: -1
@@ -76,8 +77,8 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
                 textColor = labelPaint.color
             }
 
-            if (label == null && context != null) {
-                label = MusicalNoteLabel(note, labelPaint, context, printOptions = printOption)
+            if (label == null) {
+                label = MusicalNoteLabel(note, labelPaint, noteNamePrinter, printOptions = printOption)
             }
 
             label?.drawToCanvas(x, y, LabelAnchor.Center, canvas)
@@ -88,6 +89,9 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
         }
 
     }
+
+    /** Class for measuring and printing notes. */
+    private val noteNamePrinter = NoteNamePrinter(context)
 
     /** Paint for drawing the notes. */
     private val labelPaint = TextPaint().apply {
@@ -236,7 +240,7 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
                 octaveBegin,
                 octaveEnd,
                 labelPaint,
-                context,
+                noteNamePrinter,
                 notePrintOptions,
                 enableOctaveIndex = true
             )
@@ -274,7 +278,7 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
 //                Log.v("Tuner", "DetectedNoteViewer.onDraw: drawing note ${note.toneIndex}, clicked=$clickedToneIndex, x=$xPosCenter, y=$yPosCenter, w=$width, h=$height, maxText=$maximumTextSize")
                 labelPaint.typeface = if (note.note == clickedNote) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
 //                Log.v("StaticLayoutTest", "DetectedNoteViewer.onDraw: drawing note to $xPosCenter, $yPosCenter")
-                note.drawToCanvas(canvas, xPosCenter, yPosCenter, labelPaint, context)
+                note.drawToCanvas(canvas, xPosCenter, yPosCenter, labelPaint, noteNamePrinter)
             }
         }
 
@@ -477,7 +481,7 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
             octaveBegin,
             octaveEnd,
             labelPaint,
-            context,
+            noteNamePrinter,
         )
 
         val maximumLabelWidth: Float

@@ -123,6 +123,8 @@
     <string name="equal_temperament_12_desc">12 notes per octave</string>
     <string name="equal_temperament_19">Equal temperament 19</string>
     <string name="equal_temperament_19_desc">19 notes per octave</string>
+    <string name="equal_temperament_41">Equal temperament 41</string>
+    <string name="equal_temperament_41_desc">41 notes per octave</string>
     <string name="pythagorean_tuning">Pythagorean tuning</string>
     <string name="pure_tuning">Just tuning</string>
     <string name="pure_tuning_desc">5-limit, asymmetric scale</string>
@@ -181,4 +183,5 @@
     <string name="incorrect_temperament">Incompatible temperament!</string>
     <string name="ok">OK</string>
     <string name="new_temperament_requires_adapting_reference_note">New temperament requires adapting the reference note!</string>
+    <string name="comma_separator">, </string>
 </resources>

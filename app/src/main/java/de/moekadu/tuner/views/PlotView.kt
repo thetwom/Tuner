@@ -38,6 +38,7 @@ import androidx.dynamicanimation.animation.FloatValueHolder
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
+import de.moekadu.tuner.temperaments.NoteNamePrinter
 import de.moekadu.tuner.temperaments.NoteNameScale
 import kotlinx.parcelize.Parcelize
 import kotlin.math.*
@@ -1292,6 +1293,9 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
     }
 
+    /** Class for measuring and printing notes. */
+    private val noteNamePrinter = NoteNamePrinter(context)
+
     private val rectangleAndPoint = PlotRectangleAndPoint()
 
     private lateinit var _xRange: PlotRange
@@ -2108,7 +2112,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         return { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
             val noteIndex = index + firstNoteIndex
             val note = scale.getNoteOfIndex(noteIndex)
-            MusicalNoteLabel(note, textPaint, context, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
+            MusicalNoteLabel(note, textPaint, noteNamePrinter, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
         }
     }
 
@@ -2116,7 +2120,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     fun musicalNoteLabelCreator(note: MusicalNote, notePrintOptions: MusicalNotePrintOptions)
             : ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, padding: Float, cornerRadius: Float) -> Label) {
         return { _: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
-            MusicalNoteLabel(note, textPaint, context, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
+            MusicalNoteLabel(note, textPaint, noteNamePrinter, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
         }
     }
 
@@ -2376,14 +2380,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 octaveBegin,
                 octaveEnd,
                 paint,
-                context,
+                noteNamePrinter,
                 notePrintOptions,
                 true
             )
         }
         val labelCreator = { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
             val note = noteNameScale.getNoteOfIndex(index + noteIndexBegin)
-            MusicalNoteLabel(note, textPaint, context, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
+            MusicalNoteLabel(note, textPaint, noteNamePrinter, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
         }
         setXTicks(values, redraw, labelBounds, labelCreator)
     }
@@ -2451,14 +2455,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 octaveBegin,
                 octaveEnd,
                 paint,
-                context,
+                noteNamePrinter,
                 notePrintOptions,
                 true
             )
         }
         val labelCreator = { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
             val note = noteNameScale.getNoteOfIndex(index + noteIndexBegin)
-            MusicalNoteLabel(note, textPaint, context, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
+            MusicalNoteLabel(note, textPaint, noteNamePrinter, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
         }
         setYTicks(values, redraw, labelBounds, labelCreator)
     }

@@ -35,8 +35,8 @@ import de.moekadu.tuner.dialogs.ResetSettingsDialog
 import de.moekadu.tuner.notedetection.percentToPitchHistoryDuration
 import de.moekadu.tuner.preferences.*
 import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
+import de.moekadu.tuner.temperaments.NoteNamePrinter
 import de.moekadu.tuner.temperaments.getTuningNameResourceId
-import de.moekadu.tuner.temperaments.toCharSequence
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
@@ -70,6 +70,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
   private var referenceNotePreference: Preference? = null
   private var temperamentPreference: Preference? = null
   private var appearancePreference: AppearancePreference? = null
+  private var noteNamePrinter: NoteNamePrinter? = null
 //  override fun onCreate(savedInstanceState: Bundle?) {
 //    super.onCreate(savedInstanceState)
 //
@@ -85,6 +86,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
       val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
+
+      noteNamePrinter = NoteNamePrinter(requireContext())
 
       TemperamentPreferenceDialog.setupFragmentResultListener(parentFragmentManager, viewLifecycleOwner, pref,
           requireContext(),
@@ -319,14 +322,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val pF = preferFlat ?: (preferFlatPreference?.isChecked ?: false)
         val printOption = if (pF) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
 
-        val referenceNoteSummary = SpannableStringBuilder().append(currentPrefs.referenceNote.toCharSequence(ctx, printOption, true))
+        val referenceNoteSummary = SpannableStringBuilder()
+            .append(noteNamePrinter!!.noteToCharSequence(currentPrefs.referenceNote, printOption, true))
             .append(" = ${getString(R.string.hertz_str, currentPrefs.referenceFrequency)}")
         referenceNotePreference?.summary = referenceNoteSummary
-        temperamentPreference?.summary = ctx.getString(
-            R.string.tuning_summary_no_desc,
-            ctx.getString(getTuningNameResourceId(currentPrefs.temperamentType)),
-            currentPrefs.rootNote.toCharSequence(ctx, printOption, withOctave = false)
-        )
+        temperamentPreference?.summary = SpannableStringBuilder()
+            .append(ctx.getString(getTuningNameResourceId(currentPrefs.temperamentType)))
+            .append(ctx.getString(R.string.comma_separator))
+            .append(noteNamePrinter!!.noteToCharSequence(currentPrefs.rootNote, printOption, withOctave = false))
     }
   }
 }

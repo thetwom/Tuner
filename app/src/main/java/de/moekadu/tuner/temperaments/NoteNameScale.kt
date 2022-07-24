@@ -172,3 +172,59 @@ fun createNoteNameScale19Tone(referenceNote: MusicalNote?): NoteNameScale {
         referenceNoteResolved
     )
 }
+
+fun createNoteNameScale41Tone(referenceNote: MusicalNote?): NoteNameScale {
+    val referenceNoteResolved = referenceNote ?: MusicalNote(BaseNote.A, NoteModifier.None, 4)
+    return NoteNameScale(
+        arrayOf(
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.FlatDown),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.SharpDown),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.SharpUp),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.FlatDown),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.SharpDown),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.SharpUp),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.FlatDown),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.SharpDown),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.SharpUp),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.FlatDown),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.SharpDown),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.SharpUp),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.FlatDown),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.SharpDown),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.SharpUp),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.NaturalDown),
+            ),
+        referenceNoteResolved
+    )
+}

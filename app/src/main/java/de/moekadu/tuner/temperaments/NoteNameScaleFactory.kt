@@ -8,7 +8,7 @@ class NoteNameScaleFactory {
          */
         fun getDefaultReferenceNote(temperamentType: TemperamentType): MusicalNote {
             return when (temperamentType) {
-                TemperamentType.EDO12, TemperamentType.Pythagorean, TemperamentType.Pure, TemperamentType.QuarterCommaMeanTone, TemperamentType.ThirdCommaMeanTone, TemperamentType.WerckmeisterIII, TemperamentType.WerckmeisterIV, TemperamentType.WerckmeisterV, TemperamentType.WerckmeisterVI, TemperamentType.Kirnberger1, TemperamentType.Kirnberger2, TemperamentType.Kirnberger3, TemperamentType.Neidhardt1, TemperamentType.Neidhardt2, TemperamentType.Neidhardt3, TemperamentType.Valotti, TemperamentType.Young2, TemperamentType.EDO19, TemperamentType.Test -> {
+                TemperamentType.EDO12, TemperamentType.Pythagorean, TemperamentType.Pure, TemperamentType.QuarterCommaMeanTone, TemperamentType.ThirdCommaMeanTone, TemperamentType.WerckmeisterIII, TemperamentType.WerckmeisterIV, TemperamentType.WerckmeisterV, TemperamentType.WerckmeisterVI, TemperamentType.Kirnberger1, TemperamentType.Kirnberger2, TemperamentType.Kirnberger3, TemperamentType.Neidhardt1, TemperamentType.Neidhardt2, TemperamentType.Neidhardt3, TemperamentType.Valotti, TemperamentType.Young2, TemperamentType.EDO19, TemperamentType.EDO41, TemperamentType.Test -> {
                     MusicalNote(BaseNote.A, NoteModifier.None, 4)
                 }
             }
@@ -25,6 +25,9 @@ class NoteNameScaleFactory {
                 }
                 TemperamentType.EDO19 -> {
                     createNoteNameScale19Tone(referenceNote)
+                }
+                TemperamentType.EDO41 -> {
+                    createNoteNameScale41Tone(referenceNote)
                 }
             }
         }

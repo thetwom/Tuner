@@ -5,7 +5,10 @@ enum class BaseNote {
 }
 
 enum class NoteModifier {
-    Sharp, Flat, None
+    Sharp, SharpUp, SharpUpUp, SharpDown, SharpDownDown,
+    Flat, FlatUp, FlatUpUp, FlatDown, FlatDownDown,
+    NaturalUp, NaturalUpUp, NaturalDown, NaturalDownDown,
+    None
 }
 
 data class NoteNameStem(val baseNote: BaseNote, val modifier: NoteModifier,

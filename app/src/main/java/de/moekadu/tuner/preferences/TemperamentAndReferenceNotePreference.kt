@@ -335,6 +335,7 @@ class TemperamentPreferenceDialog : DialogFragment() {
         }
     }
 
+    private var noteNamePrinter: NoteNamePrinter? = null
     private var temperamentSpinner: Spinner? = null
     private var rootNoteSelector: NoteSelector? = null
     private var noteTable: RecyclerView? = null
@@ -386,6 +387,8 @@ class TemperamentPreferenceDialog : DialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        noteNamePrinter = NoteNamePrinter(requireContext())
+
         val view = requireActivity().layoutInflater.inflate(R.layout.temperament_preference, null)
         val dialog = AlertDialog.Builder(requireContext()).apply {
             setTitle(R.string.temperament)
@@ -540,7 +543,7 @@ class TemperamentPreferenceDialog : DialogFragment() {
             Array(centArray.size) {
                 // delete octave index, so that it is not printed
                 val note = noteNameScale.getNoteOfIndex(rootNoteIndex + it)
-                note.toCharSequence(ctx, withOctave = false)
+                noteNamePrinter?.noteToCharSequence(note, printOption = notePrintOptions, withOctave = false) ?: ""
             },
             centArray,
             ratioArray
@@ -548,7 +551,7 @@ class TemperamentPreferenceDialog : DialogFragment() {
     }
 
     private fun updateCircleOfFifthNoteNames(rootNote:MusicalNote, noteNameScale: NoteNameScale) {
-        circleOfFifthsAdapter.setEntries(rootNote, noteNameScale, null)
+        circleOfFifthsAdapter.setEntries(rootNote, noteNameScale, null, notePrintOptions)
     }
 
     private fun updateCircleOfFifthCorrections(fifths: TemperamentCircleOfFifths?) {
@@ -561,6 +564,6 @@ class TemperamentPreferenceDialog : DialogFragment() {
         circleOfFifths?.visibility = View.VISIBLE
         circleOfFifthsDesc?.visibility = View.VISIBLE
         circleOfFifthsTitle?.visibility = View.VISIBLE
-        circleOfFifthsAdapter.setEntries(null, null, fifths)
+        circleOfFifthsAdapter.setEntries(null, null, fifths, notePrintOptions)
     }
 }

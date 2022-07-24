@@ -27,13 +27,14 @@ data class Instrument(private val name: CharSequence?, private val nameResource:
             context.getString(R.string.chromatic)
         } else {
             val printOption = if (preferFlat) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
+            val noteNamePrinter = NoteNamePrinter(context)
             val builder = SpannableStringBuilder()
 //            Log.v("Tuner", "Instrument.getStringsString: printOption=$printOption, preferFlat=$preferFlat")
             if (strings.isNotEmpty())
-                builder.append(strings[0].toCharSequence(context, printOption = printOption))
+                builder.append(noteNamePrinter.noteToCharSequence(strings[0], printOption = printOption, withOctave = true))
             for (i in 1 until strings.size) {
                 builder.append(" - ")
-                builder.append(strings[i].toCharSequence(context, printOption = printOption))
+                builder.append(noteNamePrinter.noteToCharSequence(strings[i], printOption = printOption, withOctave = true))
             }
             builder
 //            strings.joinToString(" - ", "", "") {

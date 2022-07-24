@@ -90,6 +90,9 @@ class MusicalScaleFactory {
                 TemperamentType.EDO19 -> MusicalScaleEqualTemperament(
                     noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
                 )
+                TemperamentType.EDO41 -> MusicalScaleEqualTemperament(
+                    noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
+                )
                 TemperamentType.Test -> MusicalScaleRatioBasedTemperaments(
                     temperamentType, rationalNumberTemperamentTest,
                     noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
