@@ -87,7 +87,7 @@ class InstrumentEditorViewModel(application: Application) : AndroidViewModel(app
     fun setInstrumentName(name: CharSequence?) {
         //Log.v("Tuner", "InstrumentEditorViewModel: Set instrument name: |$name|, current: |${instrumentName.value}|")
         if (name?.contentEquals(instrumentName.value) == false)
-            _instrumentName.value = name
+            _instrumentName.value = name ?: ""
     }
 
     fun setInstrumentIcon(resourceId: Int) {

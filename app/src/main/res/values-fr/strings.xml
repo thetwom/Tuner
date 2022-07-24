@@ -104,13 +104,7 @@
     <string name="no_instruments_for_sharing">Il n’y a pas d’instrument à partager.</string>
     <string name="load_from_disk">Charger les instruments depuis un fichier</string>
     <string name="save_to_disk">Enregistrer les instruments dans un fichier</string>
-    <string name="dflat_note_name">-</string>
-    <string name="eflat_note_name">-</string>
-    <string name="esharp_note_name">-</string>
-    <string name="gflat_note_name">-</string>
-    <string name="aflat_note_name">-</string>
-    <string name="bflat_note_name">-</string>
-    <string name="bsharp_note_name">-</string>
+
     <string name="prefer_flat">Préférer \u266D à \u266F</string>
     <string name="viola_cgda">Alto</string>
     <string name="cello_cgda">Violoncelle</string>
