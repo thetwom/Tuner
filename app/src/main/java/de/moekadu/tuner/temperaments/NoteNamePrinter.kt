@@ -148,7 +148,7 @@ class NoteNamePrinter(private val context: Context) {
                 paint.getTextBounds(sharpString, 0, sharpString.length, bounds)
                 val widthSharp = bounds.width()
 
-                val modifierStringWithSpacesAndSharp = modifierString + "\u200a\u200a\uE10A"
+                val modifierStringWithSpacesAndSharp = modifierString + "\u200a\u200a" + sharpString
                 paint.getTextBounds(modifierStringWithSpacesAndSharp, 0, modifierStringWithSpacesAndSharp.length, bounds)
                 paint.typeface = oldTypeface
                 result.right += bounds.width() - widthSharp
