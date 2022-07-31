@@ -1,0 +1,5 @@
+Open($1)
+SelectAll()
+CorrectDirection()
+Scale(130.0, 130.0, 0.0, 0.0)
+Generate($2)

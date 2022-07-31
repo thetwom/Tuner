@@ -1,0 +1,83 @@
+User README for Gonville
+========================
+
+This distribution archive contains Gonville, a font of musical symbols
+drawn by Simon Tatham and usable as a drop-in replacement for GNU
+Lilypond's default symbol set.
+
+This archive is for use with Lilypond 2.18 or earlier, which don't
+have an option to select the music font. If you're using 2.20 or
+later, then there's a separate archive on the Gonville web site,
+without 'old' in the file name.
+
+The Gonville web site is here:
+
+  https://www.chiark.greenend.org.uk/~sgtatham/gonville/
+
+Using Gonville
+--------------
+
+In earlier versions of Lilypond, up to and including the older 2.18
+series and the beginning of 2.19, there is no convenient method for
+specifying a different font of musical symbols.
+
+So the only way to get those versions of Lilypond to use Gonville is
+to _replace_ the existing font files in the Lilypond data directory,
+so that when Lilypond thinks it's loading its own font, it gets
+Gonville instead.
+
+The 'fontdir' subdirectory of this distribution archive is set up in
+the right layout to make that work. All you need to do is to find the
+Lilypond data directory, and replace its 'fonts' subdirectory with
+'fontdir' in this archive.
+
+For example, on Linux, you might do something like this:
+
+  mv /usr/share/lilypond/2.18.2/fonts /usr/share/lilypond/2.18.2/fonts.orig
+  cp -r fontdir /usr/share/lilypond/2.18.2/fonts
+
+Once you've done that, you can run Lilypond in the normal way, and it
+will typeset music in Gonville instead of its default font. But if you
+want to switch the font back to the standard one, you'll have to move
+directories around again.
+
+Finding the data directory
+--------------------------
+
+If you're not sure where Lilypond's data directory is, you can ask
+Lilypond itself to tell you, by making a file containing these lines
+and feeding it to 'lilypond -s':
+
+  #(display (ly:get-option 'datadir))
+  #(display "\n")
+
+For example, on Linux, this might report
+
+  $ lilypond -s datadir.ly
+  /usr/share/lilypond/2.18.2
+
+and then you can append 'fonts' to that directory to find the place to
+copy Gonville over.
+
+Using 'unshare' on Linux
+------------------------
+
+If you're running on Linux, you might be able to avoid having to
+modify the Lilypond installation directory permanently, by instead
+using 'unshare' and a bind mount to set up a special environment in
+which the directory looks different.
+
+For example, this works on Ubuntu 18.04:
+
+  $ unshare -mr
+  # mount --bind lilyfonts-old /usr/share/lilypond/2.18.2/fonts
+  # lilypond my-input-file.ly
+  # exit
+  $
+
+Then instances of Lilypond run under the modified environment will get
+Gonville, but run normally outside 'unshare', they'll use Lilypond's
+standard font.
+
+However, this trick only works if your Linux distribution has enabled
+the OS capabilities that 'unshare' depends on; not all of them do.

@@ -1,0 +1,300 @@
+The present modification only generates a few symbols.
+- Run "python3 glyphs.py --lilymain" for generation the
+  font files.
+- script.ff is used to scale all fonts by a given factor
+  and then generating a font file with fontforge.
+  (it is called within glyphs.py)
+- The glyphs to be generated must be mentioned in the long
+  list in glyphs.py.
+- The defiition of the glyphs can be found in font.py
+
+---- What comes is the original readme -------
+
+Developer README for Gonville
+=============================
+
+This directory contains Gonville, a font of musical symbols drawn by
+Simon Tatham and usable as a drop-in replacement for GNU Lilypond's
+default symbol set.
+
+The source form of the font is entirely in Python. Glyph definitions
+in the form of Python source code can be found in glyphs.py. Running
+that program with the appropriate option (usually '-lily', but see
+below) causes a complicated build process to take place:
+
+ - Each glyph is converted from the Python description into a piece
+   of PostScript which draws it at reasonable resolution. This
+   PostScript is constructed by generating a large but finite number
+   of points along each curve, so if rendered at _sufficient_
+   resolution (without increasing that number) it will show a loss
+   of quality.
+
+ - The PostScript is fed to Ghostscript to generate a large
+   black-and-white bitmap of the glyph.
+
+ - That bitmap is in turn fed to 'potrace' to convert it into an
+   outline description in terms of Bezier curves, which is then
+   recovered by glyphs.py and translated into a set of .sfd files.
+
+ - Finally, the .sfd files are processed by Fontforge to convert
+   them into the various standard font file formats required by
+   Lilypond.
+
+The reason for doing it this way is that the glyph descriptions in
+glyphs.py are very little like the sort of outline that font formats
+want. Instead of defining the outline of the filled area of the
+glyph, the descriptions typically work by defining the _centre_ line
+of the glyph and then specifying a line thickness or a chisel nib
+(which often vary continuously along the line).
+
+This is a rather hurriedly written README; I'm not really expecting
+it to be comprehensible to somebody who isn't also competent to read
+the Python source code to fill in the gaps. Sorry about that. If
+anyone needs to understand it and can't, please ask more questions,
+and I'll try to improve this file based on the resulting
+conversation.
+
+Generating the font files
+-------------------------
+
+To generate the full Gonville font in a Lilypond-ready form, run
+
+  ./glyphs.py -lily
+
+This takes about half an hour on my 2.4GHz Core 2 Duo, of which two
+minutes are spent generating the main glyph set and the rest of the
+time is devoted to generating the subtly varying brace characters at
+576 different sizes. During development of the former, therefore, it
+is often useful to use '-lilymain' instead of '-lily', which only
+regenerates the main part of the font containing everything except
+the braces. You can also specify '-lilybrace' to regenerate just the
+braces, for completeness.
+
+All of these options will leave a directory called 'lilyfonts' in
+the current working directory, containing all the output font files.
+There will also be a large number of .sfd, .LILC, .LILF and .LILY
+files left lying around.
+
+Other modes of glyphs.py
+------------------------
+
+Other command-line modes in which glyphs.py can be run include:
+
+./glyphs.py -test <symbol>
+
+  This generates the PostScript code to draw a given glyph, just as
+  described above, and then writes it on standard output. It's
+  useful when actually designing a glyph: you can edit the source,
+  run the test mode and view the result, then edit again if you
+  don't like it. A comment in glyphs.py gives a sample command line
+  which automatically pipes the output of this mode through
+  Ghostscript to produce a .png of the glyph.
+
+./glyphs.py -testps <symbol>
+
+  This runs a bit more of the build process for a given glyph:
+  instead of stopping at the original PostScript drawing code, this
+  mode goes through the subsequent potrace step and generates the
+  final Bezier-based outline. Then it outputs that on standard
+  output in simple Postscript, so you can examine the results of the
+  tracing step.
+
+Note that the '<symbol>' placeholder in the above lines refers to
+the glyph names _as defined in the source code_, not the ones used
+in the output file for compatibility with Lilypond. Hence, for
+instance, 'clefG' instead of 'clefs.G', and 'taildemidn' instead of
+'flags.d5'.
+
+There is also '-testpsunscaled', which is just like '-testps' except
+that it omits the final scaling of the outline to the final font
+coordinate system (in which each character is given a sensible
+origin point, and the distance between adjacent stave lines is 250
+font units), and instead keeps the coordinates exactly as they
+appear in the output of potrace.
+
+(Finally, '-mus' generates a version of this font suitable for use
+in my personal music typesetting software. I don't recommend using
+that; it was something I wrote when I was very young and from which
+I have now migrated to using Lilypond. I don't intend to maintain
+it.)
+
+Drawing glyphs
+--------------
+
+I didn't draw all these glyphs by hand-typing the coordinates of the
+line and curve segments, of course. The provided 'gui.py' is a
+simple Python/TK user interface for editing the curve sets by
+dragging endpoints around in a reasonably normal sort of way.
+
+However, it's a pretty hacky program; I didn't want to spend the
+time on writing a full GUI which I could be spending on actually
+drawing the font. A brief description of how it works follows.
+
+When gui.py starts up, it displays a blank window. You can then:
+
+ - Create new curve segments by hovering the mouse over that window
+   and pressing 'i', 'l' or 'b'. This will instantiate a new curve
+   of the appropriate type (see below for the curve types) with
+   default parameters, and place it roughly under where the mouse
+   pointer was.
+
+ - Drag to adjust endpoints and control points of existing curve
+   segments. Drag the endpoints in the obvious way; the curves that
+   are not straight lines will also show green (or red - see below)
+   lines sticking out of the endpoints, which you can drag to adjust
+   the curve's directional behaviour at that endpoint.
+
+ - To weld two curve ends together, so that they are constrained to
+   end at the same place and point in the same direction, drag the
+   two ends to roughly the same place, then hover the mouse over
+   that spot and press 'w'.
+
+ - To remove a weld, hover the mouse over the welded endpoints and
+   press 'u'.
+
+ - To save the curve data you have drawn, press 'S'. The program
+   does not bother writing data to files; instead it will write a
+   fragment of Python on its standard output, suitable for pasting
+   into glyphs.py at the default four-space indent.
+
+ - To load curve data back in for adjustment, press 'L'. The program
+   will then expect you to paste a block of curve data into its
+   standard input, and will display that block in the GUI window so
+   you can edit and re-save it. It will keep reading from standard
+   input until it sees a line beginning with "# End" (with optional
+   leading whitespace), so it's easiest if you keep the line of that
+   type which 'S' generates.
+
+ - To apply an affine transformation to the current set of curves,
+   hit 'T' or Ctrl-T. The program will prompt you to enter a matrix
+   on its standard input, which should be specified in Python syntax
+   as a list (or tuple) of six values, interpreted as a PostScript
+   matrix. (That is, [a,b,c,d,e,f] represents the transformation in
+   which (x,y) is mapped to (ax+cy+e, bx+dy+f).) Note that
+   y-coordinates in the GUI window go from the top downwards. 'T'
+   and Ctrl-T differ in that the latter will create squashed
+   involutes (see below), whereas the former will just transform
+   their endpoints and directions and let the curve shape alter
+   subtly (which is sometimes what I wanted).
+
+ - Anything else, you're on your own. The GUI has no method for
+   deleting curves, for reordering them so that their Python
+   identifiers change, or for specifying the various special
+   features supported by the underlying curve system. To do any of
+   those things, you have to save the curve set out using 'S', edit
+   the resulting Python code manually, and paste it back in using
+   'L'. (Again, I didn't want to spend lots of time polishing the
+   editor if I could manage with a very basic program and have more
+   time to draw glyphs.)
+
+ - Press Ctrl-Q to quit gui.py.
+
+Curve types:
+
+ - 'l' is a straight line, defined by its two endpoints.
+
+ - 'b' is a cubic Bezier curve, defined by two endpoints and two
+   control arms. Each control arm governs the direction of the curve
+   at the endpoint it connects to, and its length specifies the
+   'velocity' of the curve, or how far it goes in that direction
+   before heading off towards its other endpoint.
+
+ - 'i' is a segment of an involute of a circle, which is the main
+   curve type used for most of the Gonville glyphs. These just
+   specify two endpoints and two directions. For some settings of
+   these parameters, the formulae used to choose the output curve
+   will pick one that has a cusp somewhere along its length; this is
+   obvious in most cases, but in subtle cases (where it _only just_
+   happens) the cusp will be near one end and hard to spot. To warn
+   you of this, the control arms will turn from green to red in this
+   situation.
+
+ - 'e' is a segment of an involute of an exponential decay curve. I
+   introduced this for one specific purpose, which was to join the
+   curve at the bottom of the treble clef to the straight line down
+   its middle: the involute of a curve that asymptotes to the x-axis
+   attains zero curvature when it meets the axis itself, because the
+   radius of curvature tends to infinity. So this permits a
+   reasonably smooth join between a straight line and a curve.
+
+Special features you can access by manually editing the curve
+definitions:
+
+ - Half-welds are a means of joining two curve ends together so they
+   are constrained to end at the same point but are _not_
+   constrained to go in the same direction, so you can specify a
+   sharp corner. To create a half-weld, edit the 'weld_to' command
+   in the saved curve set code to add the extra parameter '1' at the
+   end. There are plenty of examples of this in the current code.
+
+ - 'Special' welds constrain two curve endpoints in a more complex
+   way than just making them terminate in the same place. To create
+   a special weld, add the half-weld parameter as above (setting it
+   to 0 if you don't want a half-weld), and follow it with a tuple
+   of four numbers. This constrains the two curve ends to be
+   separated by distance t[0] in the x-direction, plus t[1] in the
+   y-direction, plus t[2] in the direction of the curve at the
+   endpoint, plus t[3] normal to the direction of the curve. At the
+   time of writing there currently aren't any examples of this in
+   use - I wrote it for a glyph which I subsequently found a better
+   way to draw without using this feature.
+
+ - Squashed circle involutes are useful for using the involute curve
+   type (which is good at circle-like curves) to draw essentially
+   squashed or ellipse-like things. Add an extra named parameter
+   'mx' to a CircleInvolute() constructor in the curve set data,
+   which should be a four-element Python tuple giving a matrix (with
+   the same semantics as the first four parameters of the
+   six-element PostScript affine matrix). The involute will then be
+   generated in the transformed coordinate system. For instance, the
+   time-signature digit 8 uses this feature: its bulbs are somewhat
+   oblate and ellipsoid, but they _would_ be basically circular (and
+   hence match up well to the natural shapes of involute segments)
+   if you squashed the x-axis by a factor of 3/4. Thus, the
+   involutes that define that glyph are all defined with
+   mx=(0.75,0,0,1).
+
+Having drawn your curve set and pasted it into glyphs.py, you now
+need to define the nib settings with which to draw along each curve.
+This is done by assigning a 'nib' property to each curve; for
+instance, if your curve set defines curves c0, c1 and c2, you would
+set 'c0.nib', 'c1.nib' and 'c2.nib'. Nib settings can be any of:
+
+ - A single number, indicating that every point on the specified
+   curve should be surrounded by a circle of that radius. Equivalent
+   to stroking along the line using the PostScript 'stroke'
+   operator, with rounded line-cap and line-join settings, and with
+   the PostScript line width set to twice the radius.
+
+ - A tuple of four numbers specifying a chisel nib: (radius, angle,
+   fdist, bdist). This nib type is rendered using a PostScript
+   rounded-ended stroked straight line: the line width is twice
+   'radius' (as above), it's slanted at angle 'angle', one end of it
+   is 'fdist' away from the centre point in the given direction, and
+   the other is 'bdist' away in the opposite direction. In other
+   words, if the point on the original curve is (x,y), the nib at
+   that point is generated by drawing a line from
+   (x+fdist*cos(angle), y-fdist*sin(angle)) to (x-bdist*cos(angle),
+   y+bdist*sin(angle)) and stroking it with thickness 2*radius.
+   (Note that the signs of sin(angle) are flipped, because although
+   y-coordinates run downwards rather than upwards, angles are still
+   measured anticlockwise from the positive x-axis in standard
+   mathematical convention. Also, they're in radians.)
+
+ - A function (typically a Python lambda) which takes five arguments
+   c,x,y,t,theta and returns one of the two forms above. This lets
+   the nib vary along the length of the curve. The parameters are
+   x,y (the current point on the curve), t (the value of whatever
+   parameter is used to parametrise the curve - for Beziers this is
+   their natural parametrisation, for involutes it runs from 0 to 1
+   and is proportional to angle), theta (the current direction in
+   which the curve is heading - as above, specified in radians
+   anticlockwise from right), and c (the curve object itself, so you
+   can retrieve any extra fields you assigned into it).
+
+A few helper functions are provided for specialist nib types,
+notably 'ptp_nib' which places one end of the chisel nib on the
+curve and the other end wherever you like. You can use this to
+arrange that the two ends of the nib follow independent curves; this
+is used in many places, such as the top of the treble clef or the
+thick part of a quaver tail.

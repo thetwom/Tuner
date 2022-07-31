@@ -1,0 +1,106 @@
+User README for Gonville
+========================
+
+This distribution archive contains Gonville, a font of musical symbols
+drawn by Simon Tatham and usable as a drop-in replacement for GNU
+Lilypond's default symbol set.
+
+This archive is for use with Lilypond 2.20 or later. Older versions of
+Lilypond don't have an option to select the music font. A separate
+archive, with 'old' in the file name, is provided on the Gonville web
+site for those versions.
+
+The Gonville web site is here:
+
+  https://www.chiark.greenend.org.uk/~sgtatham/gonville/
+
+Using Gonville
+--------------
+
+To use Gonville as the symbols font for a piece of music you're
+typesetting, you need to do two things:
+
+  1. Make sure the files in this archive are available on Lilypond's
+     include path. You can do this on Lilypond's command line, or by
+     installing Gonville in its data directory.
+
+  2. Make Lilypond include the file 'gonville.ily' while processing
+     your score. You can do this on Lilypond's command line, or by
+     adding an include command to your input score file.
+
+The simplest way to try out Gonville, without having to modify either
+your Lilypond installation or your score file, is to do both these
+steps on the command line. You can run a command like this (replacing
+'/path/to/gonville' with wherever you put the files unpacked from this
+archive, and 'score.ly' with your real input file):
+
+  lilypond -I /path/to/gonville -d include-settings=gonville.ily score.ly
+
+and then your existing score file will be set in Gonville instead of
+in Lilypond's default font.
+
+Specifying Gonville in a score file
+-----------------------------------
+
+If you'd prefer to specify _inside_ each score file whether you want
+that score to be set in Gonville or not, then you can write this
+include command inside the score file:
+
+  \include "gonville.ily"
+
+which has the same effect as writing '-d include-settings=gonville.ily'
+on the Lilypond command line.
+
+Installing Gonville
+-------------------
+
+If you'd prefer to install Gonville in a way that doesn't need you to
+specify an -I option every time you run it, you can do that by finding
+Lilypond's main data directory, and copying all the files inside this
+archive (other than LICENCE and README) into the 'fonts/otf' or
+'fonts/svg' subdirectory of it.
+
+For example, on Linux, the data directory is usually called something
+like '/usr/share/lilypond/2.20.0', so you might do this (probably as
+root):
+
+  cp gonville* /usr/share/lilypond/2.20.0/fonts/otf
+
+If you're not sure where the data directory is, you can ask Lilypond
+itself to tell you, by making a file containing these lines and
+feeding it to 'lilypond -s':
+
+  #(display (ly:get-option 'datadir))
+  #(display "\n")
+
+For example, on Linux, this might report
+
+  $ lilypond -s datadir.ly
+  /usr/share/lilypond/2.20.0
+
+and then you can append 'fonts/otf' to that directory to find the
+place to copy Gonville to.
+
+(The Gonville files include some OTF and some SVG fonts. You *can*
+carefully distribute those between the fonts/otf and fonts/svg
+subdirectories of the Lilypond data dir if you want to, but it doesn't
+really matter!)
+
+Supported features
+------------------
+
+Gonville supports all the same symbols as the standard fonts for
+Lilypond 2.20, except for the following omissions:
+
+ - Solfa note head shapes (set using shapeNoteStyles) are not
+   supported.
+
+ - The 'longa' note (twice as long as a breve) is not supported.
+
+ - Ancient notation (mensural, Gregorian chant etc) is not
+   supported.
+
+Sometimes Lilypond changes the names under which it expect to be able
+to find symbols in the font file. I intend to try to keep Gonville up
+to date, but please let me know if there are any support problems with
+a more recent version of Lilypond.
