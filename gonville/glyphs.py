@@ -455,6 +455,7 @@ lilyglyphlist = [
 #("closearrowdown", "arrowheads.close.1M1", 0, 'cx','cy', 1,'cy'),
 #("closearrowleft", "arrowheads.close.0M1", 0, 'cx','cy', 1,'cy'),
 #("closearrowright", "arrowheads.close.01", 0, 'cx','cy', 1,'cy'),
+#("closedoublearrowright", "arrowheads.close.01", 0, 'cx','cy', 1,'cy'),
 #("upedalheel",   "scripts.upedalheel",     0, 0.5,'cy', 1,'cy'),
 #("dpedalheel",   "scripts.dpedalheel",     0, 0.5,'cy', 1,'cy'),
 #("upedaltoe",    "scripts.upedaltoe",      0, 0.5,0, 1,0),

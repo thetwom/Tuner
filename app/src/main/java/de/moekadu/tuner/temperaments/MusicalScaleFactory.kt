@@ -87,10 +87,31 @@ class MusicalScaleFactory {
                     temperamentType, circleOfFifthsYoung2,
                     noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
                 )
+                TemperamentType.EDO17 -> MusicalScaleEqualTemperament(
+                    noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
+                )
                 TemperamentType.EDO19 -> MusicalScaleEqualTemperament(
                     noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
                 )
+                TemperamentType.EDO22 -> MusicalScaleEqualTemperament(
+                    noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
+                )
+                TemperamentType.EDO24 -> MusicalScaleEqualTemperament(
+                    noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
+                )
+                TemperamentType.EDO27 -> MusicalScaleEqualTemperament(
+                    noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
+                )
+                TemperamentType.EDO29 -> MusicalScaleEqualTemperament(
+                    noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
+                )
+                TemperamentType.EDO31 -> MusicalScaleEqualTemperament(
+                    noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
+                )
                 TemperamentType.EDO41 -> MusicalScaleEqualTemperament(
+                    noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
+                )
+                TemperamentType.EDO53 -> MusicalScaleEqualTemperament(
                     noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
                 )
                 TemperamentType.Test -> MusicalScaleRatioBasedTemperaments(

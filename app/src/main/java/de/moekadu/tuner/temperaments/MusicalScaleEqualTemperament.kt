@@ -63,8 +63,15 @@ class MusicalScaleEqualTemperament(
         get() {
             return when (numberOfNotesPerOctave){
                 12 -> TemperamentType.EDO12
+                17 -> TemperamentType.EDO17
                 19 -> TemperamentType.EDO19
+                22 -> TemperamentType.EDO22
+                24 -> TemperamentType.EDO24
+                27 -> TemperamentType.EDO27
+                29 -> TemperamentType.EDO29
+                31 -> TemperamentType.EDO31
                 41 -> TemperamentType.EDO41
+                53 -> TemperamentType.EDO53
                 else -> throw RuntimeException("Equal temperament for $numberOfNotesPerOctave number of notes is not implemented")
             }
         }

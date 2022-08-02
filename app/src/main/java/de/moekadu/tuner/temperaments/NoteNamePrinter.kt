@@ -180,7 +180,7 @@ class NoteNamePrinter(private val context: Context) {
         val modifier: NoteModifier
 
         if (specialNoteName != null && specialNoteName != "" && specialNoteName != "-") {
-            octaveIndex = note.octave
+            octaveIndex = note.octave + note.octaveOffset
             baseNote = specialNoteName
             modifier = NoteModifier.None
         } else if (note.enharmonicBase != BaseNote.None && printOption.contains(note.enharmonicModifier)) {
@@ -191,7 +191,7 @@ class NoteNamePrinter(private val context: Context) {
         } else {
             baseNote = context.getString(baseNoteResourceIds[note.base]!!)
             modifier = note.modifier
-            octaveIndex = note.octave
+            octaveIndex = note.octave + note.octaveOffset
         }
         return ResolvedNoteProperties(baseNote, modifier, octaveIndex)
     }

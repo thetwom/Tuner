@@ -21,8 +21,15 @@ enum class TemperamentType {
     // Neidhardt4,
     Valotti,
     Young2,
+    EDO17,
     EDO19,
+    EDO22,
+    EDO24,
+    EDO27,
+    EDO29,
+    EDO31,
     EDO41,
+    EDO53,
     Test
 }
 
@@ -44,8 +51,15 @@ fun getTuningNameResourceId(temperamentType: TemperamentType) = when(temperament
     TemperamentType.Neidhardt3 -> R.string.neidhardt3
     TemperamentType.Valotti -> R.string.valotti
     TemperamentType.Young2 -> R.string.young2
+    TemperamentType.EDO17 -> R.string.equal_temperament_17
     TemperamentType.EDO19 -> R.string.equal_temperament_19
+    TemperamentType.EDO22 -> R.string.equal_temperament_22
+    TemperamentType.EDO24 -> R.string.equal_temperament_24
+    TemperamentType.EDO27 -> R.string.equal_temperament_27
+    TemperamentType.EDO29 -> R.string.equal_temperament_29
+    TemperamentType.EDO31 -> R.string.equal_temperament_31
     TemperamentType.EDO41 -> R.string.equal_temperament_41
+    TemperamentType.EDO53 -> R.string.equal_temperament_53
     TemperamentType.Test -> R.string.test_tuning
 }
 
@@ -67,8 +81,15 @@ fun getTuningDescriptionResourceId(temperamentType: TemperamentType) = when(temp
     TemperamentType.Neidhardt3 -> R.string.neidhardt3_desc
     TemperamentType.Valotti -> null
     TemperamentType.Young2 -> null
+    TemperamentType.EDO17 -> R.string.equal_temperament_17_desc
     TemperamentType.EDO19 -> R.string.equal_temperament_19_desc
+    TemperamentType.EDO22 -> R.string.equal_temperament_22_desc
+    TemperamentType.EDO24 -> R.string.equal_temperament_24_desc
+    TemperamentType.EDO27 -> R.string.equal_temperament_27_desc
+    TemperamentType.EDO29 -> R.string.equal_temperament_29_desc
+    TemperamentType.EDO31 -> R.string.equal_temperament_31_desc
     TemperamentType.EDO41 -> R.string.equal_temperament_41_desc
+    TemperamentType.EDO53 -> R.string.equal_temperament_53_desc
     TemperamentType.Test -> null
 }
 

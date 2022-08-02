@@ -3099,10 +3099,72 @@ def _(cont):
 @define_glyph("openarrowdown", args=(90,1))
 @define_glyph("closearrowdown", args=(90,0))
 def _(cont, rotate, is_open):
+    # my comments:
+    # tip: 500, 500
+    # c2 -> connection between the two sides c0/c1
+
+
     # Saved data from gui.py
     c0 = CircleInvolute(cont, 375, 450, 0.83205, 0.5547, 500, 500, 0.977802, 0.209529)
     c1 = CircleInvolute(cont, 500, 500, -0.977802, 0.209529, 375, 550, -0.83205, 0.5547)
     c2 = CircleInvolute(cont, 375, 550, 0.519947, -0.854199, 375, 450, -0.519947, -0.854199)
+    c0.weld_to(1, c1, 0, 1)
+    c0.weld_to(0, c2, 1, 1)
+    c1.weld_to(1, c2, 0, 1)
+    # End saved data
+
+    if is_open:
+        cont.default_nib = 10
+        c2.nib = 0
+    else:
+        x0, y0 = c0.compute_x(0.5), c0.compute_y(1)
+        cont.default_nib = lambda c,x,y,t,theta: ptp_nib(c,x,y,t,theta,x0,y0,10)
+
+    if rotate:
+        cont.before = "500 500 translate %g rotate -500 -500 translate" % rotate
+
+    cont.cx = cont.cy = 500
+    cont.extent = abs(c0.compute_y(0) - cont.cy) + 6
+
+@define_glyph("opendoublearrowright", args=(0,1))
+@define_glyph("closedoublearrowright", args=(0,0))
+@define_glyph("opendoublearrowleft", args=(180,1))
+@define_glyph("closedoublearrowleft", args=(180,0))
+@define_glyph("opendoublearrowup", args=(270,1))
+@define_glyph("closedoublearrowup", args=(270,0))
+@define_glyph("opendoublearrowdown", args=(90,1))
+@define_glyph("closedoublearrowdown", args=(90,0))
+def _(cont, rotate, is_open):
+    # my comments:
+    # tip: 500, 500
+    # c2 -> connection between the two sides c0/c1
+
+    tip_x = 500
+    symm_y = 500
+    length = 75 #125
+    width_h = 50
+
+    dx_tip = 0.74 # 0.83205
+    dy_tip = (1 - dx_tip**2)**0.5 #0.5547
+
+    dx_b = 0.91#0.977802
+    dy_b = (1 - dx_b**2)**0.5 # 0.209529
+
+    dx_c = 0.519947
+    dy_c = (1 - dx_c**2)**0.5 #0.854199
+    # Saved data from gui.py
+    c0 = CircleInvolute(cont, tip_x - length, symm_y - width_h,
+                        dx_tip, dy_tip,
+                        tip_x, symm_y,
+                        dx_b, dy_b)
+    c1 = CircleInvolute(cont, tip_x, symm_y,
+                        -dx_b, dy_b,
+                        tip_x - length, symm_y + width_h,
+                        -dx_tip, dy_tip)
+    c2 = CircleInvolute(cont, tip_x - length, symm_y + width_h,
+                        dx_c, -dy_c,
+                        tip_x - length, symm_y - width_h,
+                        -dx_c, -dy_c)
     c0.weld_to(1, c1, 0, 1)
     c0.weld_to(0, c2, 1, 1)
     c1.weld_to(1, c2, 0, 1)
@@ -3146,8 +3208,9 @@ def _(cont):
 
 @define_glyph("flatup")
 def _(cont):
+    shortenArrowLine = 60
     # Saved data from gui.py
-    c0 = StraightLine(cont, 430, 236, 430, 548)
+    c0 = StraightLine(cont, 430, 236 + shortenArrowLine, 430, 548)
     c1 = Bezier(cont, 430, 548, 481, 499, 515.999, 458, 505, 424)
     c2 = CircleInvolute(cont, 505, 424, -0.307801, -0.951451, 430, 436, -0.462566, 0.886585)
     c0.weld_to(1, c1, 0, 1)
@@ -3165,12 +3228,13 @@ def _(cont):
     #cont.hy = 469 # no sensible way to specify this except manually
     cont.hy = font.flat.hy
 
-    cont.extra = "gsave 430 236 16 add translate 0.7 dup scale -500 dup 150 sub translate", font.closearrowup, "grestore"
+    cont.extra = "gsave 430 {} 16 add translate 0.55 dup scale -500 dup 150 sub translate".format(236 + shortenArrowLine), font.closearrowup, "grestore"
 
 @define_glyph("flatupup")
 def _(cont):
+    shortenArrowLine = 72
     # Saved data from gui.py
-    c0 = StraightLine(cont, 430, 266, 430, 548)
+    c0 = StraightLine(cont, 430, 236 + shortenArrowLine, 430, 548)
     c1 = Bezier(cont, 430, 548, 481, 499, 515.999, 458, 505, 424)
     c2 = CircleInvolute(cont, 505, 424, -0.307801, -0.951451, 430, 436, -0.462566, 0.886585)
     c0.weld_to(1, c1, 0, 1)
@@ -3188,12 +3252,14 @@ def _(cont):
     #cont.hy = 469 # no sensible way to specify this except manually
     cont.hy = font.flat.hy
 
-    cont.extra = "gsave 430 266 16 add translate 0.55 dup scale -500 dup 150 sub translate", font.closearrowup, "grestore", "gsave 430 204 16 add translate 0.55 dup scale -500 dup 150 sub translate", font.closearrowup, "grestore"
+    cont.extra = "gsave 430 {} 16 add translate 0.55 dup scale -500 dup 100 sub translate".format(236 + shortenArrowLine), font.closedoublearrowup, "grestore", "gsave 430 {} 16 add translate 0.55 dup scale -500 dup 100 sub translate".format(236 - 40 + shortenArrowLine), font.closedoublearrowup, "grestore"
 
 @define_glyph("flatdn")
 def _(cont):
+    shortenArrowLine = 0
     # Saved data from gui.py
-    c0 = StraightLine(cont, 430, 236, 430, 568)
+    c0 = StraightLine(cont, 430, 236 + shortenArrowLine, 430, 548)
+    #c0 = StraightLine(cont, 430, 236, 430, 568)
     c1 = Bezier(cont, 430, 548, 481, 499, 515.999, 458, 505, 424)
     c2 = CircleInvolute(cont, 505, 424, -0.307801, -0.951451, 430, 436, -0.462566, 0.886585)
     c1.weld_to(1, c2, 0)
@@ -3210,12 +3276,14 @@ def _(cont):
     cont.hy = font.flat.hy
     #cont.hy = 469 # no sensible way to specify this except manually
 
-    cont.extra = "gsave 430 568 16 sub translate 0.7 dup scale -500 dup 150 add translate", font.closearrowdown, "grestore"
+    #cont.extra = "gsave 430 568 16 sub translate 0.7 dup scale -500 dup 150 add translate", font.closearrowdown, "grestore"
+    cont.extra = "gsave 430 228 16 sub translate 0.55 dup scale -500 dup 150 add translate", font.closearrowdown, "grestore"
 
 @define_glyph("flatdndn")
 def _(cont):
+    shortenArrowLine = 0
     # Saved data from gui.py
-    c0 = StraightLine(cont, 430, 236, 430, 558)
+    c0 = StraightLine(cont, 430, 236 + shortenArrowLine, 430, 548)
     c1 = Bezier(cont, 430, 548, 481, 499, 515.999, 458, 505, 424)
     c2 = CircleInvolute(cont, 505, 424, -0.307801, -0.951451, 430, 436, -0.462566, 0.886585)
     c1.weld_to(1, c2, 0)
@@ -3232,7 +3300,8 @@ def _(cont):
     cont.hy = font.flat.hy
     #cont.hy = 469 # no sensible way to specify this except manually
 
-    cont.extra = "gsave 430 558 16 sub translate 0.55 dup scale -500 dup 150 add translate", font.closearrowdown, "grestore", "gsave 430 620 16 sub translate 0.55 dup scale -500 dup 150 add translate", font.closearrowdown, "grestore"
+    #cont.extra = "gsave 430 558 16 sub translate 0.55 dup scale -500 dup 150 add translate", font.closearrowdown, "grestore", "gsave 430 620 16 sub translate 0.55 dup scale -500 dup 150 add translate", font.closearrowdown, "grestore"
+    cont.extra = "gsave 430 228 16 sub translate 0.55 dup scale -500 dup 100 add translate", font.closedoublearrowdown, "grestore", "gsave 430 {} 16 sub translate 0.55 dup scale -500 dup 100 add translate".format(228 + 40), font.closedoublearrowdown, "grestore"
 
 @define_glyph("flatupdn")
 def _(cont):
@@ -3344,14 +3413,16 @@ def _(cont):
 
     cont.ox = c3.compute_x(0) - 8
     #cont.cy = (c0.compute_y(0) + c2.compute_y(0)) / 2.0
-    cont.cy = c0.compute_y(0)
+    #cont.cy = c0.compute_y(0)
+    cont.cy = (c0.compute_y(0) + c2.compute_y(0)) / 2.0 + 125
 
 @define_glyph("naturalup")
 def _(cont):
+    shortenArrowLine = 32
     # Saved data from gui.py
     c0 = StraightLine(cont, 519, 622, 519, 399)
     c1 = StraightLine(cont, 519, 399, 442, 418)
-    c2 = StraightLine(cont, 442, 318, 442, 539)
+    c2 = StraightLine(cont, 442, 318 + shortenArrowLine, 442, 539)
     c3 = StraightLine(cont, 442, 539, 519, 520)
     c0.weld_to(1, c1, 0, 1)
     c2.weld_to(1, c3, 0, 1)
@@ -3359,17 +3430,18 @@ def _(cont):
 
     cont.default_nib = (8, pi/2, 16, 16)
 
-    cont.extra = "gsave 442 318 translate 0.7 dup scale -500 dup 150 sub translate", font.closearrowup, "grestore"
+    cont.extra = "gsave 442 {} translate 0.55 dup scale -500 dup 150 sub translate".format(318 + shortenArrowLine), font.closearrowup, "grestore"
 
     cont.ox = font.natural.ox
     cont.cy = font.natural.cy
 
 @define_glyph("naturalupup")
 def _(cont):
+    shortenArrowLine = 40
     # Saved data from gui.py
     c0 = StraightLine(cont, 519, 622, 519, 399)
     c1 = StraightLine(cont, 519, 399, 442, 418)
-    c2 = StraightLine(cont, 442, 338, 442, 539)
+    c2 = StraightLine(cont, 442, 318 + shortenArrowLine, 442, 539)
     c3 = StraightLine(cont, 442, 539, 519, 520)
     c0.weld_to(1, c1, 0, 1)
     c2.weld_to(1, c3, 0, 1)
@@ -3377,15 +3449,16 @@ def _(cont):
 
     cont.default_nib = (8, pi/2, 16, 16)
 
-    cont.extra = "gsave 442 338 translate 0.55 dup scale -500 dup 150 sub translate", font.closearrowup, "grestore", "gsave 442 276 translate 0.55 dup scale -500 dup 150 sub translate", font.closearrowup, "grestore"
+    cont.extra = "gsave 442 {} translate 0.55 dup scale -500 dup 100 sub translate".format(318 + shortenArrowLine), font.closedoublearrowup, "grestore", "gsave 442 {} translate 0.55 dup scale -500 dup 100 sub translate".format(318 - 40 + shortenArrowLine), font.closedoublearrowup, "grestore"
 
     cont.ox = font.natural.ox
     cont.cy = font.natural.cy
 
 @define_glyph("naturaldn")
 def _(cont):
+    shortenArrowLine = 32
     # Saved data from gui.py
-    c0 = StraightLine(cont, 519, 622, 519, 399)
+    c0 = StraightLine(cont, 519, 622 - shortenArrowLine, 519, 399)
     c1 = StraightLine(cont, 519, 399, 442, 418)
     c2 = StraightLine(cont, 442, 318, 442, 539)
     c3 = StraightLine(cont, 442, 539, 519, 520)
@@ -3395,15 +3468,16 @@ def _(cont):
 
     cont.default_nib = (8, pi/2, 16, 16)
 
-    cont.extra = "gsave 519 622 translate 0.7 dup scale -500 dup 150 add translate", font.closearrowdown, "grestore"
+    cont.extra = "gsave 519 {} translate 0.55 dup scale -500 dup 150 add translate".format(622 -shortenArrowLine), font.closearrowdown, "grestore"
 
     cont.ox = font.natural.ox
     cont.cy = font.natural.cy
 
 @define_glyph("naturaldndn")
 def _(cont):
+    shortenArrowLine = 40
     # Saved data from gui.py
-    c0 = StraightLine(cont, 519, 602, 519, 399)
+    c0 = StraightLine(cont, 519, 622 - shortenArrowLine, 519, 399)
     c1 = StraightLine(cont, 519, 399, 442, 418)
     c2 = StraightLine(cont, 442, 318, 442, 539)
     c3 = StraightLine(cont, 442, 539, 519, 520)
@@ -3413,7 +3487,7 @@ def _(cont):
 
     cont.default_nib = (8, pi/2, 16, 16)
 
-    cont.extra = "gsave 519 602 translate 0.55 dup scale -500 dup 150 add translate", font.closearrowdown, "grestore", "gsave 519 664 translate 0.55 dup scale -500 dup 150 add translate", font.closearrowdown, "grestore"
+    cont.extra = "gsave 519 {} translate 0.55 dup scale -500 dup 100 add translate".format(622 - shortenArrowLine), font.closedoublearrowdown, "grestore", "gsave 519 {} translate 0.55 dup scale -500 dup 100 add translate".format(622 + 40 - shortenArrowLine), font.closedoublearrowdown, "grestore"
 
     cont.ox = font.natural.ox
     cont.cy = font.natural.cy
@@ -3455,28 +3529,31 @@ def _(cont):
 
     cont.ox = c2.compute_x(0) - 8
     #cont.cy = (c2.compute_y(0) + c3.compute_y(1))/2.0
-    cont.cy = c0.compute_y(1)
+    cont.cy = (c0.compute_y(1) + c1.compute_y(0))/2.0 + 125
+    #cont.cy = c0.compute_y(1) - 20
 
 @define_glyph("sharpup")
 def _(cont):
+    shortenArrowLine = 48
     # Saved data from gui.py
-    c0 = StraightLine(cont, 442, 306, 442, 652)
-    c1 = StraightLine(cont, 493, 271, 493, 637)
+    c0 = StraightLine(cont, 442, 306 + shortenArrowLine, 442, 652)
+    c1 = StraightLine(cont, 493, 291, 493, 637)
     c2 = StraightLine(cont, 413, 419, 523, 392)
     c3 = StraightLine(cont, 413, 551, 523, 524)
     # End saved data
 
     cont.default_nib = (8, pi/2, 16, 16)
 
-    cont.extra = "gsave 493 271 translate 0.7 dup scale -500 dup 150 sub translate", font.closearrowup, "grestore"
+    cont.extra = "gsave 442 {} translate 0.55 dup scale -500 dup 150 sub translate".format(306 + shortenArrowLine), font.closearrowup, "grestore"
 
     cont.ox = font.sharp.ox
     cont.cy = font.sharp.cy
 
 @define_glyph("sharpupup")
 def _(cont):
+    shortenArrowLine = 60
     # Saved data from gui.py
-    c0 = StraightLine(cont, 442, 301, 442, 652)
+    c0 = StraightLine(cont, 442, 306 + shortenArrowLine, 442, 652)
     c1 = StraightLine(cont, 493, 291, 493, 637)
     c2 = StraightLine(cont, 413, 419, 523, 392)
     c3 = StraightLine(cont, 413, 551, 523, 524)
@@ -3485,7 +3562,7 @@ def _(cont):
     cont.default_nib = (8, pi/2, 16, 16)
 
     #cont.extra = "gsave 493 271 translate 0.7 dup scale -500 dup 150 sub translate", font.closearrowup, "grestore"
-    cont.extra = "gsave 442 301 translate 0.55 dup scale -500 dup 150 sub translate", font.closearrowup, "grestore", "gsave 442 239 translate 0.55 dup scale -500 dup 150 sub translate", font.closearrowup, "grestore"
+    cont.extra = "gsave 442 {} translate 0.55 dup scale -500 dup 100 sub translate".format(306 + shortenArrowLine), font.closedoublearrowup, "grestore", "gsave 442 {} translate 0.55 dup scale -500 dup 100 sub translate".format(306 - 40 + shortenArrowLine), font.closedoublearrowup, "grestore"
 
     cont.ox = font.sharp.ox
     cont.cy = font.sharp.cy
@@ -3493,32 +3570,34 @@ def _(cont):
 
 @define_glyph("sharpdn")
 def _(cont):
+    shortenArrowLine = 48
     # Saved data from gui.py
-    c0 = StraightLine(cont, 442, 306, 442, 672)
-    c1 = StraightLine(cont, 493, 291, 493, 637)
+    c0 = StraightLine(cont, 442, 306, 442, 652)
+    c1 = StraightLine(cont, 493, 291, 493, 637 - shortenArrowLine)
     c2 = StraightLine(cont, 413, 419, 523, 392)
     c3 = StraightLine(cont, 413, 551, 523, 524)
     # End saved data
 
     cont.default_nib = (8, pi/2, 16, 16)
 
-    cont.extra = "gsave 442 672 translate 0.7 dup scale -500 dup 150 add translate", font.closearrowdown, "grestore"
+    cont.extra = "gsave 493 {} translate 0.55 dup scale -500 dup 150 add translate".format(637 - shortenArrowLine), font.closearrowdown, "grestore"
 
     cont.ox = font.sharp.ox
     cont.cy = font.sharp.cy
 
 @define_glyph("sharpdndn")
 def _(cont):
+    shortenArrowLine = 60
     # Saved data from gui.py
     c0 = StraightLine(cont, 442, 306, 442, 652)
-    c1 = StraightLine(cont, 493, 291, 493, 642)
+    c1 = StraightLine(cont, 493, 291, 493, 637 - shortenArrowLine)
     c2 = StraightLine(cont, 413, 419, 523, 392)
     c3 = StraightLine(cont, 413, 551, 523, 524)
     # End saved data
 
     cont.default_nib = (8, pi/2, 16, 16)
 
-    cont.extra = "gsave 493 642 translate 0.55 dup scale -500 dup 150 add translate", font.closearrowdown, "grestore", "gsave 493 704 translate 0.55 dup scale -500 dup 150 add translate", font.closearrowdown, "grestore"
+    cont.extra = "gsave 493 {} translate 0.55 dup scale -500 dup 100 add translate".format(637 - shortenArrowLine), font.closedoublearrowdown, "grestore", "gsave 493 {} translate 0.55 dup scale -500 dup 100 add translate".format(637 + 40 - shortenArrowLine), font.closedoublearrowdown, "grestore"
 
     cont.ox = font.sharp.ox
     cont.cy = font.sharp.cy

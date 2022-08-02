@@ -3,6 +3,20 @@ package de.moekadu.tuner.temperaments
 import kotlin.math.min
 import kotlin.math.roundToInt
 
+/** Guidelines for notations:
+ * 1. Use the most simple notation for notes:
+ *    - Avoid ups and downs if possible
+ *    - Use maximum one # or one b, and avoid them, where possible
+ * 2. Enharmonics are only written down, if the enharmonic has an equally simply notation
+ *      as the base note. (e.g. G# and Ab, but not things like E# and F)
+ * 3. Notes between to fundamental notes are only written down if their
+ *     base note are one of the notes of their neighbors where they are inbetween.
+ *     E.g.  D D#Up D#UpUp/FbDownDown E, here the enharmonic FbDownDown is NOT written
+ *       since it is not based on D or E.
+ *     This rule also applies if the actually written down note is more complex (more ups/downs, ...
+ *     as there enharmonic counterpart, which has a basenote outside its neighbors)
+ */
+
 /** Note names, which can map indices between musical notes and via verse.
  * * @param notes Scale of note names, must contain the referenceNote. The octaves of
  *   the notes are not needed and must not be set.
@@ -145,6 +159,38 @@ fun createNoteNameScale12Tone(referenceNote: MusicalNote?): NoteNameScale {
     )
 }
 
+fun createNoteNameScale17Tone(referenceNote: MusicalNote?): NoteNameScale {
+    val referenceNoteResolved = referenceNote ?: MusicalNote(BaseNote.A, NoteModifier.None, 4)
+    return NoteNameScale(
+        arrayOf(
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.None),
+            //
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),
+        ),
+        referenceNoteResolved
+    )
+}
+
 fun createNoteNameScale19Tone(referenceNote: MusicalNote?): NoteNameScale {
     val referenceNoteResolved = referenceNote ?: MusicalNote(BaseNote.A, NoteModifier.None, 4)
     return NoteNameScale(
@@ -152,26 +198,241 @@ fun createNoteNameScale19Tone(referenceNote: MusicalNote?): NoteNameScale {
             MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
             MusicalNote(base = BaseNote.C, modifier = NoteModifier.Sharp),
             MusicalNote(base = BaseNote.D, modifier = NoteModifier.Flat),
+            //
             MusicalNote(base = BaseNote.D, modifier = NoteModifier.None),
             MusicalNote(base = BaseNote.D, modifier = NoteModifier.Sharp),
             MusicalNote(base = BaseNote.E, modifier = NoteModifier.Flat),
+            //
             MusicalNote(base = BaseNote.E, modifier = NoteModifier.None),
             MusicalNote(base = BaseNote.E, modifier = NoteModifier.Sharp, enharmonicBase = BaseNote.F, enharmonicModifier = NoteModifier.Flat),
+            //
             MusicalNote(base = BaseNote.F, modifier = NoteModifier.None),
             MusicalNote(base = BaseNote.F, modifier = NoteModifier.Sharp),
             MusicalNote(base = BaseNote.G, modifier = NoteModifier.Flat),
+            //
             MusicalNote(base = BaseNote.G, modifier = NoteModifier.None),
             MusicalNote(base = BaseNote.G, modifier = NoteModifier.Sharp),
             MusicalNote(base = BaseNote.A, modifier = NoteModifier.Flat),
+            //
             MusicalNote(base = BaseNote.A, modifier = NoteModifier.None),
             MusicalNote(base = BaseNote.A, modifier = NoteModifier.Sharp),
             MusicalNote(base = BaseNote.B, modifier = NoteModifier.Flat),
+            //
             MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),
             MusicalNote(base = BaseNote.B, modifier = NoteModifier.Sharp, enharmonicBase = BaseNote.C, enharmonicModifier = NoteModifier.Flat, enharmonicOctaveOffset = 1)
         ),
         referenceNoteResolved
     )
 }
+
+fun createNoteNameScale22Tone(referenceNote: MusicalNote?): NoteNameScale {
+    val referenceNoteResolved = referenceNote ?: MusicalNote(BaseNote.A, NoteModifier.None, 4)
+    return NoteNameScale(
+        arrayOf(
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.SharpDown, enharmonicBase = BaseNote.D, enharmonicModifier = NoteModifier.FlatUp),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.SharpDown, enharmonicBase = BaseNote.E, enharmonicModifier = NoteModifier.FlatUp),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.None),
+            //
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.SharpDown, enharmonicBase = BaseNote.G, enharmonicModifier = NoteModifier.FlatUp),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.SharpDown, enharmonicBase = BaseNote.A, enharmonicModifier = NoteModifier.FlatUp),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.SharpDown, enharmonicBase = BaseNote.B, enharmonicModifier = NoteModifier.FlatUp),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),
+        ),
+        referenceNoteResolved
+    )
+}
+
+fun createNoteNameScale24Tone(referenceNote: MusicalNote?): NoteNameScale {
+    val referenceNoteResolved = referenceNote ?: MusicalNote(BaseNote.A, NoteModifier.None, 4)
+    return NoteNameScale(
+        arrayOf(
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.Sharp, enharmonicBase = BaseNote.D, enharmonicModifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Sharp, enharmonicBase = BaseNote.E, enharmonicModifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.NaturalUp, enharmonicBase = BaseNote.F, enharmonicModifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.Sharp, enharmonicBase = BaseNote.G, enharmonicModifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Sharp, enharmonicBase = BaseNote.A, enharmonicModifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Sharp, enharmonicBase = BaseNote.B, enharmonicModifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.NaturalUp, enharmonicBase = BaseNote.C, enharmonicModifier = NoteModifier.NaturalDown, enharmonicOctaveOffset = 1),
+        ),
+        referenceNoteResolved
+    )
+}
+
+fun createNoteNameScale27Tone(referenceNote: MusicalNote?): NoteNameScale {
+    val referenceNoteResolved = referenceNote ?: MusicalNote(BaseNote.A, NoteModifier.None, 4)
+    return NoteNameScale(
+        arrayOf(
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.FlatUp),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.SharpDown),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.FlatUp),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.SharpDown),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.None),
+            //
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.FlatUp),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.SharpDown),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.FlatUp),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.SharpDown),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.FlatUp),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.SharpDown),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),
+            ),
+        referenceNoteResolved
+    )
+}
+
+fun createNoteNameScale29Tone(referenceNote: MusicalNote?): NoteNameScale {
+    val referenceNoteResolved = referenceNote ?: MusicalNote(BaseNote.A, NoteModifier.None, 4)
+    return NoteNameScale(
+        arrayOf(
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.NaturalUp, enharmonicBase = BaseNote.F, enharmonicModifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.NaturalUp, enharmonicBase = BaseNote.C, enharmonicModifier = NoteModifier.NaturalDown, enharmonicOctaveOffset = 1),
+        ),
+        referenceNoteResolved
+    )
+}
+
+fun createNoteNameScale31Tone(referenceNote: MusicalNote?): NoteNameScale {
+    val referenceNoteResolved = referenceNote ?: MusicalNote(BaseNote.A, NoteModifier.None, 4)
+    return NoteNameScale(
+        arrayOf(
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.Sharp),
+            //
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.Flat, octaveOffset = 1),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.Sharp),
+            ),
+        referenceNoteResolved
+    )
+}
+
 
 fun createNoteNameScale41Tone(referenceNote: MusicalNote?): NoteNameScale {
     val referenceNoteResolved = referenceNote ?: MusicalNote(BaseNote.A, NoteModifier.None, 4)
@@ -224,6 +485,74 @@ fun createNoteNameScale41Tone(referenceNote: MusicalNote?): NoteNameScale {
             MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),
             MusicalNote(base = BaseNote.B, modifier = NoteModifier.NaturalUp),
             MusicalNote(base = BaseNote.C, modifier = NoteModifier.NaturalDown),
+            ),
+        referenceNoteResolved
+    )
+}
+
+fun createNoteNameScale53Tone(referenceNote: MusicalNote?): NoteNameScale {
+    val referenceNoteResolved = referenceNote ?: MusicalNote(BaseNote.A, NoteModifier.None, 4)
+    return NoteNameScale(
+        arrayOf(
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.NaturalUpUp),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.FlatDown),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.SharpUp),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalDownDown),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalUpUp),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.FlatDown),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.SharpUp),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.NaturalDownDown),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.NaturalUpUp, enharmonicBase = BaseNote.F, enharmonicModifier = NoteModifier.NaturalDownDown),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.NaturalUpUp),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.FlatDown),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.F, modifier = NoteModifier.SharpUp),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalDownDown),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalUpUp),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.FlatDown),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.SharpUp),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalDownDown),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalUpUp),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.FlatDown),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.Flat),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.Sharp),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.SharpUp),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.NaturalDownDown),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.NaturalDown),
+            //
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.NaturalUp),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.NaturalUpUp, enharmonicBase = BaseNote.C, enharmonicModifier = NoteModifier.NaturalDownDown, enharmonicOctaveOffset = 1),
+            MusicalNote(base = BaseNote.C, modifier = NoteModifier.NaturalDown, octaveOffset = 1),
             ),
         referenceNoteResolved
     )
