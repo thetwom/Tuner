@@ -149,7 +149,8 @@
         app:markLabelColor3="?attr/colorOnNegative"
         app:markTextSize3="25sp"
         app:markLineWidth3="2dp"
-        app:markPadding="4dp"
+        app:markPaddingVertical="4dp"
+        app:markPaddingHorizontal="8dp"
         app:plotLineWidth="3dp"
         app:plotLineWidth2="2dp"
         app:plotLineColor2="?attr/colorSurfaceVariant"
@@ -176,7 +177,8 @@
         app:titleColor="?attr/colorOnSurface"
         app:yTickLabelWidth="45sp"
         app:yTickPosition="right"
-        app:tickPadding="6dp"
+        app:tickPaddingVertical="6dp"
+        app:tickPaddingHorizontal="6dp"
         app:enableTouchX="false"
         />
 

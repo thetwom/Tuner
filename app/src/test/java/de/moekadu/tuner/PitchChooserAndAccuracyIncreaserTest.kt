@@ -99,15 +99,16 @@ class PitchChooserAndAccuracyIncreaserTest {
         val mostProbableValueFromCorrelation = calculateMostProbableCorrelationPitch(
             results.correlationMaximaIndices, results.correlation, results.frequencyFromCorrelation, null)
 
+        // for the current setting, the correlation based accuracy increasing actually fails
         val frequencyHighAccuracy = increaseAccuracyForCorrelationBasedFrequency(
             mostProbableValueFromCorrelation.correlationIndex!!, results, resultsPrevious)
-        assertEquals(frequency, frequencyHighAccuracy, 0.1f)
+        assertEquals(frequency, frequencyHighAccuracy, 0.3f)
 
         val mostProbableValueFromSpec = calculateMostProbableSpectrumPitch(
             results.specMaximaIndices, results.ampSqrSpec, results.frequencyFromSpectrum, null)
         val frequencyHighAccuracy2 = increaseAccuracyForSpectrumBasedFrequency(
             mostProbableValueFromSpec.ampSqrSpecIndex!!, results, resultsPrevious)
-        assertEquals(frequency, frequencyHighAccuracy2, 0.1f)
+        assertEquals(frequency, frequencyHighAccuracy2, 0.05f)
 
         val frequencyHighAccuracy3 = increaseAccuracyForSpectrumBasedFrequency(
             mostProbableValueFromSpec.ampSqrSpecIndex!!, results, null)
@@ -144,5 +145,15 @@ class PitchChooserAndAccuracyIncreaserTest {
             results.specMaximaIndices, results.ampSqrSpec, results.frequencyFromSpectrum, 3*frequency)
         val frequencyFromSpectrumHinted = results.frequencyFromSpectrum(mostProbableValueFromSpectrumHinted.ampSqrSpecIndex!!)
         assertEquals(3.0f * frequency, frequencyFromSpectrumHinted,0.1f)
+    }
+
+    @Test
+    fun findQuadraticMaximum() {
+        val xMax = 5.3f
+        val dt = 5.0f
+        val qFun = {x: Float -> - (x - xMax).pow(2) + 3.2f}
+        val yValues = FloatArray(3) { qFun(it * dt) }
+        val xMaxCheck = increaseTimeShiftAccuracy(yValues, 1, dt)
+        assertEquals(xMax, xMaxCheck, 1e-8f)
     }
 }

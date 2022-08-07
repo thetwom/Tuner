@@ -333,7 +333,7 @@ class TunerFragmentSimple : Fragment() {
             placeLabelsOutsideBoundsIfPossible = false,
             redraw = false,
             maxLabelBounds = null
-        ) { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius: Float ->
+        ) { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float ->
             val s = when (index) {
                 0 -> nameMinusBound
                 1 -> namePlusBound
@@ -345,10 +345,10 @@ class TunerFragmentSimple : Fragment() {
                 backgroundPaint,
                 cornerRadius,
                 gravity,
-                padding,
-                padding,
-                padding,
-                padding
+                paddingHorizontal,
+                paddingHorizontal,
+                paddingVertical,
+                paddingVertical
             )
         }
 

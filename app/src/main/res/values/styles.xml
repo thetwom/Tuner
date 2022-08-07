@@ -53,12 +53,14 @@
         <attr name="markLineWidth3" format="dimension"/>
         <attr name="markTextSize3" format="dimension"/>
         <attr name="markLabelColor3" format="color"/>
-        <attr name="markPadding" format="dimension"/>
+        <attr name="markPaddingHorizontal" format="dimension"/>
+        <attr name="markPaddingVertical" format="dimension"/>
         <attr name="markCornerRadius" format="dimension"/>
         <attr name="tickColor" format="color"/>
         <attr name="tickLineWidth" format="dimension"/>
         <attr name="tickTextSize" format="dimension"/>
-        <attr name="tickPadding" format="dimension"/>
+        <attr name="tickPaddingHorizontal" format="dimension"/>
+        <attr name="tickPaddingVertical" format="dimension"/>
         <attr name="yTickLabelWidth" format="dimension"/>
         <attr name="yTickPosition" format="enum">
             <enum name="left" value="0"/>
@@ -146,14 +148,16 @@
         <item name="markLineWidth3">1dp</item>
         <item name="markTextSize3">12sp</item>
         <item name="markLabelColor3">?attr/colorOnPrimary</item>
-        <item name="markPadding">2dp</item>
+        <item name="markPaddingHorizontal">2dp</item>
+        <item name="markPaddingVertical">2dp</item>
         <item name="markCornerRadius">2dp</item>
         <item name="tickColor">?attr/colorPrimary</item>
         <item name="tickLineWidth">1dp</item>
         <item name="tickTextSize">12sp</item>
         <item name="yTickLabelWidth">0sp</item>
         <item name="yTickPosition">left</item>
-        <item name="tickPadding">2dp</item>
+        <item name="tickPaddingHorizontal">2dp</item>
+        <item name="tickPaddingVertical">2dp</item>
         <item name="pointSize">5dp</item>
         <item name="pointSize2">5dp</item>
         <item name="pointSize3">5dp</item>

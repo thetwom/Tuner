@@ -41,7 +41,10 @@ import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
 import de.moekadu.tuner.temperaments.NoteNamePrinter
 import de.moekadu.tuner.temperaments.NoteNameScale
 import kotlinx.parcelize.Parcelize
-import kotlin.math.*
+import kotlin.math.absoluteValue
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.pow
 
 private const val NO_REDRAW_PRIVATE = Long.MAX_VALUE
 
@@ -778,7 +781,8 @@ enum class MarkLabelBackgroundSize {FitIndividually, FitLargest}
  *    colors). Line widths are only needed if marks are actually lines at constant x or y values.
  *  @param textSizes Array with text for each style. (array size must be the same as colors)
  *  @param disableLabelBackground If false, the labels will have no background.
- *  @param labelPadding Padding around the label text.
+ *  @param labelPaddingHorizontal Horizontal padding around the label text.
+ *  @param labelPaddingVertical Vertical padding around the label text.
  *  @param cornerRadius Corner radius of the label background.
  */
 private class PlotMarks(transformation: PlotTransformation,
@@ -787,7 +791,8 @@ private class PlotMarks(transformation: PlotTransformation,
                         val lineWidths: FloatArray,
                         val textSizes: FloatArray,
                         val disableLabelBackground: Boolean,
-                        val labelPadding: Float,
+                        val labelPaddingHorizontal: Float,
+                        val labelPaddingVertical: Float,
                         val cornerRadius: Float)
     : PlotTransformable(transformation) {
 
@@ -895,7 +900,7 @@ private class PlotMarks(transformation: PlotTransformation,
     var placeLabelsOutsideBoundsIfPossible: Boolean = true
         private set
     /** Functor for creating labels or null if no labels should be drawn. */
-    private var labelCreator: ((index: Int, xPosition: Float?, yPosition: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, padding: Float, cornerRadius: Float) -> Label?)? = null
+    private var labelCreator: ((index: Int, xPosition: Float?, yPosition: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label?)? = null
 
     /** Functor for computing the maximum size of labels. If null, we will temporarily
      * layout all labels and then use the largest one. So this only is for optimizing if many
@@ -920,7 +925,7 @@ private class PlotMarks(transformation: PlotTransformation,
      *   This allows optimizations such that only visible marks are actually created.
      *   If null, we will compute the max bounds internally, but this will be more expensive.
      * @param labelCreator Define how to plot the mark label. The lambda will provide the mark index
-     *   (the index in xPositions or yPositins), the coordinates (or null for line
+     *   (the index in xPositions or yPositions), the coordinates (or null for line
      *   marks) and a lot of default values for creating a label, which must be returned.
      */
     fun setMarks(xPositions: FloatArray?, yPositions: FloatArray?,
@@ -929,7 +934,7 @@ private class PlotMarks(transformation: PlotTransformation,
                  placeLabelsOutsideBoundsIfPossible: Boolean,
                  suppressInvalidate: Boolean,
                  maxLabelBounds: ((TextPaint) -> Label.LabelSetBounds)?,
-                 labelCreator: ((index: Int, xPos: Float?, yPos: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, padding: Float, cornerRadius: Float) -> Label?)?
+                 labelCreator: ((index: Int, xPos: Float?, yPos: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHoriziontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label?)?
     ) {
         this.placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible
         this.backgroundSizeType = backgroundSizeType
@@ -1041,13 +1046,13 @@ private class PlotMarks(transformation: PlotTransformation,
         if (hasOnlyYLineMarks) {
             if (marks.size > 1)
                 require(marks[1].xPositionTransformed > marks[0].xPositionTransformed)
-            val maxLabelWidth = (maxLabelSizes[styleIndex]?.maxWidth ?: 0f) + 2 * labelPadding
+            val maxLabelWidth = (maxLabelSizes[styleIndex]?.maxWidth ?: 0f) + 2 * labelPaddingHorizontal
             startIndex = marks.binarySearchBy(viewBounds.left - maxLabelWidth) {it.xPositionTransformed}
             endIndex = marks.binarySearchBy(viewBounds.right + maxLabelWidth) {it.xPositionTransformed}
         } else if (hasOnlyXLineMarks) {
             if (marks.size > 1)
                 require(marks[1].yPositionTransformed > marks[0].yPositionTransformed) // here we should also take equals, since marks could be at the same position, but then, we must make sure that the binary search finds cor correct one
-            val maxLabelHeight = (maxLabelSizes[styleIndex]?.maxHeight ?: 0f) + 2 * labelPadding
+            val maxLabelHeight = (maxLabelSizes[styleIndex]?.maxHeight ?: 0f) + 2 * labelPaddingVertical
 //             Log.v("StaticLayoutTest", "PlotView.drawToCanvas: maxLabelHeight = $maxLabelHeight")
             startIndex = marks.binarySearchBy(viewBounds.top - maxLabelHeight) {it.yPositionTransformed}
             endIndex = marks.binarySearchBy(viewBounds.bottom + maxLabelHeight) {it.yPositionTransformed}
@@ -1133,8 +1138,8 @@ private class PlotMarks(transformation: PlotTransformation,
                     if (backgroundSizeType == MarkLabelBackgroundSize.FitLargest) {
                         layout.drawToCanvasWithFixedSizeBackground(
                             x, y,
-                            (maxLabelSizes[styleIndex]?.maxWidth ?: 0f) + 2 * labelPadding,
-                            (maxLabelSizes[styleIndex]?.maxHeight ?: 0f) + 2 * labelPadding,
+                            (maxLabelSizes[styleIndex]?.maxWidth ?: 0f) + 2 * labelPaddingHorizontal,
+                            (maxLabelSizes[styleIndex]?.maxHeight ?: 0f) + 2 * labelPaddingVertical,
                             0f,
                             labelAnchorResolved,
                             canvas
@@ -1186,11 +1191,11 @@ private class PlotMarks(transformation: PlotTransformation,
         val labelWidth: Float
         val labelHeight: Float
         if (backgroundSizeType == MarkLabelBackgroundSize.FitLargest) {
-            labelWidth = (maxLabelSizes[styleIndex]?.maxWidth ?: 0f) + 2 * labelPadding
-            labelHeight = (maxLabelSizes[styleIndex]?.maxHeight ?: 0f) + 2 * labelPadding
+            labelWidth = (maxLabelSizes[styleIndex]?.maxWidth ?: 0f) + 2 * labelPaddingHorizontal
+            labelHeight = (maxLabelSizes[styleIndex]?.maxHeight ?: 0f) + 2 * labelPaddingVertical
         } else {
-            labelWidth = (mark.layout?.labelWidth ?: 0f) + 2 * labelPadding
-            labelHeight = (mark.layout?.labelHeight ?: 0f) + 2 * labelPadding
+            labelWidth = (mark.layout?.labelWidth ?: 0f) + 2 * labelPaddingHorizontal
+            labelHeight = (mark.layout?.labelHeight ?: 0f) + 2 * labelPaddingVertical
         }
 
         val xMin = when (labelAnchor) {
@@ -1242,7 +1247,7 @@ private class PlotMarks(transformation: PlotTransformation,
             if (mark.yPositionRaw == DRAW_LINE) null else mark.yPositionRaw,
             textPaints[styleIndex],
             backgroundPaints[styleIndex], LabelGravity.Center,
-            labelPadding, cornerRadius
+            labelPaddingHorizontal, labelPaddingVertical, cornerRadius
         )
         mark.layout = label
         mark.labelStyle = styleIndex
@@ -1321,8 +1326,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var markTextSize = FloatArray(numMarkStyles) {10f}
     /// Text color of mark labels
     private var markLabelColor = IntArray(numMarkStyles) {Color.WHITE}
-    /** Padding for mark labels. */
-    private var markPadding = 2f
+    /** Horizontal padding for mark labels. */
+    private var markPaddingHorizontal = 2f
+    /** Vertical padding for mark labels. */
+    private var markPaddingVertical = 2f
     /** Corner radius for mark labels. */
     private var markCornerRadius = 2f
 
@@ -1351,8 +1358,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var tickLineWidth = 2f
     /** Text size of ticks. */
     private var tickTextSize = 10f
-    /** Padding of tick labels. */
-    private var tickPadding = 2f
+    /** Horizontal padding of tick labels. */
+    private var tickPaddingHorizontal = 2f
+    /** Vertical padding of tick labels. */
+    private var tickPaddingVertical = 2f
     /** Width of y-tick labels (defines the horizontal space required, must me larger zero if y-tick labels are defined). */
     private var yTickLabelWidth = 0.0f
     /** Position of y ticks. */
@@ -1618,13 +1627,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             markTextSize[2] = ta.getDimension(R.styleable.PlotView_markTextSize3, markTextSize[2])
             markLabelColor[2] = ta.getColor(R.styleable.PlotView_markLabelColor3, markLabelColor[2])
 
-            markPadding = ta.getDimension(R.styleable.PlotView_markPadding, markPadding)
+            markPaddingHorizontal = ta.getDimension(R.styleable.PlotView_markPaddingHorizontal, markPaddingHorizontal)
+            markPaddingVertical = ta.getDimension(R.styleable.PlotView_markPaddingVertical, markPaddingVertical)
             markCornerRadius = ta.getDimension(R.styleable.PlotView_markCornerRadius, markCornerRadius)
 
             tickColor = ta.getColor(R.styleable.PlotView_tickColor, tickColor)
             tickLineWidth = ta.getDimension(R.styleable.PlotView_tickLineWidth, tickLineWidth)
             tickTextSize = ta.getDimension(R.styleable.PlotView_tickTextSize, tickTextSize)
-            tickPadding = ta.getDimension(R.styleable.PlotView_tickPadding, tickPadding)
+            tickPaddingHorizontal = ta.getDimension(R.styleable.PlotView_tickPaddingHorizontal, tickPaddingHorizontal)
+            tickPaddingVertical = ta.getDimension(R.styleable.PlotView_tickPaddingVertical, tickPaddingVertical)
             yTickLabelWidth = ta.getDimension(R.styleable.PlotView_yTickLabelWidth, yTickLabelWidth)
             yTickPosition = if (ta.getInt(R.styleable.PlotView_yTickPosition, 0) == 0)
                 LabelAnchor.West
@@ -1679,10 +1690,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         //rawPlotBounds.set(0f, -0.8f, 2.0f*PI.toFloat(), 0.8f)
         xTicks = PlotMarks(rawViewTransformation, intArrayOf(tickColor), intArrayOf(tickColor),
             floatArrayOf(tickLineWidth), floatArrayOf(tickTextSize),
-            disableLabelBackground = true, tickPadding, 0f)
+            disableLabelBackground = true, tickPaddingHorizontal, tickPaddingVertical, 0f)
         yTicks = PlotMarks(rawViewTransformation, intArrayOf(tickColor), intArrayOf(tickColor),
             floatArrayOf(tickLineWidth), floatArrayOf(tickTextSize),
-            disableLabelBackground = true, tickPadding, 0f)
+            disableLabelBackground = true, tickPaddingHorizontal, tickPaddingVertical, 0f)
 
         xTicks.plotMarksChangedListener = PlotMarks.PlotMarksChangedListener { ticks, bbChanged, suppressInvalidate ->
             if (ticks.hasMarks && bbChanged)
@@ -1899,8 +1910,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
 
         val marks = PlotMarks(rawViewTransformation, markColor, markLabelColor,
-            markLineWidth, markTextSize, disableLabelBackground = false, markPadding,
-            markCornerRadius)
+            markLineWidth, markTextSize, disableLabelBackground = false, markPaddingHorizontal,
+            markPaddingVertical, markCornerRadius)
         markGroups[tag] = marks
 
         marks.plotMarksChangedListener = PlotMarks.PlotMarksChangedListener { _, _, suppressInvalidate ->
@@ -2098,7 +2109,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                  placeLabelsOutsideBoundsIfPossible: Boolean = false,
                  redraw: Boolean = true,
                  maxLabelBounds: ((TextPaint) -> Label.LabelSetBounds)?,
-                 labelCreator: ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, padding: Float, cornerRadius: Float) -> Label?)?) {
+                 labelCreator: ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label?)?) {
                  //format: ((Int, Float?, Float?) -> CharSequence?)? = null) {
         val marks = getPlotMarks(tag)
         marks.setMarks(xPositions, yPositions, styleIndex, anchors, backgroundSizeType,
@@ -2108,27 +2119,27 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     /** Helper to create a label creator based on note name scales .*/
     fun musicalNoteLabelCreator(firstNoteIndex: Int, scale: NoteNameScale, notePrintOptions: MusicalNotePrintOptions)
-            : ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, padding: Float, cornerRadius: Float) -> Label?) {
-        return { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
+            : ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label?) {
+        return { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius:Float ->
             val noteIndex = index + firstNoteIndex
             val note = scale.getNoteOfIndex(noteIndex)
-            MusicalNoteLabel(note, textPaint, noteNamePrinter, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
+            MusicalNoteLabel(note, textPaint, noteNamePrinter, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, paddingHorizontal, paddingHorizontal, paddingVertical, paddingVertical)
         }
     }
 
     /** Helper to create a label creator for MusicalNoteLabels .*/
     fun musicalNoteLabelCreator(note: MusicalNote, notePrintOptions: MusicalNotePrintOptions)
-            : ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, padding: Float, cornerRadius: Float) -> Label) {
-        return { _: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
-            MusicalNoteLabel(note, textPaint, noteNamePrinter, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
+            : ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label) {
+        return { _: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius:Float ->
+            MusicalNoteLabel(note, textPaint, noteNamePrinter, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, paddingHorizontal, paddingHorizontal, paddingVertical, paddingVertical)
         }
     }
 
     /** Helper for creating string StringLabels. */
     fun stringLabelCreator(string: String)
-            : ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, padding: Float, cornerRadius: Float) -> Label) {
-        return { _: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
-            StringLabel(string, textPaint, backgroundPaint, cornerRadius, gravity, padding, padding, padding, padding)
+            : ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label) {
+        return { _: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius:Float ->
+            StringLabel(string, textPaint, backgroundPaint, cornerRadius, gravity, paddingHorizontal, paddingHorizontal, paddingVertical, paddingVertical)
         }
     }
 
@@ -2334,7 +2345,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     fun setXTicks(
         values: FloatArray?, redraw: Boolean = true,
         maxLabelBounds: ((TextPaint) -> Label.LabelSetBounds)?,
-        labelCreator: ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, padding: Float, cornerRadius: Float) -> Label)?) {
+        labelCreator: ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label)?) {
 
         if (values == null) {
             return
@@ -2360,9 +2371,9 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         val creator = if (format == null) {
             null
         } else {
-            { index: Int, xPosition: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius: Float ->
+            { index: Int, xPosition: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float ->
                 val string = format(index, xPosition ?: 0f)
-                StringLabel(string, textPaint, backgroundPaint, cornerRadius, gravity, padding, padding, padding, padding)
+                StringLabel(string, textPaint, backgroundPaint, cornerRadius, gravity, paddingHorizontal, paddingHorizontal, paddingVertical, paddingVertical)
             }
         }
         setXTicks(values, redraw, null, creator)
@@ -2385,9 +2396,9 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 true
             )
         }
-        val labelCreator = { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
+        val labelCreator = { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius:Float ->
             val note = noteNameScale.getNoteOfIndex(index + noteIndexBegin)
-            MusicalNoteLabel(note, textPaint, noteNamePrinter, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
+            MusicalNoteLabel(note, textPaint, noteNamePrinter, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, paddingHorizontal, paddingHorizontal, paddingVertical, paddingVertical)
         }
         setXTicks(values, redraw, labelBounds, labelCreator)
     }
@@ -2409,7 +2420,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     fun setYTicks(
         values: FloatArray?, redraw: Boolean = true,
         maxLabelBounds: ((TextPaint) -> Label.LabelSetBounds)?,
-        labelCreator: ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, padding: Float, cornerRadius: Float) -> Label)?) {
+        labelCreator: ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label)?) {
 //        Log.v("Tuner", "PlotView.setYTicks: numValues = ${value?.size}")
 
         if (values == null) {
@@ -2435,9 +2446,9 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         val creator = if (format == null) {
             null
         } else {
-            { index: Int, _: Float?, yPosition: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius: Float ->
+            { index: Int, _: Float?, yPosition: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float ->
                 val string = format(index, yPosition ?: 0f)
-                StringLabel(string, textPaint, backgroundPaint, cornerRadius, gravity, padding, padding, padding, padding)
+                StringLabel(string, textPaint, backgroundPaint, cornerRadius, gravity, paddingHorizontal, paddingHorizontal, paddingVertical, paddingVertical)
             }
         }
         setYTicks(values, redraw, null, creator)
@@ -2460,9 +2471,9 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 true
             )
         }
-        val labelCreator = { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, padding: Float, cornerRadius:Float ->
+        val labelCreator = { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius:Float ->
             val note = noteNameScale.getNoteOfIndex(index + noteIndexBegin)
-            MusicalNoteLabel(note, textPaint, noteNamePrinter, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, padding, padding, padding, padding)
+            MusicalNoteLabel(note, textPaint, noteNamePrinter, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, paddingHorizontal, paddingHorizontal, paddingVertical, paddingVertical)
         }
         setYTicks(values, redraw, labelBounds, labelCreator)
     }

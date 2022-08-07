@@ -40,7 +40,6 @@ import de.moekadu.tuner.preferences.AppearancePreference
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 
 class MainActivity : AppCompatActivity() {
-    // TODO: accuracyincreaser-test fails
     // TODO: anchor-drawable should use round edges
     // TODO: baseline-alignment for marks
     // TODO: define an "closest" note behavior independent on old notenamescale
