@@ -41,7 +41,6 @@ import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 
 class MainActivity : AppCompatActivity() {
     // TODO: anchor-drawable should use round edges
-    // TODO: baseline-alignment for marks
     // TODO: define an "closest" note behavior independent on old notenamescale
 
     enum class TunerMode {Simple, Scientific, Unknown}

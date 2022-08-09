@@ -831,6 +831,19 @@ private class PlotMarks(transformation: PlotTransformation,
     private var labelWidth: Float? = null
     /** null, if each label should have its own size, else the height to be used for all labels. */
     private var labelHeight: Float? = null
+
+    /** Maximum distance from label top to baseline.
+     * Unlike labelWidth/Height, this must always be determined since we need this for baseline
+     * alignment if a label is below the plot.
+     */
+    private var labelTopAboveBaseline = 0f
+
+    /** Maximum distance from label bottom to baseline.
+     * Unlike labelWidth/Height, this must always be determined since we need this for baseline
+     * alignment if a label is above the plot.
+     */
+    private var labelBottomBelowBaseline = 0f
+
     /** Temporary point class to avoid allocation. */
     private val temporaryPointRaw = FloatArray(2) {0f}
     /** Another temporary point class to avoid allocation. */
@@ -990,6 +1003,8 @@ private class PlotMarks(transformation: PlotTransformation,
             MarkLabelBackgroundSize.FitLargest -> maxLabelSizes[styleIndex]?.maxWidth
             MarkLabelBackgroundSize.FitIndividually -> null
         }
+        labelTopAboveBaseline = maxLabelSizes[styleIndex]?.maxDistanceAboveBaseline ?: 0f
+        labelBottomBelowBaseline = maxLabelSizes[styleIndex]?.maxDistanceBelowBaseline ?: 0f
 
         if (numMarks > 0 || numMarks != numMarksBefore)
             transformAndCallListener(transformation, !boundingBox.contentEquals(oldBoundingBox), suppressInvalidate)
@@ -1030,6 +1045,8 @@ private class PlotMarks(transformation: PlotTransformation,
             MarkLabelBackgroundSize.FitLargest -> maxLabelSizes[styleIndex]?.maxHeight
             MarkLabelBackgroundSize.FitIndividually -> null
         }
+        labelTopAboveBaseline = maxLabelSizes[styleIndex]?.maxDistanceAboveBaseline ?: 0f
+        labelBottomBelowBaseline = maxLabelSizes[styleIndex]?.maxDistanceBelowBaseline ?: 0f
 
         plotMarksChangedListener?.onPlotMarksChanged(this, hasNewBoundingBox = false, suppressInvalidate)
     }
@@ -1089,10 +1106,9 @@ private class PlotMarks(transformation: PlotTransformation,
                 // override mark position based on anchor
                 if (x == DRAW_LINE) {
                     x = when (mark.anchor) {
-                            LabelAnchor.Center, LabelAnchor.North, LabelAnchor.South -> viewBounds.centerX()
-                            LabelAnchor.West, LabelAnchor.NorthWest, LabelAnchor.SouthWest -> viewBounds.left
-                            LabelAnchor.East, LabelAnchor.NorthEast, LabelAnchor.SouthEast -> viewBounds.right
-                            else -> viewBounds.centerX()
+                            LabelAnchor.Center, LabelAnchor.North, LabelAnchor.South, LabelAnchor.Baseline -> viewBounds.centerX()
+                            LabelAnchor.West, LabelAnchor.NorthWest, LabelAnchor.SouthWest, LabelAnchor.BaselineWest -> viewBounds.left
+                            LabelAnchor.East, LabelAnchor.NorthEast, LabelAnchor.SouthEast, LabelAnchor.BaselineEast -> viewBounds.right
                         }
 
                     labelAnchorResolved = if (placeLabelsOutsideBoundsIfPossible) {
@@ -1103,26 +1119,38 @@ private class PlotMarks(transformation: PlotTransformation,
                             LabelAnchor.NorthWest -> LabelAnchor.NorthEast
                             LabelAnchor.SouthEast -> LabelAnchor.SouthWest
                             LabelAnchor.SouthWest -> LabelAnchor.SouthEast
+                            LabelAnchor.BaselineWest -> LabelAnchor.BaselineEast
+                            LabelAnchor.BaselineEast -> LabelAnchor.BaselineWest
                             else -> mark.anchor
                         }
                     } else {
                         mark.anchor
                     }
                 } else if (y == DRAW_LINE) {
-                    y = when (mark.anchor) {
-                        LabelAnchor.Center, LabelAnchor.West, LabelAnchor.East -> viewBounds.centerY()
-                        LabelAnchor.South, LabelAnchor.SouthWest, LabelAnchor.SouthEast -> viewBounds.bottom
-                        LabelAnchor.North, LabelAnchor.NorthWest, LabelAnchor.NorthEast -> viewBounds.top
-                        else -> viewBounds.centerY()
+                    y = if (placeLabelsOutsideBoundsIfPossible) {
+                        when (mark.anchor) {
+                            LabelAnchor.Center, LabelAnchor.West, LabelAnchor.East -> viewBounds.centerY()
+                            LabelAnchor.South, LabelAnchor.SouthWest, LabelAnchor.SouthEast -> viewBounds.bottom + labelTopAboveBaseline + labelPaddingVertical
+                            LabelAnchor.North, LabelAnchor.NorthWest, LabelAnchor.NorthEast -> viewBounds.top - labelBottomBelowBaseline - labelPaddingVertical
+                            else -> viewBounds.centerY() // baseline really does not make sense ...
+                        }
+                    } else {
+                        when (mark.anchor) {
+                            LabelAnchor.Center, LabelAnchor.West, LabelAnchor.East -> viewBounds.centerY()
+                            LabelAnchor.South, LabelAnchor.SouthWest, LabelAnchor.SouthEast -> viewBounds.bottom
+                            LabelAnchor.North, LabelAnchor.NorthWest, LabelAnchor.NorthEast -> viewBounds.top
+                            else -> viewBounds.centerY() // baseline really does not make sense ...
+                        }
+
                     }
                     labelAnchorResolved = if (placeLabelsOutsideBoundsIfPossible) {
                         when (mark.anchor) {
-                            LabelAnchor.North -> LabelAnchor.South
-                            LabelAnchor.South -> LabelAnchor.North
-                            LabelAnchor.NorthEast -> LabelAnchor.SouthEast
-                            LabelAnchor.NorthWest -> LabelAnchor.SouthWest
-                            LabelAnchor.SouthEast -> LabelAnchor.NorthEast
-                            LabelAnchor.SouthWest -> LabelAnchor.NorthWest
+                            LabelAnchor.North -> LabelAnchor.Baseline
+                            LabelAnchor.South ->  LabelAnchor.Baseline
+                            LabelAnchor.NorthEast -> LabelAnchor.BaselineEast
+                            LabelAnchor.NorthWest -> LabelAnchor.BaselineWest
+                            LabelAnchor.SouthEast -> LabelAnchor.BaselineEast
+                            LabelAnchor.SouthWest -> LabelAnchor.BaselineWest
                             else -> mark.anchor
                         }
                     } else {
@@ -1192,10 +1220,18 @@ private class PlotMarks(transformation: PlotTransformation,
         val labelHeight: Float
         if (backgroundSizeType == MarkLabelBackgroundSize.FitLargest) {
             labelWidth = (maxLabelSizes[styleIndex]?.maxWidth ?: 0f) + 2 * labelPaddingHorizontal
-            labelHeight = (maxLabelSizes[styleIndex]?.maxHeight ?: 0f) + 2 * labelPaddingVertical
+            labelHeight = when (labelAnchor) {
+                LabelAnchor.Baseline, LabelAnchor.BaselineEast, LabelAnchor.BaselineWest ->
+                    (maxLabelSizes[styleIndex]?.maxDistanceAboveBaseline ?: 0f) + (maxLabelSizes[styleIndex]?.maxDistanceBelowBaseline ?: 0f) + 2 * labelPaddingVertical
+                else -> (maxLabelSizes[styleIndex]?.maxHeight ?: 0f) + 2 * labelPaddingVertical
+            }
         } else {
             labelWidth = (mark.layout?.labelWidth ?: 0f) + 2 * labelPaddingHorizontal
-            labelHeight = (mark.layout?.labelHeight ?: 0f) + 2 * labelPaddingVertical
+            labelHeight = when (labelAnchor) {
+                LabelAnchor.Baseline, LabelAnchor.BaselineEast, LabelAnchor.BaselineWest ->
+                    (mark.layout?.labelBaselineBelowTop ?: 0f) + (mark.layout?.labelBottomBelowBaseline ?: 0f) + 2 * labelPaddingVertical
+                else -> (mark.layout?.labelHeight ?: 0f) + 2 * labelPaddingVertical
+            }
         }
 
         val xMin = when (labelAnchor) {
@@ -1207,7 +1243,7 @@ private class PlotMarks(transformation: PlotTransformation,
             LabelAnchor.Center, LabelAnchor.East, LabelAnchor.West -> labelY - 0.5f * labelHeight
             LabelAnchor.North, LabelAnchor.NorthEast, LabelAnchor.NorthWest -> labelY
             LabelAnchor.South, LabelAnchor.SouthEast, LabelAnchor.SouthWest -> labelY - labelHeight
-            else -> throw RuntimeException("Baseline not implemented yet") // TODO: implement this
+            LabelAnchor.Baseline, LabelAnchor.BaselineEast, LabelAnchor.BaselineWest -> labelY - (mark.layout?.labelBaselineBelowTop ?: 0f)
         }
         val xMax = xMin + labelWidth
         val yMax = yMin + labelHeight
@@ -1215,10 +1251,10 @@ private class PlotMarks(transformation: PlotTransformation,
     }
 
     private fun computeMaxLabelBounds(styleIndex: Int): Label.LabelSetBounds? {
+        // we only need to compute the max sizes if there are actually labels
         if (labelCreator == null)
             return null
 
-        // we only need to compute the max sizes if there are actually labels
         maxLabelBoundComputer?.let {
             return it(textPaints[styleIndex])
         }
