@@ -1227,14 +1227,17 @@ private class PlotMarks(transformation: PlotTransformation,
         var maxHeight = 0f
         var maxDistanceAboveBaseline = 0f
         var maxDistanceBelowBaseline = 0f
+        var verticalCenterAboveBaseline = 0f
         marks.forEachIndexed { index, mark ->
             val label = getLabelFromMark(mark, styleIndex)
             maxWidth = max(label?.labelWidth ?: 0f, maxWidth)
             maxHeight = max(label?.labelHeight ?: 0f, maxHeight)
             maxDistanceAboveBaseline = max(label?.labelBaselineBelowTop ?: 0f, maxDistanceAboveBaseline)
             maxDistanceBelowBaseline = max(label?.labelBottomBelowBaseline ?: 0f, maxDistanceBelowBaseline)
+            verticalCenterAboveBaseline += label?.verticalCenterAboveBaseline ?: 0f
         }
-        return Label.LabelSetBounds(maxWidth, maxHeight, maxDistanceAboveBaseline, maxDistanceBelowBaseline)
+        verticalCenterAboveBaseline /= marks.size
+        return Label.LabelSetBounds(maxWidth, maxHeight, maxDistanceAboveBaseline, maxDistanceBelowBaseline, verticalCenterAboveBaseline)
     }
 
     private fun getLabelFromMark(mark: Mark, styleIndex: Int): Label? {

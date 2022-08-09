@@ -56,9 +56,12 @@ abstract class Label(
      * @param maxHeight Maximum label height of a set of labels.
      * @param maxDistanceAboveBaseline Maximum distance between baseline and top of label.
      * @param maxDistanceBelowBaseline Maximum distance between baseline and bottom of label.
+     * @param verticalCenterAboveBaseline Vertical center above baseline, which is used for centered
+     *   vertical alignment.
      */
     data class LabelSetBounds(val maxWidth: Float, val maxHeight: Float,
-                              val maxDistanceAboveBaseline: Float, val maxDistanceBelowBaseline: Float)
+                              val maxDistanceAboveBaseline: Float, val maxDistanceBelowBaseline: Float,
+                              val verticalCenterAboveBaseline: Float)
 
     /** Width of label. */
     abstract val labelWidth: Float
@@ -69,6 +72,9 @@ abstract class Label(
 
     /** Distance between baseline and bottom. */
     abstract val labelBottomBelowBaseline: Float
+
+    /** Vertical center above baseline, this is used for centered vertical alignment. */
+    abstract val verticalCenterAboveBaseline: Float
 
     /** Draw label.
      * @param positionX x-position of where to draw.
@@ -158,6 +164,8 @@ abstract class Label(
         if (canvas == null)
             return
 
+        // TODO: label height must be computed as 2*max(top - verticalCenter, vertcialCenter - bottom)
+        //    this modified height measurement must also be considered in the cmputation of group meaures in the NoteNameLabel/Stringlabel
         val backgroundWidth = labelWidth + paddingLeft + paddingRight
         val backgroundHeight = labelHeight + paddingTop + paddingBottom
         val backgroundBaselineBelowTop = paddingTop + labelBaselineBelowTop

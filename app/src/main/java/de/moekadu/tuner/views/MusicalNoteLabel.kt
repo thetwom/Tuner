@@ -2,6 +2,7 @@ package de.moekadu.tuner.views
 
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Rect
 import android.text.StaticLayout
 import android.text.TextPaint
 import androidx.core.graphics.withTranslation
@@ -19,6 +20,10 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint,
                        paddingTop: Float = 0f, paddingBottom: Float = 0f)
     : Label(backgroundPaint, cornerRadius, gravity, paddingLeft, paddingRight, paddingTop, paddingBottom) {
 
+    private val capitalLetterBounds = Rect().apply {
+        paint.getTextBounds("M", 0, 1, this)
+    }
+
     private val bounds = noteNamePrinter.measure(paint, note, printOptions, enableOctaveIndex)
     private val spannableString = noteNamePrinter.noteToCharSequence(note, printOptions, enableOctaveIndex)
     // make sure that the width is wide enough to not have line breaks
@@ -30,11 +35,14 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint,
     override val labelWidth: Float
         get() = bounds.width()
     override val labelHeight: Float
-        get() = bounds.height()
+        get() = 2 * max(labelBottomBelowBaseline + verticalCenterAboveBaseline, labelBaselineBelowTop - verticalCenterAboveBaseline)
+        //get() = bounds.height()
     override val labelBaselineBelowTop: Float
         get() = -bounds.top
     override val labelBottomBelowBaseline: Float
         get() = bounds.bottom
+    override val verticalCenterAboveBaseline: Float
+        get() = -capitalLetterBounds.exactCenterY()
 
     override fun drawToCanvas(positionX: Float, positionY: Float, anchor: LabelAnchor, canvas: Canvas?) {
         if (canvas == null)
@@ -48,7 +56,7 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint,
         val y = when (anchor) {
                 LabelAnchor.North, LabelAnchor.NorthEast, LabelAnchor.NorthWest -> positionY - baselineOfLayout - bounds.top
                 LabelAnchor.South, LabelAnchor.SouthEast, LabelAnchor.SouthWest -> positionY - baselineOfLayout - bounds.bottom
-                LabelAnchor.Center, LabelAnchor.East, LabelAnchor.West -> positionY - baselineOfLayout - bounds.centerY()
+                LabelAnchor.Center, LabelAnchor.East, LabelAnchor.West -> positionY - baselineOfLayout + verticalCenterAboveBaseline//- bounds.centerY()
                 LabelAnchor.Baseline, LabelAnchor.BaselineEast, LabelAnchor.BaselineWest -> positionY - baselineOfLayout
             }
 
@@ -72,6 +80,9 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint,
          */
         fun getLabelSetBounds(notes: Array<MusicalNote>, octaveBegin: Int, octaveEnd: Int, paint: TextPaint, noteNamePrinter: NoteNamePrinter,
                               printOptions: MusicalNotePrintOptions = MusicalNotePrintOptions.None, enableOctaveIndex: Boolean = true): LabelSetBounds {
+            val capitalLetterBounds = Rect().apply {
+                paint.getTextBounds("M", 0, 1, this)
+            }
 
             // get maximum measures of note names without octave
             var maxWidth = 0f
@@ -106,13 +117,15 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint,
                         maxOctaveDistanceAboveBaseline - maxDistanceAboveBaseline
                     ),
                     max(maxDistanceAboveBaseline, maxOctaveDistanceAboveBaseline),
-                    maxDistanceBelowBaseline
+                    maxDistanceBelowBaseline,
+                    -capitalLetterBounds.exactCenterY()
                 )
             } else {
                 LabelSetBounds(
                     maxWidth, maxHeight,
                     maxDistanceAboveBaseline,
-                    maxDistanceBelowBaseline
+                    maxDistanceBelowBaseline,
+                    -capitalLetterBounds.exactCenterY()
                 )
             }
         }

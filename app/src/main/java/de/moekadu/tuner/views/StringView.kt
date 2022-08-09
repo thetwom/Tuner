@@ -698,8 +698,14 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 notePrintOptions,
                 true
             )
+            val boundHeight = 2 * max(
+                bounds.maxDistanceBelowBaseline + bounds.verticalCenterAboveBaseline,
+                bounds.maxDistanceAboveBaseline - bounds.verticalCenterAboveBaseline)
+            //val boundHeight = 2 * max(labelBottomBelowBaseline + verticalCenterAboveBaseline, labelBaselineBelowTop - verticalCenterAboveBaseline)
             labelWidth = max(labelWidth, bounds.maxWidth)
-            labelHeight = max(labelHeight, bounds.maxHeight)
+
+            //labelHeight = max(labelHeight, bounds.maxHeight)
+            labelHeight = max(boundHeight, labelHeight)
         }
 
         this.labelWidth = labelWidth + 2 * labelBackgroundPadding

@@ -39,10 +39,7 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.pow
-import kotlin.math.sqrt
+import kotlin.math.*
 
 class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -222,8 +219,8 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
 //        sampleSource.testFunction = { t ->
 //            //val freq = 400 + 2*t
-//            val freq = 200 + 0.6f*t
-//            //val freq = 440
+//            //val freq = 200 + 0.6f*t
+//            val freq = 496.68f
 //           //Log.v("TestRecordFlow", "TunerViewModel.testfunction: f=$freq")
 //            sin(t * 2 * kotlin.math.PI.toFloat() * freq)
 //        }

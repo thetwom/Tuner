@@ -43,8 +43,6 @@ class MainActivity : AppCompatActivity() {
     // TODO: anchor-drawable should use round edges
     // TODO: baseline-alignment for marks
     // TODO: define an "closest" note behavior independent on old notenamescale
-    // TODO: before publish, check if the old preferences (ref note, temperament) are kept
-    // TODO: before publish, check that reference frequncy works correctly, also temperaments
 
     enum class TunerMode {Simple, Scientific, Unknown}
 
