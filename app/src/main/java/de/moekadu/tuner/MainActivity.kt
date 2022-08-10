@@ -41,7 +41,6 @@ import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 
 class MainActivity : AppCompatActivity() {
     // TODO: anchor-drawable should use round edges
-    // TODO: increase the font sizes in sicentific layout
 
     enum class TunerMode {Simple, Scientific, Unknown}
 
