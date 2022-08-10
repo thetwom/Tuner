@@ -1,5 +1,6 @@
 package de.moekadu.tuner.temperaments
 
+import de.moekadu.tuner.misc.DefaultValues
 import kotlin.math.*
 
 /** Base class for temperaments which are based on given frequency ratios in respect to a root note.
@@ -23,7 +24,7 @@ open class MusicalScaleRatioBasedTemperaments(
     private val ratios: DoubleArray,
     final override val noteNameScale: NoteNameScale,
     final override val referenceNote: MusicalNote,
-    final override val referenceFrequency: Float = 440f,
+    final override val referenceFrequency: Float = DefaultValues.REFERENCE_FREQUENCY,
     final override val rootNote: MusicalNote = MusicalNote(BaseNote.C, NoteModifier.None), // the first ratio of ratios is set at this index (12-tone this is c)
     frequencyMin: Float = 16.0f, // this would be c0 if the noteIndexAtReferenceFrequency is 0 (~16.4Hz for equal temperament)
     frequencyMax: Float = 17000.0f, // this would be c10 if the noteIndexAtReferenceFrequency is 0 (~16744Hz for equal temperament)

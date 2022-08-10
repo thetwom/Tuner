@@ -30,6 +30,7 @@ import de.moekadu.tuner.fragments.indexToTolerance
 import de.moekadu.tuner.fragments.indexToWindowSize
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.instrumentDatabase
+import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.misc.SoundSource
 import de.moekadu.tuner.notedetection.*
 import de.moekadu.tuner.preferences.TemperamentAndReferenceNoteValue
@@ -39,7 +40,10 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.*
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -99,7 +103,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     val notePrintOptions get() = if (preferFlat.value == true) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
 
     private var musicalScaleValue: MusicalScale =
-        MusicalScaleFactory.create(TemperamentType.EDO12, null, null, 440f)
+        MusicalScaleFactory.create(DefaultValues.TEMPERAMENT, null, null, DefaultValues.REFERENCE_FREQUENCY)
         set(value) {
             field = value
             pitchHistory.musicalScale = value
@@ -168,7 +172,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                     changeMusicalScale(
                         rootNote = value?.rootNote,
                         referenceNote = value?.referenceNote,
-                        referenceFrequency = value?.referenceFrequency?.toFloatOrNull() ?: 440f, // TODO: should we use a globally defined default value?
+                        referenceFrequency = value?.referenceFrequency?.toFloatOrNull() ?: DefaultValues.REFERENCE_FREQUENCY,
                         temperamentType = value?.temperamentType
                     )
 //                    Log.v("Tuner", "TunerViewModel.setupPreferenceListener: temperament and root note changed: $valueString")
@@ -446,7 +450,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
             temperamentType = temperamentAndReferenceNote.temperamentType,
             rootNote = temperamentAndReferenceNote.rootNote,
             referenceNote = temperamentAndReferenceNote.referenceNote,
-            referenceFrequency = temperamentAndReferenceNote.referenceFrequency.toFloatOrNull() ?: 440f
+            referenceFrequency = temperamentAndReferenceNote.referenceFrequency.toFloatOrNull() ?: DefaultValues.REFERENCE_FREQUENCY
         )
 
         windowingFunction = when (pref.getString("windowing", "no_window")) {

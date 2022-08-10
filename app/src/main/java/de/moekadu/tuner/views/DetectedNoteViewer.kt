@@ -19,7 +19,6 @@ import kotlin.math.roundToInt
 class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr) {
 
-    // TODO: if typeface is bold, the note modifiers should maybe also bold?
     fun interface NoteClickedListener {
         fun onNoteClicked(note: MusicalNote)
     }

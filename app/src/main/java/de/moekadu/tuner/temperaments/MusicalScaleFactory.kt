@@ -1,5 +1,7 @@
 package de.moekadu.tuner.temperaments
 
+import de.moekadu.tuner.misc.DefaultValues
+
 class MusicalScaleFactory {
     companion object {
 
@@ -8,7 +10,7 @@ class MusicalScaleFactory {
             noteNameScale: NoteNameScale,
             referenceNote: MusicalNote? = null,
             rootNote: MusicalNote? = null,
-            referenceFrequency: Float = 440f,
+            referenceFrequency: Float = DefaultValues.REFERENCE_FREQUENCY,
             frequencyMin: Float = 16.0f,
             frequencyMax: Float = 17000.0f
         ): MusicalScale {
@@ -124,7 +126,7 @@ class MusicalScaleFactory {
             temperamentType: TemperamentType,
             referenceNote: MusicalNote? = null,
             rootNote: MusicalNote? = null,
-            referenceFrequency: Float = 440f,
+            referenceFrequency: Float = DefaultValues.REFERENCE_FREQUENCY,
             frequencyMin: Float = 16.0f,
             frequencyMax: Float = 17000.0f
         ): MusicalScale {

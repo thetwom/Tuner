@@ -19,6 +19,7 @@
 
 package de.moekadu.tuner.temperaments
 
+import de.moekadu.tuner.misc.DefaultValues
 import kotlin.math.log
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -37,7 +38,7 @@ import kotlin.math.roundToInt
 class MusicalScaleEqualTemperament(
     override val noteNameScale: NoteNameScale,
     override val referenceNote: MusicalNote,
-    override val referenceFrequency: Float = 440f,
+    override val referenceFrequency: Float = DefaultValues.Companion.REFERENCE_FREQUENCY,
     override val rootNote: MusicalNote = MusicalNote(BaseNote.C, NoteModifier.None),
     private val frequencyMin: Float = 16.0f,  // 16.4Hz would be c0 if the a4 is 440Hz
     private val frequencyMax: Float = 17000f, //16744.1f  // 16744Hz would be c10 if the a4 is 440Hz

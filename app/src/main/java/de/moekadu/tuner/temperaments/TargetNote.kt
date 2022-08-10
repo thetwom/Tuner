@@ -2,6 +2,7 @@ package de.moekadu.tuner.temperaments
 
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.instrumentDatabase
+import de.moekadu.tuner.misc.DefaultValues
 import kotlin.math.log
 import kotlin.math.max
 import kotlin.math.min
@@ -19,7 +20,7 @@ class TargetNote {
     enum class TuningStatus {TooLow, TooHigh, InTune, Unknown}
 
     /// Tuning frequency class which connects tone indices with frequencies
-    var musicalScale: MusicalScale = MusicalScaleFactory.create(TemperamentType.EDO12, null, null, 440f)
+    var musicalScale: MusicalScale = MusicalScaleFactory.create(DefaultValues.TEMPERAMENT, null, null, DefaultValues.REFERENCE_FREQUENCY)
         set(value) {
             field = value
             sortedAndDistinctNoteIndices = sortStringsAccordingToNoteIndex(instrument)

@@ -44,7 +44,6 @@ class MusicalNoteTest {
             val recoveredIndex = scale.getIndexOfNote(someNote)
             assertEquals(someIndex, recoveredIndex)
         }
-        // TODO: add more tests
     }
 
     @Test

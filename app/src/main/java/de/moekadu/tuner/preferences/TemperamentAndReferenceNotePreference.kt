@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import de.moekadu.tuner.R
+import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.temperaments.*
 import de.moekadu.tuner.views.NoteSelector
 import kotlin.math.log
@@ -44,12 +45,12 @@ data class TemperamentAndReferenceNoteValue (
             val referenceNoteLegacy = ReferenceNotePreferenceValueLegacy.obtain(pref)
             val temperamentLegacy = TemperamentPreferenceValueLegacy.obtain(pref)
 
-            val temperamentType = temperamentLegacy?.temperamentType ?: TemperamentType.EDO12 // TODO: use a global default value here
+            val temperamentType = temperamentLegacy?.temperamentType ?: DefaultValues.TEMPERAMENT
             return TemperamentAndReferenceNoteValue(
                 temperamentType,
                 temperamentLegacy?.rootNote ?: NoteNameScaleFactory.create(temperamentType).notes[0],
                 referenceNoteLegacy?.referenceNote ?: NoteNameScaleFactory.getDefaultReferenceNote(temperamentType),
-                referenceNoteLegacy?.frequency?.toString() ?: "440" // TODO: use a global default value here
+                referenceNoteLegacy?.frequency?.toString() ?: DefaultValues.REFERENCE_FREQUENCY_STRING
             )
         }
 
@@ -253,7 +254,7 @@ class ReferenceNotePreferenceDialog: DialogFragment() {
         standardPitch = view.findViewById(R.id.standard_pitch)
         standardPitch?.setOnClickListener {
             referenceNoteView?.setActiveNote(noteNameScale.defaultReferenceNote, 200L)
-            editTextView?.setText("440") // TODO: should we use a global default value for this
+            editTextView?.setText(DefaultValues.REFERENCE_FREQUENCY_STRING)
         }
 
         // present notes from C0 to C10 (or something similar for non-standard 12-tone scales)
@@ -427,7 +428,7 @@ class TemperamentPreferenceDialog : DialogFragment() {
         resetToDefaultButton = view.findViewById(R.id.reset)
 
         resetToDefaultButton?.setOnClickListener {
-            setNewMusicalScale(TemperamentType.EDO12, null, resetToDefaultRootNote = true)
+            setNewMusicalScale(DefaultValues.TEMPERAMENT, null, resetToDefaultRootNote = true)
         }
 
         context?.let { ctx ->
@@ -484,10 +485,10 @@ class TemperamentPreferenceDialog : DialogFragment() {
         val musicalScaleLocal = MusicalScaleFactory.create(
             temperamentType,
             defaultReferenceNote,
-            referenceFrequency = 440f,
+            referenceFrequency = DefaultValues.REFERENCE_FREQUENCY,
             rootNote = defaultReferenceNote,
-            frequencyMin = 440f,
-            frequencyMax = 2.5f * 440f) // normally up to 2*440f would be enough for one octave, but lets play safe here
+            frequencyMin = DefaultValues.REFERENCE_FREQUENCY,
+            frequencyMax = 2.5f * DefaultValues.REFERENCE_FREQUENCY) // normally up to 2*440f would be enough for one octave, but lets play safe here
         require(musicalScaleLocal.noteIndexBegin <= 0) // default reference note is index 0 per definition
         // we needed to include the octave (so +1) and since "end" is not included, we need another +1
         require(musicalScaleLocal.noteIndexEnd >= musicalScaleLocal.numberOfNotesPerOctave + 2)

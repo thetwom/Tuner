@@ -1100,7 +1100,6 @@ private class PlotMarks(transformation: PlotTransformation,
                 canvas?.drawPath(path, linePaints[styleIndex])
             }
 
-            // TODO: treat baseline anchor (compute y position from baseline ...)
             var labelAnchorResolved: LabelAnchor
             getLabelFromMark(mark, styleIndex)?.let { layout ->
                 // override mark position based on anchor
@@ -1729,10 +1728,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         //rawPlotBounds.set(0f, -0.8f, 2.0f*PI.toFloat(), 0.8f)
         xTicks = PlotMarks(rawViewTransformation, intArrayOf(tickColor), intArrayOf(tickColor),
             floatArrayOf(tickLineWidth), floatArrayOf(tickTextSize),
-            disableLabelBackground = true, tickPaddingHorizontal, tickPaddingVertical, 0f)
+            disableLabelBackground = true, tickPaddingHorizontal, tickPaddingVertical + frameStrokeWidth, 0f)
         yTicks = PlotMarks(rawViewTransformation, intArrayOf(tickColor), intArrayOf(tickColor),
             floatArrayOf(tickLineWidth), floatArrayOf(tickTextSize),
-            disableLabelBackground = true, tickPaddingHorizontal, tickPaddingVertical, 0f)
+            disableLabelBackground = true, tickPaddingHorizontal + frameStrokeWidth, tickPaddingVertical, 0f)
 
         xTicks.plotMarksChangedListener = PlotMarks.PlotMarksChangedListener { ticks, bbChanged, suppressInvalidate ->
             if (ticks.hasMarks && bbChanged)
@@ -1767,7 +1766,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
         var bottom = (height - paddingBottom).toFloat()
         if(xTicks.hasMarks)
-            bottom -= tickTextSize
+            bottom -= tickTextSize + frameStrokeWidth + tickPaddingVertical
         var top = paddingTop.toFloat()
         if(title != null)
             top += 1.2f * titleSize
@@ -2250,7 +2249,6 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      *   change something else which also needs to redraw the screen, so you can avoid an
      *   unnecessary redraw.)
      */
-    // TODO: default anchor should maybe not be Center
     fun setXMark(xPosition: Float, label: String?, tag: Long,
                  anchor: LabelAnchor = LabelAnchor.Center, style: Int = 0,
                  placeLabelsOutsideBoundsIfPossible: Boolean = false,
@@ -2277,7 +2275,6 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      *   change something else which also needs to redraw the screen, so you can avoid an
      *   unnecessary redraw.)
      */
-    // TODO: default anchor should maybe not be Center
     fun setXMark(xPosition: Float, note: MusicalNote,
                  notePrintOptions: MusicalNotePrintOptions,
                  tag: Long,
@@ -2455,7 +2452,6 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      *   (the index in yPositions), the y-coordinate and a lot of default values for creating a
      *   label. If null is returned by the lambda, no label will be drawn.
      */
-    // TODO: if we have marks outside (not only yticks), we must add the border line stroke width to the padding
     fun setYTicks(
         values: FloatArray?, redraw: Boolean = true,
         maxLabelBounds: ((TextPaint) -> Label.LabelSetBounds)?,

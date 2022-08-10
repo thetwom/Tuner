@@ -164,8 +164,6 @@ abstract class Label(
         if (canvas == null)
             return
 
-        // TODO: label height must be computed as 2*max(top - verticalCenter, vertcialCenter - bottom)
-        //    this modified height measurement must also be considered in the cmputation of group meaures in the NoteNameLabel/Stringlabel
         val backgroundWidth = labelWidth + paddingLeft + paddingRight
         val backgroundHeight = labelHeight + paddingTop + paddingBottom
         val backgroundBaselineBelowTop = paddingTop + labelBaselineBelowTop
