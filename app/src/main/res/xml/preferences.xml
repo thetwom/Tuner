@@ -83,7 +83,7 @@
         android:title="@string/num_moving_average"
         app:min="1"
         android:max="15"
-        app:defaultValue="5"
+        app:defaultValue="7"
         app:seekBarIncrement="1"
         app:updatesContinuously="true"
         app:singleLineTitle="false"
