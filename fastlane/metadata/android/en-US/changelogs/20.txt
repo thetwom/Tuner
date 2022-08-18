@@ -1,0 +1,6 @@
+v5.0.0:
+- Improve appearance of plot labels
+- Support of scales that do not have 12 notes (microtuning capabilities)
+
+v.5.0.1:
+- Correctly overwrite scenes files

@@ -105,7 +105,7 @@ class InstrumentArchiving(private val instrumentsFragment: InstrumentsFragment) 
 
         val fileData = database.getInstrumentsString(context)
 
-        context.contentResolver?.openOutputStream(uri)?.use { stream ->
+        context.contentResolver?.openOutputStream(uri, "wt")?.use { stream ->
             stream.write(fileData.toByteArray())
         }
         return getFilenameFromUri(context, uri)
