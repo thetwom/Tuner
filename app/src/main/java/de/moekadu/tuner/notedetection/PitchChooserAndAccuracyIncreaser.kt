@@ -32,7 +32,7 @@ data class MostProbablePitchFromCorrelation(val correlationIndex: Int?, val rati
  *
  * Find the pitch matches best for the given frequency peaks. Each frequency which is a harmonic
  * of the pitch increases the probability that this is the true pitch.
- * This function will always include frequencyPeaks[0].frequency to be a harmonic of the resulting
+ * This function will always include the frequencyPeak at index 0 to be a harmonic of the resulting
  * pitch.
  * The rating in the returned class is maximal if it has a value of 1.0 (all given frequencies
  * match the given pitch) and minimal for a value for 0.0.
@@ -52,12 +52,12 @@ data class MostProbablePitchFromCorrelation(val correlationIndex: Int?, val rati
  *   not treated as a harmonic. If in contrast, we consider the frequency 1210Hz, the ratio would
  *   be 1210/400=3.025, which would be 0.025 off our 3rd harmonic which would then be treated as a
  *   valid harmonic.
- * @param maxHarmonic The peak frequency given by frequencyPeaks[0].frequency cannot be a higher
+ * @param maxHarmonic The peak frequency given by frequencyPeak at index 0 cannot be a higher
  *   harmonic than the given value. E.g. if the frequency is 300 and the maxHarmonic is 3, then
  *   the possible returned frequencies can be 100, 200, 300 but not 75, since for this pitch, our
  *   frequency would be the 4th harmonic.
- * @param harmonicLimit While maxHarmonic referred to frequencyPeaks[0], which always had to
- *   to contribute to the pitch, the harmonicLimit refers to the frequencyPeaks[1] and higher.
+ * @param harmonicLimit While maxHarmonic referred to frequencyPeak at index 0, which always had to
+ *   to contribute to the pitch, the harmonicLimit refers to the frequencyPeaks at index 1 and higher.
  *   These peaks will only increase the probability for a given pitch if they do not exceed
  *   the harmonicLimit.
  * @param hintTolerance Each pitch candidate we compare against the hint. If it matches within the
@@ -302,8 +302,7 @@ fun increaseAccuracyForCorrelationBasedFrequency(
     return frequencyHighAccuracy
 }
 
-/// Check if a given index is a local maximum in a values array.
-/**
+/** Check if a given index is a local maximum in a values array.
  * A local maximum is defined here that the index must have a left and right neighbor, and that
  * the value of the neighbors are smaller the value at the index.
  *
@@ -320,8 +319,7 @@ fun isLocalMaximum(index: Int, values: FloatArray): Boolean {
     }
 }
 
-/// Find the local maximum in an array, starting the search from an initial index.
-/**
+/** Find the local maximum in an array, starting the search from an initial index.
  * @param values Array where we search for the local maximum.
  * @param initialIndex Index in values-array where we start the search.
  * @param lowerIndex Lowest index which will be included for the search
@@ -372,15 +370,14 @@ fun findLocalMaximum(values: FloatArray, initialIndex: Int, lowerIndex: Int, upp
     return null
 }
 
-/// Class which stores chooses a pitch based on precomputed spectra, correlations and maxima
+/** Class which stores chooses a pitch based on precomputed spectra, correlations and maxima. */
 class PitchChooserAndAccuracyIncreaser {
-    /// Results from the previous call, this helps to increase the accuracy by evaluation phase data.
+    /** Results from the previous call, this helps to increase the accuracy by evaluation phase data. */
     private var _lastWorkingData: WorkingData? = null
-    /// Mutex for setting the last tuner results.
+    /** Mutex for setting the last tuner results. */
     private val tunerResultsMutex = Mutex()
 
-    /// Choose pitch and increase accuracy
-    /**
+    /** Choose pitch and increase accuracy
      * @param nextWorkingData Latest precomputed results.
      * @param hint Hint for a suitable pitch based on the history. If the current results are
      *   uncertain, this hin can help to choose an appropriate value.
