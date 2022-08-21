@@ -181,8 +181,8 @@
     <string name="select_all">Tout sélectionner</string>
     <string name="black_night_mode">Arrière-plan noir en mode sombre</string>
     <string name="system_color_accents">Couleur d’accentuation du système</string>
-    <string name="incorrect_temperament">Tempérament incompatible&nbsp;!</string>
+    <string name="incorrect_temperament">Tempérament incompatible\u00A0!</string>
     <string name="ok">OK</string>
-    <string name="new_temperament_requires_adapting_reference_note">L’ajustement de la note de référence est requis pour un nouveau tempérament&nbsp;!</string>
+    <string name="new_temperament_requires_adapting_reference_note">L’ajustement de la note de référence est requis pour un nouveau tempérament\u00A0!</string>
     <string name="comma_separator">, </string>
 </resources>
