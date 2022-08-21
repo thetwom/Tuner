@@ -111,6 +111,24 @@
     <string name="double_bass_eadg">Contrebasse</string>
     <string name="equal_temperament_12">Gamme tempérée</string>
     <string name="equal_temperament_12_desc">12 notes par octave</string>
+    <string name="equal_temperament_17">Tempérament 17 intervalles égaux</string>
+    <string name="equal_temperament_17_desc">17 notes par octave</string>
+    <string name="equal_temperament_19">Tempérament 19 intervalles égaux</string>
+    <string name="equal_temperament_19_desc">19 notes par octave</string>
+    <string name="equal_temperament_22">Tempérament 22 intervalles égaux</string>
+    <string name="equal_temperament_22_desc">22 notes par octave</string>
+    <string name="equal_temperament_24">Tempérament 24 intervalles égaux</string>
+    <string name="equal_temperament_24_desc">Quarter tone tuning</string>
+    <string name="equal_temperament_27">Tempérament 27 intervalles égaux</string>
+    <string name="equal_temperament_27_desc">27 notes par octave</string>
+    <string name="equal_temperament_29">Tempérament 29 intervalles égaux</string>
+    <string name="equal_temperament_29_desc">29 notes par octave</string>
+    <string name="equal_temperament_31">Tempérament 31 intervalles égaux</string>
+    <string name="equal_temperament_31_desc">31 notes par octave</string>
+    <string name="equal_temperament_41">Tempérament 41 intervalles égaux</string>
+    <string name="equal_temperament_41_desc">41 notes par octave</string>
+    <string name="equal_temperament_53">Tempérament 53 intervalles égaux</string>
+    <string name="equal_temperament_53_desc">53 notes par octave</string>
     <string name="pythagorean_tuning">Accord pythagoricien</string>
     <string name="pure_tuning">Intonation juste</string>
     <string name="pure_tuning_desc">à quintes et tierces justes</string>
@@ -163,4 +181,8 @@
     <string name="select_all">Tout sélectionner</string>
     <string name="black_night_mode">Arrière-plan noir en mode sombre</string>
     <string name="system_color_accents">Couleur d’accentuation du système</string>
+    <string name="incorrect_temperament">Tempérament incompatible&nbsp;!</string>
+    <string name="ok">OK</string>
+    <string name="new_temperament_requires_adapting_reference_note">L’ajustement de la note de référence est requis pour un nouveau tempérament&nbsp;!</string>
+    <string name="comma_separator">, </string>
 </resources>
