@@ -4,3 +4,4 @@ v5.0.0:
 
 v.5.0.1:
 - Correctly overwrite scenes files
+- Update French translations (thanks to Glandos)
