@@ -4,11 +4,21 @@ enum class BaseNote {
     C, D, E, F, G, A, B, None
 }
 
+/** Modifiers for base notes.
+ * The ordering is due to the sharpness level used for printing, the first
+ * note is the most flat note and the last note is the most sharp note.
+ * As said, the ordering is just as used for printing, it does NOT mean,
+ * that within an actual scale, this is true. It is e.g. possible that NaturalUpUp
+ * is more sharp than SharpDownDown.
+ */
 enum class NoteModifier {
-    Sharp, SharpUp, SharpUpUp, SharpDown, SharpDownDown,
-    Flat, FlatUp, FlatUpUp, FlatDown, FlatDownDown,
-    NaturalUp, NaturalUpUp, NaturalDown, NaturalDownDown,
-    None
+    FlatDownDown, FlatDown, Flat, FlatUp, FlatUpUp,
+    NaturalDownDown, NaturalDown, None, NaturalUp, NaturalUpUp,
+    SharpDownDown, SharpDown, Sharp, SharpUp, SharpUpUp,
+}
+
+fun NoteModifier.flatSharpIndex(): Int {
+    return this.ordinal - NoteModifier.None.ordinal
 }
 
 data class NoteNameStem(val baseNote: BaseNote, val modifier: NoteModifier,

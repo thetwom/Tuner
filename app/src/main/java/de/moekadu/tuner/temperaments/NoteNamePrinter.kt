@@ -73,6 +73,26 @@ enum class MusicalNotePrintOptions {
     abstract fun contains(modifier: NoteModifier): Boolean
 }
 
+fun NoteModifier.isOfCategory(printOption: MusicalNotePrintOptions): Boolean {
+    return when (printOption) {
+        MusicalNotePrintOptions.None -> {
+            true
+        }
+        MusicalNotePrintOptions.PreferFlat -> {
+            when (this) {
+                NoteModifier.Flat, NoteModifier.FlatUp, NoteModifier.FlatUpUp, NoteModifier.FlatDown, NoteModifier.FlatDownDown -> true
+                else -> false
+            }
+        }
+        MusicalNotePrintOptions.PreferSharp -> {
+            when (this) {
+                NoteModifier.Sharp, NoteModifier.SharpUp, NoteModifier.SharpUpUp, NoteModifier.SharpDown, NoteModifier.SharpDownDown -> true
+                else -> false
+            }
+        }
+    }
+}
+
 class NoteNamePrinter(private val context: Context) {
     private val typeface = ResourcesCompat.getFont(context, R.font.gonville) ?: throw RuntimeException("Error")
     private val octaveSpan = SmallSuperScriptSpan()
@@ -183,7 +203,7 @@ class NoteNamePrinter(private val context: Context) {
             octaveIndex = note.octave + note.octaveOffset
             baseNote = specialNoteName
             modifier = NoteModifier.None
-        } else if (note.enharmonicBase != BaseNote.None && printOption.contains(note.enharmonicModifier)) {
+        } else if (preferEnharmonic(note, printOption)) {
             baseNote = context.getString(baseNoteResourceIds[note.enharmonicBase]!!)
             modifier = note.enharmonicModifier
             octaveIndex =
@@ -194,5 +214,16 @@ class NoteNamePrinter(private val context: Context) {
             octaveIndex = note.octave + note.octaveOffset
         }
         return ResolvedNoteProperties(baseNote, modifier, octaveIndex)
+    }
+
+    private fun preferEnharmonic(note: MusicalNote, printOption: MusicalNotePrintOptions): Boolean {
+        if (note.enharmonicBase == BaseNote.None)
+            return false
+
+        return when (printOption) {
+            MusicalNotePrintOptions.None -> false
+            MusicalNotePrintOptions.PreferSharp -> note.enharmonicModifier.flatSharpIndex() > note.modifier.flatSharpIndex()
+            MusicalNotePrintOptions.PreferFlat -> note.enharmonicModifier.flatSharpIndex() < note.modifier.flatSharpIndex()
+        }
     }
 }
