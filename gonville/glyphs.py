@@ -447,6 +447,8 @@ lilyglyphlist = [
 #("mirrorturn",   "scripts.reverseturn",    0, 0.5,0.5, 1,0.5),
 #("invturn",      "scripts.slashturn",      0, 0.5,0.5, 1,0.5),
 #("turnhaydn",    "scripts.haydnturn",      0, 0.5,0.5, 1,0.5),
+("openarrowupnew",  "arrowheads.open.up",     0, 0,'cy', 1,'cy'),
+("opendoublearrowupnew",  "arrowheads.open.doubleup",     0, 0,'cy', 1,'cy'),
 #("openarrowup",  "arrowheads.open.11",     0, 'cx','cy', 1,'cy'),
 #("openarrowdown", "arrowheads.open.1M1",   0, 'cx','cy', 1,'cy'),
 #("openarrowleft", "arrowheads.open.0M1",   0, 'cx','cy', 1,'cy'),
