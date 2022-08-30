@@ -1,0 +1,8 @@
+v.5.0.1:
+- Correctly overwrite scenes files
+- Update French translations (thanks to Glandos)
+
+v.5.1.0:
+- Refactored icon
+- Refactored note namings for non-12-note temperaments
+- Czech translations (thanks to rockconqueror)
