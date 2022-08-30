@@ -110,8 +110,10 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint,
                     maxOctaveDistanceAboveBaseline = max(maxOctaveDistanceAboveBaseline, -octaveBounds.top)
                 }
 
+                val spaceWidth = noteNamePrinter.measureOctaveIndexLeadingSpace(paint)
+
                 LabelSetBounds(
-                    maxWidth + maxOctaveWidth,
+                    maxWidth + maxOctaveWidth + spaceWidth,
                     maxHeight + max(
                         0f,
                         maxOctaveDistanceAboveBaseline - maxDistanceAboveBaseline
