@@ -3090,6 +3090,82 @@ def _(cont):
 # ----------------------------------------------------------------------
 # Random functional stuff like arrowheads.
 
+@define_glyph("openarrowdownnew")
+def _(cont):
+    # my comments:
+    # tip: 500, 500
+    # c2 -> connection between the two sides c0/c1
+
+    y_tip = 500
+    arrow_length = 50
+    tip_thickness = 7
+    translate_up = 0
+    half_width = 40
+
+    c0 = StraightLine(cont, 500 - half_width, y_tip - arrow_length, 500, y_tip)
+    c1 = StraightLine(cont, 500 + half_width, y_tip - arrow_length, 500, y_tip)
+    c2 = StraightLine(cont, 500 - half_width, y_tip - arrow_length, 500, y_tip - tip_thickness)
+    c3 = StraightLine(cont, 500 + half_width, y_tip - arrow_length, 500, y_tip - tip_thickness)
+
+    c0.weld_to(1, c1, 1, 1)
+    c0.weld_to(0, c2, 0, 1)
+    c1.weld_to(0, c3, 0, 1)
+    c2.weld_to(1, c3, 1, 1)
+
+    x0, y0 = c0.compute_x(1), c0.compute_y(1)
+    cont.default_nib = lambda c,x,y,t,theta: ptp_nib(c,x,y,t,theta,x0,y0,10)
+
+    cont.ox = 500 - half_width
+    cont.cy = y_tip + 10 + translate_up # y_tip + 10 alignes downarrow tip with baseline
+
+    cont.extent = abs(c0.compute_y(0) - cont.cy) + 6
+
+@define_glyph("opendoublearrowdownnew")
+def _(cont):
+    arrow_distance = 70
+    cont.ox = font.openarrowdownnew.ox
+    cont.cy = font.openarrowdownnew.cy
+    cont.extra = font.openarrowdownnew, "gsave 0 {} translate".format(-arrow_distance), font.openarrowdownnew, "grestore"
+
+@define_glyph("openarrowupnew")
+def _(cont):
+    # my comments:
+    # tip: 500, 500
+    # c2 -> connection between the two sides c0/c1
+
+    y_tip = 500
+    arrow_length = 50
+    tip_thickness = 7
+    translate_up2 = 250
+    half_width = 40
+
+    c0 = StraightLine(cont, 500 - half_width, y_tip + arrow_length, 500, y_tip)
+    c1 = StraightLine(cont, 500 + half_width, y_tip + arrow_length, 500, y_tip)
+    c2 = StraightLine(cont, 500 - half_width, y_tip + arrow_length, 500, y_tip + tip_thickness)
+    c3 = StraightLine(cont, 500 + half_width, y_tip + arrow_length, 500, y_tip + tip_thickness)
+
+    # Saved data from gui.py
+    c0.weld_to(1, c1, 1, 1)
+    c0.weld_to(0, c2, 0, 1)
+    c1.weld_to(0, c3, 0, 1)
+    c2.weld_to(1, c3, 1, 1)
+
+    x0, y0 = c0.compute_x(1), c0.compute_y(1)
+    cont.default_nib = lambda c,x,y,t,theta: ptp_nib(c,x,y,t,theta,x0,y0,10)
+
+    cont.ox = 500 - half_width
+    cont.cy = y_tip - 10 + translate_up2 # y_tip - 10 alignes downarrow tip with baseline
+
+    cont.extent = abs(c0.compute_y(0) - cont.cy) + 6
+
+@define_glyph("opendoublearrowupnew")
+def _(cont):
+    arrow_distance = 70
+    cont.ox = font.openarrowupnew.ox
+    cont.cy = font.openarrowupnew.cy
+
+    cont.extra = font.openarrowupnew, "gsave 0 {} translate".format(arrow_distance), font.openarrowupnew, "grestore"
+
 @define_glyph("openarrowright", args=(0,1))
 @define_glyph("closearrowright", args=(0,0))
 @define_glyph("openarrowleft", args=(180,1))

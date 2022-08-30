@@ -24,24 +24,41 @@ private val baseNoteResourceIds = mapOf(
     BaseNote.B to R.string.b_note_name,
 )
 
-private val modifierStrings = mapOf(
+private val modifierPostfixStrings = mapOf(
     NoteModifier.None to "",
     NoteModifier.Sharp to "\uE10A",
-    NoteModifier.SharpUp to "\uE10B",
-    NoteModifier.SharpUpUp to "\uE10C",
-    NoteModifier.SharpDown to "\uE10D",
-    NoteModifier.SharpDownDown to "\uE10E",
+    NoteModifier.SharpUp to "\uE10A",
+    NoteModifier.SharpUpUp to "\uE10A",
+    NoteModifier.SharpDown to "\uE10A",
+    NoteModifier.SharpDownDown to "\uE10A",
     NoteModifier.Flat to "\uE100",
-    NoteModifier.FlatUp to "\uE101",
-    NoteModifier.FlatUpUp to "\uE102",
-    NoteModifier.FlatDown to "\uE103",
-    NoteModifier.FlatDownDown to "\uE104",
-    NoteModifier.NaturalUp to "\uE106",
-    NoteModifier.NaturalUpUp to "\uE107",
-    NoteModifier.NaturalDown to "\uE108",
-    NoteModifier.NaturalDownDown to "\uE109",
+    NoteModifier.FlatUp to "\uE100",
+    NoteModifier.FlatUpUp to "\uE100",
+    NoteModifier.FlatDown to "\uE100",
+    NoteModifier.FlatDownDown to "\uE100",
+    NoteModifier.NaturalUp to "",
+    NoteModifier.NaturalUpUp to "",
+    NoteModifier.NaturalDown to "",
+    NoteModifier.NaturalDownDown to "",
 )
 
+private val modifierPrefixStrings = mapOf(
+    NoteModifier.None to "",
+    NoteModifier.Sharp to "",
+    NoteModifier.SharpUp to "\uE111",
+    NoteModifier.SharpUpUp to "\uE112",
+    NoteModifier.SharpDown to "\uE10F",
+    NoteModifier.SharpDownDown to "\uE110",
+    NoteModifier.Flat to "",
+    NoteModifier.FlatUp to "\uE111",
+    NoteModifier.FlatUpUp to "\uE112",
+    NoteModifier.FlatDown to "\uE10F",
+    NoteModifier.FlatDownDown to "\uE110",
+    NoteModifier.NaturalUp to "\uE111",
+    NoteModifier.NaturalUpUp to "\uE112",
+    NoteModifier.NaturalDown to "\uE10F",
+    NoteModifier.NaturalDownDown to "\uE110",
+)
 
 private val specialNoteNameResourceIds = mapOf(
     NoteNameStem(BaseNote.B, NoteModifier.Flat, BaseNote.A, NoteModifier.Sharp) to R.string.asharp_bflat_note_name,
@@ -100,14 +117,28 @@ class NoteNamePrinter(private val context: Context) {
 
     fun noteToCharSequence(note: MusicalNote, printOption: MusicalNotePrintOptions, withOctave: Boolean): CharSequence {
         val properties = resolveNoteProperties(note, printOption)
-        val spannable = SpannableStringBuilder()
-            .append(properties.baseName)
 
-        if (properties.modifier != NoteModifier.None && modifierStrings[properties.modifier] != "") {
+        val spannable = SpannableStringBuilder()
+
+        // prefix (i.e. ups/downs)
+        if (properties.modifier != NoteModifier.None && modifierPrefixStrings[properties.modifier] != "") {
+            val spannableSource = modifierPrefixStrings[properties.modifier] + "\u200a"
+            spannable.append(
+                SpannableString(spannableSource).apply {
+                    setSpan(CustomTypefaceSpan(typeface), 0, length, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+                }
+            )
+        }
+
+        // base note name
+        spannable.append(properties.baseName)
+
+        // postfix with spaces (\u200a is a narrow space)
+        if (properties.modifier != NoteModifier.None && modifierPostfixStrings[properties.modifier] != "") {
             val spannableSource = if (withOctave && properties.octave != Int.MAX_VALUE)
-                "\u200a" + modifierStrings[properties.modifier] + "\u200a"
+                "\u200a" + modifierPostfixStrings[properties.modifier] + "\u200a"
             else
-                "\u200a" + modifierStrings[properties.modifier]
+                "\u200a" + modifierPostfixStrings[properties.modifier]
 
             spannable.append(
                 SpannableString(spannableSource).apply {
@@ -145,7 +176,7 @@ class NoteNamePrinter(private val context: Context) {
         result.left = bounds.left.toFloat()
         result.right = bounds.right.toFloat()
 
-        if (withOctave) {
+        if (withOctave && properties.octave != Int.MAX_VALUE) {
             val octaveBounds = measureOctaveIndex(paint, properties.octave)
             result.right += octaveBounds.width()
             result.top = min(result.top, octaveBounds.top)
@@ -153,22 +184,29 @@ class NoteNamePrinter(private val context: Context) {
         }
 
         if (properties.modifier != NoteModifier.None) {
-            val modifierString = modifierStrings[properties.modifier]
-            if (modifierString != null && modifierString != "") {
+            var modifierString = modifierPrefixStrings[properties.modifier]
+            if (modifierPrefixStrings[properties.modifier] != null && modifierPrefixStrings[properties.modifier] != "")
+                modifierString += "\u200a"
+            if (modifierPostfixStrings[properties.modifier] != null && modifierPostfixStrings[properties.modifier] != "")
+                modifierString += modifierPostfixStrings[properties.modifier] + "\u200a"
+            if (withOctave && properties.octave != Int.MAX_VALUE)
+                modifierString += "\u200a"
+
+            if (modifierString != "") {
                 //val modifierStringWithSpaces = "\u200a" + modifierString + "\u200a"
                 val oldTypeface = paint.typeface
                 paint.typeface = typeface
 
                 // once measure only something (we use a sharp-character here, but it could be anything
                 // and once measure the modifier with two spaces inbetween and ended by the sharp
-                // the modifier width with the spaces is then computed by subtacting the width of
+                // the modifier width with the spaces is then computed by subtracting the width of
                 // only the sharp sign. This strategy is needed, since leading and trailing spaces
                 // are ignored by the measuring procedure.
                 val sharpString = "\uE10A"
                 paint.getTextBounds(sharpString, 0, sharpString.length, bounds)
                 val widthSharp = bounds.width()
 
-                val modifierStringWithSpacesAndSharp = modifierString + "\u200a\u200a" + sharpString
+                val modifierStringWithSpacesAndSharp = modifierString + sharpString
                 paint.getTextBounds(modifierStringWithSpacesAndSharp, 0, modifierStringWithSpacesAndSharp.length, bounds)
                 paint.typeface = oldTypeface
                 result.right += bounds.width() - widthSharp
@@ -189,6 +227,21 @@ class NoteNamePrinter(private val context: Context) {
             octaveSpan.scaleTextSize * boundsInt.right,
             octaveSpan.scaleTextSize * boundsInt.bottom + octaveSpan.moveUpByPartOfAscent * paint.ascent(),
         )
+    }
+
+    fun measureOctaveIndexLeadingSpace(paint: Paint): Int {
+        val oldTypeface = paint.typeface
+        paint.typeface = typeface
+        val boundsInt = Rect()
+        val sharpString = "\uE10A"
+        val sharpsEnclosingSpace = sharpString + "\u200a" + sharpString
+        val sharpsNoSpace = sharpString + sharpString
+        paint.getTextBounds(sharpsEnclosingSpace, 0, sharpsEnclosingSpace.length, boundsInt)
+        val w = boundsInt.width()
+        paint.getTextBounds(sharpsNoSpace, 0, sharpsNoSpace.length, boundsInt)
+        val v = boundsInt.width()
+        paint.typeface = oldTypeface
+        return w - v
     }
 
     private fun resolveNoteProperties(note: MusicalNote, printOption: MusicalNotePrintOptions): ResolvedNoteProperties {
