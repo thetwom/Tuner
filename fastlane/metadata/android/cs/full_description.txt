@@ -1,0 +1,6 @@
+    Základní ladička s funkcemi jako:
+    * Detekce výšky tónu na základě autokorelace a spektra FFT.
+    * Zlepšení přesnosti pomocí vyhodnocení informace o fázi spektra a polynomického přizpůsobení.
+    * Ukazuje, jak se mění výška tónu v čase.
+    * Rovnoměrně temperované ladění
+    * Nastavení pro výběr komorního tónu, velikosti okna FFT, typu okna FFT, překrývání a další.
