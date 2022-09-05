@@ -198,4 +198,5 @@
     <string name="ok">OK</string>
     <string name="new_temperament_requires_adapting_reference_note">New temperament requires adapting the reference note!</string>
     <string name="comma_separator">, </string>
+    <string name="record">Record</string>
 </resources>

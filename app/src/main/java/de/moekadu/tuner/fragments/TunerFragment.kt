@@ -31,6 +31,7 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.instrumentDatabase
@@ -57,6 +58,7 @@ class TunerFragment : Fragment() {
     private var correlationPlot: PlotView? = null
     private var pitchPlot: PlotView? = null
     private var volumeMeter: VolumeMeter? = null
+    private var recordFab: FloatingActionButton? = null
 
     private var isPitchInactive = false
     private var tuningStatus = TargetNote.TuningStatus.Unknown
@@ -113,6 +115,7 @@ class TunerFragment : Fragment() {
         spectrumPlot = view.findViewById(R.id.spectrum_plot)
         correlationPlot = view.findViewById(R.id.correlation_plot)
         volumeMeter = view.findViewById(R.id.volume_meter)
+        recordFab = view.findViewById(R.id.record)
 
         spectrumPlot?.xRange(0f, 1600f, PlotView.NO_REDRAW)
         spectrumPlot?.setXTicks(
