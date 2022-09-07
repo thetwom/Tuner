@@ -76,11 +76,14 @@ class InstrumentsAdapter(val mode: Mode) : ListAdapter<Instrument, InstrumentsAd
 
         recyclerView.forEachViewHolder { holder ->
             if (holder is ViewHolder) {
-                val position = holder.bindingAdapterPosition
-                if (position >= 0) {
-                    val instrument = getItem(position)
-                    holder.stringText?.text = instrument.getStringsString(holder.view.context, preferFlat = preferFlat)
+                holder.instrument?.getStringsString(holder.view.context, preferFlat = preferFlat)?.let {
+                    holder.stringText?.text = it
                 }
+//                val position = holder.bindingAdapterPosition
+//                if (position in 0 until itemCount) {
+//                    val instrument = getItem(position)
+//                    holder.stringText?.text = instrument.getStringsString(holder.view.context, preferFlat = preferFlat)
+//                }
             }
         }
     }

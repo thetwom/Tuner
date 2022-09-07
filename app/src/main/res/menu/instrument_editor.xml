@@ -3,6 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/action_switch_enharmonics_editor"
+        android:orderInCategory="50"
+        android:title="@string/switch_enharmonics"
+        android:icon="@drawable/ic_prefer_flat"
+        app:showAsAction="always"
+        />
+    <item
         android:id="@+id/action_edit_done"
         android:orderInCategory="100"
         android:title="@string/done"

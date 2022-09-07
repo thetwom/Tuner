@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+<!--  <item-->
+<!--    android:id="@+id/scientific_mode"-->
+<!--    android:title="@string/scientific_mode"-->
+<!--    android:icon="@drawable/ic_developer_off"-->
+<!--    app:showAsAction="ifRoom"/>-->
+<!--  <item-->
+<!--      android:id="@+id/action_instruments"-->
+<!--      android:title="@string/instruments"-->
+<!--      android:icon="@drawable/ic_guitar"-->
+<!--      app:showAsAction="ifRoom"-->
+<!--    />-->
+
+    <item
+        android:id="@+id/action_switch_enharmonics"
+        android:title="@string/switch_enharmonics"
+        android:icon="@drawable/ic_prefer_flat_2"
+        app:showAsAction="always"
+      />
+
+</menu>

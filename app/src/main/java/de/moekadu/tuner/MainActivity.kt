@@ -24,11 +24,10 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
-import android.view.View
-import android.view.WindowInsetsController
-import android.view.WindowManager
+import android.view.*
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
@@ -38,6 +37,7 @@ import de.moekadu.tuner.fragments.*
 import de.moekadu.tuner.preferences.AppPreferences
 import de.moekadu.tuner.preferences.AppearancePreference
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
+import de.moekadu.tuner.viewmodels.TunerViewModel
 
 class MainActivity : AppCompatActivity() {
     // TODO: anchor-drawable should use round edges
@@ -53,6 +53,36 @@ class MainActivity : AppCompatActivity() {
             AppPreferences.readCustomSectionExpanded(this),
             application
         )
+    }
+
+    private val tunerViewModel: TunerViewModel by viewModels()
+
+    private val menuProvider = object : MenuProvider {
+        override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+            menuInflater.inflate(R.menu.toolbar_main, menu)
+        }
+
+        override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+            when (menuItem.itemId) {
+                R.id.action_switch_enharmonics -> {
+                    switchEnharmonicSetting()
+                    return true
+                }
+            }
+            return false
+        }
+
+        override fun onPrepareMenu(menu: Menu) {
+            super.onPrepareMenu(menu)
+            val preferFlatIcon = menu.findItem(R.id.action_switch_enharmonics)
+            val preferFlat = tunerViewModel.preferFlat.value ?: false
+            preferFlatIcon.setIcon(
+                if (preferFlat)
+                    R.drawable.ic_prefer_flat_isflat
+                else
+                    R.drawable.ic_prefer_flat_issharp
+            )
+        }
     }
 
     // private var scientificMode = TunerMode.Unknown
@@ -77,6 +107,7 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar))
+        addMenuProvider(menuProvider)
 
         if (savedInstanceState == null)
             loadSimpleOrScientificFragment()
@@ -92,6 +123,9 @@ class MainActivity : AppCompatActivity() {
             //    loadSimpleOrScientificFragment()
         }
 
+        tunerViewModel.preferFlat.observe(this) {
+            invalidateOptionsMenu()
+        }
         setStatusAndNavigationBarColors()
 
         if (savedInstanceState == null)
@@ -157,6 +191,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun switchEnharmonicSetting() {
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this@MainActivity)
+        val preferFlat = sharedPreferences.getBoolean("prefer_flat", false)
+        val editor = sharedPreferences.edit()
+        editor.putBoolean("prefer_flat", !preferFlat)
+        editor.apply()
+    }
     private fun setDisplayHomeButton() {
         val showDisplayHomeButton = !isCurrentFragmentATunerFragment() //supportFragmentManager.backStackEntryCount > 0
         supportActionBar?.setDisplayHomeAsUpEnabled(showDisplayHomeButton)

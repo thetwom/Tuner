@@ -32,6 +32,10 @@ class InstrumentEditorActionCallback(private val activity: MainActivity,
                 instrumentsViewModel.customInstrumentDatabase.replaceOrAdd(instrumentEditorViewModel.getInstrument())
                 true
             }
+            R.id.action_switch_enharmonics_editor -> {
+                activity.switchEnharmonicSetting()
+                true
+            }
             else -> false
         }
     }
