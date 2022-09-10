@@ -183,4 +183,5 @@
     <string name="equal_temperament_31_desc">31 Noten pro Oktave</string>
     <string name="equal_temperament_53">Gleichstufige Stimmung 53</string>
     <string name="equal_temperament_53_desc">53 Noten pro Oktave</string>
+    <string name="switch_enharmonics">Verwende andere enharmonische Verwechslung</string>
 </resources>

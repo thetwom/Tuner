@@ -55,12 +55,12 @@
          app:icon="@drawable/ic_tolerance"
          />
 
-        <SwitchPreferenceCompat
-            app:key="prefer_flat"
-            app:title="@string/prefer_flat"
-            app:defaultValue="false"
-            app:icon="@drawable/ic_prefer_flat"
-            />
+<!--        <SwitchPreferenceCompat-->
+<!--            app:key="prefer_flat"-->
+<!--            app:title="@string/prefer_flat"-->
+<!--            app:defaultValue="false"-->
+<!--            app:icon="@drawable/ic_prefer_flat"-->
+<!--            />-->
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/expert">

@@ -19,6 +19,7 @@
 
 package de.moekadu.tuner.fragments
 
+import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.os.Bundle
 import android.text.SpannableStringBuilder
@@ -66,7 +67,7 @@ fun nightModeStringToID(string: String) = when(string) {
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
-    private var preferFlatPreference: SwitchPreferenceCompat? = null
+    //  private var preferFlatPreference: SwitchPreferenceCompat? = null
     private var referenceNotePreference: Preference? = null
     private var temperamentPreference: Preference? = null
     private var appearancePreference: AppearancePreference? = null
@@ -80,8 +81,37 @@ class SettingsFragment : PreferenceFragmentCompat() {
 //
 //  }
 
+    private val onPreferenceChangedListener =
+        object : SharedPreferences.OnSharedPreferenceChangeListener {
+            override fun onSharedPreferenceChanged(
+                sharedPreferences: SharedPreferences?,
+                key: String?
+            ) {
+                if (sharedPreferences == null)
+                    return
+                when (key) {
+                    "prefer_flat" -> {
+                        val preferFlat = sharedPreferences.getBoolean(key, false)
+                        setTemperamentAndReferenceNoteSummary(preferFlat = preferFlat)
+                    }
+                }
+            }
+        }
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        pref.registerOnSharedPreferenceChangeListener(onPreferenceChangedListener)
+    }
+
+    override fun onStop() {
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        pref.unregisterOnSharedPreferenceChangeListener(onPreferenceChangedListener)
+        super.onStop()
     }
 
     override fun onCreateView(
@@ -98,12 +128,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
             pref,
             requireContext(),
             printOption = {
-                val preferFlat = preferFlatPreference?.isChecked ?: false
+                val preferFlat = pref.getBoolean("prefer_flat", false)
+                //val preferFlat = preferFlatPreference?.isChecked ?: false
                 if (preferFlat) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
             },
             onPreferenceChanged = {
-                val preferFlat = preferFlatPreference?.isChecked ?: false
-                setTemperamentAndReferenceNoteSummary(it, preferFlat)
+                //val preferFlat = preferFlatPreference?.isChecked ?: false
+                //setTemperamentAndReferenceNoteSummary(it, preferFlat)
+                setTemperamentAndReferenceNoteSummary(it)
             }
         )
         ReferenceNotePreferenceDialog.setupFragmentResultListener(
@@ -111,7 +143,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             viewLifecycleOwner,
             pref
         ) {
-            val preferFlat = preferFlatPreference?.isChecked ?: false
+            val preferFlat = pref.getBoolean("prefer_flat", false)
+            //val preferFlat = preferFlatPreference?.isChecked ?: false
             setTemperamentAndReferenceNoteSummary(it, preferFlat)
         }
 
@@ -148,18 +181,20 @@ class SettingsFragment : PreferenceFragmentCompat() {
             true
         }
 
-        preferFlatPreference =
-            findPreference("prefer_flat") ?: throw RuntimeException("No prefer_flat preference")
-        preferFlatPreference?.setOnPreferenceChangeListener { _, newValue ->
-//      Log.v("Tuner", "SettingsFragment: preferFlatPreference changed")
-            setTemperamentAndReferenceNoteSummary(preferFlat = newValue as Boolean)
-            true
-        }
+//      preferFlatPreference =
+//          findPreference("prefer_flat") ?: throw RuntimeException("No prefer_flat preference")
+//      preferFlatPreference?.setOnPreferenceChangeListener { _, newValue ->
+////      Log.v("Tuner", "SettingsFragment: preferFlatPreference changed")
+//          setTemperamentAndReferenceNoteSummary(preferFlat = newValue as Boolean)
+//          true
+//      }
 
-        referenceNotePreference = findPreference("reference_note")
-            ?: throw RuntimeException("no reference_note preference")
+        referenceNotePreference =
+            findPreference("reference_note")
+                ?: throw RuntimeException("no reference_note preference")
         referenceNotePreference?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val preferFlat = preferFlatPreference?.isChecked ?: false
+            val preferFlat = pref.getBoolean("prefer_flat", false)
+            //val preferFlat = preferFlatPreference?.isChecked ?: false
             val printOption =
                 if (preferFlat) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
             val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
@@ -177,7 +212,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
         temperamentPreference =
             findPreference("temperament") ?: throw RuntimeException("no temperament preference")
         temperamentPreference?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val preferFlat = preferFlatPreference?.isChecked ?: false
+            val preferFlat = pref.getBoolean("prefer_flat", false)
+            //val preferFlat = preferFlatPreference?.isChecked ?: false
             val printOption =
                 if (preferFlat) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
             val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
@@ -219,9 +255,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val windowingFunction = findPreference<ListPreference?>("windowing")
         windowingFunction?.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
 
-        val windowSize = findPreference<SeekBarPreference>("window_size") ?: throw RuntimeException(
-            "No window_size preference"
-        )
+        val windowSize = findPreference<SeekBarPreference>("window_size")
+            ?: throw RuntimeException("No window_size preference")
         windowSize.setOnPreferenceChangeListener { preference, newValue ->
             preference.summary = getWindowSizeSummary(newValue as Int)
             true
@@ -362,7 +397,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
             val currentPrefs =
                 preferenceValue ?: TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
-            val pF = preferFlat ?: (preferFlatPreference?.isChecked ?: false)
+            val pF = preferFlat ?: pref.getBoolean("prefer_flat", false)
+            //val pF = preferFlat ?: (preferFlatPreference?.isChecked ?: false)
             val printOption =
                 if (pF) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
 

@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.button.MaterialButton
@@ -54,6 +55,8 @@ class InstrumentEditorFragment : Fragment() {
     private var noteSelector: NoteSelector? = null
     private var detectedNoteViewer: DetectedNoteViewer? = null
 
+    private var actionMode: ActionMode? = null
+
     /// Instance for requesting audio recording permission.
     /**
      * This will create the sourceJob as soon as the permissions are granted.
@@ -82,6 +85,11 @@ class InstrumentEditorFragment : Fragment() {
         parentFragmentManager.setFragmentResultListener(IconPickerDialogFragment.REQUEST_KEY, viewLifecycleOwner) { _, bundle ->
             viewModel.setInstrumentIcon(bundle.getInt(IconPickerDialogFragment.ICON_KEY))
         }
+
+        actionMode = (requireActivity() as MainActivity).startSupportActionMode(
+            InstrumentEditorActionCallback(requireActivity() as MainActivity, instrumentsViewModel, viewModel)
+        )
+        actionMode?.setTitle(R.string.edit_instrument)
 
         stringView = view.findViewById(R.id.string_view)
         addButton = view.findViewById(R.id.button_add_note)
@@ -117,6 +125,17 @@ class InstrumentEditorFragment : Fragment() {
 
         tunerViewModel.musicalScale.observe(viewLifecycleOwner) {
             updateNoteNamesInAllViews()
+        }
+
+        tunerViewModel.preferFlat.observe(viewLifecycleOwner) {
+            updateNoteNamesInAllViews()
+            val icon = actionMode?.menu?.findItem(R.id.action_switch_enharmonics_editor)
+            icon?.setIcon(
+                if (it)
+                    R.drawable.ic_prefer_flat_isflat
+                else
+                    R.drawable.ic_prefer_flat_issharp
+            )
         }
 
         viewModel.instrumentName.observe(viewLifecycleOwner) {
@@ -192,11 +211,6 @@ class InstrumentEditorFragment : Fragment() {
             }
         })
 
-        val actionMode = (requireActivity() as MainActivity).startSupportActionMode(
-            InstrumentEditorActionCallback(requireActivity() as MainActivity, instrumentsViewModel, viewModel)
-        )
-        actionMode?.setTitle(R.string.edit_instrument)
-
         return view
     }
 
@@ -224,7 +238,7 @@ class InstrumentEditorFragment : Fragment() {
 
     private fun updateNoteNamesInAllViews() {
         //val noteNames = tunerViewModel.noteNames.value ?: return
-        val notePrintOptions =tunerViewModel.notePrintOptions
+        val notePrintOptions = tunerViewModel.notePrintOptions
         val musicalScale = tunerViewModel.musicalScale.value ?: return
 
         noteSelector?.setNotes(musicalScale.noteIndexBegin, musicalScale.noteIndexEnd,
