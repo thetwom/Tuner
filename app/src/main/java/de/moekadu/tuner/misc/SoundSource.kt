@@ -107,6 +107,10 @@ class SoundSource(private val scope: CoroutineScope) {
             }
         }
 
+    private val enableWaveWriter = true
+    private val waveWriterSize = 2 * sampleRate
+    val waveWriter = if (enableWaveWriter) WaveWriter(waveWriterSize) else null
+
     fun recycle(sampleData: SampleData) {
         memoryManager.recycleMemory(sampleData)
     }
@@ -114,7 +118,7 @@ class SoundSource(private val scope: CoroutineScope) {
     fun restartSampling()
     {
         stopSampling()
-        sourceJob = createAudioRecordJob(sampleRate, overlap, windowSize, outputChannel, memoryManager, scope, testFunction)
+        sourceJob = createAudioRecordJob(sampleRate, overlap, windowSize, outputChannel, memoryManager, scope, waveWriter, testFunction)
     }
 
     fun stopSampling() {
@@ -135,7 +139,8 @@ class SoundSource(private val scope: CoroutineScope) {
  */
 @SuppressLint("MissingPermission")
 fun createAudioRecordJob(sampleRate: Int, overlap: Float, windowSize: Int, channel: SendChannel<SampleData>,
-                         memoryManager: MemoryManagerSampleData, scope: CoroutineScope, testFunction: ((Float) -> Float)?) : Job {
+                         memoryManager: MemoryManagerSampleData, scope: CoroutineScope,
+                         waveWriter: WaveWriter?, testFunction: ((Float) -> Float)?) : Job {
 
     return scope.launch(Dispatchers.IO) {
 
@@ -213,6 +218,8 @@ fun createAudioRecordJob(sampleRate: Int, overlap: Float, windowSize: Int, chann
                     //    Log.v("TestRecordFlow", "is full: ${s.isFull}")
 
                     currentFrame += numRead
+
+                    waveWriter?.appendData(recordData, numRead)
                 }
             }
             record?.stop()

@@ -49,6 +49,11 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
     /// Source which conducts the audio recording.
     private val sampleSource = SoundSource(viewModelScope)
+    val sampleRate
+        get() = sampleSource.sampleRate
+
+    val waveWriter
+        get() = sampleSource.waveWriter
 
     private val _tunerResults = MutableLiveData<TunerResults>()
     val tunerResults : LiveData<TunerResults>

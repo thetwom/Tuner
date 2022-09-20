@@ -31,18 +31,21 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.instrumentDatabase
+import de.moekadu.tuner.misc.WaveFileWriterIntent
 import de.moekadu.tuner.temperaments.TargetNote
 import de.moekadu.tuner.viewmodels.TunerViewModel
 import de.moekadu.tuner.views.*
+import kotlinx.coroutines.launch
 import kotlin.math.floor
 import kotlin.math.max
 
 class TunerFragment : Fragment() {
-    private val viewModel: TunerViewModel by activityViewModels() // ? = null
+    val viewModel: TunerViewModel by activityViewModels() // ? = null
 //    private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
 //        InstrumentsViewModel.Factory(
 //            AppPreferences.readInstrumentId(requireActivity()),
@@ -53,6 +56,7 @@ class TunerFragment : Fragment() {
 //            requireActivity().application
 //        )
 //    }
+    private val waveFileWriterIntent = WaveFileWriterIntent(this)
 
     private var spectrumPlot: PlotView? = null
     private var correlationPlot: PlotView? = null
@@ -257,6 +261,13 @@ class TunerFragment : Fragment() {
 //            correlationPlot?.xRange(0f, results.correlationTimes.last(), PlotView.NO_REDRAW)
             correlationPlot?.plot(results.correlationTimes, results.correlation)
             spectrumPlot?.plot(results.ampSpecSqrFrequencies, results.ampSqrSpec)
+        }
+
+        recordFab?.setOnClickListener {
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewModel.waveWriter?.hold()
+                waveFileWriterIntent.launch()
+            }
         }
 
         return view
