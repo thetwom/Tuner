@@ -198,15 +198,15 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     private val gestureListener = object : GestureDetector.SimpleOnGestureListener() {
 
-        override fun onDown(e: MotionEvent?): Boolean {
+        override fun onDown(e: MotionEvent): Boolean {
 //            Log.v("Tuner", "PlotView: gestureListener.OnDown")
             flingAnimation.cancel()
             return true
         }
 
         override fun onScroll(
-            e1: MotionEvent?,
-            e2: MotionEvent?,
+            e1: MotionEvent,
+            e2: MotionEvent,
             distanceX: Float,
             distanceY: Float
         ): Boolean {
@@ -217,8 +217,8 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
 
         override fun onFling(
-            e1: MotionEvent?,
-            e2: MotionEvent?,
+            e1: MotionEvent,
+            e2: MotionEvent,
             velocityX: Float,
             velocityY: Float
         ): Boolean {
@@ -231,7 +231,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             return true
         }
 
-        override fun onSingleTapUp(e: MotionEvent?): Boolean {
+        override fun onSingleTapUp(e: MotionEvent): Boolean {
             if (e == null || stringClickedListener == null)
                 return true
 
@@ -467,6 +467,9 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (event == null)
+            return super.onTouchEvent(event)
+
         val g = gestureDetector.onTouchEvent(event)
         return super.onTouchEvent(event) || g
     }

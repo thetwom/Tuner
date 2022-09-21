@@ -38,6 +38,7 @@ class InstrumentEditorActionCallback(private val activity: MainActivity,
 
     override fun onDestroyActionMode(mode: ActionMode?) {
 //        Log.v("Tuner", "InstrumentEditorActionCallback: onDestroyActionMode")
-        activity.onBackPressed()
+        //activity.onBackPressed()
+        activity.handleGoBackCommand()
     }
 }

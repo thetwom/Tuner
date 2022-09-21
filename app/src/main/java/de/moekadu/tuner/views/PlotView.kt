@@ -1482,20 +1482,20 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             ViewCompat.postInvalidateOnAnimation(this@PlotView)
         }
 
-        override fun onDown(e: MotionEvent?): Boolean {
+        override fun onDown(e: MotionEvent): Boolean {
 //            Log.v("Tuner", "PlotView: gestureListener.OnDown")
             flingAnimation.cancel()
             return true
         }
-        override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
+        override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
 //            Log.v("Tuner", "PlotView: gestureListener.OnScroll x=$distanceX, y=$distanceY")
             scrollDistance(distanceX, distanceY)
             return true
         }
 
         override fun onFling(
-            e1: MotionEvent?,
-            e2: MotionEvent?,
+            e1: MotionEvent,
+            e2: MotionEvent,
             velocityX: Float,
             velocityY: Float
         ): Boolean {
@@ -1512,7 +1512,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             return true
         }
 
-        override fun onSingleTapUp(e: MotionEvent?): Boolean {
+        override fun onSingleTapUp(e: MotionEvent): Boolean {
 //            Log.v("Tuner", "PlotView: onSingleTapUp")
 //            if (e == null)
 //                return true
@@ -1545,14 +1545,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         var lastSpanX = 0f
         var lastSpanY = 0f
 
-        override fun onScaleBegin(detector: ScaleGestureDetector?): Boolean {
+        override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
             if (detector != null) {
                 lastSpanX = detector.currentSpanX
                 lastSpanY = detector.currentSpanY
             }
             return true
         }
-        override fun onScale(detector: ScaleGestureDetector?): Boolean {
+        override fun onScale(detector: ScaleGestureDetector): Boolean {
             if (detector == null)
                 return true
             val spanX = detector.currentSpanX
@@ -1874,6 +1874,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
 //        return gestureDetector.onTouchEvent(event) || scaleGestureDetector.onTouchEvent(event)
+        if (event == null)
+            return super.onTouchEvent(event)
         val s = scaleGestureDetector.onTouchEvent(event)
         val g = gestureDetector.onTouchEvent(event)
         return super.onTouchEvent(event) || s || g

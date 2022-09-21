@@ -27,6 +27,7 @@ import android.util.TypedValue
 import android.view.View
 import android.view.WindowInsetsController
 import android.view.WindowManager
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentManager
@@ -92,11 +93,25 @@ class MainActivity : AppCompatActivity() {
             //    loadSimpleOrScientificFragment()
         }
 
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                handleGoBackCommand()
+            }
+        })
+
         setStatusAndNavigationBarColors()
 
         if (savedInstanceState == null)
             handleFileLoadingIntent(intent)
 //        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
+    }
+
+    fun handleGoBackCommand() {
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            supportFragmentManager.popBackStack()
+        } else if (!isCurrentFragmentATunerFragment()){
+            loadSimpleOrScientificFragment()
+        }
     }
 
     override fun onStop() {
@@ -109,16 +124,17 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
     }
 
-    override fun onBackPressed() {
-//        Log.v("Tuner", "MainActivity.onBackPressed")
-        if (supportFragmentManager.backStackEntryCount > 0) {
-            supportFragmentManager.popBackStack()
-        } else if (!isCurrentFragmentATunerFragment()){
-            loadSimpleOrScientificFragment()
-        } else {
-            super.onBackPressed()
-        }
-    }
+//    override fun onBackPressed() {
+////        Log.v("Tuner", "MainActivity.onBackPressed")
+//        if (supportFragmentManager.backStackEntryCount > 0) {
+//            supportFragmentManager.popBackStack()
+//        } else if (!isCurrentFragmentATunerFragment()){
+//            loadSimpleOrScientificFragment()
+//        } else {
+//            super.onBackPressed()
+//        }
+//    }
+
     override fun onSupportNavigateUp(): Boolean {
 //        Log.v("Tuner", "MainActivity.onSupportNavigateUp")
         if (supportFragmentManager.backStackEntryCount > 0) {

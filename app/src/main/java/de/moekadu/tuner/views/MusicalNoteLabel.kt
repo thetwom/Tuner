@@ -6,7 +6,9 @@ import android.graphics.Rect
 import android.text.StaticLayout
 import android.text.TextPaint
 import androidx.core.graphics.withTranslation
-import de.moekadu.tuner.temperaments.*
+import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
+import de.moekadu.tuner.temperaments.NoteNamePrinter
 import kotlin.math.max
 
 /** Class for creating note labels, where the octave is typed slightly smaller and as superscript. */
@@ -73,7 +75,7 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint,
          * @param octaveBegin Smallest octave to be considered.
          * @param octaveEnd End octave to be considered (excluded).
          * @param paint Paint which will be used for drawing the notes.
-         * @param context Context required for accessing string resources.
+         * @param noteNamePrinter Class for printing notes.
          * @param printOptions Options for printing the note (prefer flat/sharp, ...)
          * @param enableOctaveIndex Set this to false if you don't want to print the octave index.
          * @return Bounds of the rectangle which fits around each single note.

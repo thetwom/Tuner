@@ -6,3 +6,5 @@ v.5.1.0:
 - Refactored icon
 - Refactored note namings for non-12-note temperaments
 - Czech translations (thanks to rockconqueror)
+- Special setting to capture sound and save to wave
+- Increase target SDK to 33

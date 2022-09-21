@@ -435,7 +435,7 @@ fun createNoteNameScale41Tone(referenceNote: MusicalNote?): NoteNameScale {
             MusicalNote(base = BaseNote.C, modifier = NoteModifier.NaturalUpUp, enharmonicBase = BaseNote.D, enharmonicModifier = NoteModifier.FlatDown),
             MusicalNote(base = BaseNote.C, modifier = NoteModifier.SharpDown, enharmonicBase = BaseNote.D, enharmonicModifier = NoteModifier.Flat),
             MusicalNote(base = BaseNote.D, modifier = NoteModifier.FlatUp, enharmonicBase = BaseNote.C, enharmonicModifier = NoteModifier.Sharp),
-            MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalDownDown, enharmonicBase = BaseNote.C, enharmonicModifier = NoteModifier.SharpUp, ),
+            MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalDownDown, enharmonicBase = BaseNote.C, enharmonicModifier = NoteModifier.SharpUp),
             MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalDown),
             //
             MusicalNote(base = BaseNote.D, modifier = NoteModifier.None),
@@ -443,7 +443,7 @@ fun createNoteNameScale41Tone(referenceNote: MusicalNote?): NoteNameScale {
             MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalUpUp, enharmonicBase = BaseNote.E, enharmonicModifier = NoteModifier.FlatDown),
             MusicalNote(base = BaseNote.D, modifier = NoteModifier.SharpDown, enharmonicBase = BaseNote.E, enharmonicModifier = NoteModifier.Flat),
             MusicalNote(base = BaseNote.E, modifier = NoteModifier.FlatUp, enharmonicBase = BaseNote.D, enharmonicModifier = NoteModifier.Sharp),
-            MusicalNote(base = BaseNote.E, modifier = NoteModifier.NaturalDownDown, enharmonicBase = BaseNote.D, enharmonicModifier = NoteModifier.SharpUp, ),
+            MusicalNote(base = BaseNote.E, modifier = NoteModifier.NaturalDownDown, enharmonicBase = BaseNote.D, enharmonicModifier = NoteModifier.SharpUp),
             MusicalNote(base = BaseNote.E, modifier = NoteModifier.NaturalDown),
             //
             MusicalNote(base = BaseNote.E, modifier = NoteModifier.None),
@@ -455,7 +455,7 @@ fun createNoteNameScale41Tone(referenceNote: MusicalNote?): NoteNameScale {
             MusicalNote(base = BaseNote.F, modifier = NoteModifier.NaturalUpUp, enharmonicBase = BaseNote.G, enharmonicModifier = NoteModifier.FlatDown),
             MusicalNote(base = BaseNote.F, modifier = NoteModifier.SharpDown, enharmonicBase = BaseNote.G, enharmonicModifier = NoteModifier.Flat),
             MusicalNote(base = BaseNote.G, modifier = NoteModifier.FlatUp, enharmonicBase = BaseNote.F, enharmonicModifier = NoteModifier.Sharp),
-            MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalDownDown, enharmonicBase = BaseNote.F, enharmonicModifier = NoteModifier.SharpUp, ),
+            MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalDownDown, enharmonicBase = BaseNote.F, enharmonicModifier = NoteModifier.SharpUp),
             MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalDown),
             //
             MusicalNote(base = BaseNote.G, modifier = NoteModifier.None),
@@ -463,7 +463,7 @@ fun createNoteNameScale41Tone(referenceNote: MusicalNote?): NoteNameScale {
             MusicalNote(base = BaseNote.G, modifier = NoteModifier.NaturalUpUp, enharmonicBase = BaseNote.A, enharmonicModifier = NoteModifier.FlatDown),
             MusicalNote(base = BaseNote.G, modifier = NoteModifier.SharpDown, enharmonicBase = BaseNote.A, enharmonicModifier = NoteModifier.Flat),
             MusicalNote(base = BaseNote.A, modifier = NoteModifier.FlatUp, enharmonicBase = BaseNote.G, enharmonicModifier = NoteModifier.Sharp),
-            MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalDownDown, enharmonicBase = BaseNote.G, enharmonicModifier = NoteModifier.SharpUp, ),
+            MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalDownDown, enharmonicBase = BaseNote.G, enharmonicModifier = NoteModifier.SharpUp),
             MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalDown),
             //
             MusicalNote(base = BaseNote.A, modifier = NoteModifier.None),
@@ -471,7 +471,7 @@ fun createNoteNameScale41Tone(referenceNote: MusicalNote?): NoteNameScale {
             MusicalNote(base = BaseNote.A, modifier = NoteModifier.NaturalUpUp, enharmonicBase = BaseNote.B, enharmonicModifier = NoteModifier.FlatDown),
             MusicalNote(base = BaseNote.A, modifier = NoteModifier.SharpDown, enharmonicBase = BaseNote.B, enharmonicModifier = NoteModifier.Flat),
             MusicalNote(base = BaseNote.B, modifier = NoteModifier.FlatUp, enharmonicBase = BaseNote.A, enharmonicModifier = NoteModifier.Sharp),
-            MusicalNote(base = BaseNote.B, modifier = NoteModifier.NaturalDownDown, enharmonicBase = BaseNote.A, enharmonicModifier = NoteModifier.SharpUp, ),
+            MusicalNote(base = BaseNote.B, modifier = NoteModifier.NaturalDownDown, enharmonicBase = BaseNote.A, enharmonicModifier = NoteModifier.SharpUp),
             MusicalNote(base = BaseNote.B, modifier = NoteModifier.NaturalDown),
             //
             MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),

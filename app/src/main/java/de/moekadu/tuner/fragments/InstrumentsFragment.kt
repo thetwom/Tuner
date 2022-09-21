@@ -154,8 +154,8 @@ class InstrumentsFragment : Fragment() {
                         instrument,
                         InstrumentsViewModel.Section.Predefined
                     )
-                    (activity as MainActivity?)?.onBackPressed()
-                }
+                    //(activity as MainActivity?)?.onBackPressed()
+                    (activity as MainActivity?)?.handleGoBackCommand()}
 
                 override fun onEditIconClicked(instrument: Instrument, stableId: Long) {}
 
@@ -177,7 +177,8 @@ class InstrumentsFragment : Fragment() {
                     instrumentsViewModel.setInstrument(instrument,
                         InstrumentsViewModel.Section.Custom
                     )
-                    (activity as MainActivity?)?.onBackPressed()
+                    //(activity as MainActivity?)?.onBackPressed()
+                    (activity as MainActivity?)?.handleGoBackCommand()
                 }
 
                 override fun onEditIconClicked(instrument: Instrument, stableId: Long) {

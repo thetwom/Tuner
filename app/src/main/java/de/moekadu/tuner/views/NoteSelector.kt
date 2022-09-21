@@ -57,19 +57,19 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     private val gestureListener = object : GestureDetector.SimpleOnGestureListener() {
 
-        override fun onDown(e: MotionEvent?): Boolean {
+        override fun onDown(e: MotionEvent): Boolean {
 //            Log.v("Tuner", "NoteSelector: gestureListener.OnDown")
             flingAnimation.cancel()
             return true
         }
 
-        override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
+        override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
 //            Log.v("Tuner", "NoteSelector: gestureListener.OnScroll x=$distanceX, y=$distanceY")
             scrollDistance(distanceX)
             return true
         }
 
-        override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
+        override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
             lastFlingValue = 0f
             offsetAnimator.cancel()
             flingAnimation.cancel()
@@ -83,7 +83,7 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             return true
         }
 
-        override fun onSingleTapUp(e: MotionEvent?): Boolean {
+        override fun onSingleTapUp(e: MotionEvent): Boolean {
 //            if (e == null || stringClickedListener == null)
             if (e == null)
                 return true
@@ -269,9 +269,12 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (event == null)
+            return super.onTouchEvent(event)
+
         val g = gestureDetector.onTouchEvent(event)
 //        Log.v("Tuner", "NoteSelector.onTouchEvent: $g")
-        val u = if (!g && event?.actionMasked == MotionEvent.ACTION_UP) {
+        val u = if (!g && event.actionMasked == MotionEvent.ACTION_UP) {
 //            Log.v("Tuner", "NoteSelector.onTouchEvent: action up")
             scrollToActiveNote(150L)
             //performClick()

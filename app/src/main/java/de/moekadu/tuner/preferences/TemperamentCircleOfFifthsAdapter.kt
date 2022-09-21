@@ -1,4 +1,4 @@
-package de.moekadu.tuner.temperaments
+package de.moekadu.tuner.preferences
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import de.moekadu.tuner.R
+import de.moekadu.tuner.temperaments.*
 import kotlin.math.absoluteValue
 
 private fun fifthCorrectionString(context: Context, correction: FifthModification): String {
