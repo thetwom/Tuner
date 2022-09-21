@@ -21,12 +21,11 @@ class WaveFileWriterIntent(fragment: TunerFragment) {
     private val _writeWave = fragment.registerForActivityResult(FileWriterContract()) { uri ->
         val viewModel = fragment.viewModel
         viewModel.viewModelScope.launch(Dispatchers.IO) {
-            viewModel.waveWriter?.writeSnapshot(
+            viewModel.waveWriter.writeStoredSnapshot(
                 viewModel.getApplication(),
                 uri,
                 viewModel.sampleRate
             )
-            viewModel.waveWriter?.record()
         }
         //        val filename = getFilenameFromUri(fragment.context, uri)
 //        if (filename == null) {
@@ -76,68 +75,79 @@ class FileWriterContract : ActivityResultContract<String, Uri?>() {
     }
 }
 
-class WaveWriter(val maxSize: Int) {
+class WaveWriter {
 
-    enum class State {Recording, OnHold}
-    private var state = State.Recording
     private val mutex = Mutex()
 
-    private val buffer = FloatArray(maxSize)
+    private var buffer: FloatArray? = null
     private var insertPosition = 0L
     private var numValues = 0
 
+    private var snapShot: FloatArray? = null
 
     /**
      * Called from any other thread
      */
     suspend fun appendData(input: FloatArray, numInputValues: Int = input.size) {
         mutex.withLock {
-            if (state == State.Recording) {
+            val bufferLocal = buffer
+            if (bufferLocal != null && bufferLocal.isNotEmpty()) {
+                val maxSize = bufferLocal.size
                 var inputIndexBegin = 0
                 while (inputIndexBegin < numInputValues) {
                     val bufferIndexBegin = (insertPosition % maxSize).toInt()
                     val numCopy = min(maxSize - bufferIndexBegin, numInputValues - inputIndexBegin)
-                    input.copyInto(buffer, bufferIndexBegin, inputIndexBegin, inputIndexBegin + numCopy)
+                    input.copyInto(bufferLocal, bufferIndexBegin, inputIndexBegin, inputIndexBegin + numCopy)
                     inputIndexBegin += numCopy
                     insertPosition += numCopy
                     numValues += numCopy
                 }
+                numValues = min(numValues, maxSize)
             }
-            numValues = min(numValues, maxSize)
         }
     }
 
-    /** Call this to start sampling. */
-    suspend fun record() {
+    /** Set size of how many values are kept in buffer.
+     * @param numValues Number of values to store.
+     */
+    suspend fun setBufferSize(numValues: Int) {
         mutex.withLock {
-            state = State.Recording
+            this.numValues = 0
+            if ((buffer?.size ?: 0) != numValues)
+                buffer = FloatArray(numValues)
         }
     }
 
-    /** Stop sampling and store data. */
-    suspend fun hold() {
+    /** Store current buffer, such that it can be written to wqve later on. */
+    suspend fun storeSnapshot() {
         mutex.withLock {
-            state = State.OnHold
-        }
-    }
-
-    suspend fun writeSnapshot(context: Context?, uri: Uri?, sampleRate: Int) {
-        val wavArray = mutex.withLock {
-            if (state == State.OnHold) {
+            val bufferLocal = buffer
+            if (bufferLocal != null) {
+                val maxSize = bufferLocal.size
                 val inlineArray = FloatArray(numValues)
                 val bufferIndexBegin = ((insertPosition - numValues) % maxSize).toInt()
                 val numCopyPart1 = min(numValues, maxSize - bufferIndexBegin)
-                buffer.copyInto(inlineArray, 0, bufferIndexBegin, bufferIndexBegin + numCopyPart1)
+                bufferLocal.copyInto(
+                    inlineArray,
+                    0,
+                    bufferIndexBegin,
+                    bufferIndexBegin + numCopyPart1
+                )
                 val numCopyPart2 = numValues - numCopyPart1
-                buffer.copyInto(inlineArray, numCopyPart1, 0, numCopyPart2)
-                inlineArray
+                bufferLocal.copyInto(inlineArray, numCopyPart1, 0, numCopyPart2)
+                snapShot = inlineArray
             } else {
-                null
+                snapShot = FloatArray(0)
             }
         }
+    }
 
-        if (wavArray != null)
-            writeWave(context, uri, sampleRate, wavArray)
+    suspend fun writeStoredSnapshot(context: Context?, uri: Uri?, sampleRate: Int) {
+        mutex.withLock {
+            snapShot?.let {
+                writeWave(context, uri, sampleRate, it)
+            }
+        }
     }
 }
 

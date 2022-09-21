@@ -107,9 +107,7 @@ class SoundSource(private val scope: CoroutineScope) {
             }
         }
 
-    private val enableWaveWriter = true
-    private val waveWriterSize = 2 * sampleRate
-    val waveWriter = if (enableWaveWriter) WaveWriter(waveWriterSize) else null
+    val waveWriter = WaveWriter()
 
     fun recycle(sampleData: SampleData) {
         memoryManager.recycleMemory(sampleData)
@@ -127,12 +125,13 @@ class SoundSource(private val scope: CoroutineScope) {
     }
 }
 
-/// Create audio record job.
-/**
+/** Create audio record job.
  * @param sampleRate Sample rate to be used.
  * @param overlap Overlap between two succeeding chunks sent to into the channel.
  * @param windowSize Chunk size of sample data which is sent into the channel.
  * @param channel Channel into which the sampled data is sent.
+ * @param waveWriter Class to store the latest data allowing to store snapshots to a wave
+ *   file.
  * @param testFunction If non-null, this test function replaces the microphone. Must have the
  *  following shape: {timeInSeconds -> sampleValueAtGivenTime}
  *    example: {t -> kotlin.math.sin(2f * kotlin.math.PI.toFloat() * 440.0f * t)}
@@ -140,7 +139,7 @@ class SoundSource(private val scope: CoroutineScope) {
 @SuppressLint("MissingPermission")
 fun createAudioRecordJob(sampleRate: Int, overlap: Float, windowSize: Int, channel: SendChannel<SampleData>,
                          memoryManager: MemoryManagerSampleData, scope: CoroutineScope,
-                         waveWriter: WaveWriter?, testFunction: ((Float) -> Float)?) : Job {
+                         waveWriter: WaveWriter, testFunction: ((Float) -> Float)?) : Job {
 
     return scope.launch(Dispatchers.IO) {
 
@@ -219,7 +218,7 @@ fun createAudioRecordJob(sampleRate: Int, overlap: Float, windowSize: Int, chann
 
                     currentFrame += numRead
 
-                    waveWriter?.appendData(recordData, numRead)
+                    waveWriter.appendData(recordData, numRead)
                 }
             }
             record?.stop()

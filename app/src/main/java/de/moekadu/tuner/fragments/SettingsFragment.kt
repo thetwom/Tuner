@@ -266,6 +266,21 @@ class SettingsFragment : PreferenceFragmentCompat() {
             pitchHistoryNumFaultyValues.value, pitchHistoryNumFaultyValues.value
         )
 
+        val capture = findPreference<SeekBarPreference>("wave_writer_duration_in_seconds")
+            ?: throw RuntimeException("No capture preference")
+        capture.setOnPreferenceChangeListener { preference, newValue ->
+            val duration = newValue as Int
+            preference.summary = if (duration == 0)
+                getString(R.string.no_capture_duration)
+            else
+                getString(R.string.capture_duration, duration)
+            true
+        }
+        capture.summary = if (capture.value == 0)
+            getString(R.string.no_capture_duration)
+        else
+            getString(R.string.capture_duration, capture.value)
+
         val resetSettings = findPreference<Preference>("setdefault")
             ?: throw RuntimeException("No reset settings preference")
 

@@ -54,6 +54,9 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
     val waveWriter
         get() = sampleSource.waveWriter
+    private val _waveWriterSize = MutableLiveData(0)
+    val waveWriterSize: LiveData<Int>
+        get() = _waveWriterSize
 
     private val _tunerResults = MutableLiveData<TunerResults>()
     val tunerResults : LiveData<TunerResults>
@@ -218,6 +221,13 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 "tolerance_in_cents" -> {
                     changeTargetNoteSettings(tolerance = indexToTolerance(sharedPreferences.getInt(key, 3)))
+                }
+                "wave_writer_duration_in_seconds" -> {
+                    val size = sampleRate * sharedPreferences.getInt(key, 0)
+                    viewModelScope.launch {
+                        waveWriter.setBufferSize(size)
+                    }
+                    _waveWriterSize.value = size
                 }
             }
         }
@@ -472,6 +482,12 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         useHint = pref.getBoolean("use_hint", true)
         pitchHistory.maxNoise = pref.getInt("max_noise", 10) / 100f
         changeTargetNoteSettings(tolerance = indexToTolerance(pref.getInt("tolerance_in_cents", 3)))
+
+        val waveWriterSizeLocal = sampleRate * pref.getInt("wave_writer_duration_in_seconds", 0)
+        viewModelScope.launch {
+            waveWriter.setBufferSize(waveWriterSizeLocal)
+        }
+        _waveWriterSize.value = waveWriterSizeLocal
     }
 
     companion object {

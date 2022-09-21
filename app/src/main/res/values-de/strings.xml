@@ -183,4 +183,8 @@
     <string name="equal_temperament_31_desc">31 Noten pro Oktave</string>
     <string name="equal_temperament_53">Gleichstufige Stimmung 53</string>
     <string name="equal_temperament_53_desc">53 Noten pro Oktave</string>
+    <string name="capture">Aufnehmen</string>
+    <string name="capture_in_scientific_mode">Aufnehmen im wissenschaftlichen Modus</string>
+    <string name="capture_duration">Aufnahmedauer: %d&#x200A;s</string>
+    <string name="no_capture_duration">Keine Aufnahme</string>
 </resources>

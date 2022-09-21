@@ -263,9 +263,12 @@ class TunerFragment : Fragment() {
             spectrumPlot?.plot(results.ampSpecSqrFrequencies, results.ampSqrSpec)
         }
 
+        viewModel.waveWriterSize.observe(viewLifecycleOwner) { waveWriterSize ->
+            recordFab?.visibility = if (waveWriterSize == 0) View.GONE else View.VISIBLE
+        }
         recordFab?.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.waveWriter?.hold()
+                viewModel.waveWriter.storeSnapshot()
                 waveFileWriterIntent.launch()
             }
         }

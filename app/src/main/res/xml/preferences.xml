@@ -158,6 +158,18 @@
         app:singleLineTitle="false"
         />
 
+    <SeekBarPreference
+        android:key="wave_writer_duration_in_seconds"
+        app:title="@string/capture_in_scientific_mode"
+        app:defaultValue="0"
+        app:min="0"
+        android:max="5"
+        app:seekBarIncrement="1"
+        app:updatesContinuously="true"
+        app:singleLineTitle="false"
+        app:icon="@drawable/ic_mic"
+        />
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/others">

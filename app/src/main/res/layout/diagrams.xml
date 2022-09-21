@@ -178,5 +178,5 @@
         android:layout_margin="16dp"
         app:fabSize="normal"
         android:src="@drawable/ic_mic"
-        android:contentDescription= "@string/record" />
+        android:contentDescription= "@string/capture" />
 </androidx.constraintlayout.widget.ConstraintLayout>
