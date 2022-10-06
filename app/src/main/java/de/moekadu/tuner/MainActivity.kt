@@ -111,6 +111,8 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.popBackStack()
         } else if (!isCurrentFragmentATunerFragment()){
             loadSimpleOrScientificFragment()
+        } else {
+            finish()
         }
     }
 
