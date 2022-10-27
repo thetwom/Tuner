@@ -1,9 +1,10 @@
-v.5.1.0:
+v5.1.0:
 - Refactored icon
 - Refactored note namings for non-12-note temperaments
 - Czech translations (thanks to rockconqueror)
 - Special setting to capture sound and save to wave
 - Increase target SDK to 33
 
-v.5.1.1:
+v5.2.0:
 - Fix: Close app on back-press
+- Bottom bar with quick settings
