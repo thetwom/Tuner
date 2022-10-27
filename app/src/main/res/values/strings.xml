@@ -77,6 +77,15 @@
     <string name="a_note_name">A</string>
     <string name="b_note_name">B</string>
     <string name="asharp_bflat_note_name">-</string>
+
+    <string name="c_solfege">Do</string>
+    <string name="d_solfege">Re</string>
+    <string name="e_solfege">Mi</string>
+    <string name="f_solfege">Fa</string>
+    <string name="g_solfege">Sol</string>
+    <string name="a_solfege">La</string>
+    <string name="b_solfege">Si</string>
+
     <string name="violin_gdae">Violin</string>
     <string name="abort">Abort</string>
     <string name="instrument_name">Instrument name</string>
