@@ -426,8 +426,10 @@ class InstrumentsFragment : Fragment() {
         super.onResume()
         activity?.let {
             it.setTitle(R.string.select_instrument)
-            if (it is MainActivity)
+            if (it is MainActivity) {
                 it.setStatusAndNavigationBarColors()
+                it.setPreferenceBarVisibilty(View.VISIBLE)
+            }
         }
     }
 }

@@ -93,3 +93,32 @@ fun getTuningDescriptionResourceId(temperamentType: TemperamentType) = when(temp
     TemperamentType.Test -> null
 }
 
+fun getTuningNameAbbrResourceId(temperamentType: TemperamentType) = when(temperamentType) {
+    TemperamentType.EDO12 -> R.string.equal_temperament_12_abbr
+    TemperamentType.Pythagorean -> R.string.pythagorean_tuning_abbr
+    TemperamentType.Pure -> R.string.pure_tuning_abbr
+    TemperamentType.QuarterCommaMeanTone -> R.string.quarter_comma_mean_tone_abbr
+    TemperamentType.ThirdCommaMeanTone -> R.string.third_comma_mean_tone_abbr
+    TemperamentType.WerckmeisterIII -> R.string.werckmeister_iii_abbr
+    TemperamentType.WerckmeisterIV -> R.string.werckmeister_iv_abbr
+    TemperamentType.WerckmeisterV -> R.string.werckmeister_v_abbr
+    TemperamentType.WerckmeisterVI -> R.string.werckmeister_vi_abbr
+    TemperamentType.Kirnberger1 -> R.string.kirnberger1_abbr
+    TemperamentType.Kirnberger2 -> R.string.kirnberger2_abbr
+    TemperamentType.Kirnberger3 -> R.string.kirnberger3_abbr
+    TemperamentType.Neidhardt1 -> R.string.neidhardt1_abbr
+    TemperamentType.Neidhardt2 -> R.string.neidhardt2_abbr
+    TemperamentType.Neidhardt3 -> R.string.neidhardt3_abbr
+    TemperamentType.Valotti -> R.string.valotti_abbr
+    TemperamentType.Young2 -> R.string.young2_abbr
+    TemperamentType.EDO17 -> R.string.equal_temperament_17_abbr
+    TemperamentType.EDO19 -> R.string.equal_temperament_19_abbr
+    TemperamentType.EDO22 -> R.string.equal_temperament_22_abbr
+    TemperamentType.EDO24 -> R.string.equal_temperament_24_abbr
+    TemperamentType.EDO27 -> R.string.equal_temperament_27_abbr
+    TemperamentType.EDO29 -> R.string.equal_temperament_29_abbr
+    TemperamentType.EDO31 -> R.string.equal_temperament_31_abbr
+    TemperamentType.EDO41 -> R.string.equal_temperament_41_abbr
+    TemperamentType.EDO53 -> R.string.equal_temperament_53_abbr
+    TemperamentType.Test -> R.string.test_tuning_abbr
+}

@@ -335,8 +335,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
         super.onResume()
         activity?.let {
             it.setTitle(R.string.settings)
-            if (it is MainActivity)
+            if (it is MainActivity) {
                 it.setStatusAndNavigationBarColors()
+                it.setPreferenceBarVisibilty(View.GONE)
+            }
         }
     }
 

@@ -119,6 +119,10 @@ class InstrumentEditorFragment : Fragment() {
             updateNoteNamesInAllViews()
         }
 
+        tunerViewModel.preferFlat.observe(viewLifecycleOwner) {
+            updateNoteNamesInAllViews()
+        }
+
         viewModel.instrumentName.observe(viewLifecycleOwner) {
 //            Log.v("Tuner", "InstrumentEditorFragment: observe instrument name: new = |$it|, before = |${instrumentNameEditText?.text?.trim()}|, different? = ${instrumentNameEditText?.text?.trim()?.contentEquals(it)}")
             //if (instrumentNameEditText?.text?.trim()?.contentEquals(it) == false)
@@ -217,8 +221,10 @@ class InstrumentEditorFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         activity?.let {
-            if (it is MainActivity)
+            if (it is MainActivity) {
                 it.setStatusAndNavigationBarColors()
+                it.setPreferenceBarVisibilty(View.VISIBLE)
+            }
         }
     }
 
