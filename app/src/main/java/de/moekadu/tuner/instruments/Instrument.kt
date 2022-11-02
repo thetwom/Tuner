@@ -20,21 +20,20 @@ data class Instrument(private val name: CharSequence?, private val nameResource:
 
     /** Get readable representation of all strings (e.g. "A#4 - C5 - G5")
      * @param context Context for obtaining string resources.
-     * @param preferFlat Prefer flat representation if available.
+     * @param notePrintOptions Info of how to print the note (prefer flat/sharp, ...).
      */
-    fun getStringsString(context: Context, preferFlat: Boolean): CharSequence {
+    fun getStringsString(context: Context, notePrintOptions: MusicalNotePrintOptions): CharSequence {
         return if (isChromatic) {
             context.getString(R.string.chromatic)
         } else {
-            val printOption = if (preferFlat) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
             val noteNamePrinter = NoteNamePrinter(context)
             val builder = SpannableStringBuilder()
 //            Log.v("Tuner", "Instrument.getStringsString: printOption=$printOption, preferFlat=$preferFlat")
             if (strings.isNotEmpty())
-                builder.append(noteNamePrinter.noteToCharSequence(strings[0], printOption = printOption, withOctave = true))
+                builder.append(noteNamePrinter.noteToCharSequence(strings[0], printOption = notePrintOptions, withOctave = true))
             for (i in 1 until strings.size) {
                 builder.append(" - ")
-                builder.append(noteNamePrinter.noteToCharSequence(strings[i], printOption = printOption, withOctave = true))
+                builder.append(noteNamePrinter.noteToCharSequence(strings[i], printOption = notePrintOptions, withOctave = true))
             }
             builder
 //            strings.joinToString(" - ", "", "") {

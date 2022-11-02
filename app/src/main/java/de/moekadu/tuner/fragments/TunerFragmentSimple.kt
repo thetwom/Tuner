@@ -32,6 +32,8 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.button.MaterialButton
 import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
@@ -42,6 +44,7 @@ import de.moekadu.tuner.temperaments.TargetNote
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 import de.moekadu.tuner.viewmodels.TunerViewModel
 import de.moekadu.tuner.views.*
+import kotlinx.coroutines.launch
 import kotlin.math.floor
 import kotlin.math.max
 
@@ -170,11 +173,20 @@ class TunerFragmentSimple : Fragment() {
             updateInvalidStringsAppearance()
         }
 
-        viewModel.preferFlat.observe(viewLifecycleOwner) {
-            updatePitchPlotMarks(redraw = false)
-            updatePitchPlotNoteNames()
-            updateStringViewNoteNames()
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.pref.notePrintOptions.collect {
+                    updatePitchPlotMarks(redraw = false)
+                    updatePitchPlotNoteNames()
+                    updateStringViewNoteNames()
+                }
+            }
         }
+//        viewModel.preferFlat.observe(viewLifecycleOwner) {
+//            updatePitchPlotMarks(redraw = false)
+//            updatePitchPlotNoteNames()
+//            updateStringViewNoteNames()
+//        }
 
         instrumentsViewModel.instrument.observe(viewLifecycleOwner) { instrumentAndSection ->
             val instrument = instrumentAndSection.instrument
@@ -357,7 +369,7 @@ class TunerFragmentSimple : Fragment() {
             pitchPlot?.setYMark(
                 targetNote.frequency,
                 targetNote.note,
-                viewModel.notePrintOptions,
+                viewModel.pref.notePrintOptions.value,
                 MARK_ID_FREQUENCY,
                 LabelAnchor.East,
                 if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
@@ -384,7 +396,7 @@ class TunerFragmentSimple : Fragment() {
         // Update ticks in pitch history plot
         pitchPlot?.setYTicks(noteFrequencies, redraw = false,
             noteNameScale = musicalScale.noteNameScale, noteIndexBegin = musicalScale.noteIndexBegin,
-            notePrintOptions = viewModel.notePrintOptions
+            notePrintOptions = viewModel.pref.notePrintOptions.value
         )
 
         // Update active y-mark in pitch history plot
@@ -393,7 +405,7 @@ class TunerFragmentSimple : Fragment() {
                 pitchPlot?.setYMark(
                     targetNote.frequency,
                     targetNote.note,
-                    viewModel.notePrintOptions,
+                    viewModel.pref.notePrintOptions.value,
                     MARK_ID_FREQUENCY,
                     LabelAnchor.East,
                     if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
@@ -413,10 +425,10 @@ class TunerFragmentSimple : Fragment() {
 
         if (instrument.isChromatic) {
             stringView?.setStrings(null, true, musicalScale.noteNameScale,
-                musicalScale.noteIndexBegin, musicalScale.noteIndexEnd, viewModel.notePrintOptions)
+                musicalScale.noteIndexBegin, musicalScale.noteIndexEnd, viewModel.pref.notePrintOptions.value)
         } else {
             stringView?.setStrings(instrument.strings, false, musicalScale.noteNameScale,
-                musicalScale.noteIndexBegin, musicalScale.noteIndexEnd, viewModel.notePrintOptions)
+                musicalScale.noteIndexBegin, musicalScale.noteIndexEnd, viewModel.pref.notePrintOptions.value)
         }
     }
 

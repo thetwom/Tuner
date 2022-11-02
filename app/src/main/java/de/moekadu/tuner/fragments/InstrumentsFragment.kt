@@ -11,6 +11,8 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -26,6 +28,7 @@ import de.moekadu.tuner.preferences.AppPreferences
 import de.moekadu.tuner.viewmodels.InstrumentEditorViewModel
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 import de.moekadu.tuner.viewmodels.TunerViewModel
+import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -341,10 +344,18 @@ class InstrumentsFragment : Fragment() {
         val touchHelper = ItemTouchHelper(simpleTouchHelper)
         touchHelper.attachToRecyclerView(recyclerView)
 
-        tunerViewModel.preferFlat.observe(viewLifecycleOwner) {
-            instrumentsPredefinedAdapter.setPreferFlat(preferFlat = it, recyclerView)
-            instrumentsCustomAdapter.setPreferFlat(preferFlat = it, recyclerView)
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                tunerViewModel.pref.notePrintOptions.collect {
+                    instrumentsPredefinedAdapter.setNotePrintOptions(notePrintOptions = it, recyclerView)
+                    instrumentsCustomAdapter.setNotePrintOptions(notePrintOptions = it, recyclerView)
+                }
+            }
         }
+//        tunerViewModel.preferFlat.observe(viewLifecycleOwner) {
+//            instrumentsPredefinedAdapter.setPreferFlat(preferFlat = it, recyclerView)
+//            instrumentsCustomAdapter.setPreferFlat(preferFlat = it, recyclerView)
+//        }
 
         instrumentsViewModel.instrument.observe(viewLifecycleOwner) {
 //            Log.v("Tuner", "InstrumentsFragment.onCreateView: setStableId: $it")

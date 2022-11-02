@@ -32,6 +32,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
@@ -182,10 +183,19 @@ class TunerFragment : Fragment() {
 //        viewModel.noteNames.observe(viewLifecycleOwner) { // noteNames ->
 //            updatePitchPlotNoteNames()
 //        }
-        viewModel.preferFlat.observe(viewLifecycleOwner) {
-            updatePitchPlotMarks(redraw = false)
-            updatePitchPlotNoteNames()
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.pref.notePrintOptions.collect {
+                    updatePitchPlotMarks(redraw = false)
+                    updatePitchPlotNoteNames()
+                }
+            }
         }
+
+//        viewModel.preferFlat.observe(viewLifecycleOwner) {
+//            updatePitchPlotMarks(redraw = false)
+//            updatePitchPlotNoteNames()
+//        }
 
         viewModel.tunerResults.observe(viewLifecycleOwner) { results ->
             if (results.pitchFrequency == null) {
@@ -263,9 +273,16 @@ class TunerFragment : Fragment() {
             spectrumPlot?.plot(results.ampSpecSqrFrequencies, results.ampSqrSpec)
         }
 
-        viewModel.waveWriterSize.observe(viewLifecycleOwner) { waveWriterSize ->
-            recordFab?.visibility = if (waveWriterSize == 0) View.GONE else View.VISIBLE
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.pref.waveWriterDurationInSeconds.collect { duration ->
+                    recordFab?.visibility = if (duration == 0) View.GONE else View.VISIBLE
+                }
+            }
         }
+//        viewModel.waveWriterSize.observe(viewLifecycleOwner) { waveWriterSize ->
+//            recordFab?.visibility = if (waveWriterSize == 0) View.GONE else View.VISIBLE
+//        }
         recordFab?.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
                 viewModel.waveWriter.storeSnapshot()
@@ -392,7 +409,7 @@ class TunerFragment : Fragment() {
             pitchPlot?.setYMark(
                 targetNote.frequency,
                 targetNote.note,
-                viewModel.notePrintOptions,
+                viewModel.pref.notePrintOptions.value,
                 MARK_ID_FREQUENCY,
                 LabelAnchor.East,
                 if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
@@ -418,7 +435,7 @@ class TunerFragment : Fragment() {
         // Update ticks in pitch history plot
         pitchPlot?.setYTicks(noteFrequencies, redraw = false,
             noteNameScale = musicalScale.noteNameScale, noteIndexBegin = musicalScale.noteIndexBegin,
-            viewModel.notePrintOptions
+            viewModel.pref.notePrintOptions.value
         )
 //        { _, f ->
 //            val toneIndex = musicalScale.getClosestNoteIndex(f)
@@ -431,7 +448,7 @@ class TunerFragment : Fragment() {
                 pitchPlot?.setYMark(
                     targetNote.frequency,
                     targetNote.note,
-                    viewModel.notePrintOptions,
+                    viewModel.pref.notePrintOptions.value,
                     //noteNames.getNoteName(requireContext(), targetNote.noteIndex, preferFlat),
                     MARK_ID_FREQUENCY,
                     LabelAnchor.East,
