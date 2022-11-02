@@ -23,6 +23,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.view.WindowInsetsController
@@ -33,6 +34,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.PreferenceManager
 import com.google.android.material.color.DynamicColors
 import de.moekadu.tuner.fragments.*
@@ -40,10 +44,11 @@ import de.moekadu.tuner.preferences.*
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 import de.moekadu.tuner.viewmodels.TunerViewModel
 import de.moekadu.tuner.views.PreferenceBarContainer
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     // TODO: anchor-drawable should use round edges
-
+    // TODO: switch scientific/simple -> afterwards, the temperament/ref note are not updated anymore
     enum class TunerMode {Simple, Scientific, Unknown}
 
     private val tunerViewModel: TunerViewModel by viewModels()
@@ -106,20 +111,35 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        tunerViewModel.preferFlat.observe(this) {
-            preferenceBarContainer.preferFlat = it
-            val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
-            // update the reference not printing
-            preferenceBarContainer.setReferenceNote(
-                currentPrefs.referenceNote, currentPrefs.referenceFrequency, tunerViewModel.notePrintOptions
-            )
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                tunerViewModel.pref.notePrintOptions.collect {
+                    preferenceBarContainer.preferFlat = it.isPreferringFlat
+                    //val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
+                    val currentPrefs = tunerViewModel.pref.temperamentAndReferenceNote.value
+                    // update the reference not printing
+                    preferenceBarContainer.setReferenceNote(
+                        currentPrefs.referenceNote, currentPrefs.referenceFrequency, tunerViewModel.pref.notePrintOptions.value
+                    )
+                }
+            }
         }
+//        tunerViewModel.preferFlat.observe(this) {
+//            preferenceBarContainer.preferFlat = it
+//            val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
+//            // update the reference not printing
+//            preferenceBarContainer.setReferenceNote(
+//                currentPrefs.referenceNote, currentPrefs.referenceFrequency, tunerViewModel.notePrintOptions
+//            )
+//        }
         tunerViewModel.musicalScale.observe(this) {
+            Log.v("Tuner", "MainActivity.musical scale changes")
             // we don't use the frequency from the musical scale but the string from the preferences
             // in order to get the "original" decimal places
-            val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
+            val currentPrefs = tunerViewModel.pref.temperamentAndReferenceNote.value
+            //val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
             preferenceBarContainer.setReferenceNote(
-                it.referenceNote, currentPrefs.referenceFrequency, tunerViewModel.notePrintOptions
+                it.referenceNote, currentPrefs.referenceFrequency, tunerViewModel.pref.notePrintOptions.value
             )
             preferenceBarContainer.setTemperament(it.temperamentType)
         }
@@ -128,7 +148,7 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager, this, sharedPreferences, {})
         TemperamentPreferenceDialog.setupFragmentResultListener(
             supportFragmentManager, this, sharedPreferences, this,
-            {tunerViewModel.notePrintOptions}, {})
+            {tunerViewModel.pref.notePrintOptions.value}, {})
 
         setStatusAndNavigationBarColors()
 
@@ -224,7 +244,7 @@ class MainActivity : AppCompatActivity() {
         val dialog = ReferenceNotePreferenceDialog.newInstance(
             currentPrefs,
             warningMessage = null,
-            tunerViewModel.notePrintOptions
+            tunerViewModel.pref.notePrintOptions.value
         )
 
         dialog.show(supportFragmentManager, "tag")
@@ -235,7 +255,7 @@ class MainActivity : AppCompatActivity() {
         val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
         val dialog = TemperamentPreferenceDialog.newInstance(
             currentPrefs,
-            tunerViewModel.notePrintOptions
+            tunerViewModel.pref.notePrintOptions.value
         )
         dialog.show(supportFragmentManager, "tag")
     }

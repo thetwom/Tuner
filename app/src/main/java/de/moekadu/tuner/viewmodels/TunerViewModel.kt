@@ -20,20 +20,18 @@
 package de.moekadu.tuner.viewmodels
 
 import android.app.Application
-import android.content.SharedPreferences
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
-import de.moekadu.tuner.fragments.indexToTolerance
-import de.moekadu.tuner.fragments.indexToWindowSize
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.instrumentDatabase
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.misc.SoundSource
 import de.moekadu.tuner.notedetection.*
-import de.moekadu.tuner.preferences.TemperamentAndReferenceNoteValue
+import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.buffer
@@ -47,6 +45,8 @@ import kotlin.math.sqrt
 
 class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
+    val pref = PreferenceResources(PreferenceManager.getDefaultSharedPreferences(application), viewModelScope)
+
     /// Source which conducts the audio recording.
     private val sampleSource = SoundSource(viewModelScope)
     val sampleRate
@@ -54,27 +54,27 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
     val waveWriter
         get() = sampleSource.waveWriter
-    private val _waveWriterSize = MutableLiveData(0)
-    val waveWriterSize: LiveData<Int>
-        get() = _waveWriterSize
+//    private val _waveWriterSize = MutableLiveData(0)
+//    val waveWriterSize: LiveData<Int>
+//        get() = _waveWriterSize
 
     private val _tunerResults = MutableLiveData<TunerResults>()
     val tunerResults : LiveData<TunerResults>
         get() = _tunerResults
 
-    var pitchHistoryDuration = 3.0f
-        set(value) {
-            if (value != field) {
-                field = value
-//                Log.v("Tuner", "TunerViewModel.pitchHistoryDuration: new duration = $value, new size = $pitchHistorySize")
-                pitchHistory.size = pitchHistorySize
-            }
-        }
+//    var pitchHistoryDuration = 3.0f
+//        set(value) {
+//            if (value != field) {
+//                field = value
+////                Log.v("Tuner", "TunerViewModel.pitchHistoryDuration: new duration = $value, new size = $pitchHistorySize")
+//                pitchHistory.size = pitchHistorySize
+//            }
+//        }
 
     /// Compute number of samples to be stored in pitch history.
     private val pitchHistorySize
         get() = pitchHistoryDurationToPitchSamples(
-            pitchHistoryDuration, sampleSource.sampleRate, windowSize, overlap)
+            pref.pitchHistoryDuration.value, sampleSource.sampleRate, pref.windowSize.value, pref.overlap.value)
 
 //    var a4Frequency = 440f
 //        set(value) {
@@ -84,31 +84,31 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 //            }
 //        }
 
-    var windowSize = 4096
-        set(value) {
-            if (field != value) {
-                field = value
-                sampleSource.windowSize = value
-                pitchHistory.size = pitchHistorySize
-            }
-        }
+//    var windowSize = 4096
+//        set(value) {
+//            if (field != value) {
+//                field = value
+//                sampleSource.windowSize = value
+//                pitchHistory.size = pitchHistorySize
+//            }
+//        }
 
-    var overlap = 0.25f
-        set(value) {
-            if (field != value) {
-                field = value
-                sampleSource.overlap = value
-                pitchHistory.size = pitchHistorySize
-            }
-        }
+//    var overlap = 0.25f
+//        set(value) {
+//            if (field != value) {
+//                field = value
+//                sampleSource.overlap = value
+//                pitchHistory.size = pitchHistorySize
+//            }
+//        }
 
     /// Duration in seconds between two updates for the pitch history
-    private val _pitchHistoryUpdateInterval = MutableLiveData(windowSize.toFloat() * (1f - overlap) / sampleSource.sampleRate)
+    private val _pitchHistoryUpdateInterval = MutableLiveData(pref.windowSize.value.toFloat() * (1f - pref.overlap.value) / sampleSource.sampleRate)
     val pitchHistoryUpdateInterval: LiveData<Float> = _pitchHistoryUpdateInterval
 
-    private val _preferFlat = MutableLiveData(false)
-    val preferFlat: LiveData<Boolean> get() = _preferFlat
-    val notePrintOptions get() = if (preferFlat.value == true) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
+//    private val _preferFlat = MutableLiveData(false)
+//    val preferFlat: LiveData<Boolean> get() = _preferFlat
+//    val notePrintOptions get() = if (preferFlat.value == true) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
 
     private var musicalScaleValue: MusicalScale =
         MusicalScaleFactory.create(DefaultValues.TEMPERAMENT, null, null, DefaultValues.REFERENCE_FREQUENCY)
@@ -138,9 +138,9 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     private val correlationAndSpectrumComputer = CorrelationAndSpectrumComputer()
     private val pitchChooserAndAccuracyIncreaser = PitchChooserAndAccuracyIncreaser()
 
-    var windowingFunction = WindowingFunction.Hamming
+//    var windowingFunction = WindowingFunction.Hamming
 
-    var useHint = true
+//    var useHint = true
 
     private val targetNoteValue = TargetNote().apply { instrument = instrumentDatabase[0] }
     private val _targetNote = MutableLiveData(targetNoteValue)
@@ -165,73 +165,73 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     val frequencyPlotRange: LiveData<FloatArray>
         get() = _frequencyPlotRange
 
-    private val pref = PreferenceManager.getDefaultSharedPreferences(application)
+//    private val pref = PreferenceManager.getDefaultSharedPreferences(application)
     
-    private val onPreferenceChangedListener = object : SharedPreferences.OnSharedPreferenceChangeListener {
-        override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-            if (sharedPreferences == null)
-                return
-//            Log.v("Tuner", "TunerViewModel.setupPreferenceListener: key=$key")
-            when (key) {
-                TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY -> {
-                    val valueString = sharedPreferences.getString(
-                        TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY, null)
-                    val value = TemperamentAndReferenceNoteValue.fromString(valueString)
-                    changeMusicalScale(
-                        rootNote = value?.rootNote,
-                        referenceNote = value?.referenceNote,
-                        referenceFrequency = value?.referenceFrequency?.toFloatOrNull() ?: DefaultValues.REFERENCE_FREQUENCY,
-                        temperamentType = value?.temperamentType
-                    )
-//                    Log.v("Tuner", "TunerViewModel.setupPreferenceListener: temperament and root note changed: $valueString")
-                }
-                "prefer_flat" -> {
-                    _preferFlat.value = sharedPreferences.getBoolean(key, false)
-                }
-                "windowing" -> {
-                    val value = sharedPreferences.getString(key, null)
-                    windowingFunction =
-                        when (value) {
-                            "no_window" -> WindowingFunction.Tophat
-                            "window_hamming" -> WindowingFunction.Hamming
-                            "window_hann" -> WindowingFunction.Hann
-                            else -> throw RuntimeException("Unknown window")
-                        }
-                }
-                "window_size" -> {
-                    windowSize = indexToWindowSize(sharedPreferences.getInt(key, 5))
-                }
-                "overlap" -> {
-                    overlap = sharedPreferences.getInt(key, 25) / 100f
-                }
-                "pitch_history_duration" -> {
-                    pitchHistoryDuration = percentToPitchHistoryDuration(sharedPreferences.getInt(key, 50))
-                }
-                "pitch_history_num_faulty_values" -> {
-                    pitchHistory.maxNumFaultyValues = sharedPreferences.getInt(key, 3)
-                }
-                "use_hint" -> {
-                    useHint = sharedPreferences.getBoolean(key, true)
-                }
-                "num_moving_average" -> {
-                    pitchHistory.numMovingAverage = sharedPreferences.getInt(key, 5)
-                }
-                "max_noise" -> {
-                    pitchHistory.maxNoise = sharedPreferences.getInt(key, 10) / 100f
-                }
-                "tolerance_in_cents" -> {
-                    changeTargetNoteSettings(tolerance = indexToTolerance(sharedPreferences.getInt(key, 3)))
-                }
-                "wave_writer_duration_in_seconds" -> {
-                    val size = sampleRate * sharedPreferences.getInt(key, 0)
-                    viewModelScope.launch {
-                        waveWriter.setBufferSize(size)
-                    }
-                    _waveWriterSize.value = size
-                }
-            }
-        }
-    }
+//    private val onPreferenceChangedListener = object : SharedPreferences.OnSharedPreferenceChangeListener {
+//        override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+//            if (sharedPreferences == null)
+//                return
+////            Log.v("Tuner", "TunerViewModel.setupPreferenceListener: key=$key")
+//            when (key) {
+//                TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY -> {
+//                    val valueString = sharedPreferences.getString(
+//                        TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY, null)
+//                    val value = TemperamentAndReferenceNoteValue.fromString(valueString)
+//                    changeMusicalScale(
+//                        rootNote = value?.rootNote,
+//                        referenceNote = value?.referenceNote,
+//                        referenceFrequency = value?.referenceFrequency?.toFloatOrNull() ?: DefaultValues.REFERENCE_FREQUENCY,
+//                        temperamentType = value?.temperamentType
+//                    )
+////                    Log.v("Tuner", "TunerViewModel.setupPreferenceListener: temperament and root note changed: $valueString")
+//                }
+//                "prefer_flat" -> {
+//                    _preferFlat.value = sharedPreferences.getBoolean(key, false)
+//                }
+//                "windowing" -> {
+//                    val value = sharedPreferences.getString(key, null)
+//                    windowingFunction =
+//                        when (value) {
+//                            "no_window" -> WindowingFunction.Tophat
+//                            "window_hamming" -> WindowingFunction.Hamming
+//                            "window_hann" -> WindowingFunction.Hann
+//                            else -> throw RuntimeException("Unknown window")
+//                        }
+//                }
+//                "window_size" -> {
+//                    windowSize = indexToWindowSize(sharedPreferences.getInt(key, 5))
+//                }
+//                "overlap" -> {
+//                    overlap = sharedPreferences.getInt(key, 25) / 100f
+//                }
+//                "pitch_history_duration" -> {
+//                    pitchHistoryDuration = percentToPitchHistoryDuration(sharedPreferences.getInt(key, 50))
+//                }
+//                "pitch_history_num_faulty_values" -> {
+//                    pitchHistory.maxNumFaultyValues = sharedPreferences.getInt(key, 3)
+//                }
+//                "use_hint" -> {
+//                    useHint = sharedPreferences.getBoolean(key, true)
+//                }
+//                "num_moving_average" -> {
+//                    pitchHistory.numMovingAverage = sharedPreferences.getInt(key, 5)
+//                }
+//                "max_noise" -> {
+//                    pitchHistory.maxNoise = sharedPreferences.getInt(key, 10) / 100f
+//                }
+//                "tolerance_in_cents" -> {
+//                    changeTargetNoteSettings(tolerance = indexToTolerance(sharedPreferences.getInt(key, 3)))
+//                }
+//                "wave_writer_duration_in_seconds" -> {
+//                    val size = sampleRate * sharedPreferences.getInt(key, 0)
+//                    viewModelScope.launch {
+//                        waveWriter.setBufferSize(size)
+//                    }
+//                    _waveWriterSize.value = size
+//                }
+//            }
+//        }
+//    }
 
     init {
 //        Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
@@ -250,8 +250,8 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 //            //1f
 //        }
 
-        pref.registerOnSharedPreferenceChangeListener(onPreferenceChangedListener)
-        loadSettingsFromSharedPreferences()
+//        pref.registerOnSharedPreferenceChangeListener(onPreferenceChangedListener)
+//        loadSettingsFromSharedPreferences()
 
         sampleSource.settingsChangedListener = SoundSource.SettingsChangedListener { sampleRate, windowSize, overlap ->
             _pitchHistoryUpdateInterval.value = windowSize.toFloat() * (1f - overlap) / sampleRate
@@ -259,11 +259,39 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
         changeTargetNoteSettings(musicalScale = musicalScaleValue)
 
+        viewModelScope.launch { pref.overlap.collect { overlap ->
+            sampleSource.overlap = overlap
+            pitchHistory.size = pitchHistorySize // this uses the latest overlap value in its getter
+        } }
+
+        viewModelScope.launch { pref.windowSize.collect { windowSize ->
+            sampleSource.windowSize = windowSize
+            pitchHistory.size = pitchHistorySize // this uses the latest overlap value in its getter
+        } }
+
+        viewModelScope.launch { pref.temperamentAndReferenceNote.collect {
+            changeMusicalScale(
+                it.rootNote,
+                it.referenceNote,
+                it.referenceFrequency.toFloatOrNull() ?: DefaultValues.REFERENCE_FREQUENCY,
+                it.temperamentType
+            )
+        }}
+
+        viewModelScope.launch { pref.pitchHistoryMaxNumFaultyValues.collect { pitchHistory.maxNumFaultyValues = it } }
+
+        viewModelScope.launch { pref.toleranceInCents.collect { changeTargetNoteSettings(tolerance = it)} }
+
+        viewModelScope.launch { pref.waveWriterDurationInSeconds.collect { durationInSeconds ->
+            val size = sampleRate * durationInSeconds
+            waveWriter.setBufferSize(size)
+        } }
+
         viewModelScope.launch {
             sampleSource.flow
                 .buffer()
                 .transform {
-                    val result = correlationAndSpectrumComputer.run(it, windowingFunction)
+                    val result = correlationAndSpectrumComputer.run(it, pref.windowing.value)
                     result.noise = if (result.correlation.size > 1) 1f - result.correlation[1] / result.correlation[0] else 1f
 
                     _standardDeviation.value = withContext(Dispatchers.Default) {
@@ -290,7 +318,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 .buffer()
                 .transform {
-                    it.pitchFrequency = pitchChooserAndAccuracyIncreaser.run(it, if (useHint) pitchHistory.history.value?.lastOrNull() else null)
+                    it.pitchFrequency = pitchChooserAndAccuracyIncreaser.run(it, if (pref.useHint.value) pitchHistory.history.value?.lastOrNull() else null)
                     emit(it)
                 }
                 .buffer()
@@ -408,7 +436,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() {
 //        Log.v("Tuner", "TunerViewModel.onCleared")
         stopSampling()
-        pref.unregisterOnSharedPreferenceChangeListener(onPreferenceChangedListener)
+//        pref.unregisterOnSharedPreferenceChangeListener(onPreferenceChangedListener)
 
         super.onCleared()
     }
@@ -436,6 +464,7 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun changeMusicalScale(rootNote: MusicalNote? = null, referenceNote: MusicalNote? = null,
                                    referenceFrequency: Float? = null, temperamentType: TemperamentType? = null) {
+        Log.v("Tuner", "TunerViewModel.changeMusicalScale")
         val temperamentTypeResolved = temperamentType ?: musicalScaleValue.temperamentType
         val rootNoteResolved = rootNote ?: musicalScaleValue.rootNote
         val referenceNoteResolved = referenceNote ?: musicalScaleValue.referenceNote
@@ -458,37 +487,37 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
         _musicalScale.value = musicalScaleValue
     }
 
-    private fun loadSettingsFromSharedPreferences() {
-        val temperamentAndReferenceNote = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
-        _preferFlat.value = pref.getBoolean("prefer_flat", false)
-        changeMusicalScale(
-            temperamentType = temperamentAndReferenceNote.temperamentType,
-            rootNote = temperamentAndReferenceNote.rootNote,
-            referenceNote = temperamentAndReferenceNote.referenceNote,
-            referenceFrequency = temperamentAndReferenceNote.referenceFrequency.toFloatOrNull() ?: DefaultValues.REFERENCE_FREQUENCY
-        )
-
-        windowingFunction = when (pref.getString("windowing", "no_window")) {
-            "no_window" -> WindowingFunction.Tophat
-            "window_hamming" -> WindowingFunction.Hamming
-            "window_hann" -> WindowingFunction.Hann
-            else -> throw RuntimeException("Unknown window")
-        }
-        windowSize = indexToWindowSize(pref.getInt("window_size", 5))
-        overlap = pref.getInt("overlap", 25) / 100f
-        pitchHistoryDuration = percentToPitchHistoryDuration(pref.getInt("pitch_history_duration", 50))
-        pitchHistory.maxNumFaultyValues = pref.getInt("pitch_history_num_faulty_values", 3)
-        pitchHistory.numMovingAverage = pref.getInt("num_moving_average", 5)
-        useHint = pref.getBoolean("use_hint", true)
-        pitchHistory.maxNoise = pref.getInt("max_noise", 10) / 100f
-        changeTargetNoteSettings(tolerance = indexToTolerance(pref.getInt("tolerance_in_cents", 3)))
-
-        val waveWriterSizeLocal = sampleRate * pref.getInt("wave_writer_duration_in_seconds", 0)
-        viewModelScope.launch {
-            waveWriter.setBufferSize(waveWriterSizeLocal)
-        }
-        _waveWriterSize.value = waveWriterSizeLocal
-    }
+//    private fun loadSettingsFromSharedPreferences() {
+//        val temperamentAndReferenceNote = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
+//        _preferFlat.value = pref.getBoolean("prefer_flat", false)
+//        changeMusicalScale(
+//            temperamentType = temperamentAndReferenceNote.temperamentType,
+//            rootNote = temperamentAndReferenceNote.rootNote,
+//            referenceNote = temperamentAndReferenceNote.referenceNote,
+//            referenceFrequency = temperamentAndReferenceNote.referenceFrequency.toFloatOrNull() ?: DefaultValues.REFERENCE_FREQUENCY
+//        )
+//
+//        windowingFunction = when (pref.getString("windowing", "no_window")) {
+//            "no_window" -> WindowingFunction.Tophat
+//            "window_hamming" -> WindowingFunction.Hamming
+//            "window_hann" -> WindowingFunction.Hann
+//            else -> throw RuntimeException("Unknown window")
+//        }
+//        windowSize = indexToWindowSize(pref.getInt("window_size", 5))
+//        overlap = pref.getInt("overlap", 25) / 100f
+//        pitchHistoryDuration = percentToPitchHistoryDuration(pref.getInt("pitch_history_duration", 50))
+//        pitchHistory.maxNumFaultyValues = pref.getInt("pitch_history_num_faulty_values", 3)
+//        pitchHistory.numMovingAverage = pref.getInt("num_moving_average", 5)
+//        useHint = pref.getBoolean("use_hint", true)
+//        pitchHistory.maxNoise = pref.getInt("max_noise", 10) / 100f
+//        changeTargetNoteSettings(tolerance = indexToTolerance(pref.getInt("tolerance_in_cents", 3)))
+//
+//        val waveWriterSizeLocal = sampleRate * pref.getInt("wave_writer_duration_in_seconds", 0)
+//        viewModelScope.launch {
+//            waveWriter.setBufferSize(waveWriterSizeLocal)
+//        }
+//        _waveWriterSize.value = waveWriterSizeLocal
+//    }
 
     companion object {
         const val NO_NEW_TOLERANCE = Int.MAX_VALUE

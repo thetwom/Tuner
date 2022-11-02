@@ -81,6 +81,7 @@ enum class MusicalNotePrintOptions {
             return true
         }
         override val isSolfege = false
+        override val isPreferringFlat = false
     },
     PreferFlat {
         override fun contains(modifier: NoteModifier): Boolean {
@@ -90,6 +91,7 @@ enum class MusicalNotePrintOptions {
             }
         }
         override val isSolfege = false
+        override val isPreferringFlat = true
     },
     PreferSharp {
         override fun contains(modifier: NoteModifier): Boolean {
@@ -99,6 +101,7 @@ enum class MusicalNotePrintOptions {
             }
         }
         override val isSolfege = false
+        override val isPreferringFlat = false
     },
     SolfegePreferFlat {
         override fun contains(modifier: NoteModifier): Boolean {
@@ -108,6 +111,7 @@ enum class MusicalNotePrintOptions {
             }
         }
         override val isSolfege = true
+        override val isPreferringFlat = true
     },
     SolfegePreferSharp {
         override fun contains(modifier: NoteModifier): Boolean {
@@ -117,9 +121,11 @@ enum class MusicalNotePrintOptions {
             }
         }
         override val isSolfege = true
+        override val isPreferringFlat = false
     };
     abstract fun contains(modifier: NoteModifier): Boolean
     abstract val isSolfege: Boolean
+    abstract val isPreferringFlat: Boolean
 }
 
 //fun NoteModifier.isOfCategory(printOption: MusicalNotePrintOptions): Boolean {

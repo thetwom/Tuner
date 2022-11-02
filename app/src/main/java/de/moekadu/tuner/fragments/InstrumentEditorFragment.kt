@@ -14,6 +14,9 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -29,6 +32,7 @@ import de.moekadu.tuner.viewmodels.TunerViewModel
 import de.moekadu.tuner.views.DetectedNoteViewer
 import de.moekadu.tuner.views.NoteSelector
 import de.moekadu.tuner.views.StringView
+import kotlinx.coroutines.launch
 
 class InstrumentEditorFragment : Fragment() {
     private val tunerViewModel: TunerViewModel by activityViewModels()
@@ -119,9 +123,16 @@ class InstrumentEditorFragment : Fragment() {
             updateNoteNamesInAllViews()
         }
 
-        tunerViewModel.preferFlat.observe(viewLifecycleOwner) {
-            updateNoteNamesInAllViews()
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                tunerViewModel.pref.notePrintOptions.collect {
+                    updateNoteNamesInAllViews()
+                }
+            }
         }
+//        tunerViewModel.preferFlat.observe(viewLifecycleOwner) {
+//            updateNoteNamesInAllViews()
+//        }
 
         viewModel.instrumentName.observe(viewLifecycleOwner) {
 //            Log.v("Tuner", "InstrumentEditorFragment: observe instrument name: new = |$it|, before = |${instrumentNameEditText?.text?.trim()}|, different? = ${instrumentNameEditText?.text?.trim()?.contentEquals(it)}")
@@ -143,7 +154,7 @@ class InstrumentEditorFragment : Fragment() {
                     musicalScale.noteNameScale,
                     musicalScale.noteIndexBegin,
                     musicalScale.noteIndexEnd,
-                    tunerViewModel.notePrintOptions
+                    tunerViewModel.pref.notePrintOptions.value
                 )
                 val selectedStringIndex = viewModel.selectedStringIndex.value ?: -1
                 if (selectedStringIndex in strings.indices)
@@ -230,7 +241,7 @@ class InstrumentEditorFragment : Fragment() {
 
     private fun updateNoteNamesInAllViews() {
         //val noteNames = tunerViewModel.noteNames.value ?: return
-        val notePrintOptions =tunerViewModel.notePrintOptions
+        val notePrintOptions = tunerViewModel.pref.notePrintOptions.value
         val musicalScale = tunerViewModel.musicalScale.value ?: return
 
         noteSelector?.setNotes(musicalScale.noteIndexBegin, musicalScale.noteIndexEnd,

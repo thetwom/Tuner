@@ -238,4 +238,5 @@
     <string name="capture_duration">Capture duration: %d&#x200A;s</string>
     <string name="no_capture_duration">Disable capturing</string>
     <string name="capture_in_scientific_mode">Capture in scientific mode</string>
+    <string name="solfege_notation">Solfège notation</string>
 </resources>
