@@ -38,6 +38,7 @@ import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.instrumentDatabase
 import de.moekadu.tuner.misc.WaveFileWriterIntent
+import de.moekadu.tuner.preferenceResources
 import de.moekadu.tuner.temperaments.TargetNote
 import de.moekadu.tuner.viewmodels.TunerViewModel
 import de.moekadu.tuner.views.*
@@ -185,7 +186,7 @@ class TunerFragment : Fragment() {
 //        }
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.pref.notePrintOptions.collect {
+                requireContext().preferenceResources.notePrintOptions.collect {
                     updatePitchPlotMarks(redraw = false)
                     updatePitchPlotNoteNames()
                 }
@@ -275,7 +276,7 @@ class TunerFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.pref.waveWriterDurationInSeconds.collect { duration ->
+                requireContext().preferenceResources.waveWriterDurationInSeconds.collect { duration ->
                     recordFab?.visibility = if (duration == 0) View.GONE else View.VISIBLE
                 }
             }
@@ -409,7 +410,7 @@ class TunerFragment : Fragment() {
             pitchPlot?.setYMark(
                 targetNote.frequency,
                 targetNote.note,
-                viewModel.pref.notePrintOptions.value,
+                requireContext().preferenceResources.notePrintOptions.value,
                 MARK_ID_FREQUENCY,
                 LabelAnchor.East,
                 if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
@@ -435,7 +436,7 @@ class TunerFragment : Fragment() {
         // Update ticks in pitch history plot
         pitchPlot?.setYTicks(noteFrequencies, redraw = false,
             noteNameScale = musicalScale.noteNameScale, noteIndexBegin = musicalScale.noteIndexBegin,
-            viewModel.pref.notePrintOptions.value
+            requireContext().preferenceResources.notePrintOptions.value
         )
 //        { _, f ->
 //            val toneIndex = musicalScale.getClosestNoteIndex(f)
@@ -448,7 +449,7 @@ class TunerFragment : Fragment() {
                 pitchPlot?.setYMark(
                     targetNote.frequency,
                     targetNote.note,
-                    viewModel.pref.notePrintOptions.value,
+                    requireContext().preferenceResources.notePrintOptions.value,
                     //noteNames.getNoteName(requireContext(), targetNote.noteIndex, preferFlat),
                     MARK_ID_FREQUENCY,
                     LabelAnchor.East,

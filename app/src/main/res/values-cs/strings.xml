@@ -147,7 +147,7 @@
     <string name="incorrect_temperament">Nekompatibilní temperament</string>
     <string name="ok">OK</string>
     <string name="new_temperament_requires_adapting_reference_note">Nový temperament vyžaduje nastavení referenční noty!</string>
-    <string name="comma_separator">,</string>
+    <string name="comma_separator">,\ </string>
     <string name="quarter_comma_mean_tone">¼-koma středotón</string>
     <string name="third_comma_mean_tone">⅓-koma středotón</string>
     <string name="third_comma_mean_tone_desc">Čistá malá tercie</string>

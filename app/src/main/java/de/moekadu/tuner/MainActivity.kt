@@ -23,7 +23,6 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.view.WindowInsetsController
@@ -113,13 +112,25 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                tunerViewModel.pref.notePrintOptions.collect {
+                preferenceResources.notePrintOptions.collect {
                     preferenceBarContainer.preferFlat = it.isPreferringFlat
                     //val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
-                    val currentPrefs = tunerViewModel.pref.temperamentAndReferenceNote.value
+                    val currentPrefs = preferenceResources.temperamentAndReferenceNote.value
                     // update the reference not printing
                     preferenceBarContainer.setReferenceNote(
-                        currentPrefs.referenceNote, currentPrefs.referenceFrequency, tunerViewModel.pref.notePrintOptions.value
+                        currentPrefs.referenceNote, currentPrefs.referenceFrequency, preferenceResources.notePrintOptions.value
+                    )
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                preferenceResources.temperamentAndReferenceNote.collect {
+                    preferenceBarContainer.setTemperament(it.temperamentType)
+                    preferenceBarContainer.setReferenceNote(
+                        it.referenceNote, it.referenceFrequency,
+                        preferenceResources.notePrintOptions.value
                     )
                 }
             }
@@ -133,13 +144,13 @@ class MainActivity : AppCompatActivity() {
 //            )
 //        }
         tunerViewModel.musicalScale.observe(this) {
-            Log.v("Tuner", "MainActivity.musical scale changes")
+//            Log.v("Tuner", "MainActivity.musical scale changes")
             // we don't use the frequency from the musical scale but the string from the preferences
             // in order to get the "original" decimal places
-            val currentPrefs = tunerViewModel.pref.temperamentAndReferenceNote.value
+            val currentPrefs = preferenceResources.temperamentAndReferenceNote.value
             //val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
             preferenceBarContainer.setReferenceNote(
-                it.referenceNote, currentPrefs.referenceFrequency, tunerViewModel.pref.notePrintOptions.value
+                it.referenceNote, currentPrefs.referenceFrequency, preferenceResources.notePrintOptions.value
             )
             preferenceBarContainer.setTemperament(it.temperamentType)
         }
@@ -148,7 +159,7 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager, this, sharedPreferences, {})
         TemperamentPreferenceDialog.setupFragmentResultListener(
             supportFragmentManager, this, sharedPreferences, this,
-            {tunerViewModel.pref.notePrintOptions.value}, {})
+            {preferenceResources.notePrintOptions.value}, {})
 
         setStatusAndNavigationBarColors()
 
@@ -244,7 +255,7 @@ class MainActivity : AppCompatActivity() {
         val dialog = ReferenceNotePreferenceDialog.newInstance(
             currentPrefs,
             warningMessage = null,
-            tunerViewModel.pref.notePrintOptions.value
+            preferenceResources.notePrintOptions.value
         )
 
         dialog.show(supportFragmentManager, "tag")
@@ -255,7 +266,7 @@ class MainActivity : AppCompatActivity() {
         val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
         val dialog = TemperamentPreferenceDialog.newInstance(
             currentPrefs,
-            tunerViewModel.pref.notePrintOptions.value
+            preferenceResources.notePrintOptions.value
         )
         dialog.show(supportFragmentManager, "tag")
     }
