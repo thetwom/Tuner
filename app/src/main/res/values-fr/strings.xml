@@ -66,6 +66,15 @@
     <string name="g_note_name">G</string>
     <string name="a_note_name">A</string>
     <string name="b_note_name">B</string>
+
+    <string name="c_solfege">Do</string>
+    <string name="d_solfege">Ré</string>
+    <string name="e_solfege">Mi</string>
+    <string name="f_solfege">Fa</string>
+    <string name="g_solfege">Sol</string>
+    <string name="a_solfege">La</string>
+    <string name="b_solfege">Si</string>
+    
     <string name="violin_gdae">Violon</string>
     <string name="abort">Annuler</string>
     <string name="instrument_name">Nom d’instrument</string>
@@ -217,4 +226,5 @@
     <string name="equal_temperament_53_abbr">EDO 53</string>
     <string name="pythagorean_tuning_abbr">pythagoricien</string>
     <string name="werckmeister_iv_abbr">Werckmeister IV</string>
+    <string name="solfege_notation">Notation solfège</string>
 </resources>
