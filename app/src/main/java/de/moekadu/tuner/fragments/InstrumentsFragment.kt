@@ -24,6 +24,7 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.dialogs.ImportInstrumentsDialog
 import de.moekadu.tuner.dialogs.InstrumentsSharingDialog
 import de.moekadu.tuner.instruments.*
+import de.moekadu.tuner.preferenceResources
 import de.moekadu.tuner.preferences.AppPreferences
 import de.moekadu.tuner.viewmodels.InstrumentEditorViewModel
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
@@ -346,7 +347,7 @@ class InstrumentsFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                tunerViewModel.pref.notePrintOptions.collect {
+                requireContext().preferenceResources.notePrintOptions.collect {
                     instrumentsPredefinedAdapter.setNotePrintOptions(notePrintOptions = it, recyclerView)
                     instrumentsCustomAdapter.setNotePrintOptions(notePrintOptions = it, recyclerView)
                 }
