@@ -24,6 +24,7 @@ import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
 import de.moekadu.tuner.dialogs.IconPickerDialogFragment
 import de.moekadu.tuner.instruments.instrumentDatabase
+import de.moekadu.tuner.preferenceResources
 import de.moekadu.tuner.preferences.AppPreferences
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.viewmodels.InstrumentEditorViewModel
@@ -125,7 +126,7 @@ class InstrumentEditorFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                tunerViewModel.pref.notePrintOptions.collect {
+                requireContext().preferenceResources.notePrintOptions.collect {
                     updateNoteNamesInAllViews()
                 }
             }
@@ -154,7 +155,7 @@ class InstrumentEditorFragment : Fragment() {
                     musicalScale.noteNameScale,
                     musicalScale.noteIndexBegin,
                     musicalScale.noteIndexEnd,
-                    tunerViewModel.pref.notePrintOptions.value
+                    requireContext().preferenceResources.notePrintOptions.value
                 )
                 val selectedStringIndex = viewModel.selectedStringIndex.value ?: -1
                 if (selectedStringIndex in strings.indices)
@@ -241,7 +242,7 @@ class InstrumentEditorFragment : Fragment() {
 
     private fun updateNoteNamesInAllViews() {
         //val noteNames = tunerViewModel.noteNames.value ?: return
-        val notePrintOptions = tunerViewModel.pref.notePrintOptions.value
+        val notePrintOptions = requireContext().preferenceResources.notePrintOptions.value
         val musicalScale = tunerViewModel.musicalScale.value ?: return
 
         noteSelector?.setNotes(musicalScale.noteIndexBegin, musicalScale.noteIndexEnd,

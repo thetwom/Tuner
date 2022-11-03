@@ -41,16 +41,13 @@ import com.google.android.material.color.DynamicColors
 import de.moekadu.tuner.fragments.*
 import de.moekadu.tuner.preferences.*
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
-import de.moekadu.tuner.viewmodels.TunerViewModel
 import de.moekadu.tuner.views.PreferenceBarContainer
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     // TODO: anchor-drawable should use round edges
-    // TODO: switch scientific/simple -> afterwards, the temperament/ref note are not updated anymore
-    enum class TunerMode {Simple, Scientific, Unknown}
 
-    private val tunerViewModel: TunerViewModel by viewModels()
+    enum class TunerMode {Simple, Scientific, Unknown}
 
     private val instrumentsViewModel: InstrumentsViewModel by viewModels {
         InstrumentsViewModel.Factory(
@@ -134,25 +131,6 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
             }
-        }
-//        tunerViewModel.preferFlat.observe(this) {
-//            preferenceBarContainer.preferFlat = it
-//            val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
-//            // update the reference not printing
-//            preferenceBarContainer.setReferenceNote(
-//                currentPrefs.referenceNote, currentPrefs.referenceFrequency, tunerViewModel.notePrintOptions
-//            )
-//        }
-        tunerViewModel.musicalScale.observe(this) {
-//            Log.v("Tuner", "MainActivity.musical scale changes")
-            // we don't use the frequency from the musical scale but the string from the preferences
-            // in order to get the "original" decimal places
-            val currentPrefs = preferenceResources.temperamentAndReferenceNote.value
-            //val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
-            preferenceBarContainer.setReferenceNote(
-                it.referenceNote, currentPrefs.referenceFrequency, preferenceResources.notePrintOptions.value
-            )
-            preferenceBarContainer.setTemperament(it.temperamentType)
         }
 
         ReferenceNotePreferenceDialog.setupFragmentResultListener(
