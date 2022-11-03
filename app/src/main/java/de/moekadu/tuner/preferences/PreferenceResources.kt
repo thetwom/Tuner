@@ -3,6 +3,7 @@ package de.moekadu.tuner.preferences
 import android.content.SharedPreferences
 import de.moekadu.tuner.fragments.indexToTolerance
 import de.moekadu.tuner.fragments.indexToWindowSize
+import de.moekadu.tuner.fragments.nightModeStringToID
 import de.moekadu.tuner.notedetection.WindowingFunction
 import de.moekadu.tuner.notedetection.percentToPitchHistoryDuration
 import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
@@ -17,6 +18,8 @@ import kotlinx.coroutines.launch
 
 class PreferenceResources(private val sharedPreferences: SharedPreferences, scope: CoroutineScope) {
 
+    private val _appearance = MutableStateFlow(obtainAppearance())
+    val appearance: StateFlow<AppearancePreference.Value> get() = _appearance
     private val _windowing = MutableStateFlow(obtainWindowing())
     val windowing: StateFlow<WindowingFunction> get() = _windowing
     private val _overlap = MutableStateFlow(obtainOverlap())
@@ -42,11 +45,16 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
     private val _temperamentAndReferenceNote = MutableStateFlow(obtainTemperamentAndReferenceNote())
     val temperamentAndReferenceNote: StateFlow<TemperamentAndReferenceNoteValue> get() = _temperamentAndReferenceNote
 
+    // we must store this explicitly outside the callback flow since otherwise this will be
+    // garbage collection, see docs:
+    // https://developer.android.com/reference/android/content/SharedPreferences.html#registerOnSharedPreferenceChangeListener(android.content.SharedPreferences.OnSharedPreferenceChangeListener)
+    lateinit var onSharedPreferenceChangedListener: SharedPreferences.OnSharedPreferenceChangeListener
     init {
 
         val sharedPrefFlow = callbackFlow {
-            val onSharedPreferenceChangedListener =
+            onSharedPreferenceChangedListener =
                 SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+//                    Log.v("Tuner", "PreferenceResources : callbackFlow: key changed: $key")
                     if (key != null)
                         trySend(key)
                 }
@@ -54,6 +62,7 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
                 onSharedPreferenceChangedListener
             )
             awaitClose {
+//                Log.v("Tuner", "PreferenceResources sharedPrefFlow closed")
                 sharedPreferences.unregisterOnSharedPreferenceChangeListener(
                     onSharedPreferenceChangedListener
                 )
@@ -63,6 +72,7 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
         scope.launch {
             sharedPrefFlow.buffer(Channel.CONFLATED).collect { key ->
                 when (key) {
+                    APPEARANCE_KEY -> _appearance.value = obtainAppearance()
                     WINDOWING_KEY -> _windowing.value = obtainWindowing()
                     OVERLAP_KEY -> _overlap.value = obtainOverlap()
                     PITCH_HISTORY_DURATION_KEY -> _pitchHistoryDuration.value = obtainPitchHistoryDuration()
@@ -79,6 +89,16 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
                 }
             }
         }
+    }
+
+    private fun obtainAppearance(): AppearancePreference.Value {
+        val value = AppearancePreference.Value(nightModeStringToID("auto"),
+            blackNightEnabled = false,
+            useSystemColorAccents = true
+        )
+        value.fromString(sharedPreferences.getString(APPEARANCE_KEY, ""))
+        //Log.v("Tuner", "PreferenceResources.obtainAppearance: value: ${sharedPreferences.getString(APPEARANCE_KEY, "")}, $value")
+        return value
     }
 
     private fun obtainNotePrintOptions(): MusicalNotePrintOptions {
@@ -122,6 +142,7 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
     private fun obtainTemperamentAndReferenceNote() = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
 
     companion object {
+        const val APPEARANCE_KEY = "appearance"
         const val PREFER_FLAT_KEY = "prefer_flat"
         const val SOLFEGE_KEY = "solfege"
         const val WINDOWING_KEY = "windowing"
