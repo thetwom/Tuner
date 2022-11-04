@@ -121,7 +121,7 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
     private fun obtainWindowing(): WindowingFunction {
         return when (sharedPreferences.getString(WINDOWING_KEY, null)) {
             "no_window" -> WindowingFunction.Tophat
-            "window_hamming" -> WindowingFunction.Hamming
+            null, "window_hamming" -> WindowingFunction.Hamming
             "window_hann" -> WindowingFunction.Hann
             else -> throw RuntimeException("Unknown window")
         }

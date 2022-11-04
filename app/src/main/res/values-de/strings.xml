@@ -214,4 +214,12 @@
     <string name="equal_temperament_53_abbr">EDO 53</string>
     <string name="pythagorean_tuning_abbr">Pythagoreisch</string>
     <string name="werckmeister_iv_abbr">Werckmeister IV</string>
+    <string name="solfege_notation">Solfège Schreibweise</string>
+    <string name="c_solfege">Do</string>
+    <string name="d_solfege">Re</string>
+    <string name="e_solfege">Mi</string>
+    <string name="f_solfege">Fa</string>
+    <string name="g_solfege">Sol</string>
+    <string name="a_solfege">La</string>
+    <string name="b_solfege">Si</string>
 </resources>
