@@ -153,6 +153,7 @@
         app:tickTextSize="20dp"
         app:titleColor="?attr/colorOnSurface"
         app:yTickLabelWidth="45sp"
+        app:extraPaddingRight="10sp"
         app:yTickPosition="right"
         app:tickPaddingVertical="6dp"
         app:tickPaddingHorizontal="6dp"

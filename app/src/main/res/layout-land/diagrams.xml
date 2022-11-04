@@ -143,6 +143,7 @@
         app:title="@string/pitch_history"
         app:titleColor="?attr/colorOnSurface"
         app:yTickLabelWidth="30sp"
+        app:extraPaddingRight="8sp"
         app:yTickPosition="right"
         app:enableTouchX="false"
         />

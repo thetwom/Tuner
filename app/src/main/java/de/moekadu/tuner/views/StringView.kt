@@ -42,6 +42,20 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     enum class HighlightBy { StringIndex, MusicalNote, Off }
 
+    var enableExtraPadding = false
+        set(value) {
+            if (value != field) {
+                field = value
+                invalidate()
+            }
+        }
+    private var extraPaddingLeft = 0f
+    private var extraPaddingRight = 0f
+    private val totalPaddingLeft
+        get() = paddingLeft + (if (enableExtraPadding) extraPaddingLeft else 0f)
+    private val totalPaddingRight
+        get() = paddingRight + (if (enableExtraPadding) extraPaddingRight else 0f)
+
     private val noteNamePrinter = NoteNamePrinter(context)
 
     private val stringPaint = arrayOf(
@@ -255,8 +269,8 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 stringClickedListener?.onStringClicked(stringIndex, strings[stringIndex].note)
             } else if (showAnchor && anchorDrawable.contains(x, y)) {
                 stringClickedListener?.onAnchorClicked()
-            } else if ((anchorDrawablePosition == 0 && x < paddingLeft) ||
-                (anchorDrawablePosition == 1 && x > width - paddingRight)) {
+            } else if ((anchorDrawablePosition == 0 && x < totalPaddingLeft) ||
+                (anchorDrawablePosition == 1 && x > width - totalPaddingRight)) {
 //                Log.v("Tuner", "StringView: Center icon clicked, highlightBy=$highlightBy, automaticScrollToSelected=$automaticScrollToSelected")
                 // select next note if we are in automatic scroll mode and highlight by toneIndex
                 if (automaticScrollToSelected && highlightBy == HighlightBy.MusicalNote) {
@@ -335,6 +349,10 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 defStyleAttr,
                 R.style.StringViewStyle
             )
+
+            extraPaddingLeft = ta.getDimension(R.styleable.StringView_extraPaddingLeft, extraPaddingLeft)
+            extraPaddingRight = ta.getDimension(R.styleable.StringView_extraPaddingRight, extraPaddingRight)
+
             labelBackgroundPadding =
                 ta.getDimension(R.styleable.StringView_labelPadding, labelBackgroundPadding)
             labelSpacing = ta.getDimension(R.styleable.StringView_labelSpacing, labelSpacing)
@@ -451,7 +469,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         var proposedWidth = max(MeasureSpec.getSize(widthMeasureSpec), suggestedMinimumWidth)
         if (widthMode == MeasureSpec.UNSPECIFIED)
             proposedWidth = max(
-                6 * ((labelWidth + labelSpacing) + labelSpacing + paddingLeft + paddingRight + 2 * framePaint.strokeWidth).toInt(),
+                6 * ((labelWidth + labelSpacing) + labelSpacing + totalPaddingLeft + totalPaddingRight + 2 * framePaint.strokeWidth).toInt(),
                 suggestedMinimumWidth
             )
         val w = resolveSize(proposedWidth, widthMeasureSpec)
@@ -501,9 +519,9 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 //            framePaint
 //        )
         canvas.drawRoundRect(
-            paddingLeft.toFloat() + 0.5f * framePaint.strokeWidth,
+            totalPaddingLeft + 0.5f * framePaint.strokeWidth,
             paddingTop.toFloat() + 0.5f * framePaint.strokeWidth,
-            width - paddingRight.toFloat() - 0.5f * framePaint.strokeWidth,
+            width - totalPaddingRight - 0.5f * framePaint.strokeWidth,
             height - paddingBottom.toFloat() - 0.5f * framePaint.strokeWidth,
             frameCornerRadius, frameCornerRadius,
             framePaint
@@ -562,13 +580,13 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             anchorYPos = max(anchorYPos, minYPos)
             if (anchorDrawablePosition == 0) { // left
                 anchorDrawable.drawToCanvas(
-                    paddingLeft.toFloat() + framePaint.strokeWidth,
+                    totalPaddingLeft + framePaint.strokeWidth,
                     anchorYPos,
                     LabelAnchor.East, canvas
                 )
             } else { // right
                 anchorDrawable.drawToCanvas(
-                    width - paddingRight.toFloat() - framePaint.strokeWidth,
+                    width - totalPaddingRight - framePaint.strokeWidth,
                     anchorYPos,
                     LabelAnchor.West, canvas
                 )
@@ -593,9 +611,9 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             }
 
             val xPositionScrollDrawable = if (anchorDrawablePosition == 0) { // left
-                paddingLeft.toFloat() + framePaint.strokeWidth - 0.5f * anchorDrawable.width
+                totalPaddingLeft + framePaint.strokeWidth - 0.5f * anchorDrawable.width
             } else { // right
-                width - paddingRight.toFloat() - framePaint.strokeWidth + 0.5f * anchorDrawable.width
+                width - totalPaddingRight - framePaint.strokeWidth + 0.5f * anchorDrawable.width
             }
 
             when (activeStyleIndex) {
@@ -826,8 +844,8 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         canvas: Canvas
     ) {
         canvas.drawLine(
-            paddingLeft.toFloat() + framePaint.strokeWidth, yPos,
-            width.toFloat() - paddingRight - framePaint.strokeWidth, yPos, stringPaint[styleIndex]
+            totalPaddingLeft + framePaint.strokeWidth, yPos,
+            width.toFloat() - totalPaddingRight - framePaint.strokeWidth, yPos, stringPaint[styleIndex]
         )
         if (stringInfo.styleIndex != styleIndex || stringInfo.label == null) {
             stringInfo.label = MusicalNoteLabel(stringInfo.note, labelPaint[styleIndex], noteNamePrinter,
@@ -890,7 +908,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     private fun getStringDrawingPositionX(stringIndex: Int): Float {
         val col = stringIndex % numCols
-        return paddingLeft + framePaint.strokeWidth + 0.5f * labelSpacing + (0.5f + col) * colWidth
+        return totalPaddingLeft + framePaint.strokeWidth + 0.5f * labelSpacing + (0.5f + col) * colWidth
     }
 
     private fun getStringDrawingPositionY(stringIndex: Int): Float {
@@ -922,7 +940,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     }
 
     private fun updateStringPositionVariables(w: Int, h: Int) {
-        val effectiveWidth = w - paddingLeft - paddingRight - 2 * framePaint.strokeWidth
+        val effectiveWidth = w - totalPaddingLeft - totalPaddingRight - 2 * framePaint.strokeWidth
         // Instead of labelWidth we could get a minimum label width and then use max(minimumLabelWidth, labelWidth)
         numCols = (floor((effectiveWidth - labelSpacing) / (labelWidth + labelSpacing))).toInt()
         //numCols = max(1, min(numCols, strings.size))

@@ -35,6 +35,8 @@
     </declare-styleable>
 
     <declare-styleable name="PlotView">
+        <attr name="extraPaddingLeft" format="dimension"/>
+        <attr name="extraPaddingRight" format="dimension"/>
         <attr name="plotLineColor" format="color"/>
         <attr name="plotLineColor2" format="color"/>
         <attr name="plotLineColor3" format="color"/>
@@ -130,6 +132,8 @@
     </declare-styleable>
 
     <style name="PlotViewStyle">
+        <item name="extraPaddingLeft">0dp</item>
+        <item name="extraPaddingRight">0dp</item>
         <item name="plotLineColor">?attr/colorPrimary</item>
         <item name="plotLineColor2">?attr/colorOnBackground</item>
         <item name="plotLineColor3">?attr/colorSecondary</item>
@@ -191,6 +195,8 @@
     </style>
 
     <declare-styleable name="StringView">
+        <attr name="extraPaddingLeft"/>
+        <attr name="extraPaddingRight"/>
         <attr name="labelTextSize" format="dimension"/>
         <attr name="labelTextSize2" format="dimension"/>
         <attr name="labelTextSize3" format="dimension"/>
@@ -226,6 +232,8 @@
     </declare-styleable>
 
     <style name="StringViewStyle">
+        <item name="extraPaddingLeft">0dp</item>
+        <item name="extraPaddingRight">0dp</item>
         <item name="labelTextSize">10sp</item>
         <item name="labelTextSize2">10sp</item>
         <item name="labelTextSize3">10sp</item>

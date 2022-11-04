@@ -189,6 +189,10 @@ class TunerFragment : Fragment() {
                 requireContext().preferenceResources.notePrintOptions.collect {
                     updatePitchPlotMarks(redraw = false)
                     updatePitchPlotNoteNames()
+
+                    pitchPlot?.enableExtraPadding = it.isSolfege
+                    spectrumPlot?.enableExtraPadding = it.isSolfege
+                    correlationPlot?.enableExtraPadding = it.isSolfege
                 }
             }
         }

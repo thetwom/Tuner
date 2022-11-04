@@ -180,6 +180,9 @@ class TunerFragmentSimple : Fragment() {
                     updatePitchPlotMarks(redraw = false)
                     updatePitchPlotNoteNames()
                     updateStringViewNoteNames()
+
+                    pitchPlot?.enableExtraPadding = it.isSolfege
+                    stringView?.enableExtraPadding = it.isSolfege
                 }
             }
         }
