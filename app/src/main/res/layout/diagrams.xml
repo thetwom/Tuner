@@ -51,6 +51,7 @@
          app:tickPaddingHorizontal="3dp"
          app:title="@string/spectrum"
          app:yTickLabelWidth="30sp"
+         app:extraPaddingRight="8sp"
          app:yTickPosition="right"
          />
 
@@ -83,6 +84,7 @@
         app:tickPaddingHorizontal="3dp"
         app:title="@string/autocorrelation"
         app:yTickLabelWidth="30sp"
+        app:extraPaddingRight="8sp"
         app:yTickPosition="right"
         />
 
@@ -143,6 +145,7 @@
         app:title="@string/pitch_history"
         app:titleColor="?attr/colorOnSurface"
         app:yTickLabelWidth="30sp"
+        app:extraPaddingRight="8sp"
         app:yTickPosition="right"
         app:enableTouchX="false"
         />

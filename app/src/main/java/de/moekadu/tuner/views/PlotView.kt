@@ -1320,12 +1320,12 @@ class PlotRectangleAndPoint {
     }
 }
 
-/// PlotView class
+/** PlotView class. */
 class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr)
 {
     companion object {
-        /// Special option for animationDuration which means that we don't animate and don't invalidate.
+        /** Special option for animationDuration which means that we don't animate and don't invalidate. */
         const val NO_REDRAW = NO_REDRAW_PRIVATE
     }
 
@@ -1349,20 +1349,30 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
     private var touchManualControlDrawable: TouchControlDrawable
 
-    /// Bounding box of all data which are inside the plot
+    var enableExtraPadding = false
+        set(value) {
+            if (value != field) {
+                field = value
+                invalidate()
+            }
+        }
+    private var extraPaddingLeft = 0f
+    private var extraPaddingRight = 0f
+
+    /** Bounding box of all data which are inside the plot. */
     private val boundingBox = RectF(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY)
-    /// Storage for boundingBox-backup
+    /** Storage for boundingBox-backup. */
     private val boundingBoxOld = RectF(0f, 0f, 0f, 0f)
 
-    /// Number of available mark styles
+    /** Number of available mark styles. */
     private val numMarkStyles = 3
-    /// Color of x- and y-marks.
+    /** Color of x- and y-marks. */
     private var markColor = IntArray(numMarkStyles) {Color.BLACK}
-    /// Line width of x- and y-marks.
+    /** Line width of x- and y-marks. */
     private var markLineWidth = FloatArray(numMarkStyles) {2f}
-    /// Text size of x- and y-mark labels
+    /** Text size of x- and y-mark labels. */
     private var markTextSize = FloatArray(numMarkStyles) {10f}
-    /// Text color of mark labels
+    /** Text color of mark labels. */
     private var markLabelColor = IntArray(numMarkStyles) {Color.WHITE}
     /** Horizontal padding for mark labels. */
     private var markPaddingHorizontal = 2f
@@ -1371,10 +1381,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     /** Corner radius for mark labels. */
     private var markCornerRadius = 2f
 
-    /// Marks groups.
+    /** Marks groups. */
     private val markGroups = mutableMapOf<Long, PlotMarks>()
 
-    /// Color list for different styles of plot line.
+    /** Color list for different styles of plot line. */
     private var plotLineColors = IntArray(3) {Color.BLACK}
     /** Widths for different styles of plot line. */
     private var plotLineWidths = FloatArray(3) {5f}
@@ -1546,15 +1556,11 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         var lastSpanY = 0f
 
         override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
-            if (detector != null) {
-                lastSpanX = detector.currentSpanX
-                lastSpanY = detector.currentSpanY
-            }
+            lastSpanX = detector.currentSpanX
+            lastSpanY = detector.currentSpanY
             return true
         }
         override fun onScale(detector: ScaleGestureDetector): Boolean {
-            if (detector == null)
-                return true
             val spanX = detector.currentSpanX
             val spanY = detector.currentSpanY
             val scaleX = lastSpanX / spanX
@@ -1620,6 +1626,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 R.styleable.PlotView, defStyleAttr,
                 R.style.PlotViewStyle
             )
+
+            extraPaddingLeft = ta.getDimension(R.styleable.PlotView_extraPaddingLeft, extraPaddingLeft)
+            extraPaddingRight = ta.getDimension(R.styleable.PlotView_extraPaddingRight, extraPaddingRight)
+
             //val ta = context.obtainStyledAttributes(it, R.styleable.PlotView)
             plotLineColors[0] = ta.getColor(R.styleable.PlotView_plotLineColor, plotLineColors[0])
             plotLineColors[1] = ta.getColor(R.styleable.PlotView_plotLineColor2, plotLineColors[1])
@@ -1761,8 +1771,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         rawViewTransformation.setRawDataBounds(xMin = _xRange.rangeMin, xMax = _xRange.rangeMax,
             yMin = _yRange.rangeMin, yMax = _yRange.rangeMax, suppressInvalidate = true)
     }
+
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
+
+        val totalPaddingLeft = paddingLeft + (if (enableExtraPadding) extraPaddingLeft else 0f)
+        val totalPaddingRight = paddingRight + (if (enableExtraPadding) extraPaddingRight else 0f)
 
         var bottom = (height - paddingBottom).toFloat()
         if(xTicks.hasMarks)
@@ -1772,12 +1786,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             top += 1.2f * titleSize
 
         val left = when (yTickPosition) {
-            LabelAnchor.West -> paddingLeft + yTickLabelWidth
-            else -> paddingLeft.toFloat()
+            LabelAnchor.West -> totalPaddingLeft + yTickLabelWidth
+            else -> totalPaddingLeft
         }
         val right = when (yTickPosition) {
-            LabelAnchor.East -> (width - paddingRight).toFloat() - yTickLabelWidth
-            else -> (width - paddingRight).toFloat()
+            LabelAnchor.East -> (width - totalPaddingRight) - yTickLabelWidth
+            else -> width - totalPaddingRight
         }
         rawViewTransformation.setViewBounds(left + frameStrokeWidth,
             top + frameStrokeWidth, right - frameStrokeWidth, bottom - frameStrokeWidth,
