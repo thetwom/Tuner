@@ -65,6 +65,10 @@ fun RealFFT.Companion.closestFrequencyIndex(frequency : Float, size: Int, dt : F
     return (frequency * dt * size).roundToInt()
 }
 
+/** Fast Fourier transform for pure real input data.
+ * @param size Number of values of input.
+ * @param windowType Window type used weighting the input before transforming.
+ */
 class RealFFT(val size : Int, private val windowType : WindowingFunction = WindowingFunction.Tophat) {
     companion object;
 
@@ -98,9 +102,17 @@ class RealFFT(val size : Int, private val windowType : WindowingFunction = Windo
         getWindow(windowType, size).copyInto(window)
     }
 
+    /** Perform fast Fourier transform.
+     * @param input Input data to be transformed (size must be the size given in the constructor)
+     * @param output Array where we will store the output. Sie must be "size of input + 2".
+     *   The results will be stored as pairs of real and imaginary part:
+     *    -> real part at given index: output[2 * index]
+     *    -> imaginary part at given index: output[2 * index + 1]
+     * @param disableWindow Even if in constructor a window is specified we allow here to ignore it.
+     */
     fun fft(input: FloatArray, output: FloatArray, disableWindow : Boolean = false) {
-        require(size == input.size) {"FFT input is of invalid size"}
-        require(size == output.size-2) {"FFT output is of invalid size"}
+        require(input.size == size) {"FFT input is of invalid size"}
+        require(output.size == size + 2) {"FFT output is of invalid size"}
       
         val halfSize = size / 2
 
