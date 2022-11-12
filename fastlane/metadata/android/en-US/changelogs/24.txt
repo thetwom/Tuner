@@ -2,5 +2,5 @@ v5.2.0:
 - Fix: Close app on back-press
 - Bottom bar with quick settings
 
-v5.2.1:
-.....
+v5.3.0:
+- Solfege notation
