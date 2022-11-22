@@ -42,7 +42,7 @@ class CorrelationAndSpectrumComputer {
 
             correlationMutex.withLock {
                 // recreate correlation instance if sample size changed
-                if (correlation?.size != sampleData.size || windowType != correlation?.windowType)
+                if ((correlation?.size != sampleData.size) || (windowType != correlation?.windowType))
                     correlation = Correlation(sampleData.size, windowType)
 
                 correlation?.correlate(sampleData.data, results.correlation, false, results.spectrum)

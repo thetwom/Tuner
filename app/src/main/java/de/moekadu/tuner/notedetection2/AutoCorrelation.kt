@@ -5,6 +5,7 @@ class AutoCorrelation(
     val dt: Float,
 
 ) {
+    val times = FloatArray(size) { it * dt }
     val values = FloatArray(size)
 
     operator fun get(index: Int) = values[index]

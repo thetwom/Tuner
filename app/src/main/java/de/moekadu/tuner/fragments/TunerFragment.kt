@@ -203,34 +203,48 @@ class TunerFragment : Fragment() {
 //            updatePitchPlotNoteNames()
 //        }
 
-        viewModel.tunerResults.observe(viewLifecycleOwner) { results ->
-            if (results.pitchFrequency == null) {
+        viewModel.noteDetectionResults.observe(viewLifecycleOwner) { resultsMemory ->
+            resultsMemory.incRef()
+            val results = resultsMemory.memory
+            if (results.frequency == 0f) {
                 correlationPlot?.removePlotMarks(null, false)
                 spectrumPlot?.removePlotMarks(null, false)
             }
             else {
-                results.pitchFrequency?.let { pitchFrequency ->
-                    val label = getString(R.string.hertz, pitchFrequency)
-                    correlationPlot?.setXMark(1.0f / pitchFrequency, label,
-                        MARK_ID_FREQUENCY, LabelAnchor.SouthWest,
-                        placeLabelsOutsideBoundsIfPossible = false)
-                    spectrumPlot?.setXMark(pitchFrequency, label, MARK_ID_FREQUENCY,
-                        LabelAnchor.SouthWest,
-                        placeLabelsOutsideBoundsIfPossible = false)
-                }
+                val label = getString(R.string.hertz, results.frequency)
+                correlationPlot?.setXMark(
+                    1.0f / results.frequency, label,
+                    MARK_ID_FREQUENCY, LabelAnchor.SouthWest,
+                    placeLabelsOutsideBoundsIfPossible = false
+                )
+                spectrumPlot?.setXMark(
+                    results.frequency, label, MARK_ID_FREQUENCY,
+                    LabelAnchor.SouthWest,
+                    placeLabelsOutsideBoundsIfPossible = false
+                )
             }
 
-            correlationPlot?.setXTouchLimits(0f, results.correlationTimes.last(),
+            correlationPlot?.setXTouchLimits(
+                0f,
+                results.autoCorrelation.times.last(),
                 PlotView.NO_REDRAW
             )
-            correlationPlot?.plot(results.correlationTimes, results.correlation)
+            correlationPlot?.plot(
+                results.autoCorrelation.times,
+                results.autoCorrelation.values
+            )
 
-            spectrumPlot?.setXTouchLimits(0f, results.ampSpecSqrFrequencies.last(),
+            spectrumPlot?.setXTouchLimits(
+                0f,
+                results.frequencySpectrum.frequencies.last(),
                 PlotView.NO_REDRAW
             )
-            spectrumPlot?.plot(results.ampSpecSqrFrequencies, results.ampSqrSpec)
+            spectrumPlot?.plot(
+                results.frequencySpectrum.frequencies,
+                results.frequencySpectrum.amplitudeSpectrumSquared)
 
 //            volumeMeter?.volume = results.noise
+            resultsMemory.decRef()
         }
 
         viewModel.pitchHistory.sizeAsLiveData.observe(viewLifecycleOwner) {
@@ -272,11 +286,20 @@ class TunerFragment : Fragment() {
         }
 
         // plot the values if available, since the plots currently cant store the plot lines.
-        viewModel.tunerResults.value?.let { results ->
+        viewModel.noteDetectionResults.value?.let { resultsMemory ->
+            resultsMemory.incRef()
+            val results = resultsMemory.memory
 //            Log.v("Tuner", "TunerFragment: results: 0, ${results.correlationTimes.last()}")
 //            correlationPlot?.xRange(0f, results.correlationTimes.last(), PlotView.NO_REDRAW)
-            correlationPlot?.plot(results.correlationTimes, results.correlation)
-            spectrumPlot?.plot(results.ampSpecSqrFrequencies, results.ampSqrSpec)
+            correlationPlot?.plot(
+                results.autoCorrelation.times,
+                results.autoCorrelation.values
+            )
+            spectrumPlot?.plot(
+                results.frequencySpectrum.frequencies,
+                results.frequencySpectrum.amplitudeSpectrumSquared
+            )
+            resultsMemory.decRef()
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
