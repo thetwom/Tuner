@@ -44,7 +44,11 @@ class CollectedResults(val sizeOfTimeSeries: Int, val sampleRate: Int) {
 
     val harmonicStatistics = HarmonicStatistics()
 
-    val frequency get() = harmonicStatistics.frequency
+    val frequency
+        get() = if (harmonicStatistics.frequency != 0f)
+            harmonicStatistics.frequency
+        else correlationBasedFrequency.frequency
+
     val inharmonicity get() = harmonicStatistics.inharmonicity
 }
 

@@ -141,6 +141,9 @@ fun findHarmonicsFromSpectrum(
     val frequencyOfGlobalMax = accurateSpectrumPeakFrequency[globalMaximumIndex]
     val harmonicOfGlobalMax = (frequencyOfGlobalMax / frequency).roundToInt()
 
+    if (harmonicOfGlobalMax == 0)
+        return
+
     harmonics.addHarmonic(harmonicOfGlobalMax, frequencyOfGlobalMax, globalMaximumIndex, ampSpecSqr[globalMaximumIndex])
 
     val searchRadius = harmonicTolerance * globalMaximumIndex / harmonicOfGlobalMax
