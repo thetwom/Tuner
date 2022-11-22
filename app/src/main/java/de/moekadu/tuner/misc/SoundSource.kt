@@ -32,8 +32,7 @@ import kotlinx.coroutines.flow.consumeAsFlow
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-/// Generator of sound samples
-/**
+/** Generator of sound samples.
  * @param scope Coroutine scope used for the sample data generator.
  */
 class SoundSource(private val scope: CoroutineScope) {
@@ -43,19 +42,18 @@ class SoundSource(private val scope: CoroutineScope) {
     }
     var settingsChangedListener: SettingsChangedListener? = null
 
-    /// Job which is generating sound.
+    /** Job which is generating sound. */
     private var sourceJob: Job? = null
 
     private var memoryManager = MemoryManagerSampleData()
 
-    /// Channel used to communicate the sound samples
+    /** Channel used to communicate the sound samples. */
     private val outputChannel = Channel<SampleData>(Channel.CONFLATED)
 
     val flow
         get() = outputChannel.consumeAsFlow()
 
-    /// Test function which can be used instead of the microphone data.
-    /**
+    /** Test function which can be used instead of the microphone data.
      * The underlying function must have the following shape:
      *   {timeInSeconds -> sampleValueAtGivenTime}
      *   example: {t -> kotlin.math.sin(2f * kotlin.math.PI.toFloat() * 440.0f * t)}
@@ -68,9 +66,8 @@ class SoundSource(private val scope: CoroutineScope) {
                 restartSampling()
         }
 
-    /// Overlap of two succeeding sample data chunks.
-    /**
-     * examples:
+    /** Overlap of two succeeding sample data chunks.
+     * Examples:
      * 0f -> no overlap
      * 0.5f -> 50% overlap
      */
@@ -85,7 +82,7 @@ class SoundSource(private val scope: CoroutineScope) {
             }
         }
 
-    /// Sample data chunk size which is passed through the communication channel.
+    /** Sample data chunk size which is passed through the communication channel. */
     var windowSize = 4096
         set(value) {
             if (field != value) {
@@ -96,7 +93,7 @@ class SoundSource(private val scope: CoroutineScope) {
             }
         }
 
-    /// Sample rate to be used.
+    /** Sample rate to be used. */
     var sampleRate = 44100
         set(value) {
             if (field != value) {

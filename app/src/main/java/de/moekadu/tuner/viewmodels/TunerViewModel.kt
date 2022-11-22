@@ -27,43 +27,51 @@ import androidx.lifecycle.viewModelScope
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.instrumentDatabase
 import de.moekadu.tuner.misc.DefaultValues
-import de.moekadu.tuner.misc.SoundSource
-import de.moekadu.tuner.notedetection.*
+import de.moekadu.tuner.misc.MemoryPool
+import de.moekadu.tuner.misc.WaveWriter
+import de.moekadu.tuner.notedetection.PitchHistory
+import de.moekadu.tuner.notedetection.pitchHistoryDurationToPitchSamples
+import de.moekadu.tuner.notedetection2.AcousticZeroWeighting
+import de.moekadu.tuner.notedetection2.CollectedResults
+import de.moekadu.tuner.notedetection2.noteDetectionFlow
 import de.moekadu.tuner.preferenceResources
 import de.moekadu.tuner.temperaments.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.pow
-import kotlin.math.sqrt
+import kotlin.math.sin
 
 class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
     private val pref = application.preferenceResources
 
-    /// Source which conducts the audio recording.
-    private val sampleSource = SoundSource(viewModelScope)
-    val sampleRate
-        get() = sampleSource.sampleRate
+    private var noteDetectionJob: Job? = null
 
-    val waveWriter
-        get() = sampleSource.waveWriter
+//    /// Source which conducts the audio recording.
+//    private val sampleSource = SoundSource(viewModelScope)
+    val sampleRate = DefaultValues.SAMPLE_RATE
+        // get() = sampleSource.sampleRate
 
-    private val _tunerResults = MutableLiveData<TunerResults>()
-    val tunerResults : LiveData<TunerResults>
-        get() = _tunerResults
+    val waveWriter = WaveWriter()
+        //get() = sampleSource.waveWriter
 
-    /// Compute number of samples to be stored in pitch history.
-    private val pitchHistorySize
-        get() = pitchHistoryDurationToPitchSamples(
-            pref.pitchHistoryDuration.value, sampleSource.sampleRate, pref.windowSize.value, pref.overlap.value)
+//    private val _tunerResults = MutableLiveData<TunerResults>()
+//    val tunerResults : LiveData<TunerResults>
+//        get() = _tunerResults
 
-    /// Duration in seconds between two updates for the pitch history
-    private val _pitchHistoryUpdateInterval = MutableLiveData(pref.windowSize.value.toFloat() * (1f - pref.overlap.value) / sampleSource.sampleRate)
+    private val _noteDetectionResults = MutableLiveData<MemoryPool<CollectedResults>.RefCountedMemory>()
+    val noteDetectionResults: LiveData<MemoryPool<CollectedResults>.RefCountedMemory>
+        get() = _noteDetectionResults
+
+//    /** Compute number of samples to be stored in pitch history. */
+//    private val pitchHistorySize
+//        get() = pitchHistoryDurationToPitchSamples(
+//            pref.pitchHistoryDuration.value, sampleRate, pref.windowSize.value, pref.overlap.value)
+
+    /** Duration in seconds between two updates for the pitch history. */
+    private val _pitchHistoryUpdateInterval = MutableLiveData(computePitchHistoryUpdateInterval())
     val pitchHistoryUpdateInterval: LiveData<Float> = _pitchHistoryUpdateInterval
 
 //    private val _preferFlat = MutableLiveData(false)
@@ -83,13 +91,13 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     val musicalScale: LiveData<MusicalScale>
         get() = _musicalScale
 
-    private val _standardDeviation = MutableLiveData(0f)
-    val standardDeviation: LiveData<Float> get() = _standardDeviation
+//    private val _standardDeviation = MutableLiveData(0f)
+//    val standardDeviation: LiveData<Float> get() = _standardDeviation
 
-    val pitchHistory = PitchHistory(pitchHistorySize, musicalScaleValue)
+    val pitchHistory = PitchHistory(computePitchHistorySize(), musicalScaleValue)
 
-    private val correlationAndSpectrumComputer = CorrelationAndSpectrumComputer()
-    private val pitchChooserAndAccuracyIncreaser = PitchChooserAndAccuracyIncreaser()
+//    private val correlationAndSpectrumComputer = CorrelationAndSpectrumComputer()
+//    private val pitchChooserAndAccuracyIncreaser = PitchChooserAndAccuracyIncreaser()
 
     private val targetNoteValue = TargetNote().apply { instrument = instrumentDatabase[0] }
     private val _targetNote = MutableLiveData(targetNoteValue)
@@ -114,6 +122,35 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     val frequencyPlotRange: LiveData<FloatArray>
         get() = _frequencyPlotRange
 
+//    // no test function
+//    private val testFunction = null
+//    // test function, which avoids excessive large times
+//    private val testFunction = { frame: Int, dt: Float ->
+//        val freqApprox = 660f
+//        val numSteps = (1 / freqApprox / dt).roundToInt()
+//        val freq = 1 / (numSteps * dt)
+//        val frameMod = frame - (frame / numSteps) * numSteps
+//        sin(frameMod * dt * 2 * kotlin.math.PI.toFloat() * freq)
+//    }
+//
+//    // constant frequency test function, but suffers from inaccuracies at large times
+//    private val testFunction = { frame: Int, dt: Float ->
+//        val freq = 660f
+//        sin(frame * dt * 2 * kotlin.math.PI.toFloat() * freq)
+//    }
+
+    // test function with increasing frequency
+    private val testFunction = { frame: Int, dt: Float ->
+        val freq = 200f + 2 * frame * dt
+        sin(frame * dt * 2 * kotlin.math.PI.toFloat() * freq)
+    }
+
+//    private val testFunction = { t: Float ->
+//        val freq = 440f
+//        sin(t * 2 * kotlin.math.PI.toFloat() * freq)
+//        //800f * Random.nextFloat()
+//        // 1f
+//    }
 
     init {
 //        Log.v("TestRecordFlow", "TunerViewModel.init: application: $application")
@@ -135,20 +172,21 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 //        pref.registerOnSharedPreferenceChangeListener(onPreferenceChangedListener)
 //        loadSettingsFromSharedPreferences()
 
-        sampleSource.settingsChangedListener = SoundSource.SettingsChangedListener { sampleRate, windowSize, overlap ->
-            _pitchHistoryUpdateInterval.value = windowSize.toFloat() * (1f - overlap) / sampleRate
-        }
+//        sampleSource.settingsChangedListener = SoundSource.SettingsChangedListener { sampleRate, windowSize, overlap ->
+//            _pitchHistoryUpdateInterval.value = windowSize.toFloat() * (1f - overlap) / sampleRate
+//        }
 
         changeTargetNoteSettings(musicalScale = musicalScaleValue)
 
         viewModelScope.launch { pref.overlap.collect { overlap ->
-            sampleSource.overlap = overlap
-            pitchHistory.size = pitchHistorySize // this uses the latest overlap value in its getter
+            _pitchHistoryUpdateInterval.value = computePitchHistoryUpdateInterval(overlap = overlap)
+            pitchHistory.size = computePitchHistorySize(overlap = overlap)
+            restartSamplingIfRunning()
         } }
 
         viewModelScope.launch { pref.windowSize.collect { windowSize ->
-            sampleSource.windowSize = windowSize
-            pitchHistory.size = pitchHistorySize // this uses the latest overlap value in its getter
+            pitchHistory.size = computePitchHistorySize(windowSize = windowSize)
+            restartSamplingIfRunning()
         } }
 
         viewModelScope.launch { pref.temperamentAndReferenceNote.collect {
@@ -160,89 +198,149 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
             )
         }}
 
-        viewModelScope.launch { pref.pitchHistoryMaxNumFaultyValues.collect { pitchHistory.maxNumFaultyValues = it } }
+        viewModelScope.launch {
+            pref.pitchHistoryMaxNumFaultyValues.collect { pitchHistory.maxNumFaultyValues = it
+        }}
 
-        viewModelScope.launch { pref.toleranceInCents.collect { changeTargetNoteSettings(tolerance = it)} }
+        viewModelScope.launch {
+            pref.toleranceInCents.collect { changeTargetNoteSettings(tolerance = it)
+        }}
 
         viewModelScope.launch { pref.waveWriterDurationInSeconds.collect { durationInSeconds ->
             val size = sampleRate * durationInSeconds
             waveWriter.setBufferSize(size)
-        } }
+            restartSamplingIfRunning()
+        }}
 
-        viewModelScope.launch {
-            sampleSource.flow
-                .buffer()
-                .transform {
-                    val result = correlationAndSpectrumComputer.run(it, pref.windowing.value)
-                    result.noise = if (result.correlation.size > 1) 1f - result.correlation[1] / result.correlation[0] else 1f
+//        viewModelScope.launch {
+//            sampleSource.flow
+//                .buffer()
+//                .transform {
+//                    val result = correlationAndSpectrumComputer.run(it, pref.windowing.value)
+//                    result.noise = if (result.correlation.size > 1) 1f - result.correlation[1] / result.correlation[0] else 1f
+//
+//                    _standardDeviation.value = withContext(Dispatchers.Default) {
+//                        val average = it.data.average().toFloat()
+//                        sqrt(it.data.fold(0f) {sum, element -> sum + (element - average).pow(2)}/ it.data.size)
+//                    }
+//                    sampleSource.recycle(it)
+//                    emit(result)
+//                }
+//                .buffer()
+//                .transform {
+//                    withContext(Dispatchers.Default) {
+//                        it.correlationMaximaIndices =
+//                            determineCorrelationMaxima(it.correlation, 25f, 5000f, it.dt)
+//                    }
+//                    emit(it)
+//                }
+//                .transform {
+//                    withContext(Dispatchers.Default) {
+//                        it.specMaximaIndices =
+//                            determineSpectrumMaxima(it.ampSqrSpec, 25f, 5000f, it.dt, 10f)
+//                    }
+//                    emit(it)
+//                }
+//                .buffer()
+//                .transform {
+//                    it.pitchFrequency = pitchChooserAndAccuracyIncreaser.run(it, if (pref.useHint.value) pitchHistory.history.value?.lastOrNull() else null)
+//                    emit(it)
+//                }
+//                .buffer()
+//                .collect {
+//                    it.pitchFrequency?.let {pitchFrequency ->
+//                        val resultsFromLiveData = _tunerResults.value
+//                        val results = if (resultsFromLiveData != null && resultsFromLiveData.size == it.size && resultsFromLiveData.sampleRate == it.sampleRate)
+//                            resultsFromLiveData
+//                        else
+//                            TunerResults(it.size, it.sampleRate)
+//                        results.set(it)
+//                        _tunerResults.value = results
+//                        if (pitchFrequency > 0.0f) {
+//                            pitchHistory.appendValue(pitchFrequency, it.noise)
+//                            if (userDefinedTargetNote == null) { // null -> AUTOMATIC_TARGET_NOTE_DETECTION
+//                                pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
+//                                    val oldTargetNote = targetNoteValue.note
+//                                    targetNoteValue.setTargetNoteBasedOnFrequency(frequency)
+//                                    if (targetNoteValue.note != oldTargetNote)
+//                                        _targetNote.value = targetNoteValue
+//                                }
+//                                //changeTargetNoteSettings(toneIndex = pitchHistory.currentEstimatedToneIndex)
+//                            }
+//
+//                            pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
+//                                updateFrequencyPlotRange(targetNoteValue.note, frequency)
+//                            }
+//                        }
+//                    }
+//                    correlationAndSpectrumComputer.recycle(it)
+//                }
+//        }
+    }
 
-                    _standardDeviation.value = withContext(Dispatchers.Default) {
-                        val average = it.data.average().toFloat()
-                        sqrt(it.data.fold(0f) {sum, element -> sum + (element - average).pow(2)}/ it.data.size)
-                    }
-                    sampleSource.recycle(it)
-                    emit(result)
+    fun collectNoteDetectionResults(resultMemory: MemoryPool<CollectedResults>.RefCountedMemory) {
+        val results = resultMemory.memory
+        if (results.frequency > 0.0f) {
+            pitchHistory.appendValue(results.frequency, results.noise)
+            if (userDefinedTargetNote == null) { // null -> AUTOMATIC_TARGET_NOTE_DETECTION
+                pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
+                    val oldTargetNote = targetNoteValue.note
+                    targetNoteValue.setTargetNoteBasedOnFrequency(frequency)
+                    if (targetNoteValue.note != oldTargetNote)
+                        _targetNote.value = targetNoteValue
                 }
-                .buffer()
-                .transform {
-                    withContext(Dispatchers.Default) {
-                        it.correlationMaximaIndices =
-                            determineCorrelationMaxima(it.correlation, 25f, 5000f, it.dt)
-                    }
-                    emit(it)
-                }
-                .transform {
-                    withContext(Dispatchers.Default) {
-                        it.specMaximaIndices =
-                            determineSpectrumMaxima(it.ampSqrSpec, 25f, 5000f, it.dt, 10f)
-                    }
-                    emit(it)
-                }
-                .buffer()
-                .transform {
-                    it.pitchFrequency = pitchChooserAndAccuracyIncreaser.run(it, if (pref.useHint.value) pitchHistory.history.value?.lastOrNull() else null)
-                    emit(it)
-                }
-                .buffer()
-                .collect {
-                    it.pitchFrequency?.let {pitchFrequency ->
-                        val resultsFromLiveData = _tunerResults.value
-                        val results = if (resultsFromLiveData != null && resultsFromLiveData.size == it.size && resultsFromLiveData.sampleRate == it.sampleRate)
-                            resultsFromLiveData
-                        else
-                            TunerResults(it.size, it.sampleRate)
-                        results.set(it)
-                        _tunerResults.value = results
-                        if (pitchFrequency > 0.0f) {
-                            pitchHistory.appendValue(pitchFrequency, it.noise)
-                            if (userDefinedTargetNote == null) { // null -> AUTOMATIC_TARGET_NOTE_DETECTION
-                                pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
-                                    val oldTargetNote = targetNoteValue.note
-                                    targetNoteValue.setTargetNoteBasedOnFrequency(frequency)
-                                    if (targetNoteValue.note != oldTargetNote)
-                                        _targetNote.value = targetNoteValue
-                                }
-                                //changeTargetNoteSettings(toneIndex = pitchHistory.currentEstimatedToneIndex)
-                            }
+                //changeTargetNoteSettings(toneIndex = pitchHistory.currentEstimatedToneIndex)
+            }
 
-                            pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
-                                updateFrequencyPlotRange(targetNoteValue.note, frequency)
-                            }
-                        }
-                    }
-                    correlationAndSpectrumComputer.recycle(it)
-                }
+            pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
+                updateFrequencyPlotRange(targetNoteValue.note, frequency)
+            }
+        }
+        noteDetectionResults.value?.decRef()
+        _noteDetectionResults.value = resultMemory
+    }
+
+    fun restartSamplingIfRunning() {
+        if (noteDetectionJob != null) {
+            stopSampling()
+            startSampling()
         }
     }
 
     fun startSampling() {
-        //Log.v("Tuner", "TunerViewModel.startSampling")
-        sampleSource.restartSampling()
+        noteDetectionJob?.cancel()
+        noteDetectionJob = viewModelScope.launch(Dispatchers.Main) {
+            noteDetectionFlow(
+                overlap = pref.overlap.value,
+                windowSize = pref.windowSize.value,
+                sampleRate = DefaultValues.SAMPLE_RATE,
+                testFunction = testFunction,
+                waveWriter = if (pref.waveWriterDurationInSeconds.value == 0) null else waveWriter,
+                frequencyMin = DefaultValues.FREQUENCY_MIN,
+                frequencyMax = DefaultValues.FREQUENCY_MAX,
+                subharmonicsTolerance = 0.05f,
+                subharmonicsPeakRatio = 0.9f,
+                harmonicTolerance = 0.1f,
+                minimumFactorOverLocalMean = 5f,
+                maxGapBetweenHarmonics = 10,
+                windowType = pref.windowing.value,
+                acousticWeighting = AcousticZeroWeighting() //AcousticCWeighting()
+            ).collect {
+                collectNoteDetectionResults(it)
+            }
+        }
     }
+
+//    fun startSampling() {
+//        //Log.v("Tuner", "TunerViewModel.startSampling")
+//        //sampleSource.restartSampling()
+//    }
 
     fun stopSampling() {
 //        Log.v("Tuner", "TunerViewModel.stopSampling")
-        sampleSource.stopSampling()
+//        sampleSource.stopSampling()
+        noteDetectionJob?.cancel()
+        noteDetectionJob = null
     }
 
     /** Set a new target note and string index.
@@ -300,6 +398,20 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 //    fun setNoteNames(noteNames: NoteNames) {
 //        _noteNames.value = noteNames
 //    }
+
+    private fun computePitchHistoryUpdateInterval(
+        windowSize: Int = pref.windowSize.value,
+        overlap: Float = pref.overlap.value,
+        sampleRate: Int = this.sampleRate
+    ) = windowSize * (1f - overlap) / sampleRate
+
+    /** Compute number of samples to be stored in pitch history. */
+    private fun computePitchHistorySize(
+        duration: Float = pref.pitchHistoryDuration.value,
+        sampleRate: Int = this.sampleRate,
+        windowSize: Int = pref.windowSize.value,
+        overlap: Float = pref.overlap.value
+    ) = pitchHistoryDurationToPitchSamples(duration, sampleRate, windowSize, overlap)
 
     private fun updateFrequencyPlotRange(targetNote: MusicalNote, currentFrequency: Float) {
         val minOld = frequencyPlotRangeValues[0]

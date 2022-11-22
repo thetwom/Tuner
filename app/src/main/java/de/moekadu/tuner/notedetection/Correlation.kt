@@ -19,6 +19,7 @@
 
 package de.moekadu.tuner.notedetection
 
+import de.moekadu.tuner.misc.MemoryPool
 import kotlin.math.pow
 
 class Correlation (val size : Int, val windowType : WindowingFunction = WindowingFunction.Tophat) {
@@ -103,4 +104,13 @@ class Correlation (val size : Int, val windowType : WindowingFunction = Windowin
       output[i] = inputBitreversed[2*i]
     output[size] = inputBitreversed[1]
   }
+}
+
+class MemoryPoolCorrelation {
+  private val pool = MemoryPool<Correlation>()
+
+  fun get(size: Int, windowType: WindowingFunction) = pool.get(
+    factory = { Correlation(size, windowType) },
+    checker = { it.size == size && it.windowType == windowType }
+  )
 }

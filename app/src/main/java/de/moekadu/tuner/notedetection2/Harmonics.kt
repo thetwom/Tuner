@@ -7,15 +7,26 @@ data class Harmonic(
     var frequency: Float,
     var spectrumIndex: Int,
     var spectrumAmplitudeSquared: Float
-)
+) : Comparable<Harmonic> {
+    override fun compareTo(other: Harmonic): Int {
+        return harmonicNumber - other.harmonicNumber
+    }
+}
 
 
 class Harmonics(maxCapacity: Int) {
     private val harmonics = Array(maxCapacity) {
         Harmonic(-1, 0f, -1, 0f)
     }
+    private var isSorted = true
+
     var size = 0
         private set
+
+    fun sort() {
+        if (!isSorted)
+            harmonics.sort(0, size)
+    }
 
     fun addHarmonic(harmonicNumber: Int, frequency: Float, spectrumIndex: Int, spectrumAmplitudeSquared: Float) {
         require(size < harmonics.size)
@@ -24,6 +35,8 @@ class Harmonics(maxCapacity: Int) {
         harmonics[size].spectrumIndex = spectrumIndex
         harmonics[size].spectrumAmplitudeSquared = spectrumAmplitudeSquared
         size += 1
+        if (size > 1 && isSorted)
+            isSorted = (harmonics[size-1].harmonicNumber >= harmonics[size-2].harmonicNumber)
     }
 
     operator fun get(index: Int): Harmonic {
@@ -33,6 +46,7 @@ class Harmonics(maxCapacity: Int) {
 
     fun clear() {
         size = 0
+        isSorted = true
     }
 }
 

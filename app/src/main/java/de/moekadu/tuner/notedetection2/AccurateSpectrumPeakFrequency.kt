@@ -13,14 +13,17 @@ import kotlin.math.roundToInt
  *   "start time spec2" - "start time spec1",
  *   in dimension of 1/spec1.df or 1/spec2.df
  *   Only required if spec1 and spec2 are not null.
+ *   You can disable the high-accuracy mode also be providing 0f here (then we use f = df * index)
  */
 class AccurateSpectrumPeakFrequency(
     private val spec1: FrequencySpectrum?,
     private val spec2: FrequencySpectrum?,
-    private val timeShiftBetweenSpecs: Float = 0f
+    var timeShiftBetweenSpecs: Float = 0f
 ) {
     /** Frequency resolution. */
     private val df = spec1?.df ?: spec2?.df ?: 1.0f
+
+    var isHighAccuracyModeEnabled = true
 
     init {
         require(spec1 != null || spec2 != null)
