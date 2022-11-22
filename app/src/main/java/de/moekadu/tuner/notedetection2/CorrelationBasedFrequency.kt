@@ -11,13 +11,22 @@ import kotlin.math.roundToInt
  * @param correlationAtTimeShift Correlation value at timeShift.
  */
 data class CorrelationBasedFrequency(
-    val frequency: Float,
-    val timeShift: Float,
-    val correlationAtTimeShift: Float
-    )
+    var frequency: Float,
+    var timeShift: Float,
+    var correlationAtTimeShift: Float
+    ) {
+    fun set(frequency: Float, timeShift: Float, correlationAtTimeShift: Float) {
+        this.frequency = frequency
+        this.timeShift = timeShift
+        this.correlationAtTimeShift = correlationAtTimeShift
+    }
+}
 
 /** Find index for shift of most probable tolerance.
+ * @param results Inhere we store the results.
  * @param correlation Array with correlation values.
+ * @param frequencyMin Minimum frequency, which is allowed to be detected.
+ * @param frequencyMax Maximum frequency, which is allowed to be detected.
  * @param subharmonicsTolerance With "subharmonics", we e.g. mean, when for a
  *   periodic signal, we in theory have a period duration of T, then the correlation
  *   will not only peak at T as shift, but also at 2*T, 3*T, ... . These multiples
@@ -37,20 +46,38 @@ data class CorrelationBasedFrequency(
  *   peak of polynomial fit at the given index)
  */
 fun findCorrelationBasedFrequency(
+    results: CorrelationBasedFrequency,
     correlation: AutoCorrelation,
+    frequencyMin: Float = 0f,
+    frequencyMax: Float = 0f,
     subharmonicsTolerance: Float = 0.05f,
     subharmonicPeakRatio: Float = 0.9f
-): CorrelationBasedFrequency {
+) {
 
     // functor for local maximum check
     val isLocalMax = {i: Int, data: AutoCorrelation -> data[i] >= data[i-1] && data[i] >= data[i+1]}
 
-    val globalIndexEnd = correlation.size - 1
+    val globalIndexEnd = if (frequencyMin > 0f) {
+        val indexShiftFrequencyMin = (1.0 / (correlation.dt * frequencyMin)).toInt() + 1
+        min(correlation.size - 1, indexShiftFrequencyMin)
+    } else {
+        correlation.size - 1
+    }
 
     // find first negative value (or 1 if there is not negative value)
     val firstNegativeValue = correlation.values.indexOfFirst { it < 0.0f }
 
-    val globalIndexBegin = max(1, firstNegativeValue)
+    val globalIndexBegin = if (frequencyMax > 0f ) {
+        val indexShiftFrequencyMax = ceil(1.0 / (correlation.dt * frequencyMax)).toInt()
+        max(indexShiftFrequencyMax, firstNegativeValue)
+    } else {
+        max(1, firstNegativeValue)
+    }
+
+    if (globalIndexBegin >= globalIndexEnd) {
+        results.set(0f, 0f, 0f)
+        return
+    }
 
     var globalMaximumIndex = 0
     var maximumValue = Float.NEGATIVE_INFINITY
@@ -62,6 +89,7 @@ fun findCorrelationBasedFrequency(
             maximumValue = correlation[i]
         }
     }
+
     var (fittedMaximumIndex, fittedPeak) = getPeakOfPolynomialFitArray(
         globalMaximumIndex, correlation.values
     )
@@ -105,9 +133,11 @@ fun findCorrelationBasedFrequency(
             }
         }
     }
-    return CorrelationBasedFrequency(
+
+    results.set(
         1.0f / (fittedMaximumIndex * correlation.dt),
         fittedMaximumIndex * correlation.dt,
         fittedPeak
     )
+    return
 }

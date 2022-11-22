@@ -45,6 +45,22 @@ class HarmonicsTest {
     }
 
     @Test
+    fun sortHarmonics() {
+        val size = 100
+        val harmonics = Harmonics(size)
+        harmonics.addHarmonic(5, 1f, 1, 1f)
+        harmonics.addHarmonic(2, 13f, 1, 5f)
+        harmonics.addHarmonic(8, 3f, 3, 2f)
+        harmonics.addHarmonic(1, 3f, 8, 2f)
+
+        harmonics.sort()
+        assertEquals(1,harmonics[0].harmonicNumber)
+        assertEquals(2,harmonics[1].harmonicNumber)
+        assertEquals(5,harmonics[2].harmonicNumber)
+        assertEquals(8,harmonics[3].harmonicNumber)
+    }
+
+    @Test
     fun findHarmonics() {
         val size = 1000
         val harmonics = Harmonics(size)
