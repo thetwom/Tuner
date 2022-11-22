@@ -41,7 +41,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.sin
 
 class TunerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -122,8 +121,8 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
     val frequencyPlotRange: LiveData<FloatArray>
         get() = _frequencyPlotRange
 
-//    // no test function
-//    private val testFunction = null
+    // no test function
+    private val testFunction = null
 //    // test function, which avoids excessive large times
 //    private val testFunction = { frame: Int, dt: Float ->
 //        val freqApprox = 660f
@@ -139,11 +138,11 @@ class TunerViewModel(application: Application) : AndroidViewModel(application) {
 //        sin(frame * dt * 2 * kotlin.math.PI.toFloat() * freq)
 //    }
 
-    // test function with increasing frequency
-    private val testFunction = { frame: Int, dt: Float ->
-        val freq = 200f + 2 * frame * dt
-        sin(frame * dt * 2 * kotlin.math.PI.toFloat() * freq)
-    }
+//    // test function with increasing frequency
+//    private val testFunction = { frame: Int, dt: Float ->
+//        val freq = 200f + 2 * frame * dt
+//        sin(frame * dt * 2 * kotlin.math.PI.toFloat() * freq)
+//    }
 
 //    private val testFunction = { t: Float ->
 //        val freq = 440f
