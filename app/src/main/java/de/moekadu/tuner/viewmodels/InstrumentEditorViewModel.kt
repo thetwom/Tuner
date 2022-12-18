@@ -1,170 +1,322 @@
 package de.moekadu.tuner.viewmodels
 
-import android.app.Application
-import android.content.SharedPreferences
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.preference.PreferenceManager
+import android.content.Context
+import android.util.Log
+import androidx.lifecycle.*
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
-import de.moekadu.tuner.preferences.TemperamentAndReferenceNoteValue
-import de.moekadu.tuner.temperaments.BaseNote
+import de.moekadu.tuner.misc.DefaultValues
+import de.moekadu.tuner.models.DetectedNoteViewModel
+import de.moekadu.tuner.models.InstrumentEditorNameModel
+import de.moekadu.tuner.models.NoteSelectorForEditorModel
+import de.moekadu.tuner.models.StringViewEditorModel
+import de.moekadu.tuner.notedetection2.FrequencyEvaluator
+import de.moekadu.tuner.notedetection2.frequencyDetectionFlow
+import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.NoteNameScaleFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
-class InstrumentEditorViewModel(application: Application) : AndroidViewModel(application) {
+private class StringsAndSelection(val strings: Array<MusicalNote>, val selectedIndex: Int) {
 
-    private val _instrumentName = MutableLiveData<CharSequence>("")
-    val instrumentName: LiveData<CharSequence> get() = _instrumentName
-    private val _iconResourceId = MutableLiveData(R.drawable.ic_guitar)
-    val iconResourceId: LiveData<Int> get() = _iconResourceId
-    private val _strings = MutableLiveData<Array<MusicalNote> >()
-    val strings: LiveData<Array<MusicalNote> > get() = _strings
-    private val _selectedStringIndex = MutableLiveData(0)
-    val selectedStringIndex: LiveData<Int> = _selectedStringIndex
+    val note get() = strings.getOrNull(selectedIndex)
+
+    fun copy(strings: Array<MusicalNote> = this.strings, selectedIndex: Int = this.selectedIndex): StringsAndSelection {
+        return StringsAndSelection(strings, selectedIndex)
+    }
+}
+
+class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewModel() {
+    private var noteDetectionJob: Job? = null
+
+    val sampleRate = DefaultValues.SAMPLE_RATE
+
+    private val _instrumentNameModel = MutableLiveData(InstrumentEditorNameModel("", R.drawable.ic_guitar))
+    val instrumentNameModel: LiveData<InstrumentEditorNameModel> get() = _instrumentNameModel
+//    private val _iconResourceId = MutableLiveData(R.drawable.ic_guitar)
+//    val iconResourceId: LiveData<Int> get() = _iconResourceId
+
+    private val _strings = MutableStateFlow(StringsAndSelection(arrayOf(), 0))
+    private val strings = _strings.asStateFlow()
+
+    private val _stringViewModel = MutableLiveData(StringViewEditorModel())
+    val stringViewModel: LiveData<StringViewEditorModel> get() = _stringViewModel
+
+    private val _noteSelectorModel = MutableLiveData(NoteSelectorForEditorModel())
+    val noteSelectorModel: LiveData<NoteSelectorForEditorModel> get() = _noteSelectorModel
 
     var stableId = Instrument.NO_STABLE_ID
-    private var defaultNote = MusicalNote(BaseNote.A, NoteModifier.None, 4)
+    private val defaultNote get() = pref.musicalScale.value.referenceNote
 
-    private val pref = PreferenceManager.getDefaultSharedPreferences(application)
+    private val _detectedNoteModel = MutableLiveData(DetectedNoteViewModel())
+    val detectedNoteModel: LiveData<DetectedNoteViewModel> get() = _detectedNoteModel
 
-    private val onPreferenceChangedListener = object : SharedPreferences.OnSharedPreferenceChangeListener {
-        override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-            if (sharedPreferences == null)
-                return
-            when (key) {
-                TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY -> {
-                    val valueString = sharedPreferences.getString(
-                        TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY, null)
-                    val value = TemperamentAndReferenceNoteValue.fromString(valueString)
-                    defaultNote = NoteNameScaleFactory.getDefaultReferenceNote(value!!.temperamentType)
-                }
-            }
-        }
-    }
+//    private val _selectedStringIndex = MutableStateFlow(0)
+//    val selectedStringIndex = _selectedStringIndex.asStateFlow()
+
+//    private val pref = PreferenceManager.getDefaultSharedPreferences(application)
+//
+//    private val onPreferenceChangedListener = object : SharedPreferences.OnSharedPreferenceChangeListener {
+//        override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+//            if (sharedPreferences == null)
+//                return
+//            when (key) {
+//                TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY -> {
+//                    val valueString = sharedPreferences.getString(
+//                        TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY, null)
+//                    val value = TemperamentAndReferenceNoteValue.fromString(valueString)
+//                    defaultNote = NoteNameScaleFactory.getDefaultReferenceNote(value!!.temperamentType)
+//                }
+//            }
+//        }
+//    }
 
     init {
-        pref.registerOnSharedPreferenceChangeListener(onPreferenceChangedListener)
-        loadSettingsFromSharedPreferences()
+//        pref.registerOnSharedPreferenceChangeListener(onPreferenceChangedListener)
+//        loadSettingsFromSharedPreferences()
+        viewModelScope.launch { pref.overlap.collect { overlap ->
+            _detectedNoteModel.value = detectedNoteModel.value?.apply {
+                changeSettings(noteUpdateInterval = computePitchHistoryUpdateInterval(overlap = overlap))
+            }
+            restartSamplingIfRunning()
+        } }
+        viewModelScope.launch { pref.windowSize.collect { windowSize ->
+            _detectedNoteModel.value = detectedNoteModel.value?.apply {
+                changeSettings(noteUpdateInterval = computePitchHistoryUpdateInterval(windowSize = windowSize))
+            }
+            restartSamplingIfRunning()
+        } }
+
+        viewModelScope.launch { pref.maxNoise.collect {
+            restartSamplingIfRunning()
+        }}
+
+        viewModelScope.launch { pref.numMovingAverage.collect {
+            restartSamplingIfRunning()
+        }}
+
+        viewModelScope.launch { pref.toleranceInCents.collect {
+            restartSamplingIfRunning()
+        }}
+
+        viewModelScope.launch { pref.musicalScale.collect {
+            _stringViewModel.value = stringViewModel.value?.apply {
+                changeSettings(musicalScale = it)
+            }
+            _noteSelectorModel.value = noteSelectorModel.value?.apply {
+                changeSettings(musicalScale = it)
+            }
+            _detectedNoteModel.value = detectedNoteModel.value?.apply {
+                changeSettings(musicalScale = it)
+            }
+            restartSamplingIfRunning()
+        }}
+
+        viewModelScope.launch { pref.notePrintOptions.collect {
+            _stringViewModel.value = stringViewModel.value?.apply {
+                changeSettings(notePrintOptions = it)
+            }
+            _noteSelectorModel.value = noteSelectorModel.value?.apply {
+                changeSettings(notePrintOptions = it)
+            }
+            _detectedNoteModel.value = detectedNoteModel.value?.apply {
+                changeSettings(notePrintOptions = it)
+            }
+        }}
+
+        viewModelScope.launch { strings.collect {
+            _stringViewModel.value = stringViewModel.value?.apply {
+                changeSettings(strings = it.strings, selectedStringIndex = it.selectedIndex)
+            }
+            _noteSelectorModel.value = noteSelectorModel.value?.apply {
+                it.note?.let { note ->
+                    changeSettings(selectedNote = note)
+                }
+            }
+        }}
     }
 
-    override fun onCleared() {
-        pref.unregisterOnSharedPreferenceChangeListener(onPreferenceChangedListener)
-        super.onCleared()
-    }
+//    override fun onCleared() {
+//        pref.unregisterOnSharedPreferenceChangeListener(onPreferenceChangedListener)
+//        super.onCleared()
+//    }
 
     fun getInstrument(): Instrument {
+        Log.v("Tuner", "InstrumentEditorViewModel: strings = ${strings.value.strings}")
         return Instrument(
-            instrumentName.value.toString(), // toString removes underlines and stuff ...
+            instrumentNameModel.value?.name.toString(), // toString removes underlines and stuff ...
             null,
-            strings.value ?: arrayOf(),
-            iconResourceId.value ?: R.drawable.ic_guitar,
+            strings.value.strings,
+            instrumentNameModel.value?.iconResourceId ?: R.drawable.ic_guitar,
             stableId
         )
     }
 
-    fun setInstrument(instrument: Instrument) {
-        _instrumentName.value = instrument.getNameString(getApplication())
-        _iconResourceId.value = instrument.iconResource
-        _strings.value = instrument.strings
-        _selectedStringIndex.value = instrument.strings.size - 1
+    fun setInstrument(instrument: Instrument, context: Context?) {
+        _instrumentNameModel.value = InstrumentEditorNameModel(
+            instrument.getNameString(context),
+            instrument.iconResource
+        )
+        _strings.value = StringsAndSelection(instrument.strings, instrument.strings.size -1)
+
         stableId = instrument.stableId
     }
 
+    fun setDefaultInstrument() {
+        clear(pref.musicalScale.value.referenceNote)
+    }
+
     fun clear(singleString: MusicalNote? = null) {
-        _instrumentName.value = ""
-        _iconResourceId.value = R.drawable.ic_guitar
-        _strings.value = if (singleString == null)
-            arrayOf()
-        else
-            arrayOf(singleString)
-        _selectedStringIndex.value = 0
+        _instrumentNameModel.value = InstrumentEditorNameModel("", R.drawable.ic_guitar)
+        _strings.value = StringsAndSelection(
+            if (singleString == null) arrayOf() else arrayOf(singleString),
+            0
+        )
         stableId = Instrument.NO_STABLE_ID
     }
 
     fun setInstrumentName(name: CharSequence?) {
         //Log.v("Tuner", "InstrumentEditorViewModel: Set instrument name: |$name|, current: |${instrumentName.value}|")
-        if (name?.contentEquals(instrumentName.value) == false)
-            _instrumentName.value = name ?: ""
+        if (name?.contentEquals(instrumentNameModel.value?.name) == false)
+            _instrumentNameModel.value = instrumentNameModel.value?.copy(name = name)
     }
 
     fun setInstrumentIcon(resourceId: Int) {
-        if (resourceId != iconResourceId.value)
-            _iconResourceId.value = resourceId
+        if (resourceId != instrumentNameModel.value?.iconResourceId)
+            _instrumentNameModel.value = instrumentNameModel.value?.copy(iconResourceId = resourceId)
     }
 
     fun selectString(stringIndex: Int) {
-        if (stringIndex != -1)
-            _selectedStringIndex.value = stringIndex
-    }
-
-    fun setStrings(strings: Array<MusicalNote>) {
-        if (!strings.contentEquals(_strings.value)) {
-            _strings.value = strings.copyOf()
-            if ((selectedStringIndex.value ?: 0) >= strings.size)
-                _selectedStringIndex.value = strings.size - 1
+        if (stringIndex != -1) {
+            _strings.value = strings.value.copy(selectedIndex = stringIndex)
         }
     }
 
+//    fun setStrings(strings: Array<MusicalNote>) {
+//        if (!strings.contentEquals(this.strings.value.strings)) {
+//            _strings.value = StringsAndSelection(
+//                this.strings.value.strings.copyOf(),
+//                if (this.strings.value.selectedIndex >= strings.size)
+//                    strings.size - 1
+//                else
+//                    this.strings.value.selectedIndex
+//            )
+//        }
+//    }
+
     fun addStringBelowSelectedAndSelectNewString(string: MusicalNote? = null) {
-        val numOldStrings = strings.value?.size ?: 0
-        val currentSelectedIndex = selectedStringIndex.value ?: 0
+        val numOldStrings = strings.value.strings.size
+        val currentSelectedIndex = strings.value.selectedIndex
 
         val newStrings = Array<MusicalNote?>(numOldStrings + 1) {null}
 
-        val newString = string ?: strings.value?.getOrNull(currentSelectedIndex) ?: defaultNote
+        val newString = string ?: strings.value.strings.getOrNull(currentSelectedIndex) ?: defaultNote
 
         if (numOldStrings > 0)
-            strings.value?.copyInto(newStrings, 0,0, currentSelectedIndex + 1)
+            strings.value.strings.copyInto(newStrings, 0,0, currentSelectedIndex + 1)
 
         if (currentSelectedIndex + 1 < numOldStrings)
-            strings.value?.copyInto(newStrings, currentSelectedIndex + 2, currentSelectedIndex + 1, numOldStrings)
+            strings.value.strings.copyInto(newStrings, currentSelectedIndex + 2, currentSelectedIndex + 1, numOldStrings)
         val newSelectedIndex = if (currentSelectedIndex + 1 >= newStrings.size)
             newStrings.size - 1
         else
             currentSelectedIndex + 1
 
         newStrings[newSelectedIndex] = newString
-        _strings.value = newStrings.filterNotNull().toTypedArray()
-        _selectedStringIndex.value = newSelectedIndex
+        _strings.value = StringsAndSelection(
+            newStrings.filterNotNull().toTypedArray(),
+            newSelectedIndex
+        )
     }
 
     /** Change the note of the currently selected string.
      * @param note New note for the selectd string
      */
     fun setSelectedStringTo(note: MusicalNote) {
-        val stringArray = strings.value ?: return
-        if (stringArray.isEmpty())
+        if (strings.value.strings.isEmpty())
             return
-        val currentSelectedIndex = selectedStringIndex.value ?: 0
+        val currentSelectedIndex = strings.value.selectedIndex
 
-        if (currentSelectedIndex < stringArray.size && stringArray[currentSelectedIndex] != note) {
-            stringArray[currentSelectedIndex] = note
-            _strings.value = stringArray
+        if (currentSelectedIndex < strings.value.strings.size && strings.value.strings[currentSelectedIndex] != note) {
+            strings.value.strings[currentSelectedIndex] = note
+            _strings.value = strings.value.copy(strings = strings.value.strings)
+            //_strings.value = stringArray
         }
     }
 
     fun deleteSelectedString() {
-        val stringArray = strings.value ?: return
+        val stringArray = strings.value.strings
         if (stringArray.isEmpty())
             return
-        val currentSelectedIndex = selectedStringIndex.value ?: 0
+        val currentSelectedIndex = strings.value.selectedIndex
 
         if (currentSelectedIndex < stringArray.size) {
             val newStringArray = Array<MusicalNote?>(stringArray.size - 1) {null}
             stringArray.copyInto(newStringArray, 0, 0, currentSelectedIndex)
             if (currentSelectedIndex + 1 < stringArray.size)
                 stringArray.copyInto(newStringArray, currentSelectedIndex, currentSelectedIndex + 1, stringArray.size)
-            _strings.value = newStringArray.filterNotNull().toTypedArray()
-            if (currentSelectedIndex >= newStringArray.size)
-                _selectedStringIndex.value = newStringArray.size - 1
+            _strings.value = strings.value.copy(
+                strings = newStringArray.filterNotNull().toTypedArray(),
+                selectedIndex = if (currentSelectedIndex >= newStringArray.size)
+                    newStringArray.size - 1
+                else
+                    currentSelectedIndex
+            )
         }
     }
 
-    private fun loadSettingsFromSharedPreferences() {
-        val values = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
-        defaultNote = NoteNameScaleFactory.getDefaultReferenceNote(values.temperamentType)
+    private fun restartSamplingIfRunning() {
+        if (noteDetectionJob != null)
+            startSampling()
+    }
+
+    fun startSampling() {
+        noteDetectionJob?.cancel()
+        noteDetectionJob = viewModelScope.launch(Dispatchers.Main) {
+            val frequencyEvaluator = FrequencyEvaluator(
+                pref.numMovingAverage.value,
+                pref.toleranceInCents.value.toFloat(),
+                pref.maxNoise.value,
+                pref.musicalScale.value,
+                Instrument(null, null, arrayOf(), 0, 0, true)
+            )
+            frequencyDetectionFlow(pref, null).collect {
+                ensureActive()
+                frequencyEvaluator.evaluate(it.memory, null).target?.note?.let {
+                    _detectedNoteModel.value = detectedNoteModel.value?.apply {
+                        changeSettings(note = it)
+                    }
+                }
+
+                it.decRef()
+//                Log.v("TunerViewModel", "collecting frequencyDetectionFlow")
+            }
+        }
+    }
+
+    fun stopSampling() {
+        noteDetectionJob?.cancel()
+    }
+
+    private fun computePitchHistoryUpdateInterval(
+        windowSize: Int = pref.windowSize.value,
+        overlap: Float = pref.overlap.value,
+        sampleRate: Int = this.sampleRate
+    ) = windowSize * (1f - overlap) / sampleRate
+
+//    private fun loadSettingsFromSharedPreferences() {
+//        val values = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
+//        defaultNote = NoteNameScaleFactory.getDefaultReferenceNote(values.temperamentType)
+//    }
+
+    class Factory(private val pref: PreferenceResources) : ViewModelProvider.Factory {
+        @Suppress("unchecked_cast")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return InstrumentEditorViewModel(pref) as T
+        }
     }
 }

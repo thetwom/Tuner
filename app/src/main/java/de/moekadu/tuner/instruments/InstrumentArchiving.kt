@@ -24,14 +24,21 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.widget.Toast
+import androidx.activity.result.ActivityResultCaller
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.core.database.getStringOrNull
+import androidx.fragment.app.FragmentManager
 import de.moekadu.tuner.R
 import de.moekadu.tuner.dialogs.ImportInstrumentsDialog
-import de.moekadu.tuner.fragments.InstrumentsFragment
 
-class InstrumentArchiving(private val instrumentsFragment: InstrumentsFragment) {
-    private val database get() = instrumentsFragment.instrumentsViewModel.customInstrumentDatabase
+class InstrumentArchiving(
+    private val obtainDatabase: () -> InstrumentDatabase,
+    activityResultCaller: ActivityResultCaller,
+    private val obtainFragmentManager: () -> FragmentManager,
+    private val obtainContext: () -> Context,
+//    private val instrumentsFragment: InstrumentsFragment
+    ) {
+//    private val database get() = instrumentsFragment.instrumentsViewModel.customInstrumentDatabase
 
     private inner class FileWriterContract : ActivityResultContract<String, String?>() {
 
@@ -67,18 +74,22 @@ class InstrumentArchiving(private val instrumentsFragment: InstrumentsFragment) 
         }
     }
 
-    private val _archiveInstruments = instrumentsFragment.registerForActivityResult(FileWriterContract()) { filename ->
+    //private val _archiveInstruments = instrumentsFragment.registerForActivityResult(FileWriterContract()) { filename ->
+    private val _archiveInstruments = activityResultCaller.registerForActivityResult(FileWriterContract()) { filename ->
+        val context = obtainContext()
         if (filename == null) {
-            Toast.makeText(instrumentsFragment.requireContext(),
+            //Toast.makeText(instrumentsFragment.requireContext(),
+            Toast.makeText(context,
                 R.string.failed_to_archive_instruments, Toast.LENGTH_LONG).show()
         } else {
-            instrumentsFragment.context?.let { context ->
-                Toast.makeText(context, context.getString(R.string.database_saved, filename), Toast.LENGTH_LONG).show()
-            }
+            //instrumentsFragment.context?.let { context ->
+            Toast.makeText(context, context.getString(R.string.database_saved, filename), Toast.LENGTH_LONG).show()
+            //}
         }
     }
 
-    private val _unarchiveInstruments = instrumentsFragment.registerForActivityResult(
+    //private val _unarchiveInstruments = instrumentsFragment.registerForActivityResult(
+    private val _unarchiveInstruments = activityResultCaller.registerForActivityResult(
         FileReaderContract()
     ) { uri ->
 //        Log.v("Tuner", "InstrumentsArchiving._unarchiveInstruments: uri=$uri")
@@ -87,7 +98,8 @@ class InstrumentArchiving(private val instrumentsFragment: InstrumentsFragment) 
 
     fun archiveInstruments(instrumentDatabase: InstrumentDatabase?) {
         if ((instrumentDatabase?.size ?: 0) == 0) {
-            Toast.makeText(instrumentsFragment.requireContext(), R.string.database_empty, Toast.LENGTH_LONG).show()
+            //Toast.makeText(instrumentsFragment.requireContext(), R.string.database_empty, Toast.LENGTH_LONG).show()
+            Toast.makeText(obtainContext(), R.string.database_empty, Toast.LENGTH_LONG).show()
         } else {
             _archiveInstruments.launch("")
         }
@@ -98,12 +110,12 @@ class InstrumentArchiving(private val instrumentsFragment: InstrumentsFragment) 
     }
 
     fun saveInstruments(uri: Uri?) : String? {
-        val context = instrumentsFragment.context
+        //val context = instrumentsFragment.context
 
-        if (uri == null || context == null)
+        if (uri == null) // || context == null)
             return null
-
-        val fileData = database.getInstrumentsString(context)
+        val context = obtainContext()
+        val fileData = obtainDatabase().getInstrumentsString(context)
 
         context.contentResolver?.openOutputStream(uri, "wt")?.use { stream ->
             stream.write(fileData.toByteArray())
@@ -113,11 +125,12 @@ class InstrumentArchiving(private val instrumentsFragment: InstrumentsFragment) 
 
     fun loadInstruments(uri: Uri?){
 //        Log.v("Tuner", "InstrumentsArchiving.loadInstruments: uri=$uri")
-        val context = instrumentsFragment.context
+        //val context = instrumentsFragment.context
 
-        if (context != null && uri != null) {
+        if (uri != null) { // && context != null)) {
+            val context = obtainContext()
             val filename = getFilenameFromUri(context, uri)
-//            Log.v("Tuner", "InstrmentArchiving.loadInstruments: $filename")
+//            Log.v("Tuner", "InstrumentArchiving.loadInstruments: $filename")
             val databaseString = context.contentResolver?.openInputStream(uri)?.use { stream ->
                 stream.reader().use {
                     it.readText()
@@ -126,7 +139,7 @@ class InstrumentArchiving(private val instrumentsFragment: InstrumentsFragment) 
 
             val (check, instruments) = InstrumentDatabase.stringToInstruments(databaseString)
             InstrumentDatabase.toastFileCheckString(context, filename, check)
-
+            val database = obtainDatabase()
             when {
                 check != InstrumentDatabase.FileCheck.Ok -> {
                     return
@@ -137,7 +150,8 @@ class InstrumentArchiving(private val instrumentsFragment: InstrumentsFragment) 
                 else -> {
         //            Log.v("Tuner", "InstrumentArchiving.loadInstruments: filename = $filename")
                     val dialog = ImportInstrumentsDialog.createInstance(databaseString)
-                    dialog.show(instrumentsFragment.parentFragmentManager, ImportInstrumentsDialog.REQUEST_KEY)
+                    //dialog.show(instrumentsFragment.parentFragmentManager, ImportInstrumentsDialog.REQUEST_KEY)
+                    dialog.show(obtainFragmentManager(), ImportInstrumentsDialog.REQUEST_KEY)
                 }
             }
         }

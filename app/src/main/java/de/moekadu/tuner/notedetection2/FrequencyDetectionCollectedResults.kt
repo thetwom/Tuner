@@ -9,7 +9,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-class CollectedResults(val sizeOfTimeSeries: Int, val sampleRate: Int) {
+class FrequencyDetectionCollectedResults(val sizeOfTimeSeries: Int, val sampleRate: Int) {
     val timeSeries = TimeSeries(sizeOfTimeSeries, 1.0f / sampleRate)
 
     /** Standard deviation computed from time series. */
@@ -49,19 +49,19 @@ class CollectedResults(val sizeOfTimeSeries: Int, val sampleRate: Int) {
             harmonicStatistics.frequency
         else correlationBasedFrequency.frequency
 
-    val inharmonicity get() = harmonicStatistics.inharmonicity
+    var inharmonicity = 0f
 }
 
-class MemoryPoolCollectedResults {
-    private val pool = MemoryPool<CollectedResults>()
+class MemoryPoolFrequencyDetectionCollectedResults {
+    private val pool = MemoryPool<FrequencyDetectionCollectedResults>()
 
     fun get(sizeOfTimeSeries: Int, sampleRate: Int) = pool.get(
-        factory = { CollectedResults(sizeOfTimeSeries, sampleRate) },
+        factory = { FrequencyDetectionCollectedResults(sizeOfTimeSeries, sampleRate) },
         checker = { it.sizeOfTimeSeries == sizeOfTimeSeries && it.sampleRate == sampleRate }
     )
 }
 
-class ResultCollector(
+class FrequencyDetectionResultCollector(
     private val frequencyMin: Float,
     private val frequencyMax: Float,
     private val subharmonicsTolerance: Float = 0.05f,
@@ -69,14 +69,16 @@ class ResultCollector(
     private val harmonicTolerance: Float = 0.1f,
     private val minimumFactorOverLocalMean: Float = 5f,
     private val maxGapBetweenHarmonics: Int = 10,
+    private val maxNumHarmonicsForInharmonicity: Int = 8,
     private val windowType: WindowingFunction = WindowingFunction.Tophat,
     private val acousticWeighting: AcousticWeighting = AcousticCWeighting()
 ) {
-    private val collectedResultsMemory = MemoryPoolCollectedResults()
+    private val collectedResultsMemory = MemoryPoolFrequencyDetectionCollectedResults()
     private val spectrumAndCorrelationMemory = MemoryPoolCorrelation()
-    private var previousResultsBuffer = Channel<MemoryPool<CollectedResults>.RefCountedMemory>(Channel.CONFLATED)
+    private val inharmonicityDetectorMemory = MemoryPoolInharmonicityDetector()
+    private var previousResultsBuffer = Channel<MemoryPool<FrequencyDetectionCollectedResults>.RefCountedMemory>(Channel.CONFLATED)
 
-    fun collectResults(sampleData: MemoryPool<SampleData>.RefCountedMemory): MemoryPool<CollectedResults>.RefCountedMemory {
+    fun collectResults(sampleData: MemoryPool<SampleData>.RefCountedMemory): MemoryPool<FrequencyDetectionCollectedResults>.RefCountedMemory {
         val collectedResults = collectedResultsMemory.get(sampleData.memory.size, sampleData.memory.sampleRate)
 
         val previousResults = previousResultsBuffer.tryReceive().getOrNull()
@@ -123,21 +125,20 @@ class ResultCollector(
                 minimumFactorOverLocalMean = minimumFactorOverLocalMean,
                 maxNumFail = maxGapBetweenHarmonics,
             )
-            collectedResults.memory.harmonicStatistics.evaluate(collectedResults.memory.harmonics, acousticWeighting)
-//            Log.v("Tuner", "CollectedResults.collectResults: number of harmonics: ${collectedResults.memory.harmonics.size}")
-//            if (collectedResults.memory.harmonics.size > 1) {
-//                var s = ""
-//                var a = 0f
-//                for (n in 0 until collectedResults.memory.harmonics.size) {
-//                    val h = collectedResults.memory.harmonics[n]
-//                    s += "h=${h.harmonicNumber}: ${h.spectrumAmplitudeSquared};  "
-//                }
-//                Log.v("Tuner", "CollectedResults.collectResults: harmonics: $s, frequency = ${collectedResults.memory.harmonicStatistics.frequency}")
-//            }
+            collectedResults.memory.harmonics.sort()
 
+            collectedResults.memory.harmonicStatistics.evaluate(collectedResults.memory.harmonics, acousticWeighting)
+
+            val inharmonicityDetector = inharmonicityDetectorMemory.get(maxNumHarmonicsForInharmonicity)
+            collectedResults.memory.inharmonicity = inharmonicityDetector.memory.computeInharmonicity(
+                collectedResults.memory.harmonics,
+                acousticWeighting
+            )
+            inharmonicityDetector.decRef()
         } else {
             collectedResults.memory.harmonics.clear()
             collectedResults.memory.harmonicStatistics.clear()
+            collectedResults.memory.inharmonicity = 0f
         }
 
         collectedResults.incRef() // increment ref count to avoid recycling while its in the previousResultsBuffer
@@ -147,8 +148,8 @@ class ResultCollector(
     }
 
     private fun copyPreviousResultsToNewResults(
-        previousResults: CollectedResults?,
-        newResults: CollectedResults
+        previousResults: FrequencyDetectionCollectedResults?,
+        newResults: FrequencyDetectionCollectedResults
     ) {
         if (previousResults != null && previousResults.sizeOfTimeSeries == newResults.sizeOfTimeSeries) {
             newResults.previousFramePosition = previousResults.timeSeries.framePosition

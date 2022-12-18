@@ -13,40 +13,26 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import androidx.fragment.app.viewModels
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
 import de.moekadu.tuner.dialogs.IconPickerDialogFragment
-import de.moekadu.tuner.instruments.instrumentDatabase
+import de.moekadu.tuner.instrumentResources
+import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.preferenceResources
-import de.moekadu.tuner.preferences.AppPreferences
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.viewmodels.InstrumentEditorViewModel
-import de.moekadu.tuner.viewmodels.InstrumentsViewModel
-import de.moekadu.tuner.viewmodels.TunerViewModel
 import de.moekadu.tuner.views.DetectedNoteViewer
 import de.moekadu.tuner.views.NoteSelector
 import de.moekadu.tuner.views.StringView
-import kotlinx.coroutines.launch
 
 class InstrumentEditorFragment : Fragment() {
-    private val tunerViewModel: TunerViewModel by activityViewModels()
-    private val viewModel: InstrumentEditorViewModel by activityViewModels()
-    private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
-        InstrumentsViewModel.Factory(
-            AppPreferences.readInstrumentId(requireActivity()),
-            AppPreferences.readInstrumentSection(requireActivity()),
-            AppPreferences.readCustomInstruments(requireActivity()),
-            AppPreferences.readPredefinedSectionExpanded(requireActivity()),
-            AppPreferences.readCustomSectionExpanded(requireActivity()),
-            requireActivity().application
-        )
+
+    private val viewModel: InstrumentEditorViewModel by viewModels {
+        InstrumentEditorViewModel.Factory(requireActivity().preferenceResources)
     }
     // TODO: the clear-icon only appears after typing, but not when getting focus.
     //       This seems an issue with the TextInputLayout???
@@ -59,6 +45,10 @@ class InstrumentEditorFragment : Fragment() {
     private var noteSelector: NoteSelector? = null
     private var detectedNoteViewer: DetectedNoteViewer? = null
 
+    private var stringViewChangeId = -1
+    private var noteSelectorChangeId = -1
+    private var detectedNoteViewChangeId = -1
+
     /// Instance for requesting audio recording permission.
     /**
      * This will create the sourceJob as soon as the permissions are granted.
@@ -67,7 +57,8 @@ class InstrumentEditorFragment : Fragment() {
         ActivityResultContracts.RequestPermission()
     ) { result ->
         if (result) {
-            tunerViewModel.startSampling()
+            //tunerViewModel.startSampling()
+            viewModel.startSampling()
         } else {
             Toast.makeText(activity, getString(R.string.no_audio_recording_permission), Toast.LENGTH_LONG)
                 .show()
@@ -83,6 +74,14 @@ class InstrumentEditorFragment : Fragment() {
     ): View? {
 
         val view = inflater.inflate(R.layout.instrument_editor, container, false)
+//        Log.v("Tuner", "InstrumentEditorFragment: onCreateView")
+        val initialInstrument = arguments?.getParcelable<Instrument?>(INSTRUMENT_KEY)
+        if (initialInstrument == null) {
+            viewModel.setDefaultInstrument()
+        } else {
+//            Log.v("Tuner", "InstrumentEditorFragment: onCreateView: initial instrument = $it")
+            viewModel.setInstrument(initialInstrument, context)
+        }
 
         parentFragmentManager.setFragmentResultListener(IconPickerDialogFragment.REQUEST_KEY, viewLifecycleOwner) { _, bundle ->
             viewModel.setInstrumentIcon(bundle.getInt(IconPickerDialogFragment.ICON_KEY))
@@ -110,68 +109,94 @@ class InstrumentEditorFragment : Fragment() {
             }
         }
 
-        tunerViewModel.pitchHistoryUpdateInterval.observe(viewLifecycleOwner) {
-            detectedNoteViewer?.setApproximateHitNoteUpdateInterval(it)
-        }
-
-        tunerViewModel.pitchHistory.historyAveraged.observe(viewLifecycleOwner) {
-            tunerViewModel.targetNote.value?.let { targetNote ->
-                detectedNoteViewer?.hitNote(targetNote.note)
-            }
-        }
-
-        tunerViewModel.musicalScale.observe(viewLifecycleOwner) {
-            updateNoteNamesInAllViews()
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                requireContext().preferenceResources.notePrintOptions.collect {
-                    updateNoteNamesInAllViews()
-                }
-            }
-        }
-//        tunerViewModel.preferFlat.observe(viewLifecycleOwner) {
+//        INFO: the following lines have been temporarily switched off
+//        tunerViewModel.pitchHistoryUpdateInterval.observe(viewLifecycleOwner) {
+//            detectedNoteViewer?.setApproximateHitNoteUpdateInterval(it)
+//        }
+//
+//        tunerViewModel.pitchHistory.historyAveraged.observe(viewLifecycleOwner) {
+//            tunerViewModel.targetNote.value?.let { targetNote ->
+//                detectedNoteViewer?.hitNote(targetNote.note)
+//            }
+//        }
+//
+//        tunerViewModel.musicalScale.observe(viewLifecycleOwner) {
 //            updateNoteNamesInAllViews()
 //        }
+//
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                requireContext().preferenceResources.notePrintOptions.collect {
+//                    updateNoteNamesInAllViews()
+//                }
+//            }
+//        }
 
-        viewModel.instrumentName.observe(viewLifecycleOwner) {
+        viewModel.instrumentNameModel.observe(viewLifecycleOwner) {
 //            Log.v("Tuner", "InstrumentEditorFragment: observe instrument name: new = |$it|, before = |${instrumentNameEditText?.text?.trim()}|, different? = ${instrumentNameEditText?.text?.trim()?.contentEquals(it)}")
             //if (instrumentNameEditText?.text?.trim()?.contentEquals(it) == false)
-            if (instrumentNameEditText?.text?.contentEquals(it) == false)
-                instrumentNameEditText?.setText(it)
+            if (instrumentNameEditText?.text?.contentEquals(it.name) == false)
+                instrumentNameEditText?.setText(it.name)
+            instrumentNameLayout?.setStartIconDrawable(it.iconResourceId)
         }
 
-        viewModel.iconResourceId.observe(viewLifecycleOwner) {
-            instrumentNameLayout?.setStartIconDrawable(it)
-        }
+//        viewModel.iconResourceId.observe(viewLifecycleOwner) {
+//            instrumentNameLayout?.setStartIconDrawable(it)
+//        }
 
-        viewModel.strings.observe(viewLifecycleOwner) { strings ->
-            //val noteNames = tunerViewModel.noteNames.value
-            tunerViewModel.musicalScale.value?.let { musicalScale ->
+//        INFO: The following lines have been temporarily switched off
+//        viewModel.strings.observe(viewLifecycleOwner) { strings ->
+//            //val noteNames = tunerViewModel.noteNames.value
+//            tunerViewModel.musicalScale.value?.let { musicalScale ->
+//                stringView?.setStrings(
+//                    strings,
+//                    isChromatic = false,
+//                    musicalScale.noteNameScale,
+//                    musicalScale.noteIndexBegin,
+//                    musicalScale.noteIndexEnd,
+//                    requireContext().preferenceResources.notePrintOptions.value
+//                )
+//                val selectedStringIndex = viewModel.selectedStringIndex.value ?: -1
+//                if (selectedStringIndex in strings.indices)
+//                    noteSelector?.setActiveNote(strings[selectedStringIndex], 150L)
+//                else
+//                    noteSelector?.setActiveNote(strings.lastOrNull(), 150L)
+//            }
+//        }
+
+//        viewModel.selectedStringIndex.observe(viewLifecycleOwner) { selectedStringIndex ->
+//            val strings = viewModel.strings.value
+//            if (strings != null && selectedStringIndex in strings.indices) {
+//                val note = strings[selectedStringIndex]
+//                stringView?.highlightSingleString(selectedStringIndex, 300L)
+//                noteSelector?.setActiveNote(note, 150L)
+//            }
+//        }
+        viewModel.stringViewModel.observe(viewLifecycleOwner) { model ->
+            if (model.changeId < stringViewChangeId)
+                stringViewChangeId = -1
+
+            if (model.stringChangedId > stringViewChangeId) {
                 stringView?.setStrings(
-                    strings,
+                    model.strings,
                     isChromatic = false,
-                    musicalScale.noteNameScale,
-                    musicalScale.noteIndexBegin,
-                    musicalScale.noteIndexEnd,
-                    requireContext().preferenceResources.notePrintOptions.value
+                    model.musicalScale.noteNameScale,
+                    model.musicalScale.noteIndexBegin,
+                    model.musicalScale.noteIndexEnd,
+                    model.notePrintOptions
                 )
-                val selectedStringIndex = viewModel.selectedStringIndex.value ?: -1
-                if (selectedStringIndex in strings.indices)
-                    noteSelector?.setActiveNote(strings[selectedStringIndex], 150L)
-                else
-                    noteSelector?.setActiveNote(strings.lastOrNull(), 150L)
             }
-        }
 
-        viewModel.selectedStringIndex.observe(viewLifecycleOwner) { selectedStringIndex ->
-            val strings = viewModel.strings.value
-            if (strings != null && selectedStringIndex in strings.indices) {
-                val note = strings[selectedStringIndex]
-                stringView?.highlightSingleString(selectedStringIndex, 300L)
-                noteSelector?.setActiveNote(note, 150L)
+            if (model.settingsChangedId > stringViewChangeId && model.selectedStringIndex in model.strings.indices) {
+                stringView?.highlightSingleString(model.selectedStringIndex, 300L)
             }
+                //            if (strings != null && selectedStringIndex in strings.indices) {
+//                val note = strings[selectedStringIndex]
+//                stringView?.highlightSingleString(selectedStringIndex, 300L)
+//                noteSelector?.setActiveNote(note, 150L)
+//            }
+
+            stringViewChangeId = model.changeId
         }
 
         stringView?.stringClickedListener = object : StringView.StringClickedListener {
@@ -191,8 +216,41 @@ class InstrumentEditorFragment : Fragment() {
             viewModel.deleteSelectedString()
         }
 
+        viewModel.noteSelectorModel.observe(viewLifecycleOwner) { model ->
+            if (model.changeId < noteSelectorChangeId)
+                noteSelectorChangeId = -1
+
+            if (model.scaleChangeId > noteSelectorChangeId) {
+                noteSelector?.setNotes(
+                    model.musicalScale.noteIndexBegin, model.musicalScale.noteIndexEnd,
+                    model.musicalScale.noteNameScale, null, model.notePrintOptions)
+            }
+            if (model.selectedNoteId > noteSelectorChangeId) {
+                noteSelector?.setActiveNote(model.selectedNote, 150L)
+            }
+            noteSelectorChangeId = model.changeId
+        }
         noteSelector?.noteChangedListener = NoteSelector.NoteChangedListener {
             viewModel.setSelectedStringTo(it)
+        }
+
+        viewModel.detectedNoteModel.observe(viewLifecycleOwner) { model ->
+            if (model.changeId < detectedNoteViewChangeId)
+                detectedNoteViewChangeId = -1
+            if (model.scaleChangeId > detectedNoteViewChangeId) {
+                detectedNoteViewer?.setNotes(
+                    model.musicalScale.noteNameScale,
+                    model.musicalScale.noteIndexBegin, model.musicalScale.noteIndexEnd,
+                    model.notePrintOptions
+                )
+            }
+            if (model.noteUpdateIntervalChangedId > detectedNoteViewChangeId) {
+                detectedNoteViewer?.setApproximateHitNoteUpdateInterval(model.noteUpdateInterval)
+            }
+            if (model.noteChangedId > detectedNoteViewChangeId) {
+                detectedNoteViewer?.hitNote(model.note)
+            }
+            detectedNoteViewChangeId = model.changeId
         }
 
         detectedNoteViewer?.noteClickedListener = DetectedNoteViewer.NoteClickedListener {
@@ -209,7 +267,13 @@ class InstrumentEditorFragment : Fragment() {
         })
 
         val actionMode = (requireActivity() as MainActivity).startSupportActionMode(
-            InstrumentEditorActionCallback(requireActivity() as MainActivity, instrumentsViewModel, viewModel)
+            //InstrumentEditorActionCallback(requireActivity() as MainActivity, instrumentsViewModel, viewModel)
+            InstrumentEditorActionCallback(
+                requireActivity() as MainActivity,
+                addOrReplaceInstrument = {
+                    activity?.instrumentResources?.replaceOrAddCustomInstrument(viewModel.getInstrument())
+                }
+            )
         )
         actionMode?.setTitle(R.string.edit_instrument)
 
@@ -220,13 +284,15 @@ class InstrumentEditorFragment : Fragment() {
         super.onStart()
 //        Log.v("Tuner", "InstrumentEditorFragment.onStart()")
         askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
-        tunerViewModel.setInstrument(instrumentDatabase[0])
-        tunerViewModel.setTargetNote(-1, null)
+        // TODO: we need a completely own view model here!
+        //tunerViewModel.setInstrument(instrumentDatabase[0])
+        //tunerViewModel.setTargetNote(-1, null)
     }
 
     override fun onStop() {
 //        Log.v("Tuner", "InstrumentEditorFragment.onStop()")
-        tunerViewModel.stopSampling()
+        //tunerViewModel.stopSampling()
+        viewModel.stopSampling()
         super.onStop()
     }
 
@@ -240,18 +306,23 @@ class InstrumentEditorFragment : Fragment() {
         }
     }
 
-    private fun updateNoteNamesInAllViews() {
-        //val noteNames = tunerViewModel.noteNames.value ?: return
-        val notePrintOptions = requireContext().preferenceResources.notePrintOptions.value
-        val musicalScale = tunerViewModel.musicalScale.value ?: return
+//    INFO: The following lines have been temporarily switched off
+//    private fun updateNoteNamesInAllViews() {
+//        //val noteNames = tunerViewModel.noteNames.value ?: return
+//        val notePrintOptions = requireContext().preferenceResources.notePrintOptions.value
+//        val musicalScale = tunerViewModel.musicalScale.value ?: return
+//
+//        noteSelector?.setNotes(musicalScale.noteIndexBegin, musicalScale.noteIndexEnd,
+//            musicalScale.noteNameScale, null, notePrintOptions)
+//        detectedNoteViewer?.setNotes(
+//            musicalScale.noteNameScale, musicalScale.noteIndexBegin, musicalScale.noteIndexEnd, notePrintOptions)
+//        viewModel.strings.value?.let { strings ->
+//            stringView?.setStrings(strings, false, musicalScale.noteNameScale,
+//                musicalScale.noteIndexBegin, musicalScale.noteIndexEnd, notePrintOptions)
+//        }
+//    }
 
-        noteSelector?.setNotes(musicalScale.noteIndexBegin, musicalScale.noteIndexEnd,
-            musicalScale.noteNameScale, null, notePrintOptions)
-        detectedNoteViewer?.setNotes(
-            musicalScale.noteNameScale, musicalScale.noteIndexBegin, musicalScale.noteIndexEnd, notePrintOptions)
-        viewModel.strings.value?.let { strings ->
-            stringView?.setStrings(strings, false, musicalScale.noteNameScale,
-                musicalScale.noteIndexBegin, musicalScale.noteIndexEnd, notePrintOptions)
-        }
+    companion object {
+        const val INSTRUMENT_KEY = "instrument"
     }
 }

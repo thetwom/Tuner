@@ -1,5 +1,8 @@
 package de.moekadu.tuner.temperaments
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
 enum class BaseNote {
     C, D, E, F, G, A, B, None
 }
@@ -46,11 +49,12 @@ data class NoteNameStem(val baseNote: BaseNote, val modifier: NoteModifier,
  *   has no meaning if enharmonicBase is BaseNote.None
  * @param enharmonicOctaveOffset Same as octaveOffset, but for the enharmonic note
  */
+@Parcelize
 data class MusicalNote(val base: BaseNote, val modifier: NoteModifier, val octave: Int = Int.MAX_VALUE,
                        val octaveOffset: Int = 0,
                        val enharmonicBase: BaseNote = BaseNote.None,
                        val enharmonicModifier: NoteModifier = NoteModifier.None,
-                       val enharmonicOctaveOffset: Int = 0) {
+                       val enharmonicOctaveOffset: Int = 0) : Parcelable {
     /** Get string representation of note, which can be later on parsed to get back the note. */
     fun asString(): String {
         return "MusicalNote(base=$base,modifier=$modifier,octave=$octave,octaveOffset=$octaveOffset,enharmonicBase=$enharmonicBase,enharmonicModifier=$enharmonicModifier,enharmonicOctaveOffset=$enharmonicOctaveOffset)"
