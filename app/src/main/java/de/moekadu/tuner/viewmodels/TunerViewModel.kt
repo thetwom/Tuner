@@ -351,6 +351,7 @@ class TunerViewModel(
             noteDetectionResults.combine(userDefinedTargetNote) { noteDetectionRes, userDefinedNote ->
                 noteDetectionRes?.incRef()
                 val result = freqEvaluator.evaluate(noteDetectionRes?.memory, userDefinedNote?.note)
+//                Log.v("Tuner", "TunerViewModel : combine noteDetectionResult and userDefinedNote, result=$result")
 //                var frequencyDetectionTimeStep = -1
 //                var dt = -1f
 //                val newTarget = noteDetectionRes?.let {

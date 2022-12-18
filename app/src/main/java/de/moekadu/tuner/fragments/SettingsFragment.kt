@@ -100,7 +100,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
+//        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
 
         noteNamePrinter = NoteNamePrinter(requireContext())
 
@@ -273,19 +273,19 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
         maxNoise.summary = getMaxNoiseSummary(maxNoise.value)
 
-        val pitchHistoryNumFaultyValues =
-            findPreference<SeekBarPreference>("pitch_history_num_faulty_values")
-                ?: throw RuntimeException("No pitch history num fault values preference")
-        pitchHistoryNumFaultyValues.setOnPreferenceChangeListener { preference, newValue ->
-            preference.summary = resources.getQuantityString(
-                R.plurals.pitch_history_num_faulty_values_summary, newValue as Int, newValue
-            )
-            true
-        }
-        pitchHistoryNumFaultyValues.summary = resources.getQuantityString(
-            R.plurals.pitch_history_num_faulty_values_summary,
-            pitchHistoryNumFaultyValues.value, pitchHistoryNumFaultyValues.value
-        )
+//        val pitchHistoryNumFaultyValues =
+//            findPreference<SeekBarPreference>("pitch_history_num_faulty_values")
+//                ?: throw RuntimeException("No pitch history num fault values preference")
+//        pitchHistoryNumFaultyValues.setOnPreferenceChangeListener { preference, newValue ->
+//            preference.summary = resources.getQuantityString(
+//                R.plurals.pitch_history_num_faulty_values_summary, newValue as Int, newValue
+//            )
+//            true
+//        }
+//        pitchHistoryNumFaultyValues.summary = resources.getQuantityString(
+//            R.plurals.pitch_history_num_faulty_values_summary,
+//            pitchHistoryNumFaultyValues.value, pitchHistoryNumFaultyValues.value
+//        )
 
         val capture = findPreference<SeekBarPreference>("wave_writer_duration_in_seconds")
             ?: throw RuntimeException("No capture preference")

@@ -38,12 +38,15 @@ class FrequencyEvaluator(
         userDefinedNote: MusicalNote?): FrequencyEvaluationResult {
         var frequencyDetectionTimeStep = -1
         var dt = -1f
+//        Log.v("Tuner", "FrequencyEvaluator.evaluate: frequencyCollectionResults = $frequencyCollectionResults")
         val newTarget = frequencyCollectionResults?.let {
+//            Log.v("Tuner", "FrequencyEvaluator.evaluate: noise = ${it.noise}, maxNoise=$maxNoise, f=${it.frequency}")
             if (it.noise < maxNoise) {
                 smoothedFrequency = smoother(it.frequency)
                 frequencyDetectionTimeStep = it.timeSeries.framePosition
                 dt = it.timeSeries.dt
 
+//                Log.v("Tuner", "FrequencyEvaluator.evaluate: smoothedFrequency=$smoothedFrequency")
                 if (smoothedFrequency > 0f) {
                     timeStepOfLastSuccessfulFrequencyDetection = frequencyDetectionTimeStep
                     tuningTargetComputer(
