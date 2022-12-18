@@ -537,6 +537,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         var anchorYPos = NO_ANCHOR
 
         if (strings.size > 0) {
+//            Log.v("Tuner", "StringView.onDraw: stringStartIndex=$stringStartIndex, stringEndIndex=$stringEndIndex")
             for (i in stringStartIndex..stringEndIndex) {
                 val xPos = getStringDrawingPositionX(i)
                 val yPos = getStringDrawingPositionY(i)

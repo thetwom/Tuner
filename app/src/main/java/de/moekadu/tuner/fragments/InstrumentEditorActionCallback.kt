@@ -5,12 +5,13 @@ import android.view.MenuItem
 import androidx.appcompat.view.ActionMode
 import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
-import de.moekadu.tuner.viewmodels.InstrumentEditorViewModel
-import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 
 class InstrumentEditorActionCallback(private val activity: MainActivity,
-                                     private val instrumentsViewModel: InstrumentsViewModel,
-                                     private val instrumentEditorViewModel: InstrumentEditorViewModel
+                                     private val addOrReplaceInstrument: () -> Unit
+                                     //private val instrument: Instrument,
+                                     //private val instrumentResources: InstrumentResources
+//                                     private val instrumentsViewModel: InstrumentsViewModel,
+//                                     private val instrumentEditorViewModel: InstrumentEditorViewModel
 )
     : ActionMode.Callback {
 
@@ -28,8 +29,9 @@ class InstrumentEditorActionCallback(private val activity: MainActivity,
         return when (item?.itemId) {
             R.id.action_edit_done -> {
                 mode?.finish()
-                //instrumentsViewModel.customInstrumentDatabase.add(instrumentEditorViewModel.getInstrument())
-                instrumentsViewModel.customInstrumentDatabase.replaceOrAdd(instrumentEditorViewModel.getInstrument())
+                //instrumentsViewModel.replaceOrAddCustomInstrument(instrumentEditorViewModel.getInstrument())
+                //instrumentResources.replaceOrAddCustomInstrument(instrument)
+                addOrReplaceInstrument()
                 true
             }
             else -> false

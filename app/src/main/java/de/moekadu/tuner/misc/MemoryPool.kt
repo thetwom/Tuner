@@ -43,19 +43,23 @@ class MemoryPool<T>
         }
     }
 
-    private val memoryChannel = Channel<RefCountedMemory>(10, BufferOverflow.DROP_OLDEST)
+    private val memoryChannel = Channel<T>(10, BufferOverflow.DROP_OLDEST)
 
     private fun recycle(memory: RefCountedMemory) {
-        memoryChannel.trySend(memory)
+        memoryChannel.trySend(memory.memory)
     }
 
     fun get(factory: () -> T, checker: (T) -> Boolean): RefCountedMemory {
-        var memory: RefCountedMemory?
+        var memory: T?
         while (true) {
             memory = memoryChannel.tryReceive().getOrNull()
-            if (memory == null || checker(memory.memory))
+            if (memory == null || checker(memory))
                 break
         }
-        return memory?.also{ it.resetRef() } ?: RefCountedMemory(factory())
+        //return memory?.also{ it.resetRef() } ?: RefCountedMemory(factory())
+        return if (memory == null)
+            RefCountedMemory(factory())
+        else
+            return RefCountedMemory(memory)
     }
 }

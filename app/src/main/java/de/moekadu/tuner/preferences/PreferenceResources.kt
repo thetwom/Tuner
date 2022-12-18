@@ -4,9 +4,12 @@ import android.content.SharedPreferences
 import de.moekadu.tuner.fragments.indexToTolerance
 import de.moekadu.tuner.fragments.indexToWindowSize
 import de.moekadu.tuner.fragments.nightModeStringToID
+import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.notedetection.WindowingFunction
 import de.moekadu.tuner.notedetection.percentToPitchHistoryDuration
 import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
+import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -28,10 +31,10 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
     val windowSize: StateFlow<Int> get() = _windowSize
     private val _pitchHistoryDuration = MutableStateFlow(obtainPitchHistoryDuration())
     val pitchHistoryDuration: StateFlow<Float> get() = _pitchHistoryDuration
-    private val _pitchHistoryMaxNumFaultyValues = MutableStateFlow(obtainPitchHistoryNumFaultyValues())
-    val pitchHistoryMaxNumFaultyValues: StateFlow<Int> get() = _pitchHistoryMaxNumFaultyValues
-    private val _useHint = MutableStateFlow(obtainUseHint())
-    val useHint: StateFlow<Boolean> get() = _useHint
+//    private val _pitchHistoryMaxNumFaultyValues = MutableStateFlow(obtainPitchHistoryNumFaultyValues())
+//    val pitchHistoryMaxNumFaultyValues: StateFlow<Int> get() = _pitchHistoryMaxNumFaultyValues
+//    private val _useHint = MutableStateFlow(obtainUseHint())
+//    val useHint: StateFlow<Boolean> get() = _useHint
     private val _numMovingAverage = MutableStateFlow(obtainNumMovingAverage())
     val numMovingAverage: StateFlow<Int> get() = _numMovingAverage
     private val _maxNoise = MutableStateFlow(obtainMaxNoise())
@@ -42,15 +45,21 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
     val waveWriterDurationInSeconds: StateFlow<Int> get() = _waveWriterDurationInSeconds
     private val _notePrintOptions = MutableStateFlow(obtainNotePrintOptions())
     val notePrintOptions: StateFlow<MusicalNotePrintOptions> get() = _notePrintOptions
+    
+    private val _musicalScale = MutableStateFlow(musicalScaleFromPreference(obtainTemperamentAndReferenceNote()))
+    val musicalScale: StateFlow<MusicalScale> get() = _musicalScale
     private val _temperamentAndReferenceNote = MutableStateFlow(obtainTemperamentAndReferenceNote())
     val temperamentAndReferenceNote: StateFlow<TemperamentAndReferenceNoteValue> get() = _temperamentAndReferenceNote
+//
+//    private val _instrumentId = MutableStateFlow(obtainInstrumentId())
+//    val instrumentId: StateFlow<Long> get() = _instrumentId
 
     // we must store this explicitly outside the callback flow since otherwise this will be
     // garbage collection, see docs:
     // https://developer.android.com/reference/android/content/SharedPreferences.html#registerOnSharedPreferenceChangeListener(android.content.SharedPreferences.OnSharedPreferenceChangeListener)
-    lateinit var onSharedPreferenceChangedListener: SharedPreferences.OnSharedPreferenceChangeListener
-    init {
+    private lateinit var onSharedPreferenceChangedListener: SharedPreferences.OnSharedPreferenceChangeListener
 
+    init {
         val sharedPrefFlow = callbackFlow {
             onSharedPreferenceChangedListener =
                 SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
@@ -75,17 +84,24 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
                     APPEARANCE_KEY -> _appearance.value = obtainAppearance()
                     WINDOWING_KEY -> _windowing.value = obtainWindowing()
                     OVERLAP_KEY -> _overlap.value = obtainOverlap()
-                    PITCH_HISTORY_DURATION_KEY -> _pitchHistoryDuration.value = obtainPitchHistoryDuration()
-                    PITCH_HISTORY_NUM_FAULTY_VALUES_KEY -> _pitchHistoryMaxNumFaultyValues.value = obtainPitchHistoryNumFaultyValues()
-                    USE_HINT_KEY -> _useHint.value = obtainUseHint()
+                    PITCH_HISTORY_DURATION_KEY -> _pitchHistoryDuration.value =
+                        obtainPitchHistoryDuration()
+//                    PITCH_HISTORY_NUM_FAULTY_VALUES_KEY -> _pitchHistoryMaxNumFaultyValues.value =
+//                        obtainPitchHistoryNumFaultyValues()
+//                    USE_HINT_KEY -> _useHint.value = obtainUseHint()
                     NUM_MOVING_AVERAGE_KEY -> _numMovingAverage.value = obtainNumMovingAverage()
                     MAX_NOISE_KEY -> _maxNoise.value = obtainMaxNoise()
                     TOLERANCE_IN_CENTS_KEY -> _toleranceInCents.value = obtainToleranceInCents()
-                    WAVE_WRITER_DURATION_IN_SECONDS -> _waveWriterDurationInSeconds.value = obtainWaveWriterDurationInSeconds()
+                    WAVE_WRITER_DURATION_IN_SECONDS_KEY -> _waveWriterDurationInSeconds.value =
+                        obtainWaveWriterDurationInSeconds()
                     PREFER_FLAT_KEY -> _notePrintOptions.value = obtainNotePrintOptions()
                     SOLFEGE_KEY -> _notePrintOptions.value = obtainNotePrintOptions()
-                    TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY ->
-                        _temperamentAndReferenceNote.value = obtainTemperamentAndReferenceNote()
+                    TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY -> {
+                        val value = obtainTemperamentAndReferenceNote()
+                        _temperamentAndReferenceNote.value = value
+                        _musicalScale.value = musicalScaleFromPreference(value)
+                    }
+//                    INSTRUMENT_ID_KEY -> _instrumentId = obtainInstrumentId()
                 }
             }
         }
@@ -130,16 +146,26 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
     private fun obtainWindowSize() = indexToWindowSize(sharedPreferences.getInt(WINDOW_SIZE_KEY, 5))
     private fun obtainPitchHistoryDuration() = percentToPitchHistoryDuration(sharedPreferences.getInt(
         PITCH_HISTORY_DURATION_KEY, 50))
-    private fun obtainPitchHistoryNumFaultyValues() = sharedPreferences.getInt(
-        PITCH_HISTORY_NUM_FAULTY_VALUES_KEY, 3)
-    private fun obtainUseHint() = sharedPreferences.getBoolean(USE_HINT_KEY, true)
+//    private fun obtainPitchHistoryNumFaultyValues() = sharedPreferences.getInt(
+//        PITCH_HISTORY_NUM_FAULTY_VALUES_KEY, 3)
+//    private fun obtainUseHint() = sharedPreferences.getBoolean(USE_HINT_KEY, true)
     private fun obtainNumMovingAverage() = sharedPreferences.getInt(NUM_MOVING_AVERAGE_KEY, 5)
     private fun obtainMaxNoise() = sharedPreferences.getInt(MAX_NOISE_KEY, 10) / 100f
     private fun obtainToleranceInCents() = indexToTolerance(sharedPreferences.getInt(
         TOLERANCE_IN_CENTS_KEY, 3))
     private fun obtainWaveWriterDurationInSeconds() = sharedPreferences.getInt(
-        WAVE_WRITER_DURATION_IN_SECONDS, 0)
+        WAVE_WRITER_DURATION_IN_SECONDS_KEY, 0)
     private fun obtainTemperamentAndReferenceNote() = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
+    private fun musicalScaleFromPreference(value: TemperamentAndReferenceNoteValue): MusicalScale {
+        return MusicalScaleFactory.create(
+            value.temperamentType,
+            value.referenceNote,
+            value.rootNote,
+            value.referenceFrequency.toFloatOrNull() ?: DefaultValues.REFERENCE_FREQUENCY
+        )
+    }
+
+//    private fun obtainInstrumentId() = sharedPreferences.getLong(INSTRUMENT_ID_KEY, 0L)
 
     companion object {
         const val APPEARANCE_KEY = "appearance"
@@ -149,11 +175,12 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
         const val OVERLAP_KEY = "overlap"
         const val WINDOW_SIZE_KEY = "window_size"
         const val PITCH_HISTORY_DURATION_KEY = "pitch_history_duration"
-        const val PITCH_HISTORY_NUM_FAULTY_VALUES_KEY = "pitch_history_num_faulty_values"
-        const val USE_HINT_KEY = "use_hint"
+//        const val PITCH_HISTORY_NUM_FAULTY_VALUES_KEY = "pitch_history_num_faulty_values"
+//        const val USE_HINT_KEY = "use_hint"
         const val NUM_MOVING_AVERAGE_KEY = "num_moving_average"
         const val MAX_NOISE_KEY = "max_noise"
         const val TOLERANCE_IN_CENTS_KEY = "tolerance_in_cents"
-        const val WAVE_WRITER_DURATION_IN_SECONDS = "wave_writer_duration_in_seconds"
+        const val WAVE_WRITER_DURATION_IN_SECONDS_KEY = "wave_writer_duration_in_seconds"
+//        const val INSTRUMENT_ID_KEY = "instrument_id"
     }
 }

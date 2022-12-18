@@ -20,9 +20,10 @@ import kotlin.math.min
 class WaveFileWriterIntent(fragment: TunerFragment) {
     private val _writeWave = fragment.registerForActivityResult(FileWriterContract()) { uri ->
         val viewModel = fragment.viewModel
+        val application = fragment.activity?.application
         viewModel.viewModelScope.launch(Dispatchers.IO) {
             viewModel.waveWriter.writeStoredSnapshot(
-                viewModel.getApplication(),
+                application,
                 uri,
                 viewModel.sampleRate
             )

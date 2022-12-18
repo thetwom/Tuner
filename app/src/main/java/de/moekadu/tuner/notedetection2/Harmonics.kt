@@ -20,6 +20,7 @@ class Harmonics(maxCapacity: Int) {
     }
     private var isSorted = true
 
+    /** Number of harmonics. */
     var size = 0
         private set
 
@@ -131,7 +132,8 @@ fun findHarmonicsFromSpectrum(
 
     val df = spectrum.df
     val ampSpecSqr = spectrum.amplitudeSpectrumSquared
-    val indexBegin = ceil(frequencyMin / df).toInt()
+    // the second condition avoids that when rounding the harmonic later on, that we get the harmonic 0
+    val indexBegin = max(ceil(frequencyMin / df).toInt(), ceil(0.5f * frequency / df).toInt())
     val indexEnd = min(ampSpecSqr.size, floor(frequencyMax / df).toInt() + 1)
     val globalMaximumIndex = findGlobalMaximumIndex(indexBegin, indexEnd, ampSpecSqr)
 
