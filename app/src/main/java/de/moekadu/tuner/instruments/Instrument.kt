@@ -1,15 +1,22 @@
 package de.moekadu.tuner.instruments
 
 import android.content.Context
+import android.os.Parcelable
 import android.text.SpannableStringBuilder
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.*
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class Instrument(private val name: CharSequence?, private val nameResource: Int?, val strings: Array<MusicalNote>,
-                      val iconResource: Int, val stableId: Long, val isChromatic: Boolean = false) {
+                      val iconResource: Int, val stableId: Long, val isChromatic: Boolean = false) :
+    Parcelable {
     //val stringsSorted = strings.map { it.toFloat() }.toFloatArray().sortedArray()
 
-    /** Get instrument name as a char sequence. */
+    /** Get instrument name as a char sequence.
+     * @param context Context is only needed, if the instrument name is a string resource.
+     * @return Name of instrument.
+     */
     fun getNameString(context: Context?): CharSequence {
         return when {
             nameResource != null && context != null -> context.getString(nameResource)
@@ -73,19 +80,21 @@ data class Instrument(private val name: CharSequence?, private val nameResource:
     }
 }
 
+val instrumentChromatic = Instrument(
+    name = null,
+    nameResource = R.string.chromatic,
+    strings = arrayOf(),
+    iconResource = R.drawable.ic_piano,
+    stableId = -1, // this should be set by a id generator
+    isChromatic = true
+)
+
 val instrumentDatabase = createInstrumentDatabase()
 
 private fun createInstrumentDatabase(): ArrayList<Instrument> {
     val instruments = ArrayList<Instrument>()
     instruments.add(
-        Instrument(
-            name = null,
-            nameResource = R.string.chromatic,
-            strings = arrayOf(),
-            iconResource = R.drawable.ic_piano,
-            stableId = -1 - instruments.size.toLong(), // this should be set by a id generator
-            isChromatic = true
-        )
+        instrumentChromatic.copy(stableId = -1 - instruments.size.toLong())
     )
     instruments.add(
         Instrument(

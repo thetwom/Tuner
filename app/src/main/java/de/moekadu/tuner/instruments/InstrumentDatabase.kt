@@ -89,6 +89,11 @@ class InstrumentDatabase {
             databaseChangedListener?.onChanged(this)
     }
 
+    /** Get string containing all instruments.
+     * @param context Context is only needed, if any of the instruments in the database contain a string
+     *   resource as instrument name, instead of an explicit string.
+     * @return String representation of instruments list.
+     */
     fun getInstrumentsString(context: Context?) : String {
 //        Log.v("Metronome", "SceneDatabase.getSceneString: string= ${stringBuilder}")
 //        return "Version=${BuildConfig.VERSION_NAME}\n\n" + instruments.joinToString(separator = "\n\n"){ getSingleInstrumentString(context, it)}
@@ -120,6 +125,12 @@ class InstrumentDatabase {
         _instruments.clear()
         stableIds.clear()
         databaseChangedListener?.onChanged(this)
+    }
+
+    fun getCopyOfInstrumentsList(): ArrayList<Instrument> {
+        val listCopy = ArrayList<Instrument>(size)
+        instruments.forEach { listCopy.add(it.copy()) }
+        return listCopy
     }
 
     enum class FileCheck {Ok, Empty, Invalid}
@@ -260,6 +271,10 @@ class InstrumentDatabase {
             }
         }
 
+        /** Get string representation of a single instrument.
+         * @param context Context is only needed, if the instrument name is a string resource.
+         * @return Instrument string representation.
+         */
         private fun getSingleInstrumentString(context: Context?, instrument: Instrument): String {
             val name = instrument.getNameString(context)
             val iconName = instrumentIconId2Name(instrument.iconResource)
@@ -276,6 +291,12 @@ class InstrumentDatabase {
                     }\n"
         }
 
+        /** Get string containing all instruments.
+         * @param context Context is only needed, if any of the instruments contain a string
+         *   resource as instrument name, instead of an explicit string.
+         * @param instruments List with instruments.
+         * @return String representation of instruments list.
+         */
         fun getInstrumentsString(context: Context?, instruments: List<Instrument>) : String {
 //        Log.v("Metronome", "SceneDatabase.getSceneString: string= ${stringBuilder}")
             return "Version=${BuildConfig.VERSION_NAME}\n\n" + instruments.joinToString(separator = "\n\n"){ getSingleInstrumentString(context, it)}
@@ -288,7 +309,6 @@ class InstrumentDatabase {
                 return InstrumentsAndFileCheckResult(FileCheck.Empty, instruments)
 
             val stream = SimpleStream(instrumentsString, 0)
-//        Log.v("Metronome", "SceneDatabase.loadDataFromString: version = $version, ${isVersion1LargerThanVersion2(BuildConfig.VERSION_NAME, version)}")
 
             var version: String? = null
             var numInstrumentsRead = 0

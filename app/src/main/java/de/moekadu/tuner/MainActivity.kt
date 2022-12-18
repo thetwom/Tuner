@@ -23,13 +23,14 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
@@ -39,32 +40,42 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.PreferenceManager
 import com.google.android.material.color.DynamicColors
 import de.moekadu.tuner.fragments.*
-import de.moekadu.tuner.preferences.*
-import de.moekadu.tuner.viewmodels.InstrumentsViewModel
+import de.moekadu.tuner.instruments.Instrument
+import de.moekadu.tuner.instruments.InstrumentArchiving
+import de.moekadu.tuner.preferences.AppearancePreference
+import de.moekadu.tuner.preferences.ReferenceNotePreferenceDialog
+import de.moekadu.tuner.preferences.TemperamentPreferenceDialog
 import de.moekadu.tuner.views.PreferenceBarContainer
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     // TODO: anchor-drawable should use round edges
 
+    // TODO: wavewriter does not work
     enum class TunerMode {Simple, Scientific, Unknown}
 
-    private val instrumentsViewModel: InstrumentsViewModel by viewModels {
-        InstrumentsViewModel.Factory(
-            AppPreferences.readInstrumentId(this),
-            AppPreferences.readInstrumentSection(this),
-            AppPreferences.readCustomInstruments(this),
-            AppPreferences.readPredefinedSectionExpanded(this),
-            AppPreferences.readCustomSectionExpanded(this),
-            application
-        )
-    }
+//    private val instrumentsViewModel: InstrumentsViewModel by viewModels {
+//        InstrumentsViewModel.Factory(
+//            AppPreferences.readInstrumentId(this),
+//            AppPreferences.readInstrumentSection(this),
+//            AppPreferences.readCustomInstruments(this),
+//            AppPreferences.readPredefinedSectionExpanded(this),
+//            AppPreferences.readCustomSectionExpanded(this),
+//            application
+//        )
+//    }
+
+    private val instrumentArchiving = InstrumentArchiving(
+        { instrumentResources.customInstrumentDatabase },
+        this, { supportFragmentManager }, { this }
+    )
 
     private lateinit var preferenceBarContainer: PreferenceBarContainer
 
     // private var scientificMode = TunerMode.Unknown
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // TODO: should this better be moved to the PreferenceResources?
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
         val appearanceString = sharedPreferences.getString("appearance", "auto") ?: "auto"
@@ -73,6 +84,8 @@ class MainActivity : AppCompatActivity() {
             DynamicColors.applyToActivityIfAvailable(this)
         if (AppearancePreference.getBlackNightEnabledFromValue(appearanceString))
             overlayThemeForBlackNight()
+
+        migrateInstrumentResources()
 
         super.onCreate(savedInstanceState)
 
@@ -157,12 +170,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        AppPreferences.writeTunerPreferences(
-            instrumentsViewModel.instrument.value?.instrument?.stableId,
-            instrumentsViewModel.instrument.value?.section?.name,
-            instrumentsViewModel.predefinedDatabaseExpanded.value ?: true,
-            instrumentsViewModel.customDatabaseExpanded.value ?: true,
-            this)
+//        AppPreferences.writeTunerPreferences(
+//            instrumentsViewModel.instrument.value?.instrument?.stableId,
+//            instrumentsViewModel.instrument.value?.section?.name,
+//            instrumentsViewModel.predefinedDatabaseExpanded.value ?: true,
+//            instrumentsViewModel.customDatabaseExpanded.value ?: true,
+//            this)
         super.onStop()
     }
 
@@ -195,11 +208,13 @@ class MainActivity : AppCompatActivity() {
                     addToBackStack(null)
             }
     }
-    fun loadTuningEditorFragment() {
+    fun loadTuningEditorFragment(instrument: Instrument?) {
 //        Log.v("Tuner", "MainActivity.loadTuningEditorFragment")
+        val bundle = Bundle(1)
+        bundle.putParcelable(InstrumentEditorFragment.INSTRUMENT_KEY, instrument)
         supportFragmentManager.commit {
             setReorderingAllowed(true)
-            replace<InstrumentEditorFragment>(R.id.main_content)
+            replace<InstrumentEditorFragment>(R.id.main_content, null, bundle)
             if (!isCurrentFragmentATunerFragment())
                 addToBackStack(null)
         }
@@ -228,22 +243,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun showReferenceNoteDialog() {
-        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
         val dialog = ReferenceNotePreferenceDialog.newInstance(
-            currentPrefs,
+            preferenceResources.temperamentAndReferenceNote.value,
             warningMessage = null,
             preferenceResources.notePrintOptions.value
         )
-
         dialog.show(supportFragmentManager, "tag")
     }
 
     fun showTemperamentDialog() {
-        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
         val dialog = TemperamentPreferenceDialog.newInstance(
-            currentPrefs,
+            preferenceResources.temperamentAndReferenceNote.value,
             preferenceResources.notePrintOptions.value
         )
         dialog.show(supportFragmentManager, "tag")
@@ -311,7 +321,8 @@ class MainActivity : AppCompatActivity() {
             intent.data?.let { uri ->
 //                Log.v("Tuner", "MainActivity.handleFileLoadingIntent: uri=$uri")
                 supportFragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
-                instrumentsViewModel.loadInstrumentsFromFile(uri)
+//                instrumentsViewModel.loadInstrumentsFromFile(uri) // TODO: directyl load this via instrument resources
+                instrumentArchiving.loadInstruments(uri)
                 loadInstrumentsFragment()
             }
         }
@@ -370,6 +381,17 @@ class MainActivity : AppCompatActivity() {
 //        Log.v("Tuner", "MainActivity.overlayTheme: uiMode = $uiMode")
         if (uiMode == Configuration.UI_MODE_NIGHT_YES)
             theme.applyStyle(R.style.ThemeOverlay_BlackNight, true)
+    }
+
+    private fun migrateInstrumentResources() {
+        val preferences = getPreferences(MODE_PRIVATE)
+        if (!preferences.contains("migration completed")) {
+            Log.v("Tuner", "MainActivity.migrateInstrumentResources : migrating")
+            instrumentResources.migrateFromOtherSharedPreferences(preferences)
+            preferences.edit { putBoolean("migration completed", true) }
+        } else {
+            Log.v("Tuner", "MainActivity.migrateInstrumentResources : not migrating since already done")
+        }
     }
 
 }

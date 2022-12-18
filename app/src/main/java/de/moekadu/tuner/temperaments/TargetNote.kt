@@ -165,7 +165,7 @@ class TargetNote {
     /** Set target note based on a given frequency
      *
      * @param frequency The frequency for which we should set the target note
-     * @param ignoreFrequencyRange If this is true, we will set note which is closest to the frequency
+     * @param ignoreFrequencyRange If this is true, we will set the note which is closest to the frequency
      *   if it is false, we only switch to a new note if we are very clearly closer to another note
      *   (allowedHalfToneDeviationBeforeTarget).
      * @return Current target note
