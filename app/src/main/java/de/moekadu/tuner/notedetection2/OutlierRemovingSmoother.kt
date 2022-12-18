@@ -1,6 +1,7 @@
 package de.moekadu.tuner.notedetection2
 
 import kotlin.math.absoluteValue
+import kotlin.math.min
 
 /** Buffer which is used for smoothing.
  * @param maxSize Maximum number of values, which can be stored in the buffer.
@@ -51,13 +52,16 @@ class OutlierRemovingSmoothingBuffer(
         if (maxSize == 0)
             return false
 
+//        Log.v("Tuner", "OutlierRemovingSmootherBuffer.append: value=$value, min=$minValue, max=$maxValue, deviation=${computeDeviation(value)}, maxRelativeDeviation=$maxRelativeDeviation}")
         return if (value < minValue || value > maxValue || computeDeviation(value) > maxRelativeDeviation){
+//            Log.v("Tuner", "OutlierRemovingSmootherBuffer.append: incrementOutlierCount")
             incrementOutlierCount()
             false
         } else {
             addValueToBuffer(value)
             numSuccessiveOutliers = 0
             mean = computeMean()
+//            Log.v("Tuner", "OutlierRemovingSmootherBuffer.append: addValue, mean=$mean")
             true
         }
     }
@@ -140,9 +144,10 @@ class OutlierRemovingSmoother(
     private val maxValue: Float,
     private val relativeDeviationToBeAnOutlier: Float = 0.1f,
     private val maxNumSuccessiveOutliers: Int = 1,
-    private val minNumValuesForValidMean: Int = 2,
+    minNumValuesForValidMean: Int = 2,
     numBuffers: Int = 3) {
 
+    private val minNumValuesForValidMean = min(minNumValuesForValidMean, size)
     /** Buffers which compute the mean value. */
     private val buffers = Array(numBuffers) {
         OutlierRemovingSmoothingBuffer(size, minValue, maxValue, relativeDeviationToBeAnOutlier, maxNumSuccessiveOutliers)
@@ -157,6 +162,7 @@ class OutlierRemovingSmoother(
      *   smoothed value.
      */
     operator fun invoke(value: Float): Float {
+//        Log.v("Tuner", "OutlierRemovingSmoother.invoke: value=$value")
         var valueAppendedSuccessfully = false
 
         for (buffer in buffers) {
@@ -165,7 +171,8 @@ class OutlierRemovingSmoother(
             else
                 valueAppendedSuccessfully = buffer.append(value)
         }
-
+//        Log.v("Tuner", "OutlierRemovingSmoother.invoke: buffers[0].size=${buffers[0].size}, buffers[1].size=${buffers[1].size}")
+//        Log.v("Tuner", "OutlierRemovingSmoother.invoke: buffers[0].size=${buffers[0].size}, minNumValuesForValidMean=$minNumValuesForValidMean, maxSize=$size")
         if (buffers[0].size < minNumValuesForValidMean)
             buffers.sortByDescending { it.size }
 
