@@ -1,9 +1,8 @@
-package de.moekadu.tuner.notedetection2
+package de.moekadu.tuner.notedetection
 
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.misc.MemoryPool
 import de.moekadu.tuner.misc.WaveWriter
-import de.moekadu.tuner.notedetection.WindowingFunction
 import de.moekadu.tuner.preferences.PreferenceResources
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

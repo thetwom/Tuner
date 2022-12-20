@@ -2,6 +2,8 @@ package de.moekadu.tuner.misc
 
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /** Memory pool class, which can be used as a base class for managing specific memory types.
  * This class would normally be wrapped like:
@@ -30,16 +32,32 @@ class MemoryPool<T>
 {
     inner class RefCountedMemory(val memory: T) {
         private var refCount = 1
-        fun incRef() {
-            ++refCount
+        private val mutex = Mutex()
+
+        suspend inline fun <R> with(f: (T) -> R): R? {
+            if (!incRef())
+                return null
+            val result = f(memory)
+            decRef()
+            return result
         }
-        fun decRef() {
-            --refCount
-            if (refCount == 0)
-                this@MemoryPool.recycle(this)
+
+        suspend fun incRef(): Boolean {
+            return mutex.withLock {
+                if (refCount == 0) {
+                    false
+                } else {
+                    ++refCount
+                    true
+                }
+            }
         }
-        fun resetRef() {
-            refCount = 1
+        suspend fun decRef() {
+            mutex.withLock {
+                --refCount
+                if (refCount == 0)
+                    this@MemoryPool.recycle(this)
+            }
         }
     }
 
@@ -57,9 +75,12 @@ class MemoryPool<T>
                 break
         }
         //return memory?.also{ it.resetRef() } ?: RefCountedMemory(factory())
-        return if (memory == null)
-            RefCountedMemory(factory())
-        else
+        return if (memory == null) {
+            val m = factory()
+//            Log.v("Tuner", "MemoryPool.get: Allocating new memory, type: $m")
+            RefCountedMemory(m)
+        } else {
             return RefCountedMemory(memory)
+        }
     }
 }

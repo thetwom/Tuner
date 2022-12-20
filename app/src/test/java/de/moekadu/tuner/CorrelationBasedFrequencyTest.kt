@@ -1,8 +1,8 @@
 package de.moekadu.tuner
 
-import de.moekadu.tuner.notedetection2.AutoCorrelation
-import de.moekadu.tuner.notedetection2.CorrelationBasedFrequency
-import de.moekadu.tuner.notedetection2.findCorrelationBasedFrequency
+import de.moekadu.tuner.notedetection.AutoCorrelation
+import de.moekadu.tuner.notedetection.CorrelationBasedFrequency
+import de.moekadu.tuner.notedetection.findCorrelationBasedFrequency
 import org.junit.Assert
 import org.junit.Test
 

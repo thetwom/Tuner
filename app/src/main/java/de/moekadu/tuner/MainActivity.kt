@@ -42,7 +42,6 @@ import com.google.android.material.color.DynamicColors
 import de.moekadu.tuner.fragments.*
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentArchiving
-import de.moekadu.tuner.preferences.AppearancePreference
 import de.moekadu.tuner.preferences.ReferenceNotePreferenceDialog
 import de.moekadu.tuner.preferences.TemperamentPreferenceDialog
 import de.moekadu.tuner.views.PreferenceBarContainer
@@ -51,19 +50,9 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
     // TODO: anchor-drawable should use round edges
 
-    // TODO: wavewriter does not work
-    enum class TunerMode {Simple, Scientific, Unknown}
+    // TODO: automatic ticks for more or less ticks depending on range
 
-//    private val instrumentsViewModel: InstrumentsViewModel by viewModels {
-//        InstrumentsViewModel.Factory(
-//            AppPreferences.readInstrumentId(this),
-//            AppPreferences.readInstrumentSection(this),
-//            AppPreferences.readCustomInstruments(this),
-//            AppPreferences.readPredefinedSectionExpanded(this),
-//            AppPreferences.readCustomSectionExpanded(this),
-//            application
-//        )
-//    }
+    enum class TunerMode {Simple, Scientific, Unknown}
 
     private val instrumentArchiving = InstrumentArchiving(
         { instrumentResources.customInstrumentDatabase },
@@ -72,25 +61,19 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var preferenceBarContainer: PreferenceBarContainer
 
-    // private var scientificMode = TunerMode.Unknown
-
     override fun onCreate(savedInstanceState: Bundle?) {
-        // TODO: should this better be moved to the PreferenceResources?
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
-        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val appearanceString = sharedPreferences.getString("appearance", "auto") ?: "auto"
-//        Log.v("Tuner", "MainActivity.onCreate: appearanceString: $appearanceString, systemAccents=${AppearancePreference.getUseSystemColorAccents(appearanceString)}, blackNight=${AppearancePreference.getBlackNightEnabledFromValue(appearanceString)}")
-        if (AppearancePreference.getUseSystemColorAccents(appearanceString))
+
+        if (preferenceResources.appearance.value.useSystemColorAccents)
             DynamicColors.applyToActivityIfAvailable(this)
-        if (AppearancePreference.getBlackNightEnabledFromValue(appearanceString))
+        if (preferenceResources.appearance.value.blackNightEnabled)
             overlayThemeForBlackNight()
 
         migrateInstrumentResources()
 
         super.onCreate(savedInstanceState)
 
-        val screenOn = sharedPreferences.getBoolean("screenon", false)
-        if (screenOn)
+        if (preferenceResources.screenAlwaysOn.value)
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         else
             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -110,8 +93,6 @@ class MainActivity : AppCompatActivity() {
 
         supportFragmentManager.addOnBackStackChangedListener {
             setDisplayHomeButton()
-            //if (supportFragmentManager.backStackEntryCount == 0)
-            //    loadSimpleOrScientificFragment()
         }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -124,9 +105,8 @@ class MainActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 preferenceResources.notePrintOptions.collect {
                     preferenceBarContainer.preferFlat = it.isPreferringFlat
-                    //val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
                     val currentPrefs = preferenceResources.temperamentAndReferenceNote.value
-                    // update the reference not printing
+                    // update the reference note printing
                     preferenceBarContainer.setReferenceNote(
                         currentPrefs.referenceNote, currentPrefs.referenceFrequency, preferenceResources.notePrintOptions.value
                     )
@@ -147,10 +127,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         ReferenceNotePreferenceDialog.setupFragmentResultListener(
-            supportFragmentManager, this, sharedPreferences, {})
+            supportFragmentManager, this
+        ) { preferenceResources.setTemperamentAndReferenceNote(it) }
         TemperamentPreferenceDialog.setupFragmentResultListener(
-            supportFragmentManager, this, sharedPreferences, this,
-            {preferenceResources.notePrintOptions.value}, {})
+            supportFragmentManager, this, this,
+            {preferenceResources.notePrintOptions.value},
+            {preferenceResources.temperamentAndReferenceNote.value}
+        ) {
+            preferenceResources.setTemperamentAndReferenceNote(it)
+        }
 
         setStatusAndNavigationBarColors()
 
@@ -168,27 +153,6 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
     }
-
-    override fun onStop() {
-//        AppPreferences.writeTunerPreferences(
-//            instrumentsViewModel.instrument.value?.instrument?.stableId,
-//            instrumentsViewModel.instrument.value?.section?.name,
-//            instrumentsViewModel.predefinedDatabaseExpanded.value ?: true,
-//            instrumentsViewModel.customDatabaseExpanded.value ?: true,
-//            this)
-        super.onStop()
-    }
-
-//    override fun onBackPressed() {
-////        Log.v("Tuner", "MainActivity.onBackPressed")
-//        if (supportFragmentManager.backStackEntryCount > 0) {
-//            supportFragmentManager.popBackStack()
-//        } else if (!isCurrentFragmentATunerFragment()){
-//            loadSimpleOrScientificFragment()
-//        } else {
-//            super.onBackPressed()
-//        }
-//    }
 
     override fun onSupportNavigateUp(): Boolean {
 //        Log.v("Tuner", "MainActivity.onSupportNavigateUp")
@@ -260,7 +224,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setDisplayHomeButton() {
-        val showDisplayHomeButton = !isCurrentFragmentATunerFragment() //supportFragmentManager.backStackEntryCount > 0
+        val showDisplayHomeButton = !isCurrentFragmentATunerFragment()
         supportActionBar?.setDisplayHomeAsUpEnabled(showDisplayHomeButton)
     }
 
@@ -300,11 +264,8 @@ class MainActivity : AppCompatActivity() {
                         replace<TunerFragmentSimple>(R.id.main_content)
                     }
                 }
-                TunerMode.Unknown -> {
-
-                }
+                else -> { }
             }
-            // scientificMode = modeFromPreferences
         }
     }
 
@@ -321,7 +282,6 @@ class MainActivity : AppCompatActivity() {
             intent.data?.let { uri ->
 //                Log.v("Tuner", "MainActivity.handleFileLoadingIntent: uri=$uri")
                 supportFragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
-//                instrumentsViewModel.loadInstrumentsFromFile(uri) // TODO: directyl load this via instrument resources
                 instrumentArchiving.loadInstruments(uri)
                 loadInstrumentsFragment()
             }

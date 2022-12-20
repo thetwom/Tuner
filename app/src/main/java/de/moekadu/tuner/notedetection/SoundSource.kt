@@ -17,7 +17,7 @@
  * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.moekadu.tuner.notedetection2
+package de.moekadu.tuner.notedetection
 
 import android.annotation.SuppressLint
 import android.media.AudioFormat

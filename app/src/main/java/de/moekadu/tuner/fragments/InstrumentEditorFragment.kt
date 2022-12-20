@@ -284,9 +284,6 @@ class InstrumentEditorFragment : Fragment() {
         super.onStart()
 //        Log.v("Tuner", "InstrumentEditorFragment.onStart()")
         askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
-        // TODO: we need a completely own view model here!
-        //tunerViewModel.setInstrument(instrumentDatabase[0])
-        //tunerViewModel.setTargetNote(-1, null)
     }
 
     override fun onStop() {

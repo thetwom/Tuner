@@ -35,7 +35,6 @@ import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
 import de.moekadu.tuner.dialogs.AboutDialog
 import de.moekadu.tuner.dialogs.ResetSettingsDialog
-import de.moekadu.tuner.notedetection.percentToPitchHistoryDuration
 import de.moekadu.tuner.preferenceResources
 import de.moekadu.tuner.preferences.*
 import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
@@ -67,6 +66,17 @@ fun nightModeStringToID(string: String) = when(string) {
     "dark" -> AppCompatDelegate.MODE_NIGHT_YES
     "light" -> AppCompatDelegate.MODE_NIGHT_NO
     else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+}
+
+/// Compute pitch history duration in seconds based on a percent value.
+/**
+ * This uses a exponential scale for setting the duration.
+ * @param percent Percentage value where 0 stands for the minimum duration and 100 for the maximum.
+ * @param durationAtFiftyPercent Duration in seconds at fifty percent.
+ * @return Pitch history duration in seconds.
+ */
+fun percentToPitchHistoryDuration(percent: Int, durationAtFiftyPercent: Float = 3.0f) : Float {
+    return durationAtFiftyPercent * 2.0f.pow(0.05f * (percent - 50))
 }
 
 class SettingsFragment : PreferenceFragmentCompat() {
@@ -268,19 +278,19 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
         maxNoise.summary = getMaxNoiseSummary(maxNoise.value)
 
-//        val pitchHistoryNumFaultyValues =
-//            findPreference<SeekBarPreference>("pitch_history_num_faulty_values")
-//                ?: throw RuntimeException("No pitch history num fault values preference")
-//        pitchHistoryNumFaultyValues.setOnPreferenceChangeListener { preference, newValue ->
-//            preference.summary = resources.getQuantityString(
-//                R.plurals.pitch_history_num_faulty_values_summary, newValue as Int, newValue
-//            )
-//            true
-//        }
-//        pitchHistoryNumFaultyValues.summary = resources.getQuantityString(
-//            R.plurals.pitch_history_num_faulty_values_summary,
-//            pitchHistoryNumFaultyValues.value, pitchHistoryNumFaultyValues.value
-//        )
+        val pitchHistoryNumFaultyValues =
+            findPreference<SeekBarPreference>("pitch_history_num_faulty_values")
+                ?: throw RuntimeException("No pitch history num fault values preference")
+        pitchHistoryNumFaultyValues.setOnPreferenceChangeListener { preference, newValue ->
+            preference.summary = resources.getQuantityString(
+                R.plurals.pitch_history_num_faulty_values_summary, newValue as Int, newValue
+            )
+            true
+        }
+        pitchHistoryNumFaultyValues.summary = resources.getQuantityString(
+            R.plurals.pitch_history_num_faulty_values_summary,
+            pitchHistoryNumFaultyValues.value, pitchHistoryNumFaultyValues.value
+        )
 
         val capture = findPreference<SeekBarPreference>("wave_writer_duration_in_seconds")
             ?: throw RuntimeException("No capture preference")

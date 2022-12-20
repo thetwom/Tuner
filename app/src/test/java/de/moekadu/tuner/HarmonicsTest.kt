@@ -1,6 +1,6 @@
 package de.moekadu.tuner
 
-import de.moekadu.tuner.notedetection2.*
+import de.moekadu.tuner.notedetection.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Test

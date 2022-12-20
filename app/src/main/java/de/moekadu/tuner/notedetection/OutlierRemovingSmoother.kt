@@ -1,4 +1,4 @@
-package de.moekadu.tuner.notedetection2
+package de.moekadu.tuner.notedetection
 
 import kotlin.math.absoluteValue
 import kotlin.math.min
@@ -165,6 +165,8 @@ class OutlierRemovingSmoother(
 //        Log.v("Tuner", "OutlierRemovingSmoother.invoke: value=$value")
         var valueAppendedSuccessfully = false
 
+        // append the value to the first available buffer, and all others just increment the
+        // outlier count
         for (buffer in buffers) {
             if (valueAppendedSuccessfully)
                 buffer.incrementOutlierCount()

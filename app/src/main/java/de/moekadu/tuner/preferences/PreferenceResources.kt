@@ -1,12 +1,13 @@
 package de.moekadu.tuner.preferences
 
 import android.content.SharedPreferences
+import android.util.Log
 import de.moekadu.tuner.fragments.indexToTolerance
 import de.moekadu.tuner.fragments.indexToWindowSize
 import de.moekadu.tuner.fragments.nightModeStringToID
+import de.moekadu.tuner.fragments.percentToPitchHistoryDuration
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.notedetection.WindowingFunction
-import de.moekadu.tuner.notedetection.percentToPitchHistoryDuration
 import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
 import de.moekadu.tuner.temperaments.MusicalScale
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
@@ -14,7 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
@@ -22,34 +23,34 @@ import kotlinx.coroutines.launch
 class PreferenceResources(private val sharedPreferences: SharedPreferences, scope: CoroutineScope) {
 
     private val _appearance = MutableStateFlow(obtainAppearance())
-    val appearance: StateFlow<AppearancePreference.Value> get() = _appearance
+    val appearance = _appearance.asStateFlow()
+    private val _screenAlwaysOn = MutableStateFlow(obtainScreenAlwaysOn())
+    val screenAlwaysOn = _screenAlwaysOn.asStateFlow()
     private val _windowing = MutableStateFlow(obtainWindowing())
-    val windowing: StateFlow<WindowingFunction> get() = _windowing
+    val windowing = _windowing.asStateFlow()
     private val _overlap = MutableStateFlow(obtainOverlap())
-    val overlap: StateFlow<Float> get() = _overlap
+    val overlap = _overlap.asStateFlow()
     private val _windowSize = MutableStateFlow(obtainWindowSize())
-    val windowSize: StateFlow<Int> get() = _windowSize
+    val windowSize = _windowSize.asStateFlow()
     private val _pitchHistoryDuration = MutableStateFlow(obtainPitchHistoryDuration())
-    val pitchHistoryDuration: StateFlow<Float> get() = _pitchHistoryDuration
-//    private val _pitchHistoryMaxNumFaultyValues = MutableStateFlow(obtainPitchHistoryNumFaultyValues())
-//    val pitchHistoryMaxNumFaultyValues: StateFlow<Int> get() = _pitchHistoryMaxNumFaultyValues
-//    private val _useHint = MutableStateFlow(obtainUseHint())
-//    val useHint: StateFlow<Boolean> get() = _useHint
+    val pitchHistoryDuration = _pitchHistoryDuration.asStateFlow()
     private val _numMovingAverage = MutableStateFlow(obtainNumMovingAverage())
-    val numMovingAverage: StateFlow<Int> get() = _numMovingAverage
+    val numMovingAverage = _numMovingAverage.asStateFlow()
     private val _maxNoise = MutableStateFlow(obtainMaxNoise())
-    val maxNoise: StateFlow<Float> get() = _maxNoise
+    val maxNoise = _maxNoise.asStateFlow()
+    private val _pitchHistoryMaxNumFaultyValues = MutableStateFlow(obtainPitchHistoryNumFaultyValues())
+    val pitchHistoryMaxNumFaultyValues = _pitchHistoryMaxNumFaultyValues.asStateFlow()
     private val _toleranceInCents = MutableStateFlow(obtainToleranceInCents())
-    val toleranceInCents: StateFlow<Int> get() = _toleranceInCents
+    val toleranceInCents = _toleranceInCents.asStateFlow()
     private val _waveWriterDurationInSeconds = MutableStateFlow(obtainWaveWriterDurationInSeconds())
-    val waveWriterDurationInSeconds: StateFlow<Int> get() = _waveWriterDurationInSeconds
+    val waveWriterDurationInSeconds = _waveWriterDurationInSeconds.asStateFlow()
     private val _notePrintOptions = MutableStateFlow(obtainNotePrintOptions())
-    val notePrintOptions: StateFlow<MusicalNotePrintOptions> get() = _notePrintOptions
+    val notePrintOptions = _notePrintOptions.asStateFlow()
     
     private val _musicalScale = MutableStateFlow(musicalScaleFromPreference(obtainTemperamentAndReferenceNote()))
-    val musicalScale: StateFlow<MusicalScale> get() = _musicalScale
+    val musicalScale = _musicalScale.asStateFlow()
     private val _temperamentAndReferenceNote = MutableStateFlow(obtainTemperamentAndReferenceNote())
-    val temperamentAndReferenceNote: StateFlow<TemperamentAndReferenceNoteValue> get() = _temperamentAndReferenceNote
+    val temperamentAndReferenceNote = _temperamentAndReferenceNote.asStateFlow()
 //
 //    private val _instrumentId = MutableStateFlow(obtainInstrumentId())
 //    val instrumentId: StateFlow<Long> get() = _instrumentId
@@ -63,7 +64,7 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
         val sharedPrefFlow = callbackFlow {
             onSharedPreferenceChangedListener =
                 SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-//                    Log.v("Tuner", "PreferenceResources : callbackFlow: key changed: $key")
+                    Log.v("Tuner", "PreferenceResources : callbackFlow: key changed: $key")
                     if (key != null)
                         trySend(key)
                 }
@@ -82,12 +83,13 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
             sharedPrefFlow.buffer(Channel.CONFLATED).collect { key ->
                 when (key) {
                     APPEARANCE_KEY -> _appearance.value = obtainAppearance()
+                    SCREEN_ALWAYS_ON -> _screenAlwaysOn.value = obtainScreenAlwaysOn()
                     WINDOWING_KEY -> _windowing.value = obtainWindowing()
                     OVERLAP_KEY -> _overlap.value = obtainOverlap()
                     PITCH_HISTORY_DURATION_KEY -> _pitchHistoryDuration.value =
                         obtainPitchHistoryDuration()
-//                    PITCH_HISTORY_NUM_FAULTY_VALUES_KEY -> _pitchHistoryMaxNumFaultyValues.value =
-//                        obtainPitchHistoryNumFaultyValues()
+                    PITCH_HISTORY_NUM_FAULTY_VALUES_KEY -> _pitchHistoryMaxNumFaultyValues.value =
+                        obtainPitchHistoryNumFaultyValues()
 //                    USE_HINT_KEY -> _useHint.value = obtainUseHint()
                     NUM_MOVING_AVERAGE_KEY -> _numMovingAverage.value = obtainNumMovingAverage()
                     MAX_NOISE_KEY -> _maxNoise.value = obtainMaxNoise()
@@ -107,6 +109,16 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
         }
     }
 
+    fun setTemperamentAndReferenceNote(value: TemperamentAndReferenceNoteValue) {
+        val editor = sharedPreferences.edit()
+        val newPrefsString = value.toString()
+        editor.putString(
+            TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY,
+            newPrefsString
+        )
+        editor.apply()
+    }
+
     private fun obtainAppearance(): AppearancePreference.Value {
         val value = AppearancePreference.Value(nightModeStringToID("auto"),
             blackNightEnabled = false,
@@ -116,6 +128,8 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
         //Log.v("Tuner", "PreferenceResources.obtainAppearance: value: ${sharedPreferences.getString(APPEARANCE_KEY, "")}, $value")
         return value
     }
+
+    private fun obtainScreenAlwaysOn() = sharedPreferences.getBoolean(SCREEN_ALWAYS_ON, false)
 
     private fun obtainNotePrintOptions(): MusicalNotePrintOptions {
         val preferFlat = sharedPreferences.getBoolean(PREFER_FLAT_KEY, false)
@@ -146,8 +160,8 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
     private fun obtainWindowSize() = indexToWindowSize(sharedPreferences.getInt(WINDOW_SIZE_KEY, 5))
     private fun obtainPitchHistoryDuration() = percentToPitchHistoryDuration(sharedPreferences.getInt(
         PITCH_HISTORY_DURATION_KEY, 50))
-//    private fun obtainPitchHistoryNumFaultyValues() = sharedPreferences.getInt(
-//        PITCH_HISTORY_NUM_FAULTY_VALUES_KEY, 3)
+    private fun obtainPitchHistoryNumFaultyValues() = sharedPreferences.getInt(
+        PITCH_HISTORY_NUM_FAULTY_VALUES_KEY, 3)
 //    private fun obtainUseHint() = sharedPreferences.getBoolean(USE_HINT_KEY, true)
     private fun obtainNumMovingAverage() = sharedPreferences.getInt(NUM_MOVING_AVERAGE_KEY, 5)
     private fun obtainMaxNoise() = sharedPreferences.getInt(MAX_NOISE_KEY, 10) / 100f
@@ -169,13 +183,14 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
 
     companion object {
         const val APPEARANCE_KEY = "appearance"
+        const val SCREEN_ALWAYS_ON = "screenon"
         const val PREFER_FLAT_KEY = "prefer_flat"
         const val SOLFEGE_KEY = "solfege"
         const val WINDOWING_KEY = "windowing"
         const val OVERLAP_KEY = "overlap"
         const val WINDOW_SIZE_KEY = "window_size"
         const val PITCH_HISTORY_DURATION_KEY = "pitch_history_duration"
-//        const val PITCH_HISTORY_NUM_FAULTY_VALUES_KEY = "pitch_history_num_faulty_values"
+        const val PITCH_HISTORY_NUM_FAULTY_VALUES_KEY = "pitch_history_num_faulty_values"
 //        const val USE_HINT_KEY = "use_hint"
         const val NUM_MOVING_AVERAGE_KEY = "num_moving_average"
         const val MAX_NOISE_KEY = "max_noise"

@@ -1,7 +1,7 @@
 package de.moekadu.tuner.models
 
-import de.moekadu.tuner.notedetection2.FrequencySpectrum
-import de.moekadu.tuner.notedetection2.Harmonics
+import de.moekadu.tuner.notedetection.FrequencySpectrum
+import de.moekadu.tuner.notedetection.Harmonics
 import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
 
 class SpectrumPlotModel {

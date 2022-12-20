@@ -147,16 +147,16 @@
         app:seekBarIncrement="1"
         app:updatesContinuously="true"
         />
-<!--    <SeekBarPreference-->
-<!--        android:key="pitch_history_num_faulty_values"-->
-<!--        app:title="@string/pitch_history_num_faulty_values"-->
-<!--        app:min="1"-->
-<!--        android:max="12"-->
-<!--        android:defaultValue="5"-->
-<!--        app:seekBarIncrement="1"-->
-<!--        app:updatesContinuously="true"-->
-<!--        app:singleLineTitle="false"-->
-<!--        />-->
+    <SeekBarPreference
+        android:key="pitch_history_num_faulty_values"
+        app:title="@string/pitch_history_num_faulty_values"
+        app:min="1"
+        android:max="12"
+        android:defaultValue="5"
+        app:seekBarIncrement="1"
+        app:updatesContinuously="true"
+        app:singleLineTitle="false"
+        />
 
 <!--    <SwitchPreferenceCompat-->
 <!--        android:key="use_hint"-->

@@ -1,4 +1,4 @@
-package de.moekadu.tuner.notedetection2
+package de.moekadu.tuner.notedetection
 
 import kotlin.math.pow
 
@@ -17,9 +17,9 @@ fun checkTuning(frequency: Float, targetFrequency: Float, toleranceInCents: Floa
     val upperFrequencyBound = targetFrequency * ratio
 
     return if (frequency < lowerFrequencyBound)
-            TuningState.TooLow
+        TuningState.TooLow
         else if (frequency > upperFrequencyBound)
-            TuningState.TooHigh
+        TuningState.TooHigh
         else
-            TuningState.InTune
+        TuningState.InTune
 }

@@ -295,7 +295,7 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         if (event == null)
-            return super.onTouchEvent(event)
+            return super.onTouchEvent(null)
         val action = event.actionMasked
 //        Log.v("Tuner", "DetectedNoteViewer.onTouchEvent: action=$action")
         val note = xPositionToNote(event.x)
