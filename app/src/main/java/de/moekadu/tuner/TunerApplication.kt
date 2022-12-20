@@ -27,7 +27,7 @@ class TunerApplication : Application() {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
         preferenceResources = PreferenceResources(sharedPreferences, MainScope())
         instrumentPreferences = getSharedPreferences("instrument resources", MODE_PRIVATE)
-        instrumentResources = InstrumentResources(instrumentPreferences) // TODO: migrate preference, by calling the migration funcion within the activity
+        instrumentResources = InstrumentResources(instrumentPreferences)
 
         val appearance = preferenceResources.appearance.value
         if (appearance.mode != AppCompatDelegate.getDefaultNightMode())

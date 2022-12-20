@@ -1,9 +1,9 @@
 package de.moekadu.tuner.models
 
 import de.moekadu.tuner.misc.DefaultValues
-import de.moekadu.tuner.notedetection2.TuningState
-import de.moekadu.tuner.notedetection2.TuningTarget
-import de.moekadu.tuner.notedetection2.checkTuning
+import de.moekadu.tuner.notedetection.TuningState
+import de.moekadu.tuner.notedetection.TuningTarget
+import de.moekadu.tuner.notedetection.checkTuning
 import de.moekadu.tuner.temperaments.*
 import kotlin.math.log
 import kotlin.math.max

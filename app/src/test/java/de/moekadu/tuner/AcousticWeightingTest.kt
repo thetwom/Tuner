@@ -1,7 +1,7 @@
 package de.moekadu.tuner
 
-import de.moekadu.tuner.notedetection2.AcousticAWeighting
-import de.moekadu.tuner.notedetection2.AcousticCWeighting
+import de.moekadu.tuner.notedetection.AcousticAWeighting
+import de.moekadu.tuner.notedetection.AcousticCWeighting
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import kotlin.math.log10

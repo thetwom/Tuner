@@ -1914,7 +1914,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     override fun onTouchEvent(event: MotionEvent?): Boolean {
 //        return gestureDetector.onTouchEvent(event) || scaleGestureDetector.onTouchEvent(event)
         if (event == null)
-            return super.onTouchEvent(event)
+            return super.onTouchEvent(null)
         val s = scaleGestureDetector.onTouchEvent(event)
         val g = gestureDetector.onTouchEvent(event)
         return super.onTouchEvent(event) || s || g

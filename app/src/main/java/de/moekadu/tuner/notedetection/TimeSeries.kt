@@ -1,4 +1,4 @@
-package de.moekadu.tuner.notedetection2
+package de.moekadu.tuner.notedetection
 
 class TimeSeries(val size: Int, val dt: Float) {
     var framePosition = 0

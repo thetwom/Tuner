@@ -486,7 +486,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         if (event == null)
-            return super.onTouchEvent(event)
+            return super.onTouchEvent(null)
 
         val g = gestureDetector.onTouchEvent(event)
         return super.onTouchEvent(event) || g

@@ -159,18 +159,18 @@ class ReferenceNotePreferenceDialog: DialogFragment() {
         fun setupFragmentResultListener(
             fragmentManager: FragmentManager,
             lifecycleOwner: LifecycleOwner,
-            pref: SharedPreferences,
+            //pref: SharedPreferences,
             onPreferenceChanged: (TemperamentAndReferenceNoteValue) -> Unit
         ) {
             fragmentManager.setFragmentResultListener(REQUEST_KEY, lifecycleOwner) { _, bundle ->
                 val newPrefsString = bundle.getString(CURRENT_VALUE_KEY) ?: throw RuntimeException("No value set")
-                val editor = pref.edit()
+//                val editor = pref.edit()
                 val newPrefs = TemperamentAndReferenceNoteValue.fromString(newPrefsString) ?: throw RuntimeException("Invalid value")
-                editor.putString(
-                    TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY,
-                    newPrefsString
-                )
-                editor.apply()
+//                editor.putString(
+//                    TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY,
+//                    newPrefsString
+//                )
+//                editor.apply()
                 onPreferenceChanged(newPrefs)
             }
         }
@@ -293,25 +293,26 @@ class TemperamentPreferenceDialog : DialogFragment() {
 
         fun setupFragmentResultListener(fragmentManager: FragmentManager,
                                         lifecycleOwner: LifecycleOwner,
-                                        pref: SharedPreferences,
+                                        //pref: SharedPreferences,
                                         context: Context, // needed for getting string resources
                                         printOption: () -> MusicalNotePrintOptions,
+                                        previousPreferences: () -> TemperamentAndReferenceNoteValue,
                                         onPreferenceChanged: (TemperamentAndReferenceNoteValue) -> Unit) {
 
             fragmentManager.setFragmentResultListener(REQUEST_KEY, lifecycleOwner) { _, bundle ->
-                val oldPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
+                val oldPrefs = previousPreferences() // TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
                 val newPrefsString = bundle.getString(CURRENT_VALUE_KEY) ?: throw RuntimeException("No value set")
-                val editor = pref.edit()
+                // val editor = pref.edit()
                 val newPrefs = TemperamentAndReferenceNoteValue.fromString(newPrefsString) ?: throw RuntimeException("Invalid value")
 
                 val newPrefNoteNameScale = NoteNameScaleFactory.create(newPrefs.temperamentType)
 
                 if (newPrefNoteNameScale.hasNote(newPrefs.referenceNote)) {
-                    editor.putString(
-                        TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY,
-                        newPrefsString
-                    )
-                    editor.apply()
+//                    editor.putString(
+//                        TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY,
+//                        newPrefsString
+//                    )
+//                    editor.apply()
                     onPreferenceChanged(newPrefs)
                 } else {
                     // fire reference note dialog to get a compatible reference note

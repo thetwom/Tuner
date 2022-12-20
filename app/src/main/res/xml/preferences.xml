@@ -154,17 +154,17 @@
         app:icon="@drawable/ic_noise"
         />
 
-<!--    <SeekBarPreference-->
-<!--        android:key="pitch_history_num_faulty_values"-->
-<!--        app:title="@string/pitch_history_num_faulty_values"-->
-<!--        app:min="1"-->
-<!--        android:max="12"-->
-<!--        android:defaultValue="5"-->
-<!--        app:seekBarIncrement="1"-->
-<!--        app:updatesContinuously="true"-->
-<!--        app:singleLineTitle="false"-->
-<!--        app:icon="@drawable/ic_jump"-->
-<!--        />-->
+    <SeekBarPreference
+        android:key="pitch_history_num_faulty_values"
+        app:title="@string/pitch_history_num_faulty_values"
+        app:min="1"
+        android:max="12"
+        android:defaultValue="5"
+        app:seekBarIncrement="1"
+        app:updatesContinuously="true"
+        app:singleLineTitle="false"
+        app:icon="@drawable/ic_jump"
+        />
 
 <!--    <SwitchPreferenceCompat-->
 <!--        android:key="use_hint"-->

@@ -3,8 +3,8 @@ package de.moekadu.tuner.models
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.instrumentDatabase
 import de.moekadu.tuner.misc.DefaultValues
-import de.moekadu.tuner.notedetection2.SortedAndDistinctInstrumentStrings
-import de.moekadu.tuner.notedetection2.TuningState
+import de.moekadu.tuner.notedetection.SortedAndDistinctInstrumentStrings
+import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.temperaments.*
 
 class StringsModel {

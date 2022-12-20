@@ -1,4 +1,4 @@
-package de.moekadu.tuner.notedetection2
+package de.moekadu.tuner.notedetection
 
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.misc.DefaultValues
@@ -14,6 +14,7 @@ data class FrequencyEvaluationResult(
 class FrequencyEvaluator(
     numMovingAverage: Int,
     toleranceInCents: Float,
+    maxNumFaultyValues: Int,
     private val maxNoise: Float,
     musicalScale: MusicalScale,
     instrument: Instrument
@@ -23,7 +24,7 @@ class FrequencyEvaluator(
         DefaultValues.FREQUENCY_MIN,
         DefaultValues.FREQUENCY_MAX,
         relativeDeviationToBeAnOutlier = 0.1f,
-        maxNumSuccessiveOutliers = 2,
+        maxNumSuccessiveOutliers = maxNumFaultyValues,
         minNumValuesForValidMean = 2,
         numBuffers = 3
     )

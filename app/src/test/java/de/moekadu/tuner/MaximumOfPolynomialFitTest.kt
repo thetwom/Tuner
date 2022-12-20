@@ -1,6 +1,6 @@
 package de.moekadu.tuner
 
-import de.moekadu.tuner.notedetection2.getPeakOfPolynomialFit
+import de.moekadu.tuner.notedetection.getPeakOfPolynomialFit
 import org.junit.Assert
 import org.junit.Test
 import kotlin.math.pow
