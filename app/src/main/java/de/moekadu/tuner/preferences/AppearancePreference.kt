@@ -42,7 +42,6 @@ class AppearancePreferenceDialog : PreferenceDialogFragmentCompat() {
             val args = Bundle(2)
             args.putString(ARG_KEY, key)
             args.putString(REQUEST_KEY, requestCode)
-            // args.putBoolean(PREFER_FLAT_KEY, preferFlat)
             val fragment = AppearancePreferenceDialog()
             fragment.arguments = args
             return fragment
@@ -89,9 +88,7 @@ class AppearancePreferenceDialog : PreferenceDialogFragmentCompat() {
 
     override fun onBindDialogView(view: View) {
         super.onBindDialogView(view)
-//        var activeToneIndex = restoredToneIndex
-//        var currentFrequency = restoredFrequencyString?.toFloatOrNull()
-//
+
         modeChooser = view.findViewById(R.id.appearance_mode)
         blackNight = view.findViewById(R.id.black_night_mode)
         systemColorAccents = view.findViewById(R.id.system_color_accents)
@@ -133,48 +130,13 @@ class AppearancePreferenceDialog : PreferenceDialogFragmentCompat() {
     }
 
     override fun onDialogClosed(positiveResult: Boolean) {
-//        if (positiveResult) {
-//            arguments?.getString(REQUEST_KEY)?.let {
-//                // val bundle = Bundle(2)
-//                val mode = nightModeResourceIdToID(modeChooser?.checkedRadioButtonId ?: R.id.auto)
-//                val blackNightEnabled = blackNight?.isChecked ?: false
-//                val useSystemColorAccents = systemColorAccents?.isChecked ?: true
-////                    // bundle.putInt("tone index", toneIndex)
-////                    // bundle.putFloat("reference frequency", frequency)
-//////                    Log.v("Tuner", "ReferenceNotePreference.onDialogClosed (Settings), posres=$positiveResult, bundle=$bundle, requestKey=$it")
-//                    (preference as AppearancePreference).setValueFromData(mode, blackNightEnabled, useSystemColorAccents)
-////                    // setFragmentResult(it, bundle)
-////                }
-//            }
-//        }
+
     }
 }
 
-class AppearancePreference(context: Context, attrs: AttributeSet?) // , defStyleAttr: Int, defStyleRef: Int)
-    : DialogPreference(context, attrs, R.attr.dialogPreferenceStyle) { // , defStyleAttr, defStyleRef) {
-    companion object {
-        fun getUIModeFromValue(string: String?): Int {
-            val value = Value(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
-                blackNightEnabled = false,
-                useSystemColorAccents = true
-            ).apply { fromString(string) }
-            return value.mode
-        }
-        fun getBlackNightEnabledFromValue(string: String?): Boolean {
-            val value = Value(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
-                blackNightEnabled = false,
-                useSystemColorAccents = true
-            ).apply { fromString(string) }
-            return value.blackNightEnabled
-        }
-        fun getUseSystemColorAccents(string: String?): Boolean {
-            val value = Value(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
-                blackNightEnabled = false,
-                useSystemColorAccents = true
-            ).apply { fromString(string) }
-            return value.useSystemColorAccents
-        }
-    }
+class AppearancePreference(context: Context, attrs: AttributeSet?)
+    : DialogPreference(context, attrs, R.attr.dialogPreferenceStyle) {
+
     fun interface OnAppearanceChangedListener {
         fun onPreferenceChanged(preference: AppearancePreference, value: Value, modeChanged: Boolean, blackNightChanged: Boolean, useSystemColorsChanged: Boolean)
     }
@@ -222,13 +184,8 @@ class AppearancePreference(context: Context, attrs: AttributeSet?) // , defStyle
         negativeButtonText = null
     }
 
-//    override fun getDialogLayoutResource(): Int {
-//        return R.layout.reference_note_preference
-//        // return super.getDialogLayoutResource()
-//    }
     override fun onGetDefaultValue(a: TypedArray, index: Int): Any? {
 //       Log.v("Tuner", "ReferenceNotePreference.onGetDefaultValue: ${a.getString(index)}")
-       //super.onGetDefaultValue(a, index)
        return a.getString(index)
     }
 
@@ -249,10 +206,8 @@ class AppearancePreference(context: Context, attrs: AttributeSet?) // , defStyle
         val useSystemColorsChanged = (this.value.useSystemColorAccents != newValue.useSystemColorAccents)
         this.value = newValue
         persistString(value)
-//        summary = summaryProvider?.provideSummary(this)
 //        Log.v("Tuner", "ReferenceNotePreference.onSetValueFromString: $value, f=${this.value.frequency}, t=${this.value.toneIndex}")
         onAppearanceChangedListener?.onPreferenceChanged(this, this.value, modeChanged, blackNightChanged, useSystemColorsChanged)
-        // summary = "my new summary"
     }
 
     fun setValueFromData(mode: Int, blackNightEnabled: Boolean, useSystemColorAccents: Boolean) {
@@ -264,8 +219,6 @@ class AppearancePreference(context: Context, attrs: AttributeSet?) // , defStyle
         value.useSystemColorAccents = useSystemColorAccents
         persistString(value.toString())
 
-        //summary = summaryProvider?.provideSummary(this)
         onAppearanceChangedListener?.onPreferenceChanged(this, this.value, modeChanged, blackNightChanged, useSystemColorsChanged)
-        // summary = "my new summary"
     }
 }

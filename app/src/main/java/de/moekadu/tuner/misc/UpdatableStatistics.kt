@@ -15,6 +15,7 @@ class UpdatableStatistics {
     /** Current sum of weights. */
     private var weightSum = 0.0f
     /** Intermediate value needed for variance. */
+    @Suppress("PrivatePropertyName")
     private var S = 0.0f
 
     /** Current mean value. */

@@ -40,7 +40,6 @@ import de.moekadu.tuner.instrumentResources
 import de.moekadu.tuner.misc.WaveFileWriterIntent
 import de.moekadu.tuner.models.PitchHistoryModel
 import de.moekadu.tuner.preferenceResources
-import de.moekadu.tuner.temperaments.TargetNote
 import de.moekadu.tuner.viewmodels.TunerViewModel
 import de.moekadu.tuner.views.*
 import kotlinx.coroutines.launch
@@ -53,17 +52,7 @@ class TunerFragment : Fragment() {
             simpleMode = false
         )
     }
-//    val viewModel: TunerViewModel by activityViewModels() // ? = null
-//    private val instrumentsViewModel: InstrumentsViewModel by activityViewModels {
-//        InstrumentsViewModel.Factory(
-//            AppPreferences.readInstrumentId(requireActivity()),
-//            AppPreferences.readInstrumentSection(requireActivity()),
-//            AppPreferences.readCustomInstruments(requireActivity()),
-//            AppPreferences.readPredefinedSectionExpanded(requireActivity()),
-//            AppPreferences.readCustomSectionExpanded(requireActivity()),
-//            requireActivity().application
-//        )
-//    }
+
     private val waveFileWriterIntent = WaveFileWriterIntent(this)
 
     private var spectrumPlot: PlotView? = null
@@ -74,11 +63,6 @@ class TunerFragment : Fragment() {
     private var pitchPlotChangeId = -1
     private var volumeMeter: VolumeMeter? = null
     private var recordFab: FloatingActionButton? = null
-
-    // private var isPitchInactive = false
-    // private var tuningStatus = TargetNote.TuningStatus.Unknown
-
-    private val minCorrelationFrequency = 25f // TODO: this should not stay here
 
     /** Instance for requesting audio recording permission.
      * This will create the sourceJob as soon as the permissions are granted.
@@ -131,7 +115,6 @@ class TunerFragment : Fragment() {
         volumeMeter = view.findViewById(R.id.volume_meter)
         recordFab = view.findViewById(R.id.record)
 
-        spectrumPlot?.xRange(0f, 1600f, PlotView.NO_REDRAW)
         spectrumPlot?.setXTicks(
             floatArrayOf(0f, 250f, 500f, 750f, 1000f, 1250f, 1500f, 1750f, 2000f, 2250f, 2500f,
                 2750f, 3000f, 3250f, 3500f, 3750f, 4000f, 4500f, 5000f, 5500f, 6000f,
@@ -143,7 +126,6 @@ class TunerFragment : Fragment() {
         }
         spectrumPlot?.setYTouchLimits(0f, Float.POSITIVE_INFINITY, PlotView.NO_REDRAW)
 
-        correlationPlot?.xRange(0f, 1f / minCorrelationFrequency, PlotView.NO_REDRAW)
         correlationPlot?.setXTicks(
             floatArrayOf(
                 1 / 1600f,
@@ -346,132 +328,6 @@ class TunerFragment : Fragment() {
             pitchPlot?.invalidate()
             pitchPlotChangeId = model.changeId
         }
-//        pitchPlot?.yRange(400f, 500f, PlotView.NO_REDRAW)
-//
-//        viewModel.musicalScale.observe(viewLifecycleOwner) { tuningFrequencies ->
-//            updatePitchPlotNoteNames()
-//            // TODO: should we extend the limits slightly, that the whole mark is visible?
-//            val firstFrequencyIndex = tuningFrequencies.noteIndexBegin
-//            val lastFrequencyIndex = tuningFrequencies.noteIndexEnd - 1
-//            val firstFrequency = tuningFrequencies.getNoteFrequency(firstFrequencyIndex)
-//            val lastFrequency = tuningFrequencies.getNoteFrequency(lastFrequencyIndex)
-//            pitchPlot?.setYTouchLimits(firstFrequency, lastFrequency, 0L)
-//        }
-//
-//        viewLifecycleOwner.lifecycleScope.launch {
-//            repeatOnLifecyscle(Lifecycle.State.STARTED) {
-//                requireContext().preferenceResources.notePrintOptions.collect {
-//                    updatePitchPlotMarks(redraw = false)
-//                    updatePitchPlotNoteNames()
-//
-//                    pitchPlot?.enableExtraPadding = it.isSolfege
-//                    spectrumPlot?.enableExtraPadding = it.isSolfege
-//                    correlationPlot?.enableExtraPadding = it.isSolfege
-//                }
-//            }
-//        }
-//
-//        viewModel.noteDetectionResults.observe(viewLifecycleOwner) { resultsMemory ->
-//            resultsMemory.incRef()
-//            val results = resultsMemory.memory
-//            if (results.frequency == 0f) {
-//                correlationPlot?.removePlotMarks(null, false)
-//                spectrumPlot?.removePlotMarks(null, false)
-//            }
-//            else {
-//                val label = getString(R.string.hertz, results.frequency)
-//                correlationPlot?.setXMark(
-//                    1.0f / results.frequency, label,
-//                    MARK_ID_FREQUENCY, LabelAnchor.SouthWest,
-//                    placeLabelsOutsideBoundsIfPossible = false
-//                )
-//                spectrumPlot?.setXMark(
-//                    results.frequency, label, MARK_ID_FREQUENCY,
-//                    LabelAnchor.SouthWest,
-//                    placeLabelsOutsideBoundsIfPossible = false
-//                )
-//            }
-//
-//            correlationPlot?.setXTouchLimits(
-//                0f,
-//                results.autoCorrelation.times.last(),
-//                PlotView.NO_REDRAW
-//            )
-//            correlationPlot?.plot(
-//                results.autoCorrelation.times,
-//                results.autoCorrelation.values
-//            )
-//
-//            spectrumPlot?.setXTouchLimits(
-//                0f,
-//                results.frequencySpectrum.frequencies.last(),
-//                PlotView.NO_REDRAW
-//            )
-//            spectrumPlot?.plot(
-//                results.frequencySpectrum.frequencies,
-//                results.frequencySpectrum.amplitudeSpectrumSquared)
-//            resultsMemory.decRef()
-//        }
-//
-//        viewModel.pitchHistory.sizeAsLiveData.observe(viewLifecycleOwner) {
-////            Log.v("TestRecordFlow", "TunerFragment.sizeAsLiveData: $it")
-//            pitchPlot?.xRange(0f, 1.08f * it.toFloat(), PlotView.NO_REDRAW)
-//        }
-//
-//        viewModel.frequencyPlotRange.observe(viewLifecycleOwner) {
-////            Log.v("TestRecordFlow", "TunerFragment.plotRange: ${it[0]} -- ${it[1]}")
-//            pitchPlot?.yRange(it[0], it[1], 600)
-//        }
-//
-//        viewModel.pitchHistory.historyAveraged.observe(viewLifecycleOwner) {
-//            if (it.size > 0) {
-//                val frequency = it.last()
-//                tuningStatus = viewModel.targetNote.value?.getTuningStatus(frequency) ?: TargetNote.TuningStatus.Unknown
-//
-//                setStyles(isPitchInactive, tuningStatus, redraw = false)
-//                pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), frequency), redraw = false)
-//                pitchPlot?.setPoints(floatArrayOf((it.size - 1).toFloat(), frequency), tag = 1L, redraw = false)
-//                pitchPlot?.plot(it)
-//            }
-//        }
-//
-//        viewModel.targetNote.observe(viewLifecycleOwner) { targetNote ->
-//            viewModel.pitchHistory.historyAveraged.value?.lastOrNull()?.let { frequency ->
-//                tuningStatus = targetNote.getTuningStatus(frequency)
-//            }
-//            setStyles(isPitchInactive, tuningStatus, redraw = false)
-//            updatePitchPlotMarks(redraw = true)
-//        }
-//
-//        viewModel.pitchHistory.numValuesSinceLastLineUpdate.observe(viewLifecycleOwner) { numValuesSinceLastUpdate ->
-//            val maxTimeBeforeInactive = 0.3f // seconds
-//            val maxNumValuesBeforeInactive = max(1f, floor(maxTimeBeforeInactive / (viewModel.pitchHistoryUpdateInterval.value ?: 1f)))
-//            isPitchInactive = (numValuesSinceLastUpdate > maxNumValuesBeforeInactive)
-//            setStyles(isPitchInactive, tuningStatus, redraw = true)
-//        }
-//
-//        // plot the values if available, since the plots currently cant store the plot lines.
-//        viewModel.noteDetectionResults.value?.let { resultsMemory ->
-//            resultsMemory.incRef()
-//            val results = resultsMemory.memory
-//            correlationPlot?.plot(
-//                results.autoCorrelation.times,
-//                results.autoCorrelation.values
-//            )
-//            spectrumPlot?.plot(
-//                results.frequencySpectrum.frequencies,
-//                results.frequencySpectrum.amplitudeSpectrumSquared
-//            )
-//            resultsMemory.decRef()
-//        }
-//
-//        viewLifecycleOwner.lifecycleScope.launch {
-//            repeatOnLifecycle(Lifecycle.State.STARTED) {
-//                requireContext().preferenceResources.waveWriterDurationInSeconds.collect { duration ->
-//                    recordFab?.visibility = if (duration == 0) View.GONE else View.VISIBLE
-//                }
-//            }
-//        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -494,8 +350,6 @@ class TunerFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
-        //viewModel.setInstrument(instrumentDatabase[0]) // TODO: we need completely own view model here instead
-        //viewModel.setTargetNote(-1, null) // TunerViewModel.AUTOMATIC_TARGET_NOTE_DETECTION)
     }
 
     override fun onResume() {
@@ -514,154 +368,7 @@ class TunerFragment : Fragment() {
         super.onStop()
     }
 
-    private fun setStyles(isPitchInactive: Boolean, tuningStatus: TargetNote.TuningStatus, redraw: Boolean) {
-        if (isPitchInactive) {
-            pitchPlot?.setLineStyle(1, suppressInvalidate = true)
-            pitchPlot?.setPointStyle(1, suppressInvalidate = true)
-            val pointSize = pitchPlot?.pointSizes?.get(1) ?: 1f
-
-            when (tuningStatus) {
-                TargetNote.TuningStatus.TooLow -> {
-                    pitchPlot?.setPointStyle(6, tag = 1L, suppressInvalidate = true)
-                    pitchPlot?.setPointVisible(true, tag = 1L, suppressInvalidate = true)
-                    pitchPlot?.setPointOffset(0f, -1.5f * pointSize, 1L, suppressInvalidate = true)
-                }
-                TargetNote.TuningStatus.TooHigh -> {
-                    pitchPlot?.setPointStyle(5, tag = 1L, suppressInvalidate = true)
-                    pitchPlot?.setPointVisible(true, tag = 1L, suppressInvalidate = true)
-                    pitchPlot?.setPointOffset(0f, 1.5f * pointSize, 1L, suppressInvalidate = true)
-                }
-                else -> pitchPlot?.setPointVisible(false, tag = 1L, suppressInvalidate = true)
-            }
-        } else {
-            pitchPlot?.setLineStyle(0, suppressInvalidate = true)
-            val pointSize = pitchPlot?.pointSizes?.get(0) ?: 1f
-
-            when (tuningStatus) {
-                TargetNote.TuningStatus.TooLow -> {
-                    pitchPlot?.setPointStyle(2, suppressInvalidate = true)
-                    pitchPlot?.setPointVisible(true, tag = 1L, suppressInvalidate = true)
-                    pitchPlot?.setPointStyle(4, tag = 1L, suppressInvalidate = true)
-                    pitchPlot?.setPointOffset(0f, -1.5f * pointSize, 1L, suppressInvalidate = true)
-                    pitchPlot?.setMarkStyle(2, MARK_ID_FREQUENCY, suppressInvalidate = true)
-                }
-                TargetNote.TuningStatus.TooHigh -> {
-                    pitchPlot?.setPointStyle(2, suppressInvalidate = true)
-                    pitchPlot?.setPointVisible(true, tag = 1L, suppressInvalidate = true)
-                    pitchPlot?.setPointStyle(3, tag = 1L, suppressInvalidate = true)
-                    pitchPlot?.setPointOffset(0f, 1.5f * pointSize, 1L, suppressInvalidate = true)
-                    pitchPlot?.setMarkStyle(2, MARK_ID_FREQUENCY, suppressInvalidate = true)
-                }
-                else -> {
-                    pitchPlot?.setPointStyle(0, suppressInvalidate = true)
-                    pitchPlot?.setPointVisible(false, tag = 1L, suppressInvalidate = true)
-                    pitchPlot?.setMarkStyle(0, MARK_ID_FREQUENCY, suppressInvalidate = true)
-                }
-            }
-        }
-        if (redraw)
-            pitchPlot?.invalidate()
-    }
-//    INFO: the following temporarily switched off
-//    private fun updatePitchPlotMarks(redraw: Boolean = true) {
-//        val targetNote = viewModel.targetNote.value ?: return
-//        //val musicalScale = viewModel.musicalScale.value ?: return
-//        //val noteNames = viewModel.noteNames.value ?: return
-//        //val preferFlat = viewModel.preferFlat.value ?: false
-//
-//        val nameMinusBound = getString(R.string.cent, -targetNote.toleranceInCents)
-//        val namePlusBound = getString(R.string.cent, targetNote.toleranceInCents)
-//
-//        if (targetNote.isTargetNoteAvailable) {
-//            pitchPlot?.setMarks(
-//                null,
-//                floatArrayOf(
-//                    targetNote.frequencyLowerTolerance,
-//                    targetNote.frequencyUpperTolerance
-//                ),
-//                MARK_ID_TOLERANCE,
-//                1,
-//                arrayOf(LabelAnchor.NorthWest, LabelAnchor.SouthWest),
-//                MarkLabelBackgroundSize.FitLargest,
-//                placeLabelsOutsideBoundsIfPossible = false,
-//                redraw = false,
-//                maxLabelBounds = null
-//            ) { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float ->
-//                val s = when (index) {
-//                    0 -> nameMinusBound
-//                    1 -> namePlusBound
-//                    else -> ""
-//                }
-//                StringLabel(
-//                    s,
-//                    textPaint,
-//                    backgroundPaint,
-//                    cornerRadius,
-//                    gravity,
-//                    paddingHorizontal,
-//                    paddingHorizontal,
-//                    paddingVertical,
-//                    paddingVertical
-//                )
-//            }
-//            pitchPlot?.setYMark(
-//                targetNote.frequency,
-//                targetNote.note,
-//                requireContext().preferenceResources.notePrintOptions.value,
-//                MARK_ID_FREQUENCY,
-//                LabelAnchor.East,
-//                if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
-//                placeLabelsOutsideBoundsIfPossible = true,
-//                redraw = redraw
-//            )
-//        } else {
-//            pitchPlot?.removePlotMarks(MARK_ID_TOLERANCE, suppressInvalidate = true)
-//            pitchPlot?.removePlotMarks(MARK_ID_FREQUENCY, suppressInvalidate = !redraw)
-//        }
-//    }
-//
-//    private fun updatePitchPlotNoteNames(redraw: Boolean = true) {
-//        //val noteNames = viewModel.noteNames.value ?: return
-//        //val preferFlat = viewModel.preferFlat.value ?: return
-//        val musicalScale = viewModel.musicalScale.value ?: return
-//
-//        val numNotes = musicalScale.noteIndexEnd - musicalScale.noteIndexBegin
-//        val noteFrequencies = FloatArray(numNotes) {
-//            musicalScale.getNoteFrequency(musicalScale.noteIndexBegin + it)
-//        }
-//
-//        // Update ticks in pitch history plot
-//        pitchPlot?.setYTicks(noteFrequencies, redraw = false,
-//            noteNameScale = musicalScale.noteNameScale, noteIndexBegin = musicalScale.noteIndexBegin,
-//            requireContext().preferenceResources.notePrintOptions.value
-//        )
-////        { _, f ->
-////            val toneIndex = musicalScale.getClosestNoteIndex(f)
-////            noteNames.getNoteName(requireContext(), toneIndex, preferFlat = preferFlat)
-////        }
-//
-//        // Update active y-mark in pitch history plot
-//        viewModel.targetNote.value?.let { targetNote ->
-//            if (targetNote.isTargetNoteAvailable) {
-//                pitchPlot?.setYMark(
-//                    targetNote.frequency,
-//                    targetNote.note,
-//                    requireContext().preferenceResources.notePrintOptions.value,
-//                    //noteNames.getNoteName(requireContext(), targetNote.noteIndex, preferFlat),
-//                    MARK_ID_FREQUENCY,
-//                    LabelAnchor.East,
-//                    style = if (tuningStatus == TargetNote.TuningStatus.InTune) 0 else 2,
-//                    placeLabelsOutsideBoundsIfPossible = true,
-//                    redraw = redraw
-//                )
-//            } else {
-//                pitchPlot?.removePlotMarks(MARK_ID_FREQUENCY, suppressInvalidate = !redraw)
-//            }
-//        }
-//    }
-
     companion object{
-        private const val MARK_ID_TOLERANCE = 10L
         private const val MARK_ID_FREQUENCY = 11L
         private const val HARMONIC_ID = 12L
     }

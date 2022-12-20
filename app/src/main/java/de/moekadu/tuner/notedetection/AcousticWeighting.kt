@@ -1,4 +1,4 @@
-package de.moekadu.tuner.notedetection2
+package de.moekadu.tuner.notedetection
 
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -28,7 +28,6 @@ class AcousticAWeighting : AcousticWeighting {
      * The amplitude at a specific frequency must multiplied with this value
      * to obtain the weighted value.
      * @param freq Frequency
-     * @param Weighting factor
      */
     private fun getWeightingFactor(freq: Float): Float {
         return getWeightingFactorNonNormalized(freq) / weightingNonNormalized1000
@@ -59,7 +58,6 @@ class AcousticCWeighting : AcousticWeighting {
      * The amplitude at a specific frequency must multiplied with this value
      * to obtain the weighted value.
      * @param freq Frequency
-     * @param Weighting factor
      */
     private fun getWeightingFactor(freq: Float): Float {
         return getWeightingFactorNonNormalized(freq) / weightingNonNormalized1000

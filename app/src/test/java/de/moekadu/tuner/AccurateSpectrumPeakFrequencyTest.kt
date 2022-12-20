@@ -1,8 +1,8 @@
 package de.moekadu.tuner
 
 import de.moekadu.tuner.notedetection.RealFFT
-import de.moekadu.tuner.notedetection2.AccurateSpectrumPeakFrequency
-import de.moekadu.tuner.notedetection2.FrequencySpectrum
+import de.moekadu.tuner.notedetection.AccurateSpectrumPeakFrequency
+import de.moekadu.tuner.notedetection.FrequencySpectrum
 import org.junit.Assert
 import org.junit.Test
 import kotlin.math.PI
@@ -30,7 +30,7 @@ class AccurateSpectrumPeakFrequencyTest {
         }
     }
 
-    fun testAccuracy(numSamples: Int, frequencyIndexFloat: Float, relativeShift: Float): AccurateSpectrumPeakFrequencyTestResult {
+    private fun testAccuracy(numSamples: Int, frequencyIndexFloat: Float, relativeShift: Float): AccurateSpectrumPeakFrequencyTestResult {
 
         val timeSeriesDuration = 3.0f
         val frequencyIndex = frequencyIndexFloat.roundToInt()

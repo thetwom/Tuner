@@ -19,37 +19,39 @@
 
 package de.moekadu.tuner.notedetection
 
+import de.moekadu.tuner.misc.MemoryPool
 import kotlin.math.max
 import kotlin.math.min
 
-/// Class which collects sample data.
-/**
+/** Class which collects sample data.
  * @param size Sample data buffer size
  * @param sampleRate Sample rate in Hertz
  * @param framePosition Position of first frame in data
  */
 class SampleData(val size: Int, val sampleRate: Int, var framePosition: Int) {
-    /// Here we store the data.
+    /** Here we store the data. */
     val data = FloatArray(size)
 
-    /// Smallest index in data, where data was written.
+    /** Smallest index in data, where data was written. */
     private var minLevel = Int.MAX_VALUE
-    /// Largest index in data, where data was written.
+    /** Largest index in data, where data was written. */
     private var maxLevel = 0
 
-    /// Flag telling if our data buffer is completely filled.
-    /** @note We only check that some data was written to min and max position of our data object. */
+    /** Flag telling if our data buffer is completely filled.
+     *  @note We only check that some data was written to min and max position of our data object. */
     val isFull
             get() = (maxLevel == size && minLevel == 0)
 
+    /** Empty object and set new frame position.
+     * @param framePosition New frame position.
+     */
     fun reset(framePosition: Int) {
         this.framePosition = framePosition
         minLevel = Int.MAX_VALUE
         maxLevel = 0
     }
 
-    /// Add some data to our data object.
-    /**
+    /** Add some data to our data object.
      * @param inputFramePosition Frame position of first entry in input-array
      * @param input Input data, which should be copied to our local data object.
      */
@@ -61,10 +63,19 @@ class SampleData(val size: Int, val sampleRate: Int, var framePosition: Int) {
         if (numCopy > 0) {
             input.copyInto(data, startIndexData, startIndexInput, startIndexInput + numCopy)
             maxLevel = max(maxLevel, startIndexData + numCopy)
-            if (numCopy > 0)
-                minLevel = min(minLevel, startIndexData)
+            minLevel = min(minLevel, startIndexData)
         }
         //Log.v("TestRecordFlow", "SampleData.addData: inputFramePosition = $inputFramePosition, input.size=${input.size}, numCopy=$numCopy, startIndexData=$startIndexData, startIndexInput=$startIndexInput")
         require(maxLevel <= size)
     }
 }
+
+class MemoryPoolSampleData {
+    private val pool = MemoryPool<SampleData>()
+
+    fun get(size: Int, sampleRate: Int, framePosition: Int) = pool.get(
+        factory = { SampleData(size, sampleRate, framePosition) },
+        checker = { it.size == size && it.sampleRate == sampleRate }
+    ).apply { memory.reset(framePosition) }
+}
+

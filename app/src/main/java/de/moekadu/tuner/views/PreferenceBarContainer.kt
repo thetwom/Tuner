@@ -51,7 +51,7 @@ class PreferenceBarContainer(val activity: MainActivity) {
         val builder = SpannableStringBuilder()
         builder.append(printer.noteToCharSequence(note, printOption, true))
         builder.append("\n")
-        builder.append(activity.getString(R.string.hertz_str, frequency)) // TODO: instead use the settings string
+        builder.append(activity.getString(R.string.hertz_str, frequency))
         referenceNote.text = builder
     }
 

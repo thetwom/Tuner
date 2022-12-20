@@ -1,4 +1,4 @@
-package de.moekadu.tuner.notedetection2
+package de.moekadu.tuner.notedetection
 
 class AutoCorrelation(
     val size: Int,

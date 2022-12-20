@@ -1,9 +1,9 @@
 package de.moekadu.tuner
 
-import de.moekadu.tuner.notedetection2.AcousticZeroWeighting
-import de.moekadu.tuner.notedetection2.Harmonics
-import de.moekadu.tuner.notedetection2.InharmonicityDetector
-import de.moekadu.tuner.notedetection2.computeInharmonicity
+import de.moekadu.tuner.notedetection.AcousticZeroWeighting
+import de.moekadu.tuner.notedetection.Harmonics
+import de.moekadu.tuner.notedetection.InharmonicityDetector
+import de.moekadu.tuner.notedetection.computeInharmonicity
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

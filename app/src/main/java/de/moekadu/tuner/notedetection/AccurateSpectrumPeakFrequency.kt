@@ -1,4 +1,4 @@
-package de.moekadu.tuner.notedetection2
+package de.moekadu.tuner.notedetection
 
 import kotlin.math.PI
 import kotlin.math.atan2
@@ -22,8 +22,6 @@ class AccurateSpectrumPeakFrequency(
 ) {
     /** Frequency resolution. */
     private val df = spec1?.df ?: spec2?.df ?: 1.0f
-
-    var isHighAccuracyModeEnabled = true
 
     init {
         require(spec1 != null || spec2 != null)

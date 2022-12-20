@@ -37,9 +37,6 @@ class InstrumentsFragment : Fragment() {
         InstrumentsViewModel.Factory(requireActivity().instrumentResources)
     }
 
-//    private val instrumentEditorViewModel: InstrumentEditorViewModel by activityViewModels()
-//    private val tunerViewModel: TunerViewModel by activityViewModels()
-
     private var recyclerView: RecyclerView? = null
     private val instrumentsPredefinedAdapter = InstrumentsAdapter(InstrumentsAdapter.Mode.Copy)
     private val instrumentsCustomAdapter = InstrumentsAdapter(InstrumentsAdapter.Mode.EditCopy)
@@ -51,7 +48,6 @@ class InstrumentsFragment : Fragment() {
     private var lastRemovedInstrumentIndex = -1
     private var lastRemovedInstrument: Instrument? = null
 
-    //private val instrumentArchiving = InstrumentArchiving(this)
     private val instrumentArchiving = InstrumentArchiving(
         { instrumentsViewModel.customInstrumentDatabase} ,
         this, { parentFragmentManager }, { requireContext() }
@@ -117,7 +113,6 @@ class InstrumentsFragment : Fragment() {
             val instruments = InstrumentDatabase.stringToInstruments(instrumentsString).instruments
             val taskString = bundle.getString(ImportInstrumentsDialog.INSERT_MODE_KEY, InstrumentDatabase.InsertMode.Append.toString())
             val task = InstrumentDatabase.InsertMode.valueOf(taskString)
-            //instrumentsViewModel.customInstrumentDatabase.loadInstruments(instruments, task)
             instrumentsViewModel.customInstrumentDatabase.loadInstruments(instruments, task)
         }
 
@@ -144,17 +139,12 @@ class InstrumentsFragment : Fragment() {
             instrumentSectionPredefinedAdapter,
             instrumentsPredefinedAdapter
         )
-        //recyclerView?.adapter = instrumentsCustomAdapter
 
         instrumentsPredefinedAdapter.onInstrumentClickedListener =
             object : InstrumentsAdapter.OnInstrumentClickedListener {
                 override fun onInstrumentClicked(instrument: Instrument, stableId: Long) {
 //                    Log.v("Tuner", "InstrumentsFragment.onCreateView: new instrument: $instrument")
-                    instrumentsViewModel.setInstrument(
-                        instrument//,
-                        //InstrumentsViewModel.Section.Predefined
-                    )
-                    //(activity as MainActivity?)?.onBackPressed()
+                    instrumentsViewModel.setInstrument(instrument)
                     (activity as MainActivity?)?.handleGoBackCommand()}
 
                 override fun onEditIconClicked(instrument: Instrument, stableId: Long) {}
@@ -166,7 +156,6 @@ class InstrumentsFragment : Fragment() {
                         stableId = Instrument.NO_STABLE_ID,
                         strings = instrument.strings.copyOf()
                     )
-//                    instrumentEditorViewModel.setInstrument(instrumentCopy)
                     (requireActivity() as MainActivity).loadTuningEditorFragment(instrumentCopy)
                 }
             }
@@ -265,7 +254,6 @@ class InstrumentsFragment : Fragment() {
                             )
                                 .setAction(R.string.undo) {
                                     if (lastRemovedInstrument != null) {
-                                        //instrumentsViewModel.customInstrumentDatabase.add(
                                         instrumentsViewModel.addCustomInstrument(
                                             lastRemovedInstrumentIndex,
                                             removedItem
@@ -345,10 +333,6 @@ class InstrumentsFragment : Fragment() {
                 }
             }
         }
-//        tunerViewModel.preferFlat.observe(viewLifecycleOwner) {
-//            instrumentsPredefinedAdapter.setPreferFlat(preferFlat = it, recyclerView)
-//            instrumentsCustomAdapter.setPreferFlat(preferFlat = it, recyclerView)
-//        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -394,71 +378,6 @@ class InstrumentsFragment : Fragment() {
                         }
                     }
                 }
-            }
-        }
-
-//        instrumentsViewModel.instrument.observe(viewLifecycleOwner) {
-////            Log.v("Tuner", "InstrumentsFragment.onCreateView: setStableId: $it")
-//            when (it.section) {
-//                InstrumentsViewModel.Section.Predefined -> {
-//                    instrumentsPredefinedAdapter.setActiveStableId(
-//                        it.instrument.stableId,
-//                        recyclerView
-//                    )
-//                    instrumentsCustomAdapter.setActiveStableId(
-//                        Instrument.NO_STABLE_ID,
-//                        recyclerView
-//                    )
-//                }
-//                InstrumentsViewModel.Section.Custom -> {
-//                    instrumentsPredefinedAdapter.setActiveStableId(
-//                        Instrument.NO_STABLE_ID,
-//                        recyclerView
-//                    )
-//                    instrumentsCustomAdapter.setActiveStableId(it.instrument.stableId, recyclerView)
-//                }
-//            }
-//        }
-
-//        instrumentsViewModel.customInstrumentDatabaseAsLiveData.observe(viewLifecycleOwner) { database ->
-//            // switch off section titles if there are not custom instruments
-//            if (database.size == 0) {
-//                instrumentSectionCustomAdapter.visible = false
-//                instrumentSectionPredefinedAdapter.visible = false
-//                instrumentsViewModel.expandPredefinedDatabase(true)
-//            } else {
-//                instrumentSectionCustomAdapter.visible = true
-//                instrumentSectionPredefinedAdapter.visible = true
-//            }
-//
-//            activity?.let {
-//                AppPreferences.writeCustomInstruments(database.getInstrumentsString(it), it)
-//            }
-//        }
-
-//        instrumentsViewModel.customInstrumentList.observe(viewLifecycleOwner) { instrumentList ->
-////            Log.v("Tuner", "InstrumentsFragment: observing custom instruments: new size= ${instrumentList.size}")
-////                Log.v("Tuner", "InstrumentFragment: Instrument stableId = ${i.stableId}")
-//            //Log.v("Tuner", "InstrumentsFragment: observing database: submitting database= ${databaseCopy.size}")
-//            instrumentsCustomAdapter.submitList(instrumentList)
-//        }
-
-//        instrumentsViewModel.predefinedInstrumentList.observe(viewLifecycleOwner) { instrumentList ->
-//            instrumentsPredefinedAdapter.submitList(instrumentList)
-//        }
-
-//        instrumentsViewModel.predefinedDatabaseExpanded.observe(viewLifecycleOwner) { expanded ->
-//            instrumentSectionPredefinedAdapter.expanded = expanded
-//        }
-//
-//        instrumentsViewModel.customDatabaseExpanded.observe(viewLifecycleOwner) { expanded ->
-//            instrumentSectionCustomAdapter.expanded = expanded
-//        }
-
-        instrumentsViewModel.uri.observe(viewLifecycleOwner) { uri ->
-            if (uri != null) {
-                instrumentArchiving.loadInstruments(uri)
-                instrumentsViewModel.loadingFileCompleted()
             }
         }
 

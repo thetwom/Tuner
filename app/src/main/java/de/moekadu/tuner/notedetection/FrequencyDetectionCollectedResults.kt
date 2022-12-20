@@ -1,10 +1,6 @@
-package de.moekadu.tuner.notedetection2
+package de.moekadu.tuner.notedetection
 
 import de.moekadu.tuner.misc.MemoryPool
-import de.moekadu.tuner.notedetection.MemoryPoolCorrelation
-import de.moekadu.tuner.notedetection.RealFFT
-import de.moekadu.tuner.notedetection.WindowingFunction
-import de.moekadu.tuner.notedetection.getFrequency
 import kotlinx.coroutines.channels.Channel
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -78,7 +74,7 @@ class FrequencyDetectionResultCollector(
     private val inharmonicityDetectorMemory = MemoryPoolInharmonicityDetector()
     private var previousResultsBuffer = Channel<MemoryPool<FrequencyDetectionCollectedResults>.RefCountedMemory>(Channel.CONFLATED)
 
-    fun collectResults(sampleData: MemoryPool<SampleData>.RefCountedMemory): MemoryPool<FrequencyDetectionCollectedResults>.RefCountedMemory {
+    suspend fun collectResults(sampleData: MemoryPool<SampleData>.RefCountedMemory): MemoryPool<FrequencyDetectionCollectedResults>.RefCountedMemory {
         val collectedResults = collectedResultsMemory.get(sampleData.memory.size, sampleData.memory.sampleRate)
 
         val previousResults = previousResultsBuffer.tryReceive().getOrNull()
@@ -141,8 +137,8 @@ class FrequencyDetectionResultCollector(
             collectedResults.memory.inharmonicity = 0f
         }
 
-        collectedResults.incRef() // increment ref count to avoid recycling while its in the previousResultsBuffer
-        previousResultsBuffer.trySend(collectedResults)
+        if (collectedResults.incRef()) // increment ref count to avoid recycling while its in the previousResultsBuffer
+            previousResultsBuffer.trySend(collectedResults)
 
         return collectedResults
     }
@@ -173,7 +169,7 @@ class FrequencyDetectionResultCollector(
         sampleData.data.copyInto(timeSeries.values)
     }
 
-    private fun computeSpectrumAndCorrelation(
+    private suspend fun computeSpectrumAndCorrelation(
         sampleData: SampleData, autoCorrelation: AutoCorrelation, spectrum: FrequencySpectrum
     ) {
         val spectrumAndCorrelation = spectrumAndCorrelationMemory.get(sampleData.size, windowType)

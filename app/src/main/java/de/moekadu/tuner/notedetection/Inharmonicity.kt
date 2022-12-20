@@ -1,4 +1,4 @@
-package de.moekadu.tuner.notedetection2
+package de.moekadu.tuner.notedetection
 
 import de.moekadu.tuner.misc.MemoryPool
 import de.moekadu.tuner.misc.UpdatableStatistics

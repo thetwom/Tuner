@@ -1,7 +1,7 @@
 package de.moekadu.tuner
 
-import de.moekadu.tuner.notedetection2.OutlierRemovingSmoother
-import de.moekadu.tuner.notedetection2.OutlierRemovingSmoothingBuffer
+import de.moekadu.tuner.notedetection.OutlierRemovingSmoother
+import de.moekadu.tuner.notedetection.OutlierRemovingSmoothingBuffer
 import org.junit.Assert.*
 import org.junit.Test
 

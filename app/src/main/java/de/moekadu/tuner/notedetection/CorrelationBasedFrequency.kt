@@ -1,4 +1,4 @@
-package de.moekadu.tuner.notedetection2
+package de.moekadu.tuner.notedetection
 
 import kotlin.math.ceil
 import kotlin.math.max

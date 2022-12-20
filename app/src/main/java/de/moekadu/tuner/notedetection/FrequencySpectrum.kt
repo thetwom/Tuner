@@ -1,4 +1,4 @@
-package de.moekadu.tuner.notedetection2
+package de.moekadu.tuner.notedetection
 
 /** Result of data in frequency space.
  * @param size Number of different frequencies. This is normally "time_domain_samples + 1"
@@ -28,12 +28,5 @@ class FrequencySpectrum(
      */
     fun imag(index: Int): Float {
         return spectrum[2 * index + 1]
-    }
-    /** Return the squared amplitude of a spectrum value.
-     * @param index Index where the value is needed.
-     * @return Squared amplitude of spectrum at given index.
-     */
-    fun ampSqr(index: Int): Float {
-        return amplitudeSpectrumSquared[index]
     }
 }

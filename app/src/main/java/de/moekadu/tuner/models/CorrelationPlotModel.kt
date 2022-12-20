@@ -1,6 +1,6 @@
 package de.moekadu.tuner.models
 
-import de.moekadu.tuner.notedetection2.AutoCorrelation
+import de.moekadu.tuner.notedetection.AutoCorrelation
 import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
 import de.moekadu.tuner.temperaments.Notation
 

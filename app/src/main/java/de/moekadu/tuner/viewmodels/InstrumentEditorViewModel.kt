@@ -10,8 +10,8 @@ import de.moekadu.tuner.models.DetectedNoteViewModel
 import de.moekadu.tuner.models.InstrumentEditorNameModel
 import de.moekadu.tuner.models.NoteSelectorForEditorModel
 import de.moekadu.tuner.models.StringViewEditorModel
-import de.moekadu.tuner.notedetection2.FrequencyEvaluator
-import de.moekadu.tuner.notedetection2.frequencyDetectionFlow
+import de.moekadu.tuner.notedetection.FrequencyEvaluator
+import de.moekadu.tuner.notedetection.frequencyDetectionFlow
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.MusicalNote
 import kotlinx.coroutines.Dispatchers
@@ -37,8 +37,6 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
 
     private val _instrumentNameModel = MutableLiveData(InstrumentEditorNameModel("", R.drawable.ic_guitar))
     val instrumentNameModel: LiveData<InstrumentEditorNameModel> get() = _instrumentNameModel
-//    private val _iconResourceId = MutableLiveData(R.drawable.ic_guitar)
-//    val iconResourceId: LiveData<Int> get() = _iconResourceId
 
     private val _strings = MutableStateFlow(StringsAndSelection(arrayOf(), 0))
     private val strings = _strings.asStateFlow()
@@ -55,29 +53,7 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
     private val _detectedNoteModel = MutableLiveData(DetectedNoteViewModel())
     val detectedNoteModel: LiveData<DetectedNoteViewModel> get() = _detectedNoteModel
 
-//    private val _selectedStringIndex = MutableStateFlow(0)
-//    val selectedStringIndex = _selectedStringIndex.asStateFlow()
-
-//    private val pref = PreferenceManager.getDefaultSharedPreferences(application)
-//
-//    private val onPreferenceChangedListener = object : SharedPreferences.OnSharedPreferenceChangeListener {
-//        override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-//            if (sharedPreferences == null)
-//                return
-//            when (key) {
-//                TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY -> {
-//                    val valueString = sharedPreferences.getString(
-//                        TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY, null)
-//                    val value = TemperamentAndReferenceNoteValue.fromString(valueString)
-//                    defaultNote = NoteNameScaleFactory.getDefaultReferenceNote(value!!.temperamentType)
-//                }
-//            }
-//        }
-//    }
-
     init {
-//        pref.registerOnSharedPreferenceChangeListener(onPreferenceChangedListener)
-//        loadSettingsFromSharedPreferences()
         viewModelScope.launch { pref.overlap.collect { overlap ->
             _detectedNoteModel.value = detectedNoteModel.value?.apply {
                 changeSettings(noteUpdateInterval = computePitchHistoryUpdateInterval(overlap = overlap))
@@ -100,6 +76,10 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
         }}
 
         viewModelScope.launch { pref.toleranceInCents.collect {
+            restartSamplingIfRunning()
+        }}
+
+        viewModelScope.launch { pref.pitchHistoryMaxNumFaultyValues.collect {
             restartSamplingIfRunning()
         }}
 
@@ -139,11 +119,6 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
             }
         }}
     }
-
-//    override fun onCleared() {
-//        pref.unregisterOnSharedPreferenceChangeListener(onPreferenceChangedListener)
-//        super.onCleared()
-//    }
 
     fun getInstrument(): Instrument {
         Log.v("Tuner", "InstrumentEditorViewModel: strings = ${strings.value.strings}")
@@ -234,7 +209,7 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
     }
 
     /** Change the note of the currently selected string.
-     * @param note New note for the selectd string
+     * @param note New note for the selected string
      */
     fun setSelectedStringTo(note: MusicalNote) {
         if (strings.value.strings.isEmpty())
@@ -280,6 +255,7 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
             val frequencyEvaluator = FrequencyEvaluator(
                 pref.numMovingAverage.value,
                 pref.toleranceInCents.value.toFloat(),
+                pref.pitchHistoryMaxNumFaultyValues.value,
                 pref.maxNoise.value,
                 pref.musicalScale.value,
                 Instrument(null, null, arrayOf(), 0, 0, true)
@@ -307,11 +283,6 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
         overlap: Float = pref.overlap.value,
         sampleRate: Int = this.sampleRate
     ) = windowSize * (1f - overlap) / sampleRate
-
-//    private fun loadSettingsFromSharedPreferences() {
-//        val values = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
-//        defaultNote = NoteNameScaleFactory.getDefaultReferenceNote(values.temperamentType)
-//    }
 
     class Factory(private val pref: PreferenceResources) : ViewModelProvider.Factory {
         @Suppress("unchecked_cast")

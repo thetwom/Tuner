@@ -1,4 +1,4 @@
-package de.moekadu.tuner.notedetection2
+package de.moekadu.tuner.notedetection
 
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.temperaments.MusicalNote
