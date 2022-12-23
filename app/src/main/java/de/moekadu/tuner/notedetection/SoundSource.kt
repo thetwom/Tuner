@@ -27,6 +27,7 @@ import android.util.Log
 import de.moekadu.tuner.misc.MemoryPool
 import de.moekadu.tuner.misc.WaveWriter
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -50,7 +51,7 @@ class SoundSource(
     private var memoryPool = MemoryPoolSampleData()
 
     /** Channel used to communicate the sound samples. */
-    val outputChannel = Channel<MemoryPool<SampleData>.RefCountedMemory>(Channel.CONFLATED)
+    val outputChannel = Channel<MemoryPool<SampleData>.RefCountedMemory>(3, BufferOverflow.DROP_OLDEST)
 
     init {
         sourceJob = scope.launch {
@@ -117,7 +118,10 @@ class SoundSource(
                         sampleDataList
                             .map { it.apply { memory.addData(currentFrame, recordData) } }
                             .filter { it.memory.isFull }
-                            .map { outputChannel.send(it) }
+                            .map {
+//                                Log.v("Tuner", "time: ${it.memory.framePosition}")
+                                outputChannel.send(it)
+                            }
                         sampleDataList.removeAll { it.memory.isFull }
 
                         //for(s in sampleDataList)

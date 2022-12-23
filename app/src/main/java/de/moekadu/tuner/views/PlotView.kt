@@ -41,10 +41,7 @@ import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
 import de.moekadu.tuner.temperaments.NoteNamePrinter
 import de.moekadu.tuner.temperaments.NoteNameScale
 import kotlinx.parcelize.Parcelize
-import kotlin.math.absoluteValue
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.pow
+import kotlin.math.*
 
 private const val NO_REDRAW_PRIVATE = Long.MAX_VALUE
 
@@ -1047,8 +1044,6 @@ private class PlotMarks(transformation: PlotTransformation,
             hasOnlyXLineMarks = false
             hasOnlyYLineMarks = false
         }
-//        for (m in marks)
-//            Log.v("Tuner", "PlotMarks.setMarks: mark=$m")
     }
 
     /** Change the style of a label.
@@ -1093,7 +1088,7 @@ private class PlotMarks(transformation: PlotTransformation,
             endIndex = marks.binarySearchBy(viewBounds.right + maxLabelWidth) {it.xPositionTransformed}
         } else if (hasOnlyXLineMarks) {
             if (marks.size > 1)
-                require(marks[1].yPositionTransformed > marks[0].yPositionTransformed) // here we should also take equals, since marks could be at the same position, but then, we must make sure that the binary search finds cor correct one
+                require(marks[1].yPositionTransformed > marks[0].yPositionTransformed) // here we should also take equals, since marks could be at the same position, but then, we must make sure that the binary search finds the correct one
             val maxLabelHeight = (maxLabelSizes[styleIndex]?.maxHeight ?: 0f) + 2 * labelPaddingVertical
 //             Log.v("StaticLayoutTest", "PlotView.drawToCanvas: maxLabelHeight = $maxLabelHeight")
             startIndex = marks.binarySearchBy(viewBounds.top - maxLabelHeight) {it.yPositionTransformed}
@@ -1180,10 +1175,8 @@ private class PlotMarks(transformation: PlotTransformation,
                     } else {
                         mark.anchor
                     }
-                } else if (x != DRAW_LINE && y != DRAW_LINE) {
+                } else { // -> (x != DRAW_LINE && y != DRAW_LINE)
                     labelAnchorResolved = mark.anchor
-                } else {
-                    throw RuntimeException("Invalid mark position")
                 }
 
                 if (isMarkInBoundingBox(mark, x, y, labelAnchorResolved)) {
@@ -1317,13 +1310,66 @@ private class PlotMarks(transformation: PlotTransformation,
         return label
     }
 
-
     companion object {
         /// Special setting for defining marks with horizontal or vertical lines.
         const val DRAW_LINE = Float.MAX_VALUE
         const val BOUND_UNDEFINED = Float.MAX_VALUE
     }
 }
+
+//class AutoTicks(
+//    private val tickDistance: Float,
+//    private val precision: Int,
+//    private val maxNumTicks: Int,
+//    private val baseDist: Float) {
+//
+//    /** First tick index (included) */
+//    fun getBeginIndex(rangeStart: Float) =  ceil(rangeStart / tickDistance).toInt()
+//    /** Last tick index (excluded) */
+//    fun getEndIndex(rangeEnd: Float) =  ceil(rangeEnd / tickDistance).toInt()
+//
+//    fun getTickValue(distanceFactor: Int): Float {
+//        return tickDistance * distanceFactor
+//    }
+//
+//    fun getTickString(distanceFactor: Int): String {
+//        val v = getTickValue(distanceFactor)
+//        return "%.${precision}f".format(v)
+//    }
+//
+//    fun checkValidity(rangeStart: Float, rangeEnd: Float): Boolean {
+//        val diff = rangeEnd - rangeStart
+//        var tickDist = 0f
+//        for (m in allowedMultipliers) {
+//            tickDist = baseDist * m
+//            val numTicks = floor(diff / tickDist).toInt()
+//            if (numTicks <= maxNumTicks)
+//                break
+//        }
+//        return tickDist == tickDistance
+//    }
+//
+//    companion object {
+//        private val allowedMultipliers = floatArrayOf(0.1f, 0.2f, 0.5f, 1f)
+//
+//        fun build(rangeStart: Float, rangeEnd: Float, maxNumTicks: Int): AutoTicks {
+//            val diff = rangeEnd - rangeStart
+//            val diffOrder = log10(diff)
+//            val diffOrderRounded = diffOrder.roundToInt()
+//            val baseDist = 10f.pow(diffOrderRounded)
+//            var tickDist = 0f
+//
+//            for (m in allowedMultipliers) {
+//                tickDist = baseDist * m
+//                val numTicks = floor(diff / tickDist).toInt()
+//                if (numTicks <= maxNumTicks)
+//                    break
+//            }
+//            val precision = max(0, -diffOrderRounded + 1)
+//            return AutoTicks(tickDist, precision, maxNumTicks, baseDist)
+//        }
+//    }
+//}
 
 class PlotRectangleAndPoint {
     var isEnabled = false
@@ -2468,7 +2514,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         indexEnd: Int = values?.size ?: 0,
         redraw: Boolean = true,
         maxLabelBounds: ((TextPaint) -> Label.LabelSetBounds)?,
-        labelCreator: ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label)?) {
+        labelCreator: ((index: Int, xPos: Float?, yPos: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label)?) {
 
         if (values == null) {
             return
@@ -2559,7 +2605,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         indexBegin: Int = 0, indexEnd: Int = values?.size ?: 0,
         redraw: Boolean = true,
         maxLabelBounds: ((TextPaint) -> Label.LabelSetBounds)?,
-        labelCreator: ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label)?) {
+        labelCreator: ((index: Int, xPos: Float?, yPos: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label)?) {
 //        Log.v("Tuner", "PlotView.setYTicks: numValues = ${value?.size}")
 
         if (values == null) {

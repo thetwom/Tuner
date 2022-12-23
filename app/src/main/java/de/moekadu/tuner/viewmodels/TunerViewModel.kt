@@ -225,9 +225,8 @@ class TunerViewModel(
 
         viewModelScope.launch { noteDetectionResults.collect {
             if (!simpleMode) {
-                //it?.incRef()
                 it?.with { results ->
-                //it?.memory?.let { results ->
+//                    Log.v("Tuner", "TunerViewModel: collecting noteDetectionResults: time = ${results.timeSeries.framePosition}, dt=${results.timeSeries.dt}")
                     _spectrumPlotModel.value = spectrumPlotModel.value?.apply {
                         changeSettings(
                             frequencySpectrum = results.frequencySpectrum,
