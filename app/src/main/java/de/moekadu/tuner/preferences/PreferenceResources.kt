@@ -1,7 +1,6 @@
 package de.moekadu.tuner.preferences
 
 import android.content.SharedPreferences
-import android.util.Log
 import de.moekadu.tuner.fragments.indexToTolerance
 import de.moekadu.tuner.fragments.indexToWindowSize
 import de.moekadu.tuner.fragments.nightModeStringToID
@@ -64,7 +63,7 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
         val sharedPrefFlow = callbackFlow {
             onSharedPreferenceChangedListener =
                 SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-                    Log.v("Tuner", "PreferenceResources : callbackFlow: key changed: $key")
+//                    Log.v("Tuner", "PreferenceResources : callbackFlow: key changed: $key")
                     if (key != null)
                         trySend(key)
                 }

@@ -70,6 +70,7 @@ fun frequencyDetectionFlow(
 
         CoroutineScope(coroutineContext + Dispatchers.Default).launch {
             for (sampleData in soundSource.outputChannel) {
+//                Log.v("Tuner", "frequencyDetectionFlow: collecting sample data: time = ${sampleData.memory.framePosition}")
                 resultChannel.send(frequencyDetectionResultCollector.collectResults(sampleData))
                 sampleData.decRef() // not needed anymore
             }

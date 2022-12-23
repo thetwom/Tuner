@@ -133,6 +133,7 @@ class PitchHistoryModel {
 
         // reset pitch history array
         if (maxNumHistoryValues >= 0 && maxNumHistoryValues != this.maxNumHistoryValues) {
+//            Log.v("Tuner", "PitchHistoryModel.changeSettings: numHistoryValues=$maxNumHistoryValues")
             this.maxNumHistoryValues = maxNumHistoryValues
             val oldNumHistoryValues = numHistoryValues
             val oldHistoryValues = historyValues
