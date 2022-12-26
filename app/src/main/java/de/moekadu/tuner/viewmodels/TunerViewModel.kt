@@ -119,10 +119,6 @@ class TunerViewModel(
             restartSamplingIfRunning()
         }}
 
-//        viewModelScope.launch { pref.pitchHistoryMaxNumFaultyValues.collect {
-//            pitchHistory.maxNumFaultyValues = it
-//        }}
-
         viewModelScope.launch { pref.toleranceInCents.collect {
             _pitchHistoryModel.value = pitchHistoryModel.value?.apply { changeSettings(toleranceInCents = it) }
             if (simpleMode) {
@@ -223,27 +219,39 @@ class TunerViewModel(
             }
         }}
 
-        viewModelScope.launch { noteDetectionResults.collect {
-            if (!simpleMode) {
+        if (!simpleMode) {
+            viewModelScope.launch {
+                var sampleNumberOfLastUpdate = 0
+                val minSampleDiffToUpdateSpectrumAndCorrelation = sampleRate / MAXIMUM_REFRESH_RATE
+
+                noteDetectionResults.collect {
+//            Log.v("Tuner", "TunerViewModel: collecting noteDetectionResults: resultUpdateRate = ${computeResultUpdateRate()}")
+
                 it?.with { results ->
-//                    Log.v("Tuner", "TunerViewModel: collecting noteDetectionResults: time = ${results.timeSeries.framePosition}, dt=${results.timeSeries.dt}")
-                    _spectrumPlotModel.value = spectrumPlotModel.value?.apply {
-                        changeSettings(
-                            frequencySpectrum = results.frequencySpectrum,
-                            harmonics = results.harmonics,
-                            detectedFrequency = results.harmonicStatistics.frequency
-                        )
+                    val currentSampleNumber = results.timeSeries.framePosition
+                    val diff = currentSampleNumber - sampleNumberOfLastUpdate
+
+                    if (diff > minSampleDiffToUpdateSpectrumAndCorrelation || diff < 0) {
+                        sampleNumberOfLastUpdate = currentSampleNumber
+
+//              Log.v("Tuner", "TunerViewModel: collecting noteDetectionResults: time = ${results.timeSeries.framePosition}, dt=${results.timeSeries.dt}")
+                        _spectrumPlotModel.value = spectrumPlotModel.value?.apply {
+                            changeSettings(
+                                frequencySpectrum = results.frequencySpectrum,
+                                harmonics = results.harmonics,
+                                detectedFrequency = results.harmonicStatistics.frequency
+                            )
+                        }
+                        _correlationPlotModel.value = correlationPlotModel.value?.apply {
+                            changeSettings(
+                                autoCorrelation = results.autoCorrelation,
+                                detectedFrequency = results.harmonicStatistics.frequency
+                            )
+                        }
                     }
-                    _correlationPlotModel.value = correlationPlotModel.value?.apply {
-                        changeSettings(
-                            autoCorrelation = results.autoCorrelation,
-                            detectedFrequency = results.harmonicStatistics.frequency
-                        )
-                    }
-                }
-                //it?.decRef()
+                } }
             }
-        }}
+        }
     }
 
     private fun restartFrequencyEvaluationJob(
@@ -355,8 +363,15 @@ class TunerViewModel(
         toleranceInCents: Int = pref.toleranceInCents.value
     ) = checkTuning(currentFrequency, targetFrequency, toleranceInCents.toFloat())
 
+    private fun computeResultUpdateRate(
+        sampleRate: Int = this.sampleRate,
+        windowSize: Int = pref.windowSize.value,
+        overlap: Float = pref.overlap.value
+    ) = sampleRate.toFloat() / (windowSize * (1.0f - overlap))
+
     companion object {
         const val DURATION_FOR_MARKING_NOTEDETECTION_AS_INACTIVE = 0.5f // in seconds
+        const val MAXIMUM_REFRESH_RATE = 60 // Hz
     }
 
     class Factory(

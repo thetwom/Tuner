@@ -85,6 +85,7 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
                     SCREEN_ALWAYS_ON -> _screenAlwaysOn.value = obtainScreenAlwaysOn()
                     WINDOWING_KEY -> _windowing.value = obtainWindowing()
                     OVERLAP_KEY -> _overlap.value = obtainOverlap()
+                    WINDOW_SIZE_KEY -> _windowSize.value = obtainWindowSize()
                     PITCH_HISTORY_DURATION_KEY -> _pitchHistoryDuration.value =
                         obtainPitchHistoryDuration()
                     PITCH_HISTORY_NUM_FAULTY_VALUES_KEY -> _pitchHistoryMaxNumFaultyValues.value =
