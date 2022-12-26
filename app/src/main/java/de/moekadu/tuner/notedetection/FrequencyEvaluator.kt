@@ -1,5 +1,6 @@
 package de.moekadu.tuner.notedetection
 
+import android.util.Log
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.temperaments.MusicalNote
@@ -34,6 +35,8 @@ class FrequencyEvaluator(
     private var timeStepOfLastSuccessfulFrequencyDetection = 0
     private var smoothedFrequency = 0f
 
+    private var lastTime = 0
+
     fun evaluate(
         frequencyCollectionResults: FrequencyDetectionCollectedResults?,
         userDefinedNote: MusicalNote?): FrequencyEvaluationResult {
@@ -67,6 +70,10 @@ class FrequencyEvaluator(
             currentTargetNote = it
         }
 
+        val time = frequencyCollectionResults?.timeSeries?.framePosition ?: 0
+        val diff = time - lastTime
+        lastTime = time
+        Log.v("Tuner", "FrequencyEvaluator.evaluate: time since last update = $diff")
         return FrequencyEvaluationResult(
             smoothedFrequency,
             newTarget,
