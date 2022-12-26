@@ -119,12 +119,11 @@ class TunerFragment : Fragment() {
             floatArrayOf(0f, 250f, 500f, 750f, 1000f, 1250f, 1500f, 1750f, 2000f, 2250f, 2500f,
                 2750f, 3000f, 3250f, 3500f, 3750f, 4000f, 4500f, 5000f, 5500f, 6000f,
                 6500f, 7000f, 7500f, 8000f, 8500f, 9000f, 9500f, 10000f, 11000f, 12000f, 13000f, 14000f,
-                15000f, 16000f, 17000f, 18000f, 19000f, 20000f, 25000f, 30000f, 35000f, 40000f),
-            redraw = false
+                15000f, 16000f, 17000f, 18000f, 19000f, 20000f, 25000f, 30000f, 35000f, 40000f)
         ) { _, i ->
             getString(R.string.hertz, i)
         }
-        spectrumPlot?.setYTouchLimits(0f, Float.POSITIVE_INFINITY, PlotView.NO_REDRAW)
+        spectrumPlot?.setYTouchLimits(0f, Float.POSITIVE_INFINITY)
 
         correlationPlot?.setXTicks(
             floatArrayOf(
@@ -150,40 +149,37 @@ class TunerFragment : Fragment() {
                 1 / 3f,
                 1 / 2f,
                 1 / 1f,
-            ), redraw = false
+            )
         ) { _, i ->
             getString(R.string.hertz, 1 / i)
         }
-        correlationPlot?.setYTicks(floatArrayOf(0f), redraw = false) { _, _ -> "" }
+        correlationPlot?.setYTicks(floatArrayOf(0f)) { _, _ -> "" }
 
         viewModel.spectrumPlotModel.observe(viewLifecycleOwner) { model ->
 //            Log.v("Tuner", "TunerFragment: spectrumModel.observe: changeId=${model.changeId}, noteDetectionId=${model.noteDetectionChangeId}, targetId=${model.targetChangeId}")
             if (model.changeId < spectrumPlotChangeId)
                 spectrumPlotChangeId = -1
             if (model.noteDetectionChangeId > spectrumPlotChangeId) {
-                spectrumPlot?.plot(model.frequencies, model.squaredAmplitudes, redraw = false)
+                spectrumPlot?.plot(model.frequencies, model.squaredAmplitudes)
                 spectrumPlot?.setMarks(model.harmonicsFrequencies, null, HARMONIC_ID,
-                    indexEnd = model.numHarmonics, redraw = false)
+                    indexEnd = model.numHarmonics)
                 val label = getString(R.string.hertz, model.detectedFrequency)
                 if (model.detectedFrequency > 0f) {
                     spectrumPlot?.setXMark(
                         model.detectedFrequency, label, MARK_ID_FREQUENCY, LabelAnchor.SouthWest,
                         placeLabelsOutsideBoundsIfPossible = false,
-                        redraw = false
                     )
                 } else {
-                    spectrumPlot?.removePlotMarks(MARK_ID_FREQUENCY, true)
+                    spectrumPlot?.removePlotMarks(MARK_ID_FREQUENCY)
                 }
                 if (model.frequencies.isNotEmpty())
-                    spectrumPlot?.setXTouchLimits(0f, model.frequencies.last(), PlotView.NO_REDRAW)
+                    spectrumPlot?.setXTouchLimits(0f, model.frequencies.last())
             }
 
             if (model.targetChangeId > spectrumPlotChangeId) {
                 spectrumPlot?.xRange(model.frequencyRange[0], model.frequencyRange[1], 300L)
             }
             spectrumPlot?.enableExtraPadding = model.useExtraPadding
-            spectrumPlot?.invalidate()
-
             spectrumPlotChangeId = model.changeId
         }
 
@@ -193,7 +189,7 @@ class TunerFragment : Fragment() {
                 correlationPlotChangeId = -1
 
             if (model.noteDetectionChangeId > correlationPlotChangeId) {
-                correlationPlot?.plot(model.timeShifts, model.correlationValues, redraw = false)
+                correlationPlot?.plot(model.timeShifts, model.correlationValues)
                 val label = getString(R.string.hertz, model.detectedFrequency)
                 if (model.detectedFrequency > 0f) {
                     correlationPlot?.setXMark(
@@ -201,14 +197,13 @@ class TunerFragment : Fragment() {
                         label,
                         MARK_ID_FREQUENCY,
                         LabelAnchor.SouthWest,
-                        placeLabelsOutsideBoundsIfPossible = false,
-                        redraw = false
+                        placeLabelsOutsideBoundsIfPossible = false
                     )
                 } else {
-                    correlationPlot?.removePlotMarks(MARK_ID_FREQUENCY, true)
+                    correlationPlot?.removePlotMarks(MARK_ID_FREQUENCY)
                 }
                 if (model.timeShifts.isNotEmpty())
-                    correlationPlot?.setXTouchLimits(0f, model.timeShifts.last(), PlotView.NO_REDRAW)
+                    correlationPlot?.setXTouchLimits(0f, model.timeShifts.last())
             }
 
             if (model.targetChangeId > correlationPlotChangeId) {
@@ -216,7 +211,6 @@ class TunerFragment : Fragment() {
             }
 
             correlationPlot?.enableExtraPadding = model.useExtraPadding
-            correlationPlot?.invalidate()
             correlationPlotChangeId = model.changeId
         }
 
@@ -225,7 +219,7 @@ class TunerFragment : Fragment() {
                 pitchPlotChangeId = -1
 
             if (model.musicalScaleChangeId > pitchPlotChangeId || model.notePrintOptionsChangeId > pitchPlotChangeId) {
-                pitchPlot?.setYTicks(model.musicalScaleFrequencies, redraw = false,
+                pitchPlot?.setYTicks(model.musicalScaleFrequencies,
                     noteNameScale = model.musicalScale.noteNameScale,
                     noteIndexBegin = model.musicalScale.noteIndexBegin,
                     notePrintOptions = model.notePrintOptions
@@ -236,19 +230,18 @@ class TunerFragment : Fragment() {
             }
             if (model.historyValuesChangeId > pitchPlotChangeId) {
                 if (model.numHistoryValues == 0 || model.currentFrequency <= 0f) {
-                    pitchPlot?.removePlotPoints(PitchHistoryModel.CURRENT_FREQUENCY_POINT_TAG, suppressInvalidate = true)
-                    pitchPlot?.removePlotPoints(PitchHistoryModel.TUNING_DIRECTION_POINT_TAG, suppressInvalidate = true)
+                    pitchPlot?.removePlotPoints(PitchHistoryModel.CURRENT_FREQUENCY_POINT_TAG)
+                    pitchPlot?.removePlotPoints(PitchHistoryModel.TUNING_DIRECTION_POINT_TAG)
                 } else {
                     val point = floatArrayOf(model.numHistoryValues - 1f, model.currentFrequency)
-                    pitchPlot?.setPoints(point, tag = PitchHistoryModel.CURRENT_FREQUENCY_POINT_TAG, redraw = false)
-                    pitchPlot?.setPoints(point, tag = PitchHistoryModel.TUNING_DIRECTION_POINT_TAG, redraw = false)
+                    pitchPlot?.setPoints(point, tag = PitchHistoryModel.CURRENT_FREQUENCY_POINT_TAG)
+                    pitchPlot?.setPoints(point, tag = PitchHistoryModel.TUNING_DIRECTION_POINT_TAG)
                 }
                 pitchPlot?.plot(
                     model.historyValues, PitchHistoryModel.HISTORY_LINE_TAG,
-                    indexBegin = 0, indexEnd = model.numHistoryValues,
-                    redraw = false
+                    indexBegin = 0, indexEnd = model.numHistoryValues
                 )
-                pitchPlot?.xRange(0f, 1.08f * model.historyValues.size, PlotView.NO_REDRAW)
+                pitchPlot?.xRange(0f, 1.08f * model.historyValues.size)
             }
 
             if (model.yRangeChangeId > pitchPlotChangeId) {
@@ -265,11 +258,10 @@ class TunerFragment : Fragment() {
                         PitchHistoryModel.TARGET_NOTE_MARK_TAG,
                         LabelAnchor.East,
                         model.targetNoteMarkStyle,
-                        placeLabelsOutsideBoundsIfPossible = true,
-                        redraw = false
+                        placeLabelsOutsideBoundsIfPossible = true
                     )
                 } else {
-                    pitchPlot?.removePlotMarks(PitchHistoryModel.TARGET_NOTE_MARK_TAG, suppressInvalidate = true)
+                    pitchPlot?.removePlotMarks(PitchHistoryModel.TARGET_NOTE_MARK_TAG)
                 }
             }
 
@@ -287,7 +279,6 @@ class TunerFragment : Fragment() {
                         anchors = arrayOf(LabelAnchor.NorthWest, LabelAnchor.SouthWest),
                         backgroundSizeType = MarkLabelBackgroundSize.FitLargest,
                         placeLabelsOutsideBoundsIfPossible = false,
-                        redraw = false,
                         maxLabelBounds = null
                     ) { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float ->
                         val s = when (index) {
@@ -308,24 +299,21 @@ class TunerFragment : Fragment() {
                         )
                     }
                 } else {
-                    pitchPlot?.removePlotMarks(PitchHistoryModel.TOLERANCE_MARK_TAG, true)
+                    pitchPlot?.removePlotMarks(PitchHistoryModel.TOLERANCE_MARK_TAG)
                 }
             }
 
-            pitchPlot?.setLineStyle(model.historyLineStyle, PitchHistoryModel.HISTORY_LINE_TAG, suppressInvalidate = true)
-            pitchPlot?.setPointStyle(model.currentFrequencyPointStyle, PitchHistoryModel.CURRENT_FREQUENCY_POINT_TAG, suppressInvalidate = true)
-            pitchPlot?.setPointStyle(model.tuningDirectionPointStyle, PitchHistoryModel.TUNING_DIRECTION_POINT_TAG, suppressInvalidate = true)
+            pitchPlot?.setLineStyle(model.historyLineStyle, PitchHistoryModel.HISTORY_LINE_TAG)
+            pitchPlot?.setPointStyle(model.currentFrequencyPointStyle, PitchHistoryModel.CURRENT_FREQUENCY_POINT_TAG)
+            pitchPlot?.setPointStyle(model.tuningDirectionPointStyle, PitchHistoryModel.TUNING_DIRECTION_POINT_TAG)
             val pointSize = pitchPlot?.pointSizes?.get(model.currentFrequencyPointStyle) ?: 1f
             pitchPlot?.setPointOffset(
                 0f, pointSize * model.tuningDirectionPointRelativeOffset,
-                PitchHistoryModel.TUNING_DIRECTION_POINT_TAG,
-                suppressInvalidate = false
+                PitchHistoryModel.TUNING_DIRECTION_POINT_TAG
             )
 //            Log.v("Tuner", "TunerFragment: tuningDirectionPointVisible = ${model.tuningDirectionPointVisible}, offset=${pointSize * model.tuningDirectionPointRelativeOffset}")
-            pitchPlot?.setPointVisible(model.tuningDirectionPointVisible, PitchHistoryModel.TUNING_DIRECTION_POINT_TAG, suppressInvalidate = true)
-            pitchPlot?.setMarkStyle(model.targetNoteMarkStyle, PitchHistoryModel.TARGET_NOTE_MARK_TAG, suppressInvalidate = true)
-
-            pitchPlot?.invalidate()
+            pitchPlot?.setPointVisible(model.tuningDirectionPointVisible, PitchHistoryModel.TUNING_DIRECTION_POINT_TAG)
+            pitchPlot?.setMarkStyle(model.targetNoteMarkStyle, PitchHistoryModel.TARGET_NOTE_MARK_TAG)
             pitchPlotChangeId = model.changeId
         }
 

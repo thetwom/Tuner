@@ -43,8 +43,6 @@ import de.moekadu.tuner.temperaments.NoteNameScale
 import kotlinx.parcelize.Parcelize
 import kotlin.math.*
 
-private const val NO_REDRAW_PRIVATE = Long.MAX_VALUE
-
 private fun RectF.contentEquals(other: RectF): Boolean {
     return this.left == other.left && this.top == other.top && this.right == other.right && this.bottom == other.bottom
 }
@@ -128,7 +126,7 @@ class PlotRange(private val allowTouchControl: Boolean = true)  {
         val ticksRange: FloatArray) : Parcelable
 
     fun interface RangeChangedListener {
-        fun onRangeChanged(range: PlotRange, minValue: Float, maxValue: Float, suppressInvalidate: Boolean)
+        fun onRangeChanged(range: PlotRange, minValue: Float, maxValue: Float)
     }
 
     /** Temporary memory for resolveAuto return value (avoid memory allocation if this function is called from animation). */
@@ -151,11 +149,11 @@ class PlotRange(private val allowTouchControl: Boolean = true)  {
         addUpdateListener {
             val range = it.animatedValue as FloatArray
             range.copyInto(currentRange)
-            rangeChangedListener?.onRangeChanged(this@PlotRange, range[0], range[1], false)
+            rangeChangedListener?.onRangeChanged(this@PlotRange, range[0], range[1])
         }
     }
 
-    fun setDataRange(minValue: Float = BOUND_UNDEFINED, maxValue: Float = BOUND_UNDEFINED, suppressInvalidate: Boolean = false) {
+    fun setDataRange(minValue: Float = BOUND_UNDEFINED, maxValue: Float = BOUND_UNDEFINED) {
 //        Log.v("Tuner", "PlotRange.setDataRange: minValue=$minValue, maxValue=$maxValue")
         if (dataRange[0] == minValue && dataRange[1] == maxValue)
             return
@@ -169,10 +167,10 @@ class PlotRange(private val allowTouchControl: Boolean = true)  {
         targetRange.copyInto(currentRange)
         if (rangeAnimator.isStarted)
             rangeAnimator.end()
-        rangeChangedListener?.onRangeChanged(this, currentRange[0], currentRange[1], suppressInvalidate)
+        rangeChangedListener?.onRangeChanged(this, currentRange[0], currentRange[1])
     }
 
-    fun setTicksRange(minValue: Float = BOUND_UNDEFINED, maxValue: Float = BOUND_UNDEFINED, suppressInvalidate: Boolean = false) {
+    fun setTicksRange(minValue: Float = BOUND_UNDEFINED, maxValue: Float = BOUND_UNDEFINED) {
 //        Log.v("Tuner", "PlotView.PlotRange.setTicksRange: minValue=$minValue, maxValue=$maxValue")
         if (ticksRange[0] == minValue && ticksRange[1] == maxValue)
             return
@@ -186,7 +184,7 @@ class PlotRange(private val allowTouchControl: Boolean = true)  {
         targetRange.copyInto(currentRange)
         if (rangeAnimator.isStarted)
             rangeAnimator.end()
-        rangeChangedListener?.onRangeChanged(this, currentRange[0], currentRange[1], suppressInvalidate)
+        rangeChangedListener?.onRangeChanged(this, currentRange[0], currentRange[1])
     }
 
     fun setRange(minValue: Float, maxValue: Float, animationStrategy: AnimationStrategy, animationDuration: Long) {
@@ -202,11 +200,11 @@ class PlotRange(private val allowTouchControl: Boolean = true)  {
         if (targetRange.contentEquals(targetRangeOld))
             return
 //        Log.v("Tuner", "PlotView.PlotRange.setRange: targetRange=${targetRange[0]} -- ${targetRange[1]}")
-        if (animationDuration == 0L || animationDuration == NO_REDRAW_PRIVATE) {
+        if (animationDuration == 0L) {
             if (rangeAnimator.isStarted)
                 rangeAnimator.end()
             targetRange.copyInto(currentRange)
-            rangeChangedListener?.onRangeChanged(this, currentRange[0], currentRange[1], animationDuration == NO_REDRAW_PRIVATE)
+            rangeChangedListener?.onRangeChanged(this, currentRange[0], currentRange[1])
         } else if (animationDuration > 0L) {
             animateTo(targetRange, animationStrategy, animationDuration)
         }
@@ -236,11 +234,11 @@ class PlotRange(private val allowTouchControl: Boolean = true)  {
 
         determineTargetRange()
 
-        if (isTouchControlled || animationDuration == 0L || animationDuration == NO_REDRAW_PRIVATE) {
+        if (isTouchControlled || animationDuration == 0L) {
             if (rangeAnimator.isStarted)
                 rangeAnimator.end()
             targetRange.copyInto(currentRange)
-            rangeChangedListener?.onRangeChanged(this, currentRange[0], currentRange[1],animationDuration == NO_REDRAW_PRIVATE)
+            rangeChangedListener?.onRangeChanged(this, currentRange[0], currentRange[1])
         } else {
             animateTo(targetRange, animationStrategy, animationDuration)
         }
@@ -251,11 +249,9 @@ class PlotRange(private val allowTouchControl: Boolean = true)  {
             dataRange = dataRange, ticksRange = ticksRange)
     }
     fun restore(state: SavedState) {
-        setTicksRange(state.ticksRange[0], state.ticksRange[1], true)
-        setDataRange(state.dataRange[0], state.dataRange[1], true)
-        setRange(state.fixedRange[0], state.fixedRange[1],
-            AnimationStrategy.Direct, NO_REDRAW_PRIVATE
-        )
+        setTicksRange(state.ticksRange[0], state.ticksRange[1])
+        setDataRange(state.dataRange[0], state.dataRange[1])
+        setRange(state.fixedRange[0], state.fixedRange[1], AnimationStrategy.Direct, 0L)
         state.touchBasedRange.copyInto(touchBasedRange)
         determineTargetRange()
         targetRange.copyInto(currentRange)
@@ -325,7 +321,7 @@ class PlotRange(private val allowTouchControl: Boolean = true)  {
 
 private class PlotTransformation {
     fun interface TransformationChangedListener {
-        fun transformationChanged(transform: PlotTransformation, suppressInvalidate: Boolean)
+        fun transformationChanged(transform: PlotTransformation)
     }
 
     private val transformationChangedListeners = ArrayList<TransformationChangedListener>()
@@ -343,8 +339,7 @@ private class PlotTransformation {
     /** Plot bounds in canvas coordinates. */
     val viewPlotBounds = RectF()
 
-    fun setRawDataBounds(xMin: Float = KEEP_VALUE, xMax: Float = KEEP_VALUE, yMin: Float = KEEP_VALUE, yMax: Float = KEEP_VALUE,
-                         suppressInvalidate: Boolean) {
+    fun setRawDataBounds(xMin: Float = KEEP_VALUE, xMax: Float = KEEP_VALUE, yMin: Float = KEEP_VALUE, yMax: Float = KEEP_VALUE) {
 
 //        Log.v("Tuner", "PlotView.PlotTransformation.setRawBounds: xMin = $xMin, xMax = $xMax, yMin = $yMin, yMax = $yMax, rawPlotBonds=$rawPlotBounds")
         var changed = false
@@ -366,11 +361,10 @@ private class PlotTransformation {
         }
         // Log.v("Tuner", "PlotView.PlotTransformation.setRawBounds: ${rawPlotBounds}, $xMin, $xMax")
         if (changed)
-            updateTransformationMatrices(suppressInvalidate) // this also calls the listener
+            updateTransformationMatrices() // this also calls the listener
     }
 
-    fun setViewBounds(left: Float = KEEP_VALUE, top: Float = KEEP_VALUE, right: Float = KEEP_VALUE, bottom: Float = KEEP_VALUE,
-                      suppressInvalidate: Boolean) {
+    fun setViewBounds(left: Float = KEEP_VALUE, top: Float = KEEP_VALUE, right: Float = KEEP_VALUE, bottom: Float = KEEP_VALUE) {
         var changed = false
         if (left != KEEP_VALUE && left != viewPlotBounds.left) {
             viewPlotBounds.left = left
@@ -389,7 +383,7 @@ private class PlotTransformation {
             changed = true
         }
         if (changed)
-            updateTransformationMatrices(suppressInvalidate) // this also calls the listener
+            updateTransformationMatrices() // this also calls the listener
     }
 
     fun transformRawToView(raw: Path, view: Path) {
@@ -424,7 +418,7 @@ private class PlotTransformation {
     fun rawPlotBoundsIntersect(rect: RectF) = (RectF.intersects(rawPlotBounds, rect))
     fun viewBoundsContain(x: Float, y: Float) = viewPlotBounds.contains(x, y)
 
-    private fun updateTransformationMatrices(suppressInvalidate: Boolean) {
+    private fun updateTransformationMatrices() {
         matrixRawToView.setRectToRect(rawPlotBounds, viewPlotBounds, Matrix.ScaleToFit.FILL)
         matrixRawToView.postScale(1f, -1f, 0f, viewPlotBounds.centerY())
 
@@ -434,8 +428,8 @@ private class PlotTransformation {
         //matrixViewToRaw.setRectToRect(viewPlotBounds, rawPlotBounds, Matrix.ScaleToFit.FILL)
 
         for (transformationChangedListener in transformationChangedListeners)
-            transformationChangedListener.transformationChanged(this, suppressInvalidate)
-        transformationFinishedListener?.transformationChanged(this, suppressInvalidate)
+            transformationChangedListener.transformationChanged(this)
+        transformationFinishedListener?.transformationChanged(this)
     }
 
     companion object {
@@ -445,11 +439,8 @@ private class PlotTransformation {
 
 private abstract class PlotTransformable(transformation: PlotTransformation) {
     private val transformationChangedListener =
-        PlotTransformation.TransformationChangedListener { t, _ ->
-            //transform(transform, suppressInvalidate)
-            // always suppress invalidate, since we rely on the plot transformation to call invalidate in the
-            // end
-            transform(t, true)
+        PlotTransformation.TransformationChangedListener { t, ->
+            transform(t)
         }
 
     protected var transformation: PlotTransformation? = transformation
@@ -468,13 +459,13 @@ private abstract class PlotTransformable(transformation: PlotTransformation) {
         transformation = null
     }
 
-    protected abstract fun transform(transform: PlotTransformation?, suppressInvalidate: Boolean)
+    protected abstract fun transform(transform: PlotTransformation?)
 }
 
 private class PlotLine(transformation: PlotTransformation, val colors: IntArray, val widths: FloatArray)
     : PlotTransformable(transformation) {
     fun interface PlotLineChangedListener {
-        fun onPlotLineChanged(plotLine: PlotLine, hasNewBoundingBox: Boolean, suppressInvalidate: Boolean)
+        fun onPlotLineChanged(plotLine: PlotLine, hasNewBoundingBox: Boolean)
     }
     var plotLineChangedListener: PlotLineChangedListener? = null
 
@@ -497,14 +488,14 @@ private class PlotLine(transformation: PlotTransformation, val colors: IntArray,
     private val oldBoundingBox = RectF(0f, 0f, 0f, 0f)
     val boundingBox = RectF(0f, 0f, 0f, 0f)
 
-    fun setStyleIndex(index: Int, suppressInvalidate: Boolean) {
+    fun setStyleIndex(index: Int) {
         if (index == styleIndex)
             return
         styleIndex = index
-        plotLineChangedListener?.onPlotLineChanged(this, false, suppressInvalidate)
+        plotLineChangedListener?.onPlotLineChanged(this, false)
     }
 
-    fun setLine(yValues: PlotViewArray, indexBegin: Int, indexEnd: Int, suppressInvalidate: Boolean) {
+    fun setLine(yValues: PlotViewArray, indexBegin: Int, indexEnd: Int) {
 //        Log.v("Tuner", "PlotLine.setLine: yValues.size=${yValues.size}")
         val indexBeginResolved = max(0, indexBegin)
         val indexEndResolved = min(yValues.size, indexEnd)
@@ -531,14 +522,12 @@ private class PlotLine(transformation: PlotTransformation, val colors: IntArray,
         emptyLine = (numValues <= 1) // one value doesn't give a line
 
         if (!emptyLine || emptyLine != emptyLineBackup) {
-            transformAndCallListener(transformation, !boundingBox.contentEquals(oldBoundingBox), suppressInvalidate)
+            transformAndCallListener(transformation, !boundingBox.contentEquals(oldBoundingBox))
         }
     }
 
     fun setLine(
-        xValues: PlotViewArray, yValues: PlotViewArray,
-        indexBegin: Int, indexEnd: Int,
-        suppressInvalidate: Boolean
+        xValues: PlotViewArray, yValues: PlotViewArray, indexBegin: Int, indexEnd: Int
     ) {
 //        Log.v("Tuner", "PlotLine.setLine: xValues.size=${xValues.size}, yValues.size=${yValues.size}")
         val indexBeginResolved = max(0, indexBegin)
@@ -569,7 +558,7 @@ private class PlotLine(transformation: PlotTransformation, val colors: IntArray,
         emptyLine = (numValues <= 1) // one value doesn't give a line
 
         if (!emptyLine || emptyLine != emptyLineBackup) {
-            transformAndCallListener(transformation, !boundingBox.contentEquals(oldBoundingBox), suppressInvalidate)
+            transformAndCallListener(transformation, !boundingBox.contentEquals(oldBoundingBox))
         }
     }
 
@@ -583,13 +572,13 @@ private class PlotLine(transformation: PlotTransformation, val colors: IntArray,
         }
     }
 
-    fun transformAndCallListener(transform: PlotTransformation?, hasNewBoundingBox: Boolean, suppressInvalidate: Boolean) {
+    fun transformAndCallListener(transform: PlotTransformation?, hasNewBoundingBox: Boolean) {
         transform?.transformRawToView(rawPlotLine, transformedPlotLine)
-        plotLineChangedListener?.onPlotLineChanged(this, hasNewBoundingBox, suppressInvalidate)
+        plotLineChangedListener?.onPlotLineChanged(this, hasNewBoundingBox)
     }
 
-    override fun transform(transform: PlotTransformation?, suppressInvalidate: Boolean) {
-        transformAndCallListener(transform, false, suppressInvalidate)
+    override fun transform(transform: PlotTransformation?) {
+        transformAndCallListener(transform, false)
     }
 }
 
@@ -598,7 +587,7 @@ enum class PointShapes {Circle, TriangleUp, TriangleDown}
 private class PlotPoints(transformation: PlotTransformation, val colors: IntArray, val sizes: FloatArray, val shapes: Array<PointShapes>)
     : PlotTransformable(transformation) {
     fun interface PlotPointsChangedListener {
-        fun onPlotPointsChanged(plotPoints: PlotPoints, hasNewBoundingBox: Boolean, suppressInvalidate: Boolean)
+        fun onPlotPointsChanged(plotPoints: PlotPoints, hasNewBoundingBox: Boolean)
     }
     var plotPointsChangedListener: PlotPointsChangedListener? = null
 
@@ -633,26 +622,24 @@ private class PlotPoints(transformation: PlotTransformation, val colors: IntArra
 
     private var isVisible = true
 
-    fun setStyleIndex(index: Int, suppressInvalidate: Boolean) {
+    fun setStyleIndex(index: Int) {
         if (index == styleIndex)
             return
 
         styleIndex = index
 
-        plotPointsChangedListener?.onPlotPointsChanged(this,
-            hasNewBoundingBox = false, suppressInvalidate)
+        plotPointsChangedListener?.onPlotPointsChanged(this, hasNewBoundingBox = false)
     }
 
-    fun setOffset(offsetX: Float, offsetY: Float, suppressInvalidate: Boolean) {
+    fun setOffset(offsetX: Float, offsetY: Float) {
         if (offsetX == this.offsetX && offsetY == this.offsetY)
             return
         this.offsetX = offsetX
         this.offsetY = offsetY
-        plotPointsChangedListener?.onPlotPointsChanged(this,
-            hasNewBoundingBox = false, suppressInvalidate)
+        plotPointsChangedListener?.onPlotPointsChanged(this, hasNewBoundingBox = false)
     }
 
-    fun setPoints(points: FloatArray?, suppressInvalidate: Boolean) {
+    fun setPoints(points: FloatArray?) {
 //        Log.v("Tuner", "PlotPoints.setPoints, points.size = ${points?.size}")
         val numPointsBackup = numPoints
         var boundingBoxChanged = false
@@ -674,7 +661,7 @@ private class PlotPoints(transformation: PlotTransformation, val colors: IntArra
 
         if (numPoints > 0 || numPoints != numPointsBackup) {
 //            Log.v("Tuner", "PlotPoints.setPoints: transforming point")
-            transformAndCallListener(transformation, boundingBoxChanged, suppressInvalidate)
+            transformAndCallListener(transformation, boundingBoxChanged)
         }
     }
 
@@ -694,11 +681,11 @@ private class PlotPoints(transformation: PlotTransformation, val colors: IntArra
         return !boundingBox.contentEquals(oldBoundingBox)
     }
 
-    fun setVisible(isVisible: Boolean, suppressInvalidate: Boolean) {
+    fun setVisible(isVisible: Boolean) {
         if (this.isVisible == isVisible)
             return
         this.isVisible = isVisible
-        transformAndCallListener(transformation, hasNewBoundingBox = false, suppressInvalidate)
+        transformAndCallListener(transformation, hasNewBoundingBox = false)
     }
 
     fun drawToCanvas(canvas: Canvas?) {
@@ -717,7 +704,7 @@ private class PlotPoints(transformation: PlotTransformation, val colors: IntArra
         }
     }
 
-    fun transformAndCallListener(transformation: PlotTransformation?, hasNewBoundingBox: Boolean, suppressInvalidate: Boolean) {
+    fun transformAndCallListener(transformation: PlotTransformation?, hasNewBoundingBox: Boolean) {
         rawPoints?.let { raw ->
             if (transformedPoints.size < 2 * numPoints)
                 transformedPoints = FloatArray(2 * numPoints)
@@ -725,11 +712,11 @@ private class PlotPoints(transformation: PlotTransformation, val colors: IntArra
             transformation?.transformRawToView(raw, transformedPoints, numPoints)
         }
         // Log.v("Tuner", "PlotPoints.transformAndCallListener: rP0 = ${rawPoints?.get(0)} rP1 = ${rawPoints?.get(1)}, v0=${transformedPoints?.get(0)} v1=${transformedPoints?.get(1)}")
-        plotPointsChangedListener?.onPlotPointsChanged(this, hasNewBoundingBox, suppressInvalidate)
+        plotPointsChangedListener?.onPlotPointsChanged(this, hasNewBoundingBox)
     }
 
-    override fun transform(transform: PlotTransformation?, suppressInvalidate: Boolean) {
-        transformAndCallListener(transform, false, suppressInvalidate)
+    override fun transform(transform: PlotTransformation?) {
+        transformAndCallListener(transform, hasNewBoundingBox = false)
     }
 
     private fun drawFilledCircles(canvas: Canvas) {
@@ -810,7 +797,7 @@ private class PlotMarks(transformation: PlotTransformation,
 
     /** Interface for callbacks when the plot marks are changed. */
     fun interface PlotMarksChangedListener {
-        fun onPlotMarksChanged(plotMarks: PlotMarks, hasNewBoundingBox: Boolean, suppressInvalidate: Boolean)
+        fun onPlotMarksChanged(plotMarks: PlotMarks, hasNewBoundingBox: Boolean)
     }
 
     /** Callback for label mark changes. */
@@ -947,7 +934,6 @@ private class PlotMarks(transformation: PlotTransformation,
      *   If null, the marks will be centered.
      * @param placeLabelsOutsideBoundsIfPossible If possible (meaning, in case of line marks)
      *   the label is placed outside the plot bounds.
-     * @param suppressInvalidate Don't trigger redraw.
      * @param maxLabelBounds Functor to compute maximum label bounds based on the paint.
      *   This allows optimizations such that only visible marks are actually created.
      *   If null, we will compute the max bounds internally, but this will be more expensive.
@@ -963,7 +949,6 @@ private class PlotMarks(transformation: PlotTransformation,
         anchors: Array<LabelAnchor>? = null,
         backgroundSizeType: MarkLabelBackgroundSize = MarkLabelBackgroundSize.FitIndividually,
         placeLabelsOutsideBoundsIfPossible: Boolean = false,
-        suppressInvalidate: Boolean = false,
         maxLabelBounds: ((TextPaint) -> Label.LabelSetBounds)? = null,
         labelCreator: ((index: Int, xPos: Float?, yPos: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label?)? = null
     ) {
@@ -1029,7 +1014,7 @@ private class PlotMarks(transformation: PlotTransformation,
         labelBottomBelowBaseline = maxLabelSizes[styleIndex]?.maxDistanceBelowBaseline ?: 0f
 
         if (numMarks > 0 || numMarks != numMarksBefore)
-            transformAndCallListener(transformation, !boundingBox.contentEquals(oldBoundingBox), suppressInvalidate)
+            transformAndCallListener(transformation, !boundingBox.contentEquals(oldBoundingBox))
 
         if (xPositions == null && yPositions != null) {
             // descending sort since later on we do a binary search by yPositionTransformed, which is inverse
@@ -1048,9 +1033,8 @@ private class PlotMarks(transformation: PlotTransformation,
 
     /** Change the style of a label.
      * @param index Style index (0 <= index < numStyles, where numStyles = colors.size)
-     * @param suppressInvalidate If true, we won't trigger a redraw.
      */
-    fun setStyleIndex(index: Int, suppressInvalidate: Boolean) {
+    fun setStyleIndex(index: Int) {
         if (index == styleIndex)
             return
         styleIndex = index
@@ -1068,7 +1052,7 @@ private class PlotMarks(transformation: PlotTransformation,
         labelTopAboveBaseline = maxLabelSizes[styleIndex]?.maxDistanceAboveBaseline ?: 0f
         labelBottomBelowBaseline = maxLabelSizes[styleIndex]?.maxDistanceBelowBaseline ?: 0f
 
-        plotMarksChangedListener?.onPlotMarksChanged(this, hasNewBoundingBox = false, suppressInvalidate)
+        plotMarksChangedListener?.onPlotMarksChanged(this, hasNewBoundingBox = false)
     }
 
     fun drawToCanvas(canvas: Canvas?) {
@@ -1197,7 +1181,7 @@ private class PlotMarks(transformation: PlotTransformation,
         }
     }
 
-    fun transformAndCallListener(transformation: PlotTransformation?, hasNewBoundingBox: Boolean, suppressInvalidate: Boolean) {
+    fun transformAndCallListener(transformation: PlotTransformation?, hasNewBoundingBox: Boolean) {
         for (m in marks) {
             temporaryPointRaw[0] = if (m.xPositionRaw == DRAW_LINE) 0f else m.xPositionRaw
             temporaryPointRaw[1] = if (m.yPositionRaw == DRAW_LINE) 0f else m.yPositionRaw
@@ -1206,11 +1190,11 @@ private class PlotMarks(transformation: PlotTransformation,
             m.yPositionTransformed = if (m.yPositionRaw == DRAW_LINE) DRAW_LINE else temporaryPointTransformed[1]
         }
 
-        plotMarksChangedListener?.onPlotMarksChanged(this, hasNewBoundingBox, suppressInvalidate)
+        plotMarksChangedListener?.onPlotMarksChanged(this, hasNewBoundingBox)
     }
 
-    override fun transform(transform: PlotTransformation?, suppressInvalidate: Boolean) {
-        transformAndCallListener(transform, false, suppressInvalidate)
+    override fun transform(transform: PlotTransformation?) {
+        transformAndCallListener(transform, hasNewBoundingBox = false)
     }
 
     /** Check if a mark is in the currently shown view.
@@ -1395,15 +1379,9 @@ class PlotRectangleAndPoint {
 class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     : View(context, attrs, defStyleAttr)
 {
-    companion object {
-        /** Special option for animationDuration which means that we don't animate and don't invalidate. */
-        const val NO_REDRAW = NO_REDRAW_PRIVATE
-    }
-
     private val rawViewTransformation = PlotTransformation().apply {
-        transformationFinishedListener = PlotTransformation.TransformationChangedListener { _, suppressInvalidate ->
-            if (!suppressInvalidate)
-                invalidate()
+        transformationFinishedListener = PlotTransformation.TransformationChangedListener { _ ->
+            invalidate()
         }
     }
 
@@ -1555,10 +1533,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             }
 
             _xRange.setTouchRange(rectRaw.left, rectRaw.right,
-                PlotRange.AnimationStrategy.Direct, NO_REDRAW
+                PlotRange.AnimationStrategy.Direct, 0L
             )
             _yRange.setTouchRange(rectRaw.top, rectRaw.bottom,
-                PlotRange.AnimationStrategy.Direct, NO_REDRAW
+                PlotRange.AnimationStrategy.Direct, 0L
             )
             ViewCompat.postInvalidateOnAnimation(this@PlotView)
         }
@@ -1647,10 +1625,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             rectView.offset(focusX, focusY)
             rawViewTransformation.transformViewToRaw(rectView, rectRaw)
             _xRange.setTouchRange(rectRaw.left, rectRaw.right,
-                PlotRange.AnimationStrategy.Direct, NO_REDRAW
+                PlotRange.AnimationStrategy.Direct, 0L
             )
             _yRange.setTouchRange(rectRaw.top, rectRaw.bottom,
-                PlotRange.AnimationStrategy.Direct, NO_REDRAW
+                PlotRange.AnimationStrategy.Direct, 0L
             )
 
 
@@ -1794,15 +1772,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         touchManualControlDrawable.setSize(width = touchManualControlDrawableWidth)
 
         _xRange = PlotRange(allowTouchX).apply {
-            rangeChangedListener = PlotRange.RangeChangedListener { _, minValue, maxValue, suppressInvalidate ->
+            rangeChangedListener = PlotRange.RangeChangedListener { _, minValue, maxValue ->
 //                Log.v("Tuner", "PlotView: xrange changed: minValue=$minValue, maxValue=$maxValue")
-                rawViewTransformation.setRawDataBounds(xMin = minValue, xMax = maxValue, suppressInvalidate = suppressInvalidate)
+                rawViewTransformation.setRawDataBounds(xMin = minValue, xMax = maxValue)
             }
         }
         _yRange = PlotRange(allowTouchY).apply {
-            rangeChangedListener = PlotRange.RangeChangedListener { _, minValue, maxValue, suppressInvalidate ->
+            rangeChangedListener = PlotRange.RangeChangedListener { _, minValue, maxValue ->
 //            Log.v("Tuner", "PlotView: yrange changed: minValue=$minValue, maxValue=$maxValue")
-                rawViewTransformation.setRawDataBounds(yMin = minValue, yMax = maxValue, suppressInvalidate = suppressInvalidate)
+                rawViewTransformation.setRawDataBounds(yMin = minValue, yMax = maxValue)
             }
         }
 
@@ -1814,33 +1792,29 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             floatArrayOf(tickLineWidth), floatArrayOf(tickTextSize),
             disableLabelBackground = true, tickPaddingHorizontal + frameStrokeWidth, tickPaddingVertical, 0f)
 
-        xTicks.plotMarksChangedListener = PlotMarks.PlotMarksChangedListener { ticks, bbChanged, suppressInvalidate ->
+        xTicks.plotMarksChangedListener = PlotMarks.PlotMarksChangedListener { ticks, bbChanged ->
             if (ticks.hasMarks && bbChanged)
-                _xRange.setTicksRange(ticks.boundingBox.left, ticks.boundingBox.right, true)
+                _xRange.setTicksRange(ticks.boundingBox.left, ticks.boundingBox.right)
             else if (!ticks.hasMarks)
-                _xRange.setTicksRange(PlotRange.BOUND_UNDEFINED, PlotRange.BOUND_UNDEFINED, true)
-
-            if (!suppressInvalidate)
-                invalidate()
+                _xRange.setTicksRange(PlotRange.BOUND_UNDEFINED, PlotRange.BOUND_UNDEFINED)
+            invalidate()
         }
-        yTicks.plotMarksChangedListener = PlotMarks.PlotMarksChangedListener { ticks, bbChanged, suppressInvalidate ->
+        yTicks.plotMarksChangedListener = PlotMarks.PlotMarksChangedListener { ticks, bbChanged ->
             if (ticks.hasMarks && bbChanged) {
 //                Log.v("Tuner", "PlotView: yTicks.plotMarksChanges: ${ticks.boundingBox}")
-                _yRange.setTicksRange(ticks.boundingBox.top, ticks.boundingBox.bottom, true)
+                _yRange.setTicksRange(ticks.boundingBox.top, ticks.boundingBox.bottom)
             }
             else if (!ticks.hasMarks) {
-                _yRange.setTicksRange(PlotRange.BOUND_UNDEFINED, PlotRange.BOUND_UNDEFINED, true)
+                _yRange.setTicksRange(PlotRange.BOUND_UNDEFINED, PlotRange.BOUND_UNDEFINED)
             }
-
-            if (!suppressInvalidate)
-                invalidate()
+            invalidate()
         }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         rawViewTransformation.setRawDataBounds(xMin = _xRange.rangeMin, xMax = _xRange.rangeMax,
-            yMin = _yRange.rangeMin, yMax = _yRange.rangeMax, suppressInvalidate = true)
+            yMin = _yRange.rangeMin, yMax = _yRange.rangeMax)
     }
 
     override fun onDraw(canvas: Canvas?) {
@@ -1864,9 +1838,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             LabelAnchor.East -> (width - totalPaddingRight) - yTickLabelWidth
             else -> width - totalPaddingRight
         }
-        rawViewTransformation.setViewBounds(left + frameStrokeWidth,
-            top + frameStrokeWidth, right - frameStrokeWidth, bottom - frameStrokeWidth,
-            suppressInvalidate = true)
+        rawViewTransformation.setViewBounds(
+            left + frameStrokeWidth,top + frameStrokeWidth,
+            right - frameStrokeWidth, bottom - frameStrokeWidth
+        )
 
         xTicks.drawToCanvas(canvas)
         yTicks.drawToCanvas(canvas)
@@ -1940,13 +1915,13 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 rawViewTransformation.rawPlotBounds.left,
                 rawViewTransformation.rawPlotBounds.right,
                 PlotRange.AnimationStrategy.Direct,
-                NO_REDRAW
+                0L
             )
             _yRange.setTouchRange(
                 rawViewTransformation.rawPlotBounds.top,
                 rawViewTransformation.rawPlotBounds.bottom,
                 PlotRange.AnimationStrategy.Direct,
-                NO_REDRAW
+                0L
             )
             ViewCompat.postInvalidateOnAnimation(this@PlotView)
         }
@@ -2002,12 +1977,11 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         val line = PlotLine(rawViewTransformation, plotLineColors, plotLineWidths)
         plotLines[tag] = line
 
-        line.plotLineChangedListener = PlotLine.PlotLineChangedListener { _, hasNewBoundingBox, suppressInvalidate ->
+        line.plotLineChangedListener = PlotLine.PlotLineChangedListener { _, hasNewBoundingBox ->
 //            Log.v("Tuner", "PlotView.getPlotLine: Listener: newBoundingBox=$hasNewBoundingBox")
             if (hasNewBoundingBox)
-                computeBoundingBox(true)
-            if (!suppressInvalidate)
-                invalidate()
+                computeBoundingBox()
+            invalidate()
         }
         return line
     }
@@ -2020,11 +1994,10 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         val points = PlotPoints(rawViewTransformation, pointColors, pointSizes, pointShapes)
         plotPoints[tag] = points
 
-        points.plotPointsChangedListener = PlotPoints.PlotPointsChangedListener { _, hasNewBoundingBox, suppressInvalidate ->
+        points.plotPointsChangedListener = PlotPoints.PlotPointsChangedListener { _, hasNewBoundingBox ->
             if (hasNewBoundingBox)
-                computeBoundingBox(true)
-            if (!suppressInvalidate)
-                invalidate()
+                computeBoundingBox()
+            invalidate()
         }
         return points
     }
@@ -2039,15 +2012,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             markPaddingVertical, markCornerRadius)
         markGroups[tag] = marks
 
-        marks.plotMarksChangedListener = PlotMarks.PlotMarksChangedListener { _, _, suppressInvalidate ->
-            if (!suppressInvalidate)
-                invalidate()
+        marks.plotMarksChangedListener = PlotMarks.PlotMarksChangedListener { _, _ ->
+            invalidate()
         }
 
         return marks
     }
 
-    private fun computeBoundingBox(suppressInvalidate: Boolean) {
+    private fun computeBoundingBox() {
         boundingBoxOld.set(boundingBox)
         // set inverse max values
         boundingBox.left = Float.POSITIVE_INFINITY
@@ -2071,61 +2043,55 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 //        Log.v("Tuner", "PlotView.computeBoundingBox: boundingBox=$boundingBox")
         _xRange.setDataRange(
             if (boundingBox.left == Float.POSITIVE_INFINITY) PlotRange.BOUND_UNDEFINED else boundingBox.left,
-            if (boundingBox.right == Float.NEGATIVE_INFINITY) PlotRange.BOUND_UNDEFINED else boundingBox.right,
-            true
+            if (boundingBox.right == Float.NEGATIVE_INFINITY) PlotRange.BOUND_UNDEFINED else boundingBox.right
         )
         _yRange.setDataRange(
             if (boundingBox.top == Float.POSITIVE_INFINITY) PlotRange.BOUND_UNDEFINED else boundingBox.top,
-            if (boundingBox.bottom == Float.NEGATIVE_INFINITY) PlotRange.BOUND_UNDEFINED else boundingBox.bottom,
-            true
+            if (boundingBox.bottom == Float.NEGATIVE_INFINITY) PlotRange.BOUND_UNDEFINED else boundingBox.bottom
         )
 
-        if (!suppressInvalidate && !boundingBox.contentEquals(boundingBoxOld))
+        if (!boundingBox.contentEquals(boundingBoxOld))
             invalidate()
     }
 
-    fun removePlotLine(tag: Long, suppressInvalidate: Boolean) {
+    fun removePlotLine(tag: Long) {
         plotLines.remove(tag)?.unregisterFromPlotTransformation()
-        if (!suppressInvalidate)
-            invalidate()
+        invalidate()
     }
 
-    fun removePlotPoints(tag: Long, suppressInvalidate: Boolean) {
+    fun removePlotPoints(tag: Long) {
         plotPoints.remove(tag)?.unregisterFromPlotTransformation()
-        if (!suppressInvalidate)
-            invalidate()
+        invalidate()
     }
 
-    fun removePlotMarks(tag: Long?, suppressInvalidate: Boolean) {
+    fun removePlotMarks(tag: Long?) {
         if (tag == null) {
             for (t in markGroups.keys)
                 markGroups.remove(t)?.unregisterFromPlotTransformation()
         } else {
             markGroups.remove(tag)?.unregisterFromPlotTransformation()
         }
-
-        if (!suppressInvalidate)
-            invalidate()
+        invalidate()
     }
 
-    fun setLineStyle(styleIndex: Int, tag: Long = 0L, suppressInvalidate: Boolean) {
-        plotLines[tag]?.setStyleIndex(styleIndex, suppressInvalidate)
+    fun setLineStyle(styleIndex: Int, tag: Long = 0L) {
+        plotLines[tag]?.setStyleIndex(styleIndex)
     }
 
-    fun setPointStyle(styleIndex: Int, tag: Long = 0L, suppressInvalidate: Boolean) {
-        plotPoints[tag]?.setStyleIndex(styleIndex, suppressInvalidate)
+    fun setPointStyle(styleIndex: Int, tag: Long = 0L) {
+        plotPoints[tag]?.setStyleIndex(styleIndex)
     }
 
-    fun setPointOffset(offsetX: Float, offsetY: Float, tag: Long = 0L, suppressInvalidate: Boolean) {
-        plotPoints[tag]?.setOffset(offsetX, offsetY, suppressInvalidate)
+    fun setPointOffset(offsetX: Float, offsetY: Float, tag: Long = 0L) {
+        plotPoints[tag]?.setOffset(offsetX, offsetY)
     }
 
-    fun setPointVisible(isVisible: Boolean, tag: Long = 0L, suppressInvalidate: Boolean) {
-        plotPoints[tag]?.setVisible(isVisible, suppressInvalidate)
+    fun setPointVisible(isVisible: Boolean, tag: Long = 0L) {
+        plotPoints[tag]?.setVisible(isVisible)
     }
 
-    fun setMarkStyle(styleIndex: Int, tag: Long = 0L, suppressInvalidate: Boolean) {
-        markGroups[tag]?.setStyleIndex(styleIndex, suppressInvalidate)
+    fun setMarkStyle(styleIndex: Int, tag: Long = 0L) {
+        markGroups[tag]?.setStyleIndex(styleIndex)
     }
 
     /// Set x-range.
@@ -2165,16 +2131,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param tag Tag to identify the line.
      * @param indexBegin First index in yValues to use (included).
      * @param indexEnd End index in yValues to use (excluded).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
      */
     fun plot(
         yValues : FloatArray, tag: Long = 0L,
-        indexBegin: Int = 0, indexEnd: Int = yValues.size,
-        redraw: Boolean = true
+        indexBegin: Int = 0, indexEnd: Int = yValues.size
     ) {
-        plot(yValues.asPlotViewArray(), tag, indexBegin, indexEnd, redraw)
+        plot(yValues.asPlotViewArray(), tag, indexBegin, indexEnd)
     }
 
     /** Plot equidistant values (Taking an ArrayList<Float>).
@@ -2182,16 +2144,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param tag Tag to identify the line.
      * @param indexBegin First index in yValues to use (included).
      * @param indexEnd End index in yValues to use (excluded).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
      */
     fun plot(
         yValues : ArrayList<Float>, tag: Long = 0L,
-        indexBegin: Int = 0, indexEnd: Int = yValues.size,
-        redraw: Boolean = true
+        indexBegin: Int = 0, indexEnd: Int = yValues.size
     ) {
-        plot(yValues.asPlotViewArray(), tag, indexBegin, indexEnd, redraw)
+        plot(yValues.asPlotViewArray(), tag, indexBegin, indexEnd)
     }
 
     /**  Plot values (Taking FloatArrays).
@@ -2201,17 +2159,13 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      *   we will overwrite the line.
      * @param indexBegin First index in x/yValues to use (included).
      * @param indexEnd End index in x/yValues to use (excluded).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
      */
     fun plot(
         xValues : FloatArray, yValues : FloatArray,
         tag: Long = 0L,
-        indexBegin: Int = 0, indexEnd: Int = min(xValues.size, yValues.size),
-        redraw : Boolean = true
+        indexBegin: Int = 0, indexEnd: Int = min(xValues.size, yValues.size)
     ) {
-        plot(xValues.asPlotViewArray(), yValues.asPlotViewArray(), tag, indexBegin, indexEnd, redraw)
+        plot(xValues.asPlotViewArray(), yValues.asPlotViewArray(), tag, indexBegin, indexEnd)
     }
 
     /** Plot values (Taking ArrayLists<Float>).
@@ -2221,17 +2175,13 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      *   we will overwrite the line.
      * @param indexBegin First index in x/yValues to use (included).
      * @param indexEnd End index in x/yValues to use (excluded).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
      */
     fun plot(
         xValues : ArrayList<Float>, yValues : ArrayList<Float>,
         tag: Long = 0L,
-        indexBegin: Int = 0, indexEnd: Int = min(xValues.size, yValues.size),
-        redraw : Boolean = true
+        indexBegin: Int = 0, indexEnd: Int = min(xValues.size, yValues.size)
     ) {
-        plot(xValues.asPlotViewArray(), yValues.asPlotViewArray(), tag, indexBegin, indexEnd, redraw)
+        plot(xValues.asPlotViewArray(), yValues.asPlotViewArray(), tag, indexBegin, indexEnd)
     }
 
     /** Set marks.
@@ -2245,9 +2195,6 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param anchors An anchor for each mark label, or null for using the defaults (centered)
      * @param backgroundSizeType Defines if the background for the labels should all be
      *   the same size or if they should be individually fitted to each label size.
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
      * @param maxLabelBounds Functor to compute maximum label bounds based on the paint.
      *   This allows optimizations such that only visible marks are actually created.
      *   If null, we will compute the max bounds internally, but this will be more expensive.
@@ -2265,7 +2212,6 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         anchors: Array<LabelAnchor>? = null,
         backgroundSizeType: MarkLabelBackgroundSize = MarkLabelBackgroundSize.FitIndividually,
         placeLabelsOutsideBoundsIfPossible: Boolean = false,
-        redraw: Boolean = true,
         maxLabelBounds: ((TextPaint) -> Label.LabelSetBounds)? = null,
         labelCreator: ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label?)? = null
     ) {
@@ -2273,7 +2219,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         val marks = getPlotMarks(tag)
         marks.setMarks(xPositions, yPositions, indexBegin, indexEnd, styleIndex, anchors, backgroundSizeType,
             placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
-            suppressInvalidate = !redraw, maxLabelBounds, labelCreator)
+            maxLabelBounds, labelCreator
+        )
     }
 
     /** Helper to create a label creator based on note name scales .*/
@@ -2311,20 +2258,16 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param anchor Anchor which defines how to align the label relative to the mark position.
      * @param style Mark style to use (0 -> use mark-xml-attributes without prefix,
      *   1 -> use the xml-attributes with prefix 2).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
      */
     fun setMark(xPosition: Float, yPosition: Float, label: String?, tag: Long,
                 anchor: LabelAnchor = LabelAnchor.Center,
                 placeLabelsOutsideBoundsIfPossible: Boolean = false,
-                style: Int = 0,
-                redraw: Boolean = true) {
+                style: Int = 0
+    ) {
         setMarks(floatArrayOf(xPosition), floatArrayOf(yPosition), tag, style,
             anchors = arrayOf(anchor),
             backgroundSizeType = MarkLabelBackgroundSize.FitIndividually,
             placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
-            redraw = redraw,
             maxLabelBounds = null,
             labelCreator = if (label == null) null else stringLabelCreator(label)
         )
@@ -2340,22 +2283,18 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param anchor Anchor which defines how to align the label relative to the mark position.
      * @param style Mark style to use (0 -> use mark-xml-attributes without prefix,
      *   1 -> use the xml-attributes with prefix 2).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
      */
     fun setMark(xPosition: Float, yPosition: Float, note: MusicalNote,
                 notePrintOptions: MusicalNotePrintOptions,
                 tag: Long,
                 anchor: LabelAnchor = LabelAnchor.Center,
                 placeLabelsOutsideBoundsIfPossible: Boolean = false,
-                style: Int = 0,
-                redraw: Boolean = true) {
+                style: Int = 0
+    ) {
         setMarks(floatArrayOf(xPosition), floatArrayOf(yPosition), tag, style,
             anchors = arrayOf(anchor),
             backgroundSizeType = MarkLabelBackgroundSize.FitIndividually,
             placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
-            redraw = redraw,
             maxLabelBounds = null,
             labelCreator = musicalNoteLabelCreator(note, notePrintOptions)
         )
@@ -2370,19 +2309,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param anchor Anchor which defines how to align the label relative to the mark position.
      * @param style Mark style to use (0 -> use mark-xml-attributes without prefix,
      *   1 -> use the xml-attributes with prefix 2).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
      */
     fun setXMark(xPosition: Float, label: String?, tag: Long,
                  anchor: LabelAnchor = LabelAnchor.Center, style: Int = 0,
-                 placeLabelsOutsideBoundsIfPossible: Boolean = false,
-                 redraw: Boolean = true) {
+                 placeLabelsOutsideBoundsIfPossible: Boolean = false
+    ) {
         setMarks(floatArrayOf(xPosition), null, tag, style,
             anchors = arrayOf(anchor),
             backgroundSizeType = MarkLabelBackgroundSize.FitIndividually,
             placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
-            redraw = redraw,
             maxLabelBounds = null,
             labelCreator = if (label == null) null else stringLabelCreator(label)
         )
@@ -2397,21 +2332,17 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param anchor Anchor which defines how to align the label relative to the mark position.
      * @param style Mark style to use (0 -> use mark-xml-attributes without prefix,
      *   1 -> use the xml-attributes with prefix 2).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
      */
     fun setXMark(xPosition: Float, note: MusicalNote,
                  notePrintOptions: MusicalNotePrintOptions,
                  tag: Long,
                  anchor: LabelAnchor = LabelAnchor.Center, style: Int = 0,
-                 placeLabelsOutsideBoundsIfPossible: Boolean = false,
-                 redraw: Boolean = true) {
+                 placeLabelsOutsideBoundsIfPossible: Boolean = false
+    ) {
         setMarks(floatArrayOf(xPosition), null, tag, style,
             anchors = arrayOf(anchor),
             backgroundSizeType = MarkLabelBackgroundSize.FitIndividually,
             placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
-            redraw = redraw,
             maxLabelBounds = null,
             labelCreator = musicalNoteLabelCreator(note, notePrintOptions)
         )
@@ -2426,19 +2357,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param anchor Anchor which defines how to align the label relative to the mark position.
      * @param style Mark style to use (0 -> use mark-xml-attributes without prefix,
      *   1 -> use the xml-attributes with prefix 2).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
      */
     fun setYMark(yPosition: Float, label: String?, tag: Long,
                  anchor: LabelAnchor = LabelAnchor.Center, style: Int = 0,
-                 placeLabelsOutsideBoundsIfPossible: Boolean = false,
-                 redraw: Boolean = true) {
+                 placeLabelsOutsideBoundsIfPossible: Boolean = false
+    ) {
         setMarks(null, floatArrayOf(yPosition), tag, style,
             anchors = arrayOf(anchor),
             backgroundSizeType = MarkLabelBackgroundSize.FitIndividually,
             placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
-            redraw = redraw,
             maxLabelBounds = null,
             labelCreator = if (label == null) null else stringLabelCreator(label)
         )
@@ -2453,21 +2380,17 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param anchor Anchor which defines how to align the label relative to the mark position.
      * @param style Mark style to use (0 -> use mark-xml-attributes without prefix,
      *   1 -> use the xml-attributes with prefix 2).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
      */
     fun setYMark(yPosition: Float, note: MusicalNote,
                  notePrintOptions: MusicalNotePrintOptions,
                  tag: Long,
                  anchor: LabelAnchor = LabelAnchor.Center, style: Int = 0,
-                 placeLabelsOutsideBoundsIfPossible: Boolean = false,
-                 redraw: Boolean = true) {
+                 placeLabelsOutsideBoundsIfPossible: Boolean = false
+    ) {
         setMarks(null, floatArrayOf(yPosition), tag, style,
             anchors = arrayOf(anchor),
             backgroundSizeType = MarkLabelBackgroundSize.FitIndividually,
             placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
-            redraw = redraw,
             maxLabelBounds = null,
             labelCreator = musicalNoteLabelCreator(note, notePrintOptions)
         )
@@ -2478,16 +2401,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param value Array with point coordinates (of form x0, y0, x1, y1, ...)
      * @param tag Identifier of points. If this method is called again with the same tag
      *   we will overwrite these points.
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
      */
-    fun setPoints(value: FloatArray?, tag: Long = 0L, redraw: Boolean = true) {
+    fun setPoints(value: FloatArray?, tag: Long = 0L) {
         // Log.v("Tuner", "PlotView.setPoints")
         val points = getPlotPoints(tag)
-        points.setPoints(value, false)
-        if (redraw)
-            invalidate()
+        points.setPoints(value)
+        invalidate()
     }
 
     fun getPointSize(tag: Long = 0L): Float {
@@ -2498,9 +2417,6 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param values Values of x-ticks to be drawn.
      * @param indexBegin First index in values to be used (included).
      * @param indexEnd End index in values to be used (excluded).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
      * @param maxLabelBounds Functor to compute maximum label bounds based on the paint.
      *   This allows optimizations such that only visible marks are actually created.
      *   If null, we will compute the max bounds internally, but this will be more expensive.
@@ -2512,7 +2428,6 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         values: FloatArray?,
         indexBegin: Int = 0,
         indexEnd: Int = values?.size ?: 0,
-        redraw: Boolean = true,
         maxLabelBounds: ((TextPaint) -> Label.LabelSetBounds)?,
         labelCreator: ((index: Int, xPos: Float?, yPos: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label)?) {
 
@@ -2526,14 +2441,11 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 anchors = Array(values.size) { LabelAnchor.South },
                 backgroundSizeType = MarkLabelBackgroundSize.FitIndividually,
                 placeLabelsOutsideBoundsIfPossible = true,
-                suppressInvalidate = true,
                 maxLabelBounds = maxLabelBounds,
                 labelCreator = labelCreator
             )
         }
-
-        if(redraw)
-            invalidate()
+        invalidate()
     }
 
 
@@ -2541,7 +2453,6 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         values: FloatArray?,
         indexBegin: Int = 0,
         indexEnd: Int = values?.size ?: 0,
-        redraw: Boolean = true,
         format: ((Int, Float) -> String)?) {
         if (values == null)
             return
@@ -2553,14 +2464,13 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 StringLabel(string, textPaint, backgroundPaint, cornerRadius, gravity, paddingHorizontal, paddingHorizontal, paddingVertical, paddingVertical)
             }
         }
-        setXTicks(values, indexBegin, indexEnd, redraw, null, creator)
+        setXTicks(values, indexBegin, indexEnd, null, creator)
     }
 
     fun setXTicks(
         values: FloatArray?,
         indexBegin: Int = 0,
         indexEnd: Int = values?.size ?: 0,
-        redraw: Boolean = true,
         noteNameScale: NoteNameScale,
         noteIndexBegin: Int,
         notePrintOptions: MusicalNotePrintOptions) {
@@ -2583,17 +2493,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             val note = noteNameScale.getNoteOfIndex(index + noteIndexBegin)
             MusicalNoteLabel(note, textPaint, noteNamePrinter, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, paddingHorizontal, paddingHorizontal, paddingVertical, paddingVertical)
         }
-        setXTicks(values, indexBegin, indexEnd, redraw, labelBounds, labelCreator)
+        setXTicks(values, indexBegin, indexEnd, labelBounds, labelCreator)
     }
 
     /** Set y-ticks.
      * @param values Values of y-ticks to be drawn.
      * @param indexBegin First index in values to be used (included).
      * @param indexEnd End index in values to be used (excluded).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
-     *   * @param maxLabelBounds Functor to compute maximum label bounds based on the paint.
+     * @param maxLabelBounds Functor to compute maximum label bounds based on the paint.
      *   This allows optimizations such that only visible marks are actually created.
      *   If null, we will compute the max bounds internally, but this will be more expensive.
      * @param labelCreator Define how to plot the mark label. The lambda will provide the mark index
@@ -2603,7 +2510,6 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     fun setYTicks(
         values: FloatArray?,
         indexBegin: Int = 0, indexEnd: Int = values?.size ?: 0,
-        redraw: Boolean = true,
         maxLabelBounds: ((TextPaint) -> Label.LabelSetBounds)?,
         labelCreator: ((index: Int, xPos: Float?, yPos: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label)?) {
 //        Log.v("Tuner", "PlotView.setYTicks: numValues = ${value?.size}")
@@ -2618,20 +2524,17 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 anchors = Array(values.size) { yTickPosition },
                 backgroundSizeType = MarkLabelBackgroundSize.FitIndividually,
                 placeLabelsOutsideBoundsIfPossible = true,
-                suppressInvalidate = true,
                 maxLabelBounds = maxLabelBounds,
                 labelCreator = labelCreator
             )
         }
-
-        if(redraw)
-            invalidate()
+        invalidate()
     }
 
     fun setYTicks(
         values: FloatArray?,
         indexBegin: Int = 0, indexEnd: Int = values?.size ?: 0,
-        redraw: Boolean = true, format: ((Int, Float) -> String)?) {
+        format: ((Int, Float) -> String)?) {
         if (values == null)
             return
         val creator = if (format == null) {
@@ -2642,13 +2545,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 StringLabel(string, textPaint, backgroundPaint, cornerRadius, gravity, paddingHorizontal, paddingHorizontal, paddingVertical, paddingVertical)
             }
         }
-        setYTicks(values, indexBegin, indexEnd, redraw, null, creator)
+        setYTicks(values, indexBegin, indexEnd, null, creator)
     }
 
     fun setYTicks(
         values: FloatArray?,
         indexBegin: Int = 0, indexEnd: Int = values?.size ?: 0,
-        redraw: Boolean = true,
         noteNameScale: NoteNameScale,
         noteIndexBegin: Int,
         notePrintOptions: MusicalNotePrintOptions) {
@@ -2671,7 +2573,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             val note = noteNameScale.getNoteOfIndex(index + noteIndexBegin)
             MusicalNoteLabel(note, textPaint, noteNamePrinter, backgroundPaint, cornerRadius, gravity, notePrintOptions, true, paddingHorizontal, paddingHorizontal, paddingVertical, paddingVertical)
         }
-        setYTicks(values, indexBegin, indexEnd, redraw, labelBounds, labelCreator)
+        setYTicks(values, indexBegin, indexEnd, labelBounds, labelCreator)
     }
 
     /** Plot equidistant values (general version with PlotViewArray).
@@ -2680,19 +2582,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      *   we will overwrite the line.
      * @param indexBegin First index in yValues to use (included).
      * @param indexEnd End index in yValues to use (excluded).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
      */
     private fun plot(
         yValues : PlotViewArray, tag: Long = 0L,
-        indexBegin: Int = 0, indexEnd: Int = yValues.size,
-        redraw: Boolean = true
+        indexBegin: Int = 0, indexEnd: Int = yValues.size
     ) {
         val line = getPlotLine(tag)
-        line.setLine(yValues, indexBegin, indexEnd, true)
-        if (redraw)
-            invalidate()
+        line.setLine(yValues, indexBegin, indexEnd)
+        invalidate()
     }
 
     /** Plot values (general version take in PlotViewArrays).
@@ -2702,20 +2599,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      *   we will overwrite the line.
      * @param indexBegin First index in x/yValues to use (included).
      * @param indexEnd End index in x/yValues to use (excluded).
-     * @param redraw Set this to false in order to not redraw directly (e.g. if you plan to
-     *   change something else which also needs to redraw the screen, so you can avoid an
-     *   unnecessary redraw.)
      */
     private fun plot(
         xValues : PlotViewArray, yValues : PlotViewArray,
         tag: Long = 0L,
-        indexBegin: Int = 0, indexEnd: Int = min(xValues.size, yValues.size),
-        redraw : Boolean = true
+        indexBegin: Int = 0, indexEnd: Int = min(xValues.size, yValues.size)
     ) {
         val line = getPlotLine(tag)
-        line.setLine(xValues, yValues, indexBegin, indexEnd, true)
-        if (redraw)
-            invalidate()
+        line.setLine(xValues, yValues, indexBegin, indexEnd)
+        invalidate()
     }
 
 

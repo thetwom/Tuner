@@ -58,7 +58,7 @@ fun frequencyDetectionFlow(
             testFunction = testFunction,
             waveWriter = waveWriter
         )
-        val resultChannel = Channel<MemoryPool<FrequencyDetectionCollectedResults>.RefCountedMemory>(2, BufferOverflow.DROP_OLDEST)
+        val resultChannel = Channel<MemoryPool<FrequencyDetectionCollectedResults>.RefCountedMemory>(3, BufferOverflow.DROP_OLDEST)
 
         val frequencyDetectionResultCollector = FrequencyDetectionResultCollector(
             frequencyMin, frequencyMax,
