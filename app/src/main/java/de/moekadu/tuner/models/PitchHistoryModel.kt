@@ -33,6 +33,9 @@ class PitchHistoryModel {
         private set
     val currentFrequency get() = if (numHistoryValues == 0) 0f else historyValues[numHistoryValues - 1]
 
+    private var cachedHistoryValues = FloatArray(50)
+    private var numCachedHistoryValues = 0
+
     var yRangeAuto = FloatArray(2)
     var yRangeChangeId = 0
         private set
@@ -131,6 +134,9 @@ class PitchHistoryModel {
         // reset pitch history array
         if (maxNumHistoryValues >= 0 && maxNumHistoryValues != this.maxNumHistoryValues) {
 //            Log.v("Tuner", "PitchHistoryModel.changeSettings: numHistoryValues=$maxNumHistoryValues")
+            moveCachedValuesToHistory()
+            cachedHistoryValues = FloatArray(maxNumHistoryValues)
+
             this.maxNumHistoryValues = maxNumHistoryValues
             val oldNumHistoryValues = numHistoryValues
             val oldHistoryValues = historyValues
@@ -138,6 +144,8 @@ class PitchHistoryModel {
             val startIndex = max(0, oldNumHistoryValues - maxNumHistoryValues)
             oldHistoryValues.copyInto(historyValues, 0, startIndex, oldNumHistoryValues)
             numHistoryValues = oldNumHistoryValues - startIndex
+            recomputeTuning = true
+            recomputeYRange = true
             historyValuesChangeId = changeId
         }
 
@@ -191,15 +199,48 @@ class PitchHistoryModel {
         setStyles(tuningState, this.isCurrentlyDetectingNotes)
     }
 
-    fun addFrequency(frequency: Float) {
-        changeId++
-        if (numHistoryValues == historyValues.size) {
-            for (i in 1 until numHistoryValues)
-                historyValues[i - 1] = historyValues[i]
-            --numHistoryValues
+    private fun addFrequencyToCache(frequency: Float) {
+        if (numCachedHistoryValues == cachedHistoryValues.size) {
+            cachedHistoryValues.copyInto(cachedHistoryValues, 0, 1, numHistoryValues)
+            --numCachedHistoryValues
         }
-        historyValues[numHistoryValues] = frequency
-        ++numHistoryValues
+        cachedHistoryValues[numCachedHistoryValues] = frequency
+        ++numCachedHistoryValues
+    }
+
+    private fun moveCachedValuesToHistory() {
+        val numFree = historyValues.size - numHistoryValues
+        val numDelete = max(0, numCachedHistoryValues - numFree)
+        if (numDelete > 0) {
+            historyValues.copyInto(historyValues, 0, numDelete, numHistoryValues)
+            numHistoryValues -= numDelete
+        }
+        cachedHistoryValues.copyInto(historyValues, numHistoryValues, 0, numCachedHistoryValues)
+        numHistoryValues += numCachedHistoryValues
+        numCachedHistoryValues = 0
+    }
+
+    /** Add a new frequency
+     * @param frequency Frequency to ass
+     * @param cacheOnly Just store the frequency, but don't update the model. This can be used
+     *   to suppress too frequent view updates.
+     */
+    fun addFrequency(frequency: Float, cacheOnly: Boolean) {
+        addFrequencyToCache(frequency)
+
+        if (cacheOnly)
+            return
+
+        changeId++
+
+        moveCachedValuesToHistory()
+//        if (numHistoryValues == historyValues.size) {
+//            for (i in 1 until numHistoryValues)
+//                historyValues[i - 1] = historyValues[i]
+//            --numHistoryValues
+//        }
+//        historyValues[numHistoryValues] = frequency
+//        ++numHistoryValues
 
         tuningState = checkTuning(
             frequency,
@@ -221,7 +262,7 @@ class PitchHistoryModel {
         val closestNoteIndex = musicalScale.getClosestNoteIndex(currentFrequency)
 
         val minIndex = if (targetNoteIndex == Int.MAX_VALUE) {
-            closestNoteIndex - YRANGE_IN_NOTE_INDICES_AT_CLOSEST_NOTE
+            closestNoteIndex - YRANGE_IN_NOTE_INDICES_AT_TARGET_NOTE // not intuitive that we use here the TARGET NOTE, but it looks better to have a slightly bigger range in this rare case
         } else {
             min(
                 closestNoteIndex - YRANGE_IN_NOTE_INDICES_AT_CLOSEST_NOTE,
@@ -230,7 +271,7 @@ class PitchHistoryModel {
         }
 
         val maxIndex =  if (targetNoteIndex == Int.MAX_VALUE) {
-            closestNoteIndex + YRANGE_IN_NOTE_INDICES_AT_CLOSEST_NOTE
+            closestNoteIndex + YRANGE_IN_NOTE_INDICES_AT_TARGET_NOTE // not intuitive that we use here the TARGET NOTE, but it looks better to have a slightly bigger range in this rare case
         } else {
             max(
                 closestNoteIndex + YRANGE_IN_NOTE_INDICES_AT_CLOSEST_NOTE,

@@ -6,11 +6,8 @@ import de.moekadu.tuner.misc.WaveWriter
 import de.moekadu.tuner.preferences.PreferenceResources
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
 import kotlin.coroutines.coroutineContext
 
 fun frequencyDetectionFlow(pref: PreferenceResources, waveWriter: WaveWriter?) = frequencyDetectionFlow(
@@ -58,7 +55,6 @@ fun frequencyDetectionFlow(
             testFunction = testFunction,
             waveWriter = waveWriter
         )
-        val resultChannel = Channel<MemoryPool<FrequencyDetectionCollectedResults>.RefCountedMemory>(3, BufferOverflow.DROP_OLDEST)
 
         val frequencyDetectionResultCollector = FrequencyDetectionResultCollector(
             frequencyMin, frequencyMax,
@@ -68,16 +64,15 @@ fun frequencyDetectionFlow(
             windowType, acousticWeighting
         )
 
-        CoroutineScope(coroutineContext + Dispatchers.Default).launch {
-            for (sampleData in soundSource.outputChannel) {
-//                Log.v("Tuner", "frequencyDetectionFlow: collecting sample data: time = ${sampleData.memory.framePosition}")
-                resultChannel.send(frequencyDetectionResultCollector.collectResults(sampleData))
-                sampleData.decRef() // not needed anymore
-            }
-        }
-
-        for (result in resultChannel)
+//        var lastUpdate = 0
+        for (sampleData in soundSource.outputChannel) {
+//            val diff = sampleData.memory.framePosition - lastUpdate
+//            lastUpdate = sampleData.memory.framePosition
+//            Log.v("Tuner", "frequencyDetectionFlow: collecting sample data: time = ${sampleData.memory.framePosition}, diff = $diff")
+            val result = frequencyDetectionResultCollector.collectResults(sampleData)
+            sampleData.decRef() // sampleData is not needed anymore, so we can decrement ref to allow recycling
             emit(result)
+        }
     }
 }
 
