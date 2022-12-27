@@ -19,7 +19,6 @@
 
 package de.moekadu.tuner.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.*
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentResources
@@ -50,6 +49,7 @@ class TunerViewModel(
     private val simpleMode: Boolean
 ) : ViewModel() {
     data class UserSelectedString(val stringIndex: Int, val note: MusicalNote)
+    data class FrequencyWithFramePosition(val frequency: Float, val framePosition: Int)
 
     private var frequencyDetectionJob: Job? = null
     private var frequencyEvaluationJob: Job? = null
@@ -93,7 +93,7 @@ class TunerViewModel(
     private val _userDefinedTargetNote = MutableStateFlow<UserSelectedString?>(null)
     private val userDefinedTargetNote = _userDefinedTargetNote.asStateFlow()
 
-    private val _currentFrequency = MutableStateFlow(0f)
+    private val _currentFrequency = MutableStateFlow(FrequencyWithFramePosition(0f, 0))
     private val currentFrequency = _currentFrequency.asStateFlow()
 
     private val _timeSinceThereIsNoFrequencyDetectionResult = MutableStateFlow(0f)
@@ -198,16 +198,30 @@ class TunerViewModel(
             }
         }}
 
-        viewModelScope.launch { currentFrequency.collect {
-            if (currentFrequency.value > 0f) {
-                _pitchHistoryModel.value = pitchHistoryModel.value?.apply { addFrequency(it) }
-                if (simpleMode) {
-                    _stringsModel.value = stringsModel.value?.apply {
-                        changeSettings(tuningState = computeTuningState(currentFrequency = it))
+        viewModelScope.launch {
+            var framePositionOfLastUpdate = 0
+            val minSampleDiffToUpdateView = sampleRate / MAXIMUM_REFRESH_RATE
+            currentFrequency.collect {
+//                Log.v("Tuner", "TunerViewModel: collecting currentFrequency, framePosition = ${it.framePosition}")
+                if (it.frequency > 0f) {
+                    val currentFramePosition = it.framePosition
+                    val diff = currentFramePosition - framePositionOfLastUpdate
+
+                    if (diff > minSampleDiffToUpdateView || diff < 0) {
+                        framePositionOfLastUpdate = currentFramePosition
+                        _pitchHistoryModel.value = pitchHistoryModel.value?.apply { addFrequency(it.frequency, cacheOnly = false) }
+                    } else {
+                        _pitchHistoryModel.value?.addFrequency(it.frequency, cacheOnly = true)
+                    }
+
+                    if (simpleMode) {
+                        _stringsModel.value = stringsModel.value?.apply {
+                            changeSettings(tuningState = computeTuningState(currentFrequency = it.frequency))
+                        }
                     }
                 }
             }
-        }}
+        }
 
         viewModelScope.launch { userDefinedTargetNote.collect {
 //            Log.v("Tuner", "TunerViewModel: collecting userDefinedTargetNote = $it")
@@ -221,18 +235,18 @@ class TunerViewModel(
 
         if (!simpleMode) {
             viewModelScope.launch {
-                var sampleNumberOfLastUpdate = 0
+                var framePositionOfLastUpdate = 0
                 val minSampleDiffToUpdateSpectrumAndCorrelation = sampleRate / MAXIMUM_REFRESH_RATE
 
                 noteDetectionResults.collect {
 //            Log.v("Tuner", "TunerViewModel: collecting noteDetectionResults: resultUpdateRate = ${computeResultUpdateRate()}")
 
                 it?.with { results ->
-                    val currentSampleNumber = results.timeSeries.framePosition
-                    val diff = currentSampleNumber - sampleNumberOfLastUpdate
+                    val framePositionNumber = results.timeSeries.framePosition
+                    val diff = framePositionNumber - framePositionOfLastUpdate
 
                     if (diff > minSampleDiffToUpdateSpectrumAndCorrelation || diff < 0) {
-                        sampleNumberOfLastUpdate = currentSampleNumber
+                        framePositionOfLastUpdate = framePositionNumber
 
 //              Log.v("Tuner", "TunerViewModel: collecting noteDetectionResults: time = ${results.timeSeries.framePosition}, dt=${results.timeSeries.dt}")
                         _spectrumPlotModel.value = spectrumPlotModel.value?.apply {
@@ -263,7 +277,7 @@ class TunerViewModel(
         instrument: Instrument = instrumentResources.instrument.value.instrument,
     ) {
         frequencyEvaluationJob?.cancel()
-        frequencyEvaluationJob = viewModelScope.launch(Dispatchers.Main) {
+        frequencyEvaluationJob = viewModelScope.launch(Dispatchers.Default) {
 //            Log.v("Tuner", "TunerViewModel.restartFrequencyEvaluationJob: restarting")
             val freqEvaluator = FrequencyEvaluator(
                 numMovingAverage,
@@ -276,17 +290,19 @@ class TunerViewModel(
 
             noteDetectionResults.combine(userDefinedTargetNote) { noteDetectionRes, userDefinedNote ->
                 noteDetectionRes?.with {
+//                    Log.v("Tuner", "TunerViewModel: collecting noteDetectionResults, framePosition = ${it.timeSeries.framePosition}")
                     freqEvaluator.evaluate(it, userDefinedNote?.note)
                 } ?: freqEvaluator.evaluate(null, userDefinedNote?.note)
             }.collect {
                 ensureActive()
+//                Log.v("Tuner", "TunerViewModel: collecting frequencyEvaluationResults, framePosition = ${it.framePosition}")
 //                Log.v("Tuner", "TunerViewModel: evaluating target: $it, $coroutineContext")
                 it.target?.let{ tuningTarget ->
                     _tuningTarget.value = tuningTarget
                 }
                 _timeSinceThereIsNoFrequencyDetectionResult.value = it.timeSinceThereIsNoFrequencyDetectionResult
                 if (it.smoothedFrequency > 0f)
-                    _currentFrequency.value = it.smoothedFrequency
+                    _currentFrequency.value = FrequencyWithFramePosition(it.smoothedFrequency, it.framePosition)
             }
         }
     }
@@ -300,8 +316,9 @@ class TunerViewModel(
 
     fun startSampling() {
         frequencyDetectionJob?.cancel()
-        frequencyDetectionJob = viewModelScope.launch(Dispatchers.Main) {
-            frequencyDetectionFlow(pref, waveWriter).collect {
+        frequencyDetectionJob = viewModelScope.launch(Dispatchers.Default) {
+            frequencyDetectionFlow(pref, waveWriter)
+                .collect {
                 ensureActive()
                 noteDetectionResults.value?.decRef()
                 _noteDetectionResults.value = it
@@ -330,7 +347,7 @@ class TunerViewModel(
      * @return true, if a string was selected, false if a string was deselected.
      */
     fun clickString(stringIndex: Int, note: MusicalNote): Boolean {
-        Log.v("Tuner", "TunerViewModel.clickString: stringIndex=$stringIndex, ${instrument.value}")
+//        Log.v("Tuner", "TunerViewModel.clickString: stringIndex=$stringIndex, ${instrument.value}")
         val userDefNote = userDefinedTargetNote.value
         return if (userDefNote?.stringIndex == stringIndex) {
             _userDefinedTargetNote.value = null
@@ -358,7 +375,7 @@ class TunerViewModel(
     ) = (duration / (windowSize.toFloat() / sampleRate.toFloat() * (1.0f - overlap))).roundToInt()
 
     private fun computeTuningState(
-        currentFrequency: Float = this.currentFrequency.value,
+        currentFrequency: Float = this.currentFrequency.value.frequency,
         targetFrequency: Float = tuningTarget.value.frequency,
         toleranceInCents: Int = pref.toleranceInCents.value
     ) = checkTuning(currentFrequency, targetFrequency, toleranceInCents.toFloat())

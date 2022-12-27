@@ -70,8 +70,8 @@ class SampleData(val size: Int, val sampleRate: Int, var framePosition: Int) {
     }
 }
 
-class MemoryPoolSampleData {
-    private val pool = MemoryPool<SampleData>()
+class MemoryPoolSampleData(capacity: Int) {
+    private val pool = MemoryPool<SampleData>(capacity)
 
     fun get(size: Int, sampleRate: Int, framePosition: Int) = pool.get(
         factory = { SampleData(size, sampleRate, framePosition) },

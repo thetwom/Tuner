@@ -2,6 +2,7 @@ package de.moekadu.tuner.models
 
 import de.moekadu.tuner.notedetection.AutoCorrelation
 import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
+import kotlin.math.min
 
 class CorrelationPlotModel {
     var changeId = 0
@@ -53,7 +54,7 @@ class CorrelationPlotModel {
 
         if (targetFrequency > 0f) {
             this.targetFrequency = targetFrequency
-            timeShiftRange[1] = 3.0f / targetFrequency
+            timeShiftRange[1] = min(3.0f / targetFrequency, timeShifts.lastOrNull() ?: Float.MAX_VALUE)
             targetChangeId = changeId
         }
 
