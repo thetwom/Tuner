@@ -19,6 +19,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 
 private class StringsAndSelection(val strings: Array<MusicalNote>, val selectedIndex: Int) {
@@ -260,17 +261,19 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
                 pref.musicalScale.value,
                 Instrument(null, null, arrayOf(), 0, 0, true)
             )
-            frequencyDetectionFlow(pref, null).collect {
-                ensureActive()
-                frequencyEvaluator.evaluate(it.memory, null).target?.note?.let {
-                    _detectedNoteModel.value = detectedNoteModel.value?.apply {
-                        changeSettings(note = it)
+            frequencyDetectionFlow(pref, null)
+                .flowOn(Dispatchers.Default)
+                .collect {
+                    ensureActive()
+                    frequencyEvaluator.evaluate(it.memory, null).target?.note?.let {
+                        _detectedNoteModel.value = detectedNoteModel.value?.apply {
+                            changeSettings(note = it)
+                        }
                     }
-                }
 
-                it.decRef()
+                    it.decRef()
 //                Log.v("TunerViewModel", "collecting frequencyDetectionFlow")
-            }
+                }
         }
     }
 

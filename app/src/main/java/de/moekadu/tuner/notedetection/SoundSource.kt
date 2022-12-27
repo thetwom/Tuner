@@ -48,19 +48,26 @@ class SoundSource(
     private var sourceJob: Job? = null
 
      /** Pool which allows to recyle the sample data. */
-    private var memoryPool = MemoryPoolSampleData()
+    private var memoryPool: MemoryPoolSampleData
 
     /** Channel used to communicate the sound samples. */
-    val outputChannel = Channel<MemoryPool<SampleData>.RefCountedMemory>(3, BufferOverflow.DROP_OLDEST)
+    //val outputChannel = Channel<MemoryPool<SampleData>.RefCountedMemory>(1, BufferOverflow.DROP_OLDEST)
+    var outputChannel: Channel<MemoryPool<SampleData>.RefCountedMemory> // = Channel<MemoryPool<SampleData>.RefCountedMemory>(2, BufferOverflow.SUSPEND)
+        private set
+
+    var channelCapacity: Int
 
     init {
+        val minBufferSize = AudioRecord.getMinBufferSize(
+            sampleRate,
+            AudioFormat.CHANNEL_IN_MONO,
+            AudioFormat.ENCODING_PCM_FLOAT
+        )
+        channelCapacity = computeRequiredChannelCapacity(minBufferSize / 4)
+        memoryPool = MemoryPoolSampleData(2 * channelCapacity) // trial shows that single channel capacity does not very well recycle data in extreme cases, double channel capacity seems to work fine
+        outputChannel = Channel(channelCapacity, BufferOverflow.SUSPEND)
+//        Log.v("Tuner", "SoundSource.init: output channel capacity = $channelCapacity")
         sourceJob = scope.launch {
-
-            val minBufferSize = AudioRecord.getMinBufferSize(
-                sampleRate,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_FLOAT
-            )
 
             val record =
                 if (testFunction == null)
@@ -119,8 +126,11 @@ class SoundSource(
                             .map { it.apply { memory.addData(currentFrame, recordData) } }
                             .filter { it.memory.isFull }
                             .map {
-//                                Log.v("Tuner", "time: ${it.memory.framePosition}")
-                                outputChannel.send(it)
+//                                Log.v("Tuner", "SoundSource: sending sample data at frame: ${it.memory.framePosition}")
+                                //outputChannel.send(it)
+                                val sendStatus = outputChannel.trySend(it)
+                                if (!sendStatus.isSuccess)
+                                    it.decRef()
                             }
                         sampleDataList.removeAll { it.memory.isFull }
 
@@ -141,5 +151,13 @@ class SoundSource(
     fun stopSampling() {
         sourceJob?.cancel()
         sourceJob = null
+    }
+
+    private fun computeRequiredChannelCapacity(audioRecordBufferSizeInFrames: Int): Int {
+        val updateRateInFrames = max(1, 1 + (windowSize * (1.0 - overlap)).toInt())
+//        Log.v("Tuner", "SoundSource: windowSize = $windowSize, overlap = $overlap, updateRateInFrames = $updateRateInFrames" )
+        // multiply by 2, to allow writing to the output channel within one iteration
+        // without loosing data and additionally have enough capacity to store a second cycle
+        return max(2, 2 * audioRecordBufferSizeInFrames / updateRateInFrames)
     }
 }

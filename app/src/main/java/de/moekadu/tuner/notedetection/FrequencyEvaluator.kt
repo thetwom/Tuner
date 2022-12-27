@@ -1,6 +1,5 @@
 package de.moekadu.tuner.notedetection
 
-import android.util.Log
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.temperaments.MusicalNote
@@ -9,7 +8,8 @@ import de.moekadu.tuner.temperaments.MusicalScale
 data class FrequencyEvaluationResult(
     val smoothedFrequency: Float,
     val target: TuningTarget?,
-    val timeSinceThereIsNoFrequencyDetectionResult: Float
+    val timeSinceThereIsNoFrequencyDetectionResult: Float,
+    val framePosition: Int
 )
 
 class FrequencyEvaluator(
@@ -39,7 +39,9 @@ class FrequencyEvaluator(
 
     fun evaluate(
         frequencyCollectionResults: FrequencyDetectionCollectedResults?,
-        userDefinedNote: MusicalNote?): FrequencyEvaluationResult {
+        userDefinedNote: MusicalNote?
+    ): FrequencyEvaluationResult {
+
         var frequencyDetectionTimeStep = -1
         var dt = -1f
 //        Log.v("Tuner", "FrequencyEvaluator.evaluate: frequencyCollectionResults = $frequencyCollectionResults")
@@ -73,11 +75,12 @@ class FrequencyEvaluator(
         val time = frequencyCollectionResults?.timeSeries?.framePosition ?: 0
         val diff = time - lastTime
         lastTime = time
-        Log.v("Tuner", "FrequencyEvaluator.evaluate: time since last update = $diff")
+//        Log.v("Tuner", "FrequencyEvaluator.evaluate: time since last update = $diff")
         return FrequencyEvaluationResult(
             smoothedFrequency,
             newTarget,
-            (frequencyDetectionTimeStep - timeStepOfLastSuccessfulFrequencyDetection) * dt
+            (frequencyDetectionTimeStep - timeStepOfLastSuccessfulFrequencyDetection) * dt,
+            frequencyDetectionTimeStep
         )
     }
 //    }.collect {

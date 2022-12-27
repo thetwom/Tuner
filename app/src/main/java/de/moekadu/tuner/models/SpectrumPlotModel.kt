@@ -4,6 +4,7 @@ import de.moekadu.tuner.notedetection.FrequencySpectrum
 import de.moekadu.tuner.notedetection.Harmonics
 import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
 import de.moekadu.tuner.temperaments.Notation
+import kotlin.math.min
 
 class SpectrumPlotModel {
     var changeId = 0
@@ -77,7 +78,7 @@ class SpectrumPlotModel {
 
         if (targetFrequency > 0f) {
             this.targetFrequency = targetFrequency
-            frequencyRange[1] = 3.5f * targetFrequency
+            frequencyRange[1] = min(3.5f * targetFrequency, frequencies.lastOrNull() ?: Float.MAX_VALUE)
             targetChangeId = changeId
         }
 

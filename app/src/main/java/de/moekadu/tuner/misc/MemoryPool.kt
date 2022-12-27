@@ -1,5 +1,6 @@
 package de.moekadu.tuner.misc
 
+import android.util.Log
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.sync.Mutex
@@ -28,7 +29,7 @@ import kotlinx.coroutines.sync.withLock
 }
 
  */
-class MemoryPool<T>
+class MemoryPool<T>(capacity: Int = 10)
 {
     inner class RefCountedMemory(val memory: T) {
         private var refCount = 1
@@ -61,7 +62,7 @@ class MemoryPool<T>
         }
     }
 
-    private val memoryChannel = Channel<T>(10, BufferOverflow.DROP_OLDEST)
+    private val memoryChannel = Channel<T>(capacity, BufferOverflow.DROP_OLDEST)
 
     private fun recycle(memory: RefCountedMemory) {
         memoryChannel.trySend(memory.memory)
@@ -77,9 +78,10 @@ class MemoryPool<T>
         //return memory?.also{ it.resetRef() } ?: RefCountedMemory(factory())
         return if (memory == null) {
             val m = factory()
-//            Log.v("Tuner", "MemoryPool.get: Allocating new memory, type: $m")
+            Log.v("Tuner", "MemoryPool.get: Allocating new memory, type: $m")
             RefCountedMemory(m)
         } else {
+//            Log.v("Tuner", "MemoryPool.get: Recycling memory, type: $memory")
             return RefCountedMemory(memory)
         }
     }
