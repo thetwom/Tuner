@@ -50,8 +50,7 @@ class TunerFragmentSimple : Fragment() {
     private val viewModel: TunerViewModel by viewModels {
         TunerViewModel.Factory(
             requireActivity().preferenceResources,
-            requireActivity().instrumentResources,
-            simpleMode = true
+            requireActivity().instrumentResources
         )
     }
 

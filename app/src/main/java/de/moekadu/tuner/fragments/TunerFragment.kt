@@ -36,7 +36,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
-import de.moekadu.tuner.instrumentResources
 import de.moekadu.tuner.misc.WaveFileWriterIntent
 import de.moekadu.tuner.models.PitchHistoryModel
 import de.moekadu.tuner.preferenceResources
@@ -46,11 +45,7 @@ import kotlinx.coroutines.launch
 
 class TunerFragment : Fragment() {
     val viewModel: TunerViewModel by viewModels {
-        TunerViewModel.Factory(
-            requireActivity().preferenceResources,
-            requireActivity().instrumentResources,
-            simpleMode = false
-        )
+        TunerViewModel.Factory(requireActivity().preferenceResources, null)
     }
 
     private val waveFileWriterIntent = WaveFileWriterIntent(this)
