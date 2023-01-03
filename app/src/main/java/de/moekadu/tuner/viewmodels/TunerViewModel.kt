@@ -43,59 +43,77 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
+/** Class for tuner view model.
+ * @param pref Preferences.
+ * @param instrumentResources Instruments or null to use a chromatic instrument.
+ *   Also, if this is null, we assume that we are in simple mode with a string view and no
+ *   correlation and spectrum plots.
+ */
 class TunerViewModel(
     private val pref: PreferenceResources,
-    private val instrumentResources: InstrumentResources,
-    private val simpleMode: Boolean
+    private val instrumentResources: InstrumentResources?
 ) : ViewModel() {
     data class UserSelectedString(val stringIndex: Int, val note: MusicalNote)
     data class FrequencyWithFramePosition(val frequency: Float, val framePosition: Int)
+    /** Simple mode (with string view) or no simple mode (with spectrum and correlation plots). */
+    private val simpleMode = (instrumentResources != null)
 
+    /** Job for detecting the peak frequencies. */
     private var frequencyDetectionJob: Job? = null
+    /** Job for translating frequencies to a target note. */
     private var frequencyEvaluationJob: Job? = null
 
+    /** Instrument which is used if there are no instrument resources. */
     private val chromaticInstrumentStateFlow = MutableStateFlow(
         InstrumentResources.InstrumentAndSection(instrumentChromatic, InstrumentResources.Section.Undefined)
     )
 
-    val instrument get() = if (simpleMode)
-        instrumentResources.instrument
-    else
-        chromaticInstrumentStateFlow.asStateFlow()
+    /** Current instrument with instrument section. */
+    val instrument get() = instrumentResources?.instrument ?: chromaticInstrumentStateFlow.asStateFlow()
 
+    /** Sample rate. */
     val sampleRate = DefaultValues.SAMPLE_RATE
+    /** Writer class which allows dumping recorded data into wav-files. */
     val waveWriter = WaveWriter()
+    /** Collected results from the frequency detection. */
+    private val _frequencyDetectionResults = MutableStateFlow<MemoryPool<FrequencyDetectionCollectedResults>.RefCountedMemory?>(null)
+    private val frequencyDetectionResults = _frequencyDetectionResults.asStateFlow()
 
-    private val _noteDetectionResults = MutableStateFlow<MemoryPool<FrequencyDetectionCollectedResults>.RefCountedMemory?>(null)
-    private val noteDetectionResults = _noteDetectionResults.asStateFlow()
-
+    /** Current tuning target. */
     private val _tuningTarget = MutableStateFlow(
         TuningTarget(pref.musicalScale.value.referenceNote, pref.musicalScale.value.referenceFrequency, false)
     )
     private val tuningTarget = _tuningTarget.asStateFlow()
 
+    /** Model class for the pitch history. */
     private val _pitchHistoryModel = MutableLiveData(PitchHistoryModel().apply { changeSettings(maxNumHistoryValues = computePitchHistorySize()) })
     val pitchHistoryModel: LiveData<PitchHistoryModel> get() = _pitchHistoryModel
 
+    /** Model class for strings (only in simple mode). */
     private val _stringsModel = MutableLiveData(StringsModel())
     val stringsModel: LiveData<StringsModel> get() = _stringsModel
 
+    /** Model class for showing the spectrum (only if simple mode is disabled). */
     private val _spectrumPlotModel = MutableLiveData(SpectrumPlotModel())
     val spectrumPlotModel: LiveData<SpectrumPlotModel> get() = _spectrumPlotModel
 
+    /** Model class for showing the autocorrelation (only if simple mode is disabled). */
     private val _correlationPlotModel = MutableLiveData(CorrelationPlotModel())
     val correlationPlotModel: LiveData<CorrelationPlotModel> get() = _correlationPlotModel
 
+    /** Info if the wave-writer fab button should be shown. */
     private val _showWaveWriterFab = MutableStateFlow(false)
     val showWaveWriterFab = _showWaveWriterFab.asStateFlow()
 
-    /** User defined target note or null, if target note is autodetected. */
+    /** User defined target note or null, if target note is auto-detected. */
     private val _userDefinedTargetNote = MutableStateFlow<UserSelectedString?>(null)
     private val userDefinedTargetNote = _userDefinedTargetNote.asStateFlow()
 
+    /** Currently detected base frequency. */
     private val _currentFrequency = MutableStateFlow(FrequencyWithFramePosition(0f, 0))
     private val currentFrequency = _currentFrequency.asStateFlow()
 
+    /** Time duration since we didn't get any new frequencies. */
     private val _timeSinceThereIsNoFrequencyDetectionResult = MutableStateFlow(0f)
     private val timeSinceThereIsNoFrequencyDetectionResult = _timeSinceThereIsNoFrequencyDetectionResult.asStateFlow()
 
@@ -238,7 +256,7 @@ class TunerViewModel(
                 var framePositionOfLastUpdate = 0
                 val minSampleDiffToUpdateSpectrumAndCorrelation = sampleRate / MAXIMUM_REFRESH_RATE
 
-                noteDetectionResults.collect {
+                frequencyDetectionResults.collect {
 //            Log.v("Tuner", "TunerViewModel: collecting noteDetectionResults: resultUpdateRate = ${computeResultUpdateRate()}")
 
                 it?.with { results ->
@@ -268,6 +286,15 @@ class TunerViewModel(
         }
     }
 
+    /** Restart the job for evaluating detected frequencies.
+     * @param numMovingAverage Number of values which are used for the moving average.
+     * @param toleranceInCents Tolerance in cents within which a note is said to be in tune.
+     * @param maxNumFaultyValues Maximum values which don't match the current pitch and we don't
+     *   switch to a now pitch.
+     * @param maxNoise Maximum relative noise further evaluated a detected frequency.
+     * @param musicalScale Musical scale.
+     * @param instrument Instrument which defines the target notes.
+     */
     private fun restartFrequencyEvaluationJob(
         numMovingAverage: Int = pref.numMovingAverage.value,
         toleranceInCents: Float = pref.toleranceInCents.value.toFloat(),
@@ -288,7 +315,7 @@ class TunerViewModel(
                 instrument
             )
 
-            noteDetectionResults.combine(userDefinedTargetNote) { noteDetectionRes, userDefinedNote ->
+            frequencyDetectionResults.combine(userDefinedTargetNote) { noteDetectionRes, userDefinedNote ->
                 noteDetectionRes?.with {
 //                    Log.v("Tuner", "TunerViewModel: collecting noteDetectionResults, framePosition = ${it.timeSeries.framePosition}")
                     freqEvaluator.evaluate(it, userDefinedNote?.note)
@@ -307,6 +334,9 @@ class TunerViewModel(
         }
     }
 
+    /** Restart sampling and frequency detection if it is running.
+     * This will use the current preference (pref) to get the current settings.
+     */
     private fun restartSamplingIfRunning() {
         if (frequencyDetectionJob != null) {
             stopSampling()
@@ -314,19 +344,23 @@ class TunerViewModel(
         }
     }
 
+    /** Start sampling and frequency detection.
+     * This will use the current preference (pref) to get the current settings.
+     */
     fun startSampling() {
         frequencyDetectionJob?.cancel()
         frequencyDetectionJob = viewModelScope.launch(Dispatchers.Default) {
             frequencyDetectionFlow(pref, waveWriter)
                 .collect {
                 ensureActive()
-                noteDetectionResults.value?.decRef()
-                _noteDetectionResults.value = it
+                frequencyDetectionResults.value?.decRef()
+                _frequencyDetectionResults.value = it
 //                Log.v("TunerViewModel", "collecting frequencyDetectionFlow")
             }
         }
     }
 
+    /** Stop sampling. */
     fun stopSampling() {
 //        Log.v("Tuner", "TunerViewModel.stopSampling")
         frequencyDetectionJob?.cancel()
@@ -374,12 +408,14 @@ class TunerViewModel(
         overlap: Float = pref.overlap.value
     ) = (duration / (windowSize.toFloat() / sampleRate.toFloat() * (1.0f - overlap))).roundToInt()
 
+    /** Compute current tuning state. */
     private fun computeTuningState(
         currentFrequency: Float = this.currentFrequency.value.frequency,
         targetFrequency: Float = tuningTarget.value.frequency,
         toleranceInCents: Int = pref.toleranceInCents.value
     ) = checkTuning(currentFrequency, targetFrequency, toleranceInCents.toFloat())
 
+    /** Compute update rate with which we get new frequency results. */
     private fun computeResultUpdateRate(
         sampleRate: Int = this.sampleRate,
         windowSize: Int = pref.windowSize.value,
@@ -391,14 +427,19 @@ class TunerViewModel(
         const val MAXIMUM_REFRESH_RATE = 60 // Hz
     }
 
+    /** Factory for creating the view model.
+     * @param pref Preferences.
+     * @param instrumentResources Instruments or null to use a chromatic instrument.
+     *   Also, if this is null, we assume that we are in simple mode with a string view and no
+     *   correlation and spectrum plots.
+     */
     class Factory(
         private val pref: PreferenceResources,
-        private val instrumentResources: InstrumentResources,
-        private val simpleMode: Boolean
+        private val instrumentResources: InstrumentResources?
     ) : ViewModelProvider.Factory {
         @Suppress("unchecked_cast")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return TunerViewModel(pref, instrumentResources, simpleMode) as T
+            return TunerViewModel(pref, instrumentResources) as T
         }
     }
 }
