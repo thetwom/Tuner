@@ -51,11 +51,12 @@ class SoundSource(
     private var memoryPool: MemoryPoolSampleData
 
     /** Channel used to communicate the sound samples. */
-    //val outputChannel = Channel<MemoryPool<SampleData>.RefCountedMemory>(1, BufferOverflow.DROP_OLDEST)
-    var outputChannel: Channel<MemoryPool<SampleData>.RefCountedMemory> // = Channel<MemoryPool<SampleData>.RefCountedMemory>(2, BufferOverflow.SUSPEND)
+    var outputChannel: Channel<MemoryPool<SampleData>.RefCountedMemory>
         private set
 
-    var channelCapacity: Int
+    /** Capacity of channel. */
+    private var channelCapacity: Int
+        private set
 
     init {
         val minBufferSize = AudioRecord.getMinBufferSize(
