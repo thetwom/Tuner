@@ -35,6 +35,13 @@ class MemoryPool<T>(capacity: Int = 10)
         private var refCount = 1
         private val mutex = Mutex()
 
+        /** Access the underlying memory in a save way.
+         * The ref counts are handled by the function itself.
+         * If the underlying memory is not available anymore, nothing will be done.
+         * @param f Function which obtains as argument the underlying memory and can use it.
+         * @return Return value of function or null if the underlying memory is not available
+         *   anymore.
+         */
         suspend inline fun <R> with(f: (T) -> R): R? {
             if (!incRef())
                 return null
@@ -43,6 +50,10 @@ class MemoryPool<T>(capacity: Int = 10)
             return result
         }
 
+        /** Increment the reference count.
+         * @return True, if we successfully incremented the count. False if the underlying memory
+         *   does not exist anymore.
+         */
         suspend fun incRef(): Boolean {
             return mutex.withLock {
                 if (refCount == 0) {
@@ -53,6 +64,8 @@ class MemoryPool<T>(capacity: Int = 10)
                 }
             }
         }
+
+        /** Decrement the reference count. */
         suspend fun decRef() {
             mutex.withLock {
                 --refCount
@@ -62,12 +75,24 @@ class MemoryPool<T>(capacity: Int = 10)
         }
     }
 
+    /** Channel which stores the available objects which can be recycled. */
     private val memoryChannel = Channel<T>(capacity, BufferOverflow.DROP_OLDEST)
 
+    /** Recycle a ref counted memory.
+     * @param memory Memory to be recycled.
+     */
     private fun recycle(memory: RefCountedMemory) {
         memoryChannel.trySend(memory.memory)
     }
 
+    /** Obtain a new ref counted memory object.
+     * @param factory Factory class which is used to create a new memory object. This will only
+     *   be called if a new memory allocation is needed.
+     * @param checker Function which checks if a recycled memory is appropriate for being used.
+     *   This e.g. could check, if the required array size of a memory is correct. If the checker
+     *   returns false, we will not use the proposed recycled object.
+     * @return Ref counted memory.
+     */
     fun get(factory: () -> T, checker: (T) -> Boolean): RefCountedMemory {
         var memory: T?
         while (true) {
@@ -75,7 +100,7 @@ class MemoryPool<T>(capacity: Int = 10)
             if (memory == null || checker(memory))
                 break
         }
-        //return memory?.also{ it.resetRef() } ?: RefCountedMemory(factory())
+
         return if (memory == null) {
             val m = factory()
             Log.v("Tuner", "MemoryPool.get: Allocating new memory, type: $m")

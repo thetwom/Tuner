@@ -164,14 +164,14 @@ class TunerViewModel(
             _pitchHistoryModel.value = pitchHistoryModel.value?.apply{ changeSettings(notePrintOptions = printOptions)}
         }}
 
-        viewModelScope.launch { instrument.collect { instrumentAndSection ->
-            if (simpleMode) {
+        if (simpleMode) {
+            viewModelScope.launch { instrument.collect { instrumentAndSection ->
                 _stringsModel.value =
                     stringsModel.value?.apply { changeSettings(instrument = instrumentAndSection.instrument) }
-            }
-            restartFrequencyEvaluationJob(instrument = instrumentAndSection.instrument)
-            restartSamplingIfRunning()
-        }}
+                restartFrequencyEvaluationJob(instrument = instrumentAndSection.instrument)
+                restartSamplingIfRunning()
+            } }
+        }
 
         viewModelScope.launch { tuningTarget.collect {
             if (simpleMode) {
@@ -274,7 +274,7 @@ class TunerViewModel(
         maxNumFaultyValues: Int = pref.pitchHistoryMaxNumFaultyValues.value,
         maxNoise: Float = pref.maxNoise.value,
         musicalScale: MusicalScale = pref.musicalScale.value,
-        instrument: Instrument = instrumentResources.instrument.value.instrument,
+        instrument: Instrument = this.instrument.value.instrument,
     ) {
         frequencyEvaluationJob?.cancel()
         frequencyEvaluationJob = viewModelScope.launch(Dispatchers.Default) {

@@ -5,7 +5,12 @@ import kotlinx.coroutines.channels.Channel
 import kotlin.math.pow
 import kotlin.math.sqrt
 
+/** Class which collects all results in the process of frequency detection.
+ * @param sizeOfTimeSeries Number of samples, which are stored in the time series.
+ * @param sampleRate Sample rate of the underlying time series.
+ */
 class FrequencyDetectionCollectedResults(val sizeOfTimeSeries: Int, val sampleRate: Int) {
+    /** Object, storing the raw data of the time series. */
     val timeSeries = TimeSeries(sizeOfTimeSeries, 1.0f / sampleRate)
 
     /** Standard deviation computed from time series. */
@@ -17,7 +22,7 @@ class FrequencyDetectionCollectedResults(val sizeOfTimeSeries: Int, val sampleRa
      */
     val frequencySpectrum = FrequencySpectrum(
         (sizeOfTimeSeries + 1),
-        RealFFT.getFrequency(1, 2 * sizeOfTimeSeries, timeSeries.dt)) // factor 2 since we will zeropad input
+        RealFFT.getFrequency(1, 2 * sizeOfTimeSeries, timeSeries.dt)) // factor 2 since we will zero-pad input
 
     /** Frame position on which the previousSpectrum is based on. -1 if there is not previous spectrum.n*/
     var previousFramePosition = -1
@@ -27,24 +32,31 @@ class FrequencyDetectionCollectedResults(val sizeOfTimeSeries: Int, val sampleRa
      */
     val previousSpectrum = FrequencySpectrum(frequencySpectrum.size, frequencySpectrum.df)
 
+    /** Functor for obtaining peak frequencies with increased accuracy. */
     val accuratePeakFrequency = AccurateSpectrumPeakFrequency(previousSpectrum, frequencySpectrum, 0f)
 
+    /** Auto correlation of the time series. */
     val autoCorrelation = AutoCorrelation(sizeOfTimeSeries + 1, timeSeries.dt)
 
     /** Relative noise in the signal (1->high noise, 0 -> low noise) */
     var noise = 0.0f
 
+    /** Detected frequency based on the autocorrelation. */
     val correlationBasedFrequency = CorrelationBasedFrequency(0f , 0f, 0f)
 
+    /** Object, storing the found harmonic frequencies of the signal. */
     val harmonics = Harmonics(sizeOfTimeSeries)
 
+    /** Contains statistics of the harmonics, most important the base frequency. */
     val harmonicStatistics = HarmonicStatistics()
 
+    /** Quick access of the base frequency, obtained through the harmonics in the frequency spectrum. */
     val frequency
         get() = if (harmonicStatistics.frequency != 0f)
             harmonicStatistics.frequency
         else correlationBasedFrequency.frequency
 
+    /** Inharmonicity of the tone. */
     var inharmonicity = 0f
 }
 
