@@ -84,7 +84,7 @@
     <string name="no_instruments_for_sharing">Neexistují žádné nástroje, které by bylo možné sdílet.</string>
     <string name="load_from_disk">Načíst nástroje ze souboru</string>
     <string name="save_to_disk">Uložit nástroje do souboru</string>
-    <string name="prefer_flat">Dávat přednost \\u266D před \\u266F</string>
+    <string name="prefer_flat">Dávat přednost \u266D před \u266F</string>
     <string name="viola_cgda">Viola</string>
     <string name="cello_cgda">Violoncello</string>
     <string name="double_bass_eadg">Kontrabas</string>
@@ -191,4 +191,16 @@
     <string name="equal_temperament_53_abbr">EDO 53</string>
     <string name="pythagorean_tuning_abbr">Pythagorejské</string>
     <string name="werckmeister_iv_abbr">Werckmeister IV</string>
+    <string name="c_solfege">Do</string>
+    <string name="d_solfege">Re</string>
+    <string name="e_solfege">Mi</string>
+    <string name="f_solfege">Fa</string>
+    <string name="g_solfege">Sol</string>
+    <string name="a_solfege">La</string>
+    <string name="b_solfege">Si</string>
+    <string name="solfege_notation">Zápis v solège</string>
+    <string name="capture">Nahrát</string>
+    <string name="capture_duration">Doba nahrávání: %d&#x200A;s</string>
+    <string name="no_capture_duration">Žádné nahrávání</string>
+    <string name="capture_in_scientific_mode">Nahrávat ve vědeckém režimu</string>
 </resources>
