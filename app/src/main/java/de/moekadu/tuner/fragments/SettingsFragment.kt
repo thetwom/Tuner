@@ -22,6 +22,7 @@ package de.moekadu.tuner.fragments
 import android.content.res.Configuration
 import android.os.Bundle
 import android.text.SpannableStringBuilder
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -161,6 +162,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
 //            setTemperamentAndReferenceNoteSummary(preferFlat = newValue as Boolean)
 //            true
 //        }
+
+        val notation = findPreference<ListPreference?>("notation")
+        notation?.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
+        Log.v("Tuner", "SettingsFragment: notation = ${notation?.value}")
 
         referenceNotePreference = findPreference("reference_note")
             ?: throw RuntimeException("no reference_note preference")

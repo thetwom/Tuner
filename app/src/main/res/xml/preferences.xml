@@ -62,12 +62,16 @@
             app:icon="@drawable/ic_prefer_flat"
             />
 
-        <SwitchPreferenceCompat
-            app:key="solfege"
-            app:title="@string/solfege_notation"
-            app:defaultValue="false"
+        <ListPreference
+            app:key="notation"
+            app:title="@string/notation"
+            app:defaultValue="standard"
+            android:entries="@array/notation_names"
+            android:entryValues="@array/notation_list"
+            app:summary="%s"
             app:icon="@drawable/ic_solfege"
             />
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/expert">

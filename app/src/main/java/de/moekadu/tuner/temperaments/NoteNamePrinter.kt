@@ -34,6 +34,17 @@ private val baseNoteSolfegeResourceIds = mapOf(
     BaseNote.B to R.string.b_solfege,
 )
 
+private val baseNoteInternationalResourceIds = mapOf(
+    BaseNote.C to R.string.c_note_international,
+    BaseNote.D to R.string.d_note_international,
+    BaseNote.E to R.string.e_note_international,
+    BaseNote.F to R.string.f_note_international,
+    BaseNote.G to R.string.g_note_international,
+    BaseNote.A to R.string.a_note_international,
+    BaseNote.B to R.string.b_note_international,
+)
+
+
 private val modifierPostfixStrings = mapOf(
     NoteModifier.None to "",
     NoteModifier.Sharp to "\uE10A",
@@ -75,12 +86,14 @@ private val specialNoteNameResourceIds = mapOf(
     NoteNameStem(BaseNote.A, NoteModifier.Sharp, BaseNote.B, NoteModifier.Flat) to R.string.asharp_bflat_note_name
 )
 
+enum class Notation {standard, solfege, international}
+
 enum class MusicalNotePrintOptions {
     None {
         override fun contains(modifier: NoteModifier): Boolean {
             return true
         }
-        override val isSolfege = false
+        override val notation = Notation.standard
         override val isPreferringFlat = false
     },
     PreferFlat {
@@ -90,7 +103,7 @@ enum class MusicalNotePrintOptions {
                 else -> false
             }
         }
-        override val isSolfege = false
+        override val notation = Notation.standard
         override val isPreferringFlat = true
     },
     PreferSharp {
@@ -100,7 +113,7 @@ enum class MusicalNotePrintOptions {
                 else -> false
             }
         }
-        override val isSolfege = false
+        override val notation = Notation.standard
         override val isPreferringFlat = false
     },
     SolfegePreferFlat {
@@ -110,7 +123,7 @@ enum class MusicalNotePrintOptions {
                 else -> false
             }
         }
-        override val isSolfege = true
+        override val notation = Notation.solfege
         override val isPreferringFlat = true
     },
     SolfegePreferSharp {
@@ -120,11 +133,31 @@ enum class MusicalNotePrintOptions {
                 else -> false
             }
         }
-        override val isSolfege = true
+        override val notation = Notation.solfege
+        override val isPreferringFlat = false
+    },
+    InternationalPreferFlat {
+        override fun contains(modifier: NoteModifier): Boolean {
+            return when (modifier) {
+                NoteModifier.Flat, NoteModifier.FlatUp, NoteModifier.FlatUpUp, NoteModifier.FlatDown, NoteModifier.FlatDownDown -> true
+                else -> false
+            }
+        }
+        override val notation = Notation.international
+        override val isPreferringFlat = true
+    },
+    InternationalPreferSharp {
+        override fun contains(modifier: NoteModifier): Boolean {
+            return when (modifier) {
+                NoteModifier.Sharp, NoteModifier.SharpUp, NoteModifier.SharpUpUp, NoteModifier.SharpDown, NoteModifier.SharpDownDown -> true
+                else -> false
+            }
+        }
+        override val notation = Notation.international
         override val isPreferringFlat = false
     };
     abstract fun contains(modifier: NoteModifier): Boolean
-    abstract val isSolfege: Boolean
+    abstract val notation: Notation
     abstract val isPreferringFlat: Boolean
 }
 
@@ -290,23 +323,25 @@ class NoteNamePrinter(private val context: Context) {
         val octaveIndex: Int
         val modifier: NoteModifier
 
-        if (specialNoteName != null && specialNoteName != "" && specialNoteName != "-" && !printOption.isSolfege) {
+        if (specialNoteName != null && specialNoteName != "" && specialNoteName != "-" && printOption.notation == Notation.standard) {
             octaveIndex = note.octave + note.octaveOffset
             baseNote = specialNoteName
             modifier = NoteModifier.None
         } else if (preferEnharmonic(note, printOption)) {
-            baseNote = if (printOption.isSolfege)
-                context.getString(baseNoteSolfegeResourceIds[note.enharmonicBase]!!)
-            else
-                context.getString(baseNoteResourceIds[note.enharmonicBase]!!)
+            baseNote = when (printOption.notation) {
+                Notation.solfege -> context.getString(baseNoteSolfegeResourceIds[note.enharmonicBase]!!)
+                Notation.international -> context.getString(baseNoteInternationalResourceIds[note.enharmonicBase]!!)
+                Notation.standard -> context.getString(baseNoteResourceIds[note.enharmonicBase]!!)
+            }
             modifier = note.enharmonicModifier
             octaveIndex =
                 if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else note.octave + note.enharmonicOctaveOffset
         } else {
-            baseNote = if (printOption.isSolfege)
-                context.getString(baseNoteSolfegeResourceIds[note.base]!!)
-            else
-                context.getString(baseNoteResourceIds[note.base]!!)
+            baseNote = when (printOption.notation) {
+                Notation.solfege -> context.getString(baseNoteSolfegeResourceIds[note.base]!!)
+                Notation.international -> context.getString(baseNoteInternationalResourceIds[note.base]!!)
+                Notation.standard -> context.getString(baseNoteResourceIds[note.base]!!)
+            }
             modifier = note.modifier
             octaveIndex = note.octave + note.octaveOffset
         }
@@ -321,10 +356,10 @@ class NoteNamePrinter(private val context: Context) {
             MusicalNotePrintOptions.None -> {
                 false
             }
-            MusicalNotePrintOptions.PreferSharp, MusicalNotePrintOptions.SolfegePreferSharp -> {
+            MusicalNotePrintOptions.PreferSharp, MusicalNotePrintOptions.SolfegePreferSharp, MusicalNotePrintOptions.InternationalPreferSharp -> {
                 note.enharmonicModifier.flatSharpIndex() > note.modifier.flatSharpIndex()
             }
-            MusicalNotePrintOptions.PreferFlat, MusicalNotePrintOptions.SolfegePreferFlat -> {
+            MusicalNotePrintOptions.PreferFlat, MusicalNotePrintOptions.SolfegePreferFlat, MusicalNotePrintOptions.InternationalPreferFlat -> {
                 note.enharmonicModifier.flatSharpIndex() < note.modifier.flatSharpIndex()
             }
         }

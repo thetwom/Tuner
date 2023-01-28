@@ -86,6 +86,19 @@
     <string name="a_solfege">La</string>
     <string name="b_solfege">Si</string>
 
+    <string name="c_note_international" translatable="false">C</string>
+    <string name="d_note_international" translatable="false">D</string>
+    <string name="e_note_international" translatable="false">E</string>
+    <string name="f_note_international" translatable="false">F</string>
+    <string name="g_note_international" translatable="false">G</string>
+    <string name="a_note_international" translatable="false">A</string>
+    <string name="b_note_international" translatable="false">B</string>
+
+    <string name="notation">Notation</string>
+    <string name="notation_standard">Default (A-B-C-...)</string>
+    <string name="notation_solfege">Solfège</string>
+    <string name="notation_international">International (A-B-C-...)</string>
+
     <string name="violin_gdae">Violin</string>
     <string name="abort">Abort</string>
     <string name="instrument_name">Instrument name</string>

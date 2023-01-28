@@ -46,10 +46,11 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
     val temperamentAndReferenceNote: StateFlow<TemperamentAndReferenceNoteValue> get() = _temperamentAndReferenceNote
 
     // we must store this explicitly outside the callback flow since otherwise this will be
-    // garbage collection, see docs:
+    // garbage collected, see docs:
     // https://developer.android.com/reference/android/content/SharedPreferences.html#registerOnSharedPreferenceChangeListener(android.content.SharedPreferences.OnSharedPreferenceChangeListener)
     lateinit var onSharedPreferenceChangedListener: SharedPreferences.OnSharedPreferenceChangeListener
     init {
+        runMigrations()
 
         val sharedPrefFlow = callbackFlow {
             onSharedPreferenceChangedListener =
@@ -83,7 +84,8 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
                     TOLERANCE_IN_CENTS_KEY -> _toleranceInCents.value = obtainToleranceInCents()
                     WAVE_WRITER_DURATION_IN_SECONDS -> _waveWriterDurationInSeconds.value = obtainWaveWriterDurationInSeconds()
                     PREFER_FLAT_KEY -> _notePrintOptions.value = obtainNotePrintOptions()
-                    SOLFEGE_KEY -> _notePrintOptions.value = obtainNotePrintOptions()
+                    NOTATION_KEY -> _notePrintOptions.value = obtainNotePrintOptions()
+                    //SOLFEGE_KEY -> _notePrintOptions.value = obtainNotePrintOptions()
                     TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY ->
                         _temperamentAndReferenceNote.value = obtainTemperamentAndReferenceNote()
                 }
@@ -102,6 +104,25 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
     }
 
     private fun obtainNotePrintOptions(): MusicalNotePrintOptions {
+        val preferFlat = sharedPreferences.getBoolean(PREFER_FLAT_KEY, false)
+        val notation = sharedPreferences.getString(NOTATION_KEY, "standard") ?: "standard"
+
+        return if (preferFlat) {
+            when (notation) {
+                "solfege" -> MusicalNotePrintOptions.SolfegePreferFlat
+                "international" -> MusicalNotePrintOptions.InternationalPreferFlat
+                else ->  MusicalNotePrintOptions.PreferFlat
+            }
+        } else {
+            when (notation) {
+                "solfege" -> MusicalNotePrintOptions.SolfegePreferSharp
+                "international" -> MusicalNotePrintOptions.InternationalPreferSharp
+                else ->  MusicalNotePrintOptions.PreferSharp
+            }
+        }
+    }
+
+    private fun obtainNotePrintOptionsOld(): MusicalNotePrintOptions {
         val preferFlat = sharedPreferences.getBoolean(PREFER_FLAT_KEY, false)
         val useSolfege = sharedPreferences.getBoolean(SOLFEGE_KEY, false)
 
@@ -141,10 +162,25 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
         WAVE_WRITER_DURATION_IN_SECONDS, 0)
     private fun obtainTemperamentAndReferenceNote() = TemperamentAndReferenceNoteValue.fromSharedPreferences(sharedPreferences)
 
+    private fun runMigrations() {
+        if (sharedPreferences.contains(SOLFEGE_KEY)) {
+            val isSolfege = sharedPreferences.getBoolean(SOLFEGE_KEY, false)
+            if (isSolfege) {
+                if (notePrintOptions.value.isPreferringFlat)
+                    _notePrintOptions.value = MusicalNotePrintOptions.SolfegePreferFlat
+                else
+                    _notePrintOptions.value = MusicalNotePrintOptions.SolfegePreferSharp
+                sharedPreferences.edit().putString(NOTATION_KEY, "solfege").apply()
+            }
+            sharedPreferences.edit().remove(SOLFEGE_KEY).apply()
+        }
+    }
+
     companion object {
         const val APPEARANCE_KEY = "appearance"
         const val PREFER_FLAT_KEY = "prefer_flat"
         const val SOLFEGE_KEY = "solfege"
+        const val NOTATION_KEY = "notation"
         const val WINDOWING_KEY = "windowing"
         const val OVERLAP_KEY = "overlap"
         const val WINDOW_SIZE_KEY = "window_size"

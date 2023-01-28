@@ -31,5 +31,15 @@
         <item>@string/append_current_list</item>
     </string-array>
 
+    <string-array name="notation_list">
+        <item>"standard"</item>
+        <item>"solfege"</item>
+        <item>"international"</item>
+    </string-array>
 
+    <string-array name="notation_names">
+        <item>@string/notation_standard</item>
+        <item>@string/notation_solfege</item>
+        <item>@string/notation_international</item>
+    </string-array>
 </resources>

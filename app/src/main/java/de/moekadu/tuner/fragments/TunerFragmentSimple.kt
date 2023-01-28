@@ -41,6 +41,7 @@ import de.moekadu.tuner.instruments.instrumentDatabase
 import de.moekadu.tuner.preferenceResources
 import de.moekadu.tuner.preferences.AppPreferences
 import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments.Notation
 import de.moekadu.tuner.temperaments.TargetNote
 import de.moekadu.tuner.viewmodels.InstrumentsViewModel
 import de.moekadu.tuner.viewmodels.TunerViewModel
@@ -181,8 +182,9 @@ class TunerFragmentSimple : Fragment() {
                     updatePitchPlotNoteNames()
                     updateStringViewNoteNames()
 
-                    pitchPlot?.enableExtraPadding = it.isSolfege
-                    stringView?.enableExtraPadding = it.isSolfege
+                    val needExtraPadding = (it.notation == Notation.solfege)
+                    pitchPlot?.enableExtraPadding = needExtraPadding
+                    stringView?.enableExtraPadding = needExtraPadding
                 }
             }
         }

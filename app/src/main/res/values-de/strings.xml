@@ -222,4 +222,8 @@
     <string name="g_solfege">Sol</string>
     <string name="a_solfege">La</string>
     <string name="b_solfege">Si</string>
+    <string name="notation">Schreibweise</string>
+    <string name="notation_standard">Standard (A-H-C-…)</string>
+    <string name="notation_solfege">Solfège</string>
+    <string name="notation_international">International (A-B-C-…)</string>
 </resources>

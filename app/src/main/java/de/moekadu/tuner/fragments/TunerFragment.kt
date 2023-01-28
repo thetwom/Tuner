@@ -39,6 +39,7 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.instrumentDatabase
 import de.moekadu.tuner.misc.WaveFileWriterIntent
 import de.moekadu.tuner.preferenceResources
+import de.moekadu.tuner.temperaments.Notation
 import de.moekadu.tuner.temperaments.TargetNote
 import de.moekadu.tuner.viewmodels.TunerViewModel
 import de.moekadu.tuner.views.*
@@ -189,10 +190,10 @@ class TunerFragment : Fragment() {
                 requireContext().preferenceResources.notePrintOptions.collect {
                     updatePitchPlotMarks(redraw = false)
                     updatePitchPlotNoteNames()
-
-                    pitchPlot?.enableExtraPadding = it.isSolfege
-                    spectrumPlot?.enableExtraPadding = it.isSolfege
-                    correlationPlot?.enableExtraPadding = it.isSolfege
+                    val needExtraPadding = (it.notation == Notation.solfege)
+                    pitchPlot?.enableExtraPadding = needExtraPadding
+                    spectrumPlot?.enableExtraPadding = needExtraPadding
+                    correlationPlot?.enableExtraPadding = needExtraPadding
                 }
             }
         }
