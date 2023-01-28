@@ -398,12 +398,20 @@ private class PlotTransformation {
         matrixRawToView.mapPoints(view, 0, raw, 0, numValues)
     }
 
+    fun transformRawToView(inOut: FloatArray) {
+        matrixRawToView.mapPoints(inOut)
+    }
+
     fun transformViewToRaw(view: FloatArray, raw: FloatArray, numValues: Int = view.size / 2) {
         matrixViewToRaw.mapPoints(raw, 0, view, 0, numValues)
     }
 
     fun transformViewToRaw(view: RectF, raw: RectF) {
         matrixViewToRaw.mapRect(raw, view)
+    }
+
+    fun transformVectorViewTorRaw(inOut: FloatArray) {
+        matrixViewToRaw.mapVectors(inOut)
     }
 
     fun registerTransformationChangedListener(transformationChangedListener: TransformationChangedListener) {
@@ -813,17 +821,15 @@ private class PlotMarks(transformation: PlotTransformation,
      */
     data class Mark(val xPositionRaw: Float, val yPositionRaw: Float, val index: Int, // val label: CharSequence?,
                     val anchor: LabelAnchor = LabelAnchor.Center) {
-        var xPositionTransformed = 0f
-        var yPositionTransformed = 0f
         /** Style with which the label was created. */
         var labelStyle = 0
         /** Label layout. */
         var layout: Label? = null
     }
 
-    /// Array of marks.
+    /** Array of marks. */
     private val marks = ArrayList<Mark>()
-    /// Flag which tells if this class contains marks or not.
+    /** Flag which tells if this class contains marks or not. */
     val hasMarks: Boolean get() = marks.size > 0
 
     /** null, if each label should have its own size, else the width to be used for all labels. */
@@ -878,6 +884,11 @@ private class PlotMarks(transformation: PlotTransformation,
             strokeWidth = lineWidths[it]
         }
     }
+
+    /** Stroke width of marks in x-raw coordinate space. */
+    private val strokeWidthsRawX = FloatArray(colors.size)
+    /** Stroke width of marks in y-raw coordinate space. */
+    private val strokeWidthsRawY = FloatArray(colors.size)
 
     /** Paint for drawing the label text. One paint for each style. */
     private val textPaints = Array(colors.size) {
@@ -1017,8 +1028,7 @@ private class PlotMarks(transformation: PlotTransformation,
             transformAndCallListener(transformation, !boundingBox.contentEquals(oldBoundingBox))
 
         if (xPositions == null && yPositions != null) {
-            // descending sort since later on we do a binary search by yPositionTransformed, which is inverse
-            marks.sortByDescending { it.yPositionRaw }
+            marks.sortBy { it.yPositionRaw }
             hasOnlyXLineMarks = true
             hasOnlyYLineMarks = false
         } else if (xPositions != null && yPositions == null) {
@@ -1057,6 +1067,7 @@ private class PlotMarks(transformation: PlotTransformation,
 
     fun drawToCanvas(canvas: Canvas?) {
         val viewBounds = transformation?.viewPlotBounds ?: return
+        val rawBounds = transformation?.rawPlotBounds ?: return
 
         if (marks.size == 0)
             return
@@ -1066,17 +1077,24 @@ private class PlotMarks(transformation: PlotTransformation,
 
         if (hasOnlyYLineMarks) {
             if (marks.size > 1)
-                require(marks[1].xPositionTransformed > marks[0].xPositionTransformed)
-            val maxLabelWidth = (maxLabelSizes[styleIndex]?.maxWidth ?: 0f) + 2 * labelPaddingHorizontal
-            startIndex = marks.binarySearchBy(viewBounds.left - maxLabelWidth) {it.xPositionTransformed}
-            endIndex = marks.binarySearchBy(viewBounds.right + maxLabelWidth) {it.xPositionTransformed}
+                require(marks[1].xPositionRaw > marks[0].xPositionRaw)
+            temporaryPointTransformed[0] = (maxLabelSizes[styleIndex]?.maxWidth ?: 0f) + 2 * labelPaddingHorizontal
+            temporaryPointTransformed[0] = max(temporaryPointTransformed[0], strokeWidthsRawY[styleIndex])
+            temporaryPointTransformed[1] = 0f
+            transformLabelSizeToRaw(transformation, temporaryPointTransformed, temporaryPointRaw)
+            val maxLabelWidthRaw = temporaryPointRaw[0]
+            startIndex = marks.binarySearchBy(rawBounds.left - maxLabelWidthRaw) {it.xPositionRaw}
+            endIndex = marks.binarySearchBy(rawBounds.right + maxLabelWidthRaw) {it.xPositionRaw}
         } else if (hasOnlyXLineMarks) {
             if (marks.size > 1)
-                require(marks[1].yPositionTransformed > marks[0].yPositionTransformed) // here we should also take equals, since marks could be at the same position, but then, we must make sure that the binary search finds the correct one
-            val maxLabelHeight = (maxLabelSizes[styleIndex]?.maxHeight ?: 0f) + 2 * labelPaddingVertical
-//             Log.v("StaticLayoutTest", "PlotView.drawToCanvas: maxLabelHeight = $maxLabelHeight")
-            startIndex = marks.binarySearchBy(viewBounds.top - maxLabelHeight) {it.yPositionTransformed}
-            endIndex = marks.binarySearchBy(viewBounds.bottom + maxLabelHeight) {it.yPositionTransformed}
+                require(marks[1].yPositionRaw > marks[0].yPositionRaw) // here we should also take equals, since marks could be at the same position, but then, we must make sure that the binary search finds the correct one
+            temporaryPointTransformed[0] = 0f
+            temporaryPointTransformed[1] = (maxLabelSizes[styleIndex]?.maxHeight ?: 0f) + 2 * labelPaddingVertical
+            temporaryPointTransformed[1] = max(temporaryPointTransformed[1], strokeWidthsRawX[styleIndex])
+            transformLabelSizeToRaw(transformation, temporaryPointTransformed, temporaryPointRaw)
+            val maxLabelHeightRaw = temporaryPointRaw[1]
+            startIndex = marks.binarySearchBy(rawBounds.top - maxLabelHeightRaw) {it.yPositionRaw}
+            endIndex = marks.binarySearchBy(rawBounds.bottom + maxLabelHeightRaw) {it.yPositionRaw}
         }
 
         if(startIndex < 0)
@@ -1087,17 +1105,20 @@ private class PlotMarks(transformation: PlotTransformation,
         for (i in startIndex until endIndex) {
             val mark = marks[i]
             // only plot if mark is within bounds
-            var x = mark.xPositionTransformed
-            var y = mark.yPositionTransformed
+            val xRaw = mark.xPositionRaw
+            val yRaw = mark.yPositionRaw
+            transformPointToView(transformation, xRaw, yRaw, temporaryPointTransformed)
+            var x = temporaryPointTransformed[0]
+            var y = temporaryPointTransformed[1]
             // horizontal line
-            if (x == DRAW_LINE && y > viewBounds.top && y < viewBounds.bottom) {
+            if (xRaw == DRAW_LINE && yRaw > rawBounds.top && yRaw < rawBounds.bottom) {
                 path.rewind()
                 path.moveTo(viewBounds.left, y)
                 path.lineTo(viewBounds.right, y)
                 canvas?.drawPath(path, linePaints[styleIndex])
             }
             // vertical line
-            else if (y == DRAW_LINE && x > viewBounds.left && x < viewBounds.right) {
+            else if (yRaw == DRAW_LINE && xRaw > rawBounds.left && xRaw < rawBounds.right) {
                 path.rewind()
                 path.moveTo(x, viewBounds.bottom)
                 path.lineTo(x, viewBounds.top)
@@ -1107,7 +1128,7 @@ private class PlotMarks(transformation: PlotTransformation,
             var labelAnchorResolved: LabelAnchor
             getLabelFromMark(mark, styleIndex)?.let { layout ->
                 // override mark position based on anchor
-                if (x == DRAW_LINE) {
+                if (xRaw == DRAW_LINE) {
                     x = when (mark.anchor) {
                             LabelAnchor.Center, LabelAnchor.North, LabelAnchor.South, LabelAnchor.Baseline -> viewBounds.centerX()
                             LabelAnchor.West, LabelAnchor.NorthWest, LabelAnchor.SouthWest, LabelAnchor.BaselineWest -> viewBounds.left
@@ -1181,13 +1202,11 @@ private class PlotMarks(transformation: PlotTransformation,
         }
     }
 
-    fun transformAndCallListener(transformation: PlotTransformation?, hasNewBoundingBox: Boolean) {
-        for (m in marks) {
-            temporaryPointRaw[0] = if (m.xPositionRaw == DRAW_LINE) 0f else m.xPositionRaw
-            temporaryPointRaw[1] = if (m.yPositionRaw == DRAW_LINE) 0f else m.yPositionRaw
-            transformation?.transformRawToView(temporaryPointRaw, temporaryPointTransformed)
-            m.xPositionTransformed = if (m.xPositionRaw == DRAW_LINE) DRAW_LINE else temporaryPointTransformed[0]
-            m.yPositionTransformed = if (m.yPositionRaw == DRAW_LINE) DRAW_LINE else temporaryPointTransformed[1]
+    fun transformAndCallListener(transform: PlotTransformation?, hasNewBoundingBox: Boolean) {
+        lineWidths.forEachIndexed { index, lineWidth ->
+            transformStrokeWidthToRaw(transform, lineWidth, temporaryPointTransformed)
+            strokeWidthsRawX[index] = temporaryPointTransformed[0]
+            strokeWidthsRawY[index] = temporaryPointTransformed[1]
         }
 
         plotMarksChangedListener?.onPlotMarksChanged(this, hasNewBoundingBox)
@@ -1195,6 +1214,32 @@ private class PlotMarks(transformation: PlotTransformation,
 
     override fun transform(transform: PlotTransformation?) {
         transformAndCallListener(transform, hasNewBoundingBox = false)
+    }
+
+    private fun transformStrokeWidthToRaw(transform: PlotTransformation?, strokeWidth: Float, result: FloatArray) {
+        require(result.size == 2)
+        result[0] = strokeWidth
+        result[1] = strokeWidth
+        transform?.transformVectorViewTorRaw(result)
+        result[0] = result[0].absoluteValue
+        result[1] = result[1].absoluteValue
+    }
+
+    private fun transformLabelSizeToRaw(transform: PlotTransformation?, labelSize: FloatArray, rawLabelSize: FloatArray) {
+        require(labelSize.size == 2)
+        require(rawLabelSize.size == 2)
+        labelSize.copyInto(rawLabelSize)
+        transform?.transformVectorViewTorRaw(rawLabelSize)
+        rawLabelSize[0] = rawLabelSize[0].absoluteValue
+        rawLabelSize[1] = rawLabelSize[1].absoluteValue
+    }
+
+    private fun transformPointToView(transform: PlotTransformation?, xRaw: Float, yRaw: Float, result: FloatArray) {
+        result[0] = if (xRaw == DRAW_LINE) 0f else xRaw
+        result[1] = if (yRaw == DRAW_LINE) 0f else yRaw
+        transform?.transformRawToView(result)
+        result[0] = if (xRaw == DRAW_LINE) DRAW_LINE else result[0]
+        result[1] = if (yRaw == DRAW_LINE) DRAW_LINE else result[1]
     }
 
     /** Check if a mark is in the currently shown view.
@@ -1265,7 +1310,7 @@ private class PlotMarks(transformation: PlotTransformation,
         var maxDistanceAboveBaseline = 0f
         var maxDistanceBelowBaseline = 0f
         var verticalCenterAboveBaseline = 0f
-        marks.forEachIndexed { index, mark ->
+        marks.forEach { mark ->
             val label = getLabelFromMark(mark, styleIndex)
             maxWidth = max(label?.labelWidth ?: 0f, maxWidth)
             maxHeight = max(label?.labelHeight ?: 0f, maxHeight)
@@ -1301,6 +1346,39 @@ private class PlotMarks(transformation: PlotTransformation,
     }
 }
 
+private class AdaptiveMarks {
+    private class MarksWithRange(val marks: PlotMarks, val range: Float)
+    private val marksWithRange = ArrayList<MarksWithRange>()
+
+    private var maxNumMarks = 5 // TODO: this should depend on the label sizes
+    // required:
+    // - maximum width / height OR number of marks
+    // - minimum distance between marks (we assume that the marks are roughly equally distributed)
+    // function which gets raw range (only distance, no min/max) and returns the number of marks
+    // or better: mapping from raw-range to Marks-class
+
+    fun getMarks(range: Float): PlotMarks {
+        val marksIdx = marksWithRange.binarySearchBy(range) { it.range }
+        val resolvedIdx = if (marksIdx >= 0)
+            marksIdx
+        else
+            min(max(0, -marksIdx - 2), marksWithRange.size - 1)
+        return marksWithRange[resolvedIdx].marks
+    }
+
+    fun addMarks(marks: PlotMarks, minMarkDistanceRaw: Float) {
+        val range = minMarkDistanceRaw * (maxNumMarks + 1)
+        val marksIdx = marksWithRange.binarySearchBy(range) { it.range }
+        if (marksIdx >= 0)
+            marksWithRange[marksIdx] = MarksWithRange(marks, range)
+        else
+            marksWithRange.add(-marksIdx - 1, MarksWithRange(marks, range))
+    }
+
+    fun setMaxNumMarks(sizeView: Float, maxLabelSize: Float) {
+        maxNumMarks = (sizeView / maxLabelSize / 1.2f).toInt()
+    }
+}
 //class AutoTicks(
 //    private val tickDistance: Float,
 //    private val precision: Int,
