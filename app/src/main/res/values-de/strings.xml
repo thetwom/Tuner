@@ -222,4 +222,9 @@
     <string name="g_solfege">Sol</string>
     <string name="a_solfege">La</string>
     <string name="b_solfege">Si</string>
+    <string name="czech">Tschechisch</string>
+    <string name="german">Deutsch</string>
+    <string name="english">Englisch</string>
+    <string name="french">Französisch</string>
+    <string name="language">Sprache</string>
 </resources>

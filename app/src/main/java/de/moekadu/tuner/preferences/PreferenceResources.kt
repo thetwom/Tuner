@@ -10,16 +10,15 @@ import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class PreferenceResources(private val sharedPreferences: SharedPreferences, scope: CoroutineScope) {
 
     private val _appearance = MutableStateFlow(obtainAppearance())
     val appearance: StateFlow<AppearancePreference.Value> get() = _appearance
+    private val _language = MutableStateFlow(obtainLanguage())
+    val language = _language.asStateFlow()
     private val _windowing = MutableStateFlow(obtainWindowing())
     val windowing: StateFlow<WindowingFunction> get() = _windowing
     private val _overlap = MutableStateFlow(obtainOverlap())
@@ -73,6 +72,7 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
             sharedPrefFlow.buffer(Channel.CONFLATED).collect { key ->
                 when (key) {
                     APPEARANCE_KEY -> _appearance.value = obtainAppearance()
+                    LANGUAGE_KEY -> _language.value = obtainLanguage()
                     WINDOWING_KEY -> _windowing.value = obtainWindowing()
                     OVERLAP_KEY -> _overlap.value = obtainOverlap()
                     PITCH_HISTORY_DURATION_KEY -> _pitchHistoryDuration.value = obtainPitchHistoryDuration()
@@ -99,6 +99,10 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
         value.fromString(sharedPreferences.getString(APPEARANCE_KEY, ""))
         //Log.v("Tuner", "PreferenceResources.obtainAppearance: value: ${sharedPreferences.getString(APPEARANCE_KEY, "")}, $value")
         return value
+    }
+
+    private fun obtainLanguage(): String {
+        return sharedPreferences.getString(LANGUAGE_KEY, null) ?: "en"
     }
 
     private fun obtainNotePrintOptions(): MusicalNotePrintOptions {
@@ -143,6 +147,7 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
 
     companion object {
         const val APPEARANCE_KEY = "appearance"
+        const val LANGUAGE_KEY = "language"
         const val PREFER_FLAT_KEY = "prefer_flat"
         const val SOLFEGE_KEY = "solfege"
         const val WINDOWING_KEY = "windowing"

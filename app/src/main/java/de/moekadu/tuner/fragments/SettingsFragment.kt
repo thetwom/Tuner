@@ -27,6 +27,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -128,6 +129,18 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 }
             }
         }
+
+        val languagePreference = findPreference<ListPreference?>("language")
+            ?: throw RuntimeException("No language preference")
+        languagePreference.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
+        languagePreference.setOnPreferenceChangeListener { _, newValue ->
+            val appLocale = LocaleListCompat.forLanguageTags(newValue as String)
+            AppCompatDelegate.setApplicationLocales(appLocale)
+            true
+        }
+        val locale = AppCompatDelegate.getApplicationLocales().get(0)?.language
+        languagePreference.value = locale
+
 
         val screenOnPreference = findPreference<SwitchPreferenceCompat?>("screenon")
             ?: throw RuntimeException("No screenon preference")
