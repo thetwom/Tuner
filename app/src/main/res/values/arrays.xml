@@ -31,17 +31,5 @@
         <item>@string/append_current_list</item>
     </string-array>
 
-    <string-array name="language_list">
-        <item>"cs"</item>
-        <item>"de"</item>
-        <item>"en"</item>
-        <item>"fr"</item>
-    </string-array>
 
-    <string-array name="language_names">
-        <item>@string/czech</item>
-        <item>@string/german</item>
-        <item>@string/english</item>
-        <item>@string/french</item>
-    </string-array>
 </resources>

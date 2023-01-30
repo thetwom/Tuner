@@ -23,17 +23,6 @@
 <!--        android:summary="@string/system_appearance"-->
 <!--        />-->
 
-
-        <ListPreference
-            app:key="language"
-            app:title="@string/language"
-            android:entries="@array/language_names"
-            android:entryValues="@array/language_list"
-            android:defaultValue="en"
-            android:icon="@drawable/ic_language"
-            android:summary="@string/english"
-            />
-
         <SwitchPreferenceCompat
             app:key="screenon"
             app:title="@string/keep_screen_on"

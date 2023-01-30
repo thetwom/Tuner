@@ -239,10 +239,4 @@
     <string name="no_capture_duration">Disable capturing</string>
     <string name="capture_in_scientific_mode">Capture in scientific mode</string>
     <string name="solfege_notation">Solfège notation</string>
-
-    <string name="czech">Czech</string>
-    <string name="german">German</string>
-    <string name="english">English</string>
-    <string name="french">French</string>
-    <string name="language">Language</string>
 </resources>
