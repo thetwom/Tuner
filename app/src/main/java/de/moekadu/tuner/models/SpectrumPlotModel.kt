@@ -1,5 +1,6 @@
 package de.moekadu.tuner.models
 
+import android.util.Log
 import de.moekadu.tuner.notedetection.FrequencySpectrum
 import de.moekadu.tuner.notedetection.Harmonics
 import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
@@ -31,8 +32,8 @@ class SpectrumPlotModel {
     // the following values will be changed together with targetChangeId
     var targetFrequency = -1f
         private set
-    var frequencyRange = FloatArray(2) { 0f }
-        private set
+    val frequencyRange = FloatArray(2) { 0f }
+
     var targetChangeId = changeId
         private set
 
@@ -47,6 +48,7 @@ class SpectrumPlotModel {
         targetFrequency: Float = -1f,
         notePrintOptions: MusicalNotePrintOptions? = null
     ) {
+
         ++changeId
         frequencySpectrum?.let {
             if (frequencies.size != it.size) {
@@ -78,7 +80,8 @@ class SpectrumPlotModel {
 
         if (targetFrequency > 0f) {
             this.targetFrequency = targetFrequency
-            frequencyRange[1] = min(3.5f * targetFrequency, frequencies.lastOrNull() ?: Float.MAX_VALUE)
+            Log.v("Tuner", "SpectrumPlotModel.changeSettings: frequencies.size()=${frequencies.size}")
+            frequencyRange[1] = min(3.5f * this.targetFrequency, frequencies.lastOrNull() ?: Float.MAX_VALUE)
             targetChangeId = changeId
         }
 
