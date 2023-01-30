@@ -140,6 +140,7 @@
         android:max="100"
         app:seekBarIncrement="1"
         app:updatesContinuously="true"
+        app:icon="@drawable/ic_duration"
         />
 
     <SeekBarPreference
@@ -150,6 +151,7 @@
         android:max="100"
         app:seekBarIncrement="1"
         app:updatesContinuously="true"
+        app:icon="@drawable/ic_noise"
         />
     <SeekBarPreference
         android:key="pitch_history_num_faulty_values"
@@ -160,6 +162,7 @@
         app:seekBarIncrement="1"
         app:updatesContinuously="true"
         app:singleLineTitle="false"
+        app:icon="@drawable/ic_jump"
         />
 
     <SwitchPreferenceCompat
