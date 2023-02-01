@@ -248,6 +248,7 @@ class PlotRange(private val allowTouchControl: Boolean = true)  {
         return SavedState(fixedRange = fixedRange, touchBasedRange = touchBasedRange,
             dataRange = dataRange, ticksRange = ticksRange)
     }
+
     fun restore(state: SavedState) {
         setTicksRange(state.ticksRange[0], state.ticksRange[1])
         setDataRange(state.dataRange[0], state.dataRange[1])
@@ -856,9 +857,9 @@ private class PlotMarks(transformation: PlotTransformation,
     /** Path class to draw the lines of x-marks or y-marks. */
     private val path = Path()
     /** Flag if class contains only x-line marks. */
-    private var hasOnlyXLineMarks = false
+    private var hasOnlyYMarks = false
     /** Flag if class contains only y-line marks. */
-    private var hasOnlyYLineMarks = false
+    private var hasOnlyXMarks = false
 
     /** Paint used for drawing label backgrounds, one for each style. If null, no label background
      * will be drawn.
@@ -1029,15 +1030,15 @@ private class PlotMarks(transformation: PlotTransformation,
 
         if (xPositions == null && yPositions != null) {
             marks.sortBy { it.yPositionRaw }
-            hasOnlyXLineMarks = true
-            hasOnlyYLineMarks = false
+            hasOnlyYMarks = true
+            hasOnlyXMarks = false
         } else if (xPositions != null && yPositions == null) {
             marks.sortBy { it.xPositionRaw }
-            hasOnlyXLineMarks = false
-            hasOnlyYLineMarks = true
+            hasOnlyYMarks = false
+            hasOnlyXMarks = true
         } else {
-            hasOnlyXLineMarks = false
-            hasOnlyYLineMarks = false
+            hasOnlyYMarks = false
+            hasOnlyXMarks = false
         }
     }
 
@@ -1075,7 +1076,7 @@ private class PlotMarks(transformation: PlotTransformation,
         var startIndex = 0
         var endIndex = marks.size
 
-        if (hasOnlyYLineMarks) {
+        if (hasOnlyXMarks) {
             if (marks.size > 1)
                 require(marks[1].xPositionRaw > marks[0].xPositionRaw)
             temporaryPointTransformed[0] = (maxLabelSizes[styleIndex]?.maxWidth ?: 0f) + 2 * labelPaddingHorizontal
@@ -1085,7 +1086,7 @@ private class PlotMarks(transformation: PlotTransformation,
             val maxLabelWidthRaw = temporaryPointRaw[0]
             startIndex = marks.binarySearchBy(rawBounds.left - maxLabelWidthRaw) {it.xPositionRaw}
             endIndex = marks.binarySearchBy(rawBounds.right + maxLabelWidthRaw) {it.xPositionRaw}
-        } else if (hasOnlyXLineMarks) {
+        } else if (hasOnlyYMarks) {
             if (marks.size > 1)
                 require(marks[1].yPositionRaw > marks[0].yPositionRaw) // here we should also take equals, since marks could be at the same position, but then, we must make sure that the binary search finds the correct one
             temporaryPointTransformed[0] = 0f
@@ -1210,6 +1211,26 @@ private class PlotMarks(transformation: PlotTransformation,
         }
 
         plotMarksChangedListener?.onPlotMarksChanged(this, hasNewBoundingBox)
+    }
+
+    fun numXMarksWithinRange(minValue: Float, maxValue: Float): Int {
+        require(hasOnlyXMarks)
+        val startIndex = marks.binarySearchBy(minValue) {it.xPositionRaw}
+        val endIndex = marks.binarySearchBy(maxValue) {it.xPositionRaw}
+
+        val startIndexResolved  = if (startIndex < 0) -startIndex - 1 else startIndex
+        val endIndexResolved  = if (endIndex < 0) -endIndex - 1 else endIndex + 1
+        return endIndexResolved - startIndexResolved
+    }
+
+    fun numYMarksWithinRange(minValue: Float, maxValue: Float): Int {
+        require(hasOnlyYMarks)
+        val startIndex = marks.binarySearchBy(minValue) {it.yPositionRaw}
+        val endIndex = marks.binarySearchBy(maxValue) {it.yPositionRaw}
+
+        val startIndexResolved  = if (startIndex < 0) -startIndex - 1 else startIndex
+        val endIndexResolved  = if (endIndex < 0) -endIndex - 1 else endIndex + 1
+        return endIndexResolved - startIndexResolved
     }
 
     override fun transform(transform: PlotTransformation?) {
@@ -1358,12 +1379,15 @@ private class AdaptiveMarks {
     // or better: mapping from raw-range to Marks-class
 
     fun getMarks(range: Float): PlotMarks {
-        val marksIdx = marksWithRange.binarySearchBy(range) { it.range }
-        val resolvedIdx = if (marksIdx >= 0)
-            marksIdx
-        else
-            min(max(0, -marksIdx - 2), marksWithRange.size - 1)
-        return marksWithRange[resolvedIdx].marks
+//        val marksIdx = marksWithRange.binarySearchBy(range) { it.range }
+//        val resolvedIdx = if (marksIdx >= 0)
+//            marksIdx
+//        else
+//            min(max(0, -marksIdx - 2), marksWithRange.size - 1)
+//        return marksWithRange[resolvedIdx].marks
+
+        // instead loop over all Marks (maybe cache last used one)
+        // find the one where PlotMarks.numX/YMarksWithinRange matches best
     }
 
     fun addMarks(marks: PlotMarks, minMarkDistanceRaw: Float) {

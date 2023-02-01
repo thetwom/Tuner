@@ -11,7 +11,7 @@ class SpectrumPlotModel {
     var changeId = 0
         private set
 
-    // the following values will be changed togehter with noteDetectionChangedId
+    // the following values will be changed together with noteDetectionChangedId
     var frequencies = FloatArray(0)
         private set
     var squaredAmplitudes = FloatArray(0)
