@@ -10,10 +10,10 @@ import kotlin.math.roundToInt
  */
 
 /** Note names, which can map indices between musical notes and via verse.
- * * @param notes Scale of note names, must contain the referenceNote. The octaves of
+ * @param notes Scale of note names, must contain the referenceNote. The octaves of
  *   the notes are not needed and must not be set.
  * @param defaultReferenceNote Reference note of the scale, which refers to noteIndex 0.
- *   This note must be part of the notes-array given as first argument.
+ *   This note must be part of the notes-array.
  */
 class NoteNameScale(
     val notes: Array<MusicalNote>,
