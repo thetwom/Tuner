@@ -6,6 +6,7 @@ import android.graphics.Rect
 import android.text.StaticLayout
 import android.text.TextPaint
 import androidx.core.graphics.withTranslation
+import kotlin.math.absoluteValue
 import kotlin.math.max
 
 class StringLabel(string: String, paint: TextPaint,
@@ -62,8 +63,14 @@ class StringLabel(string: String, paint: TextPaint,
     }
 
     companion object {
-        fun getBounds(string: String, paint: TextPaint, rect: Rect) {
-            paint.getTextBounds(string, 0, string.length, rect)
+        fun getBounds(string: String, paint: TextPaint): LabelSetBounds {
+            val bounds = Rect()
+            paint.getTextBounds(string, 0, string.length, bounds)
+            return LabelSetBounds(
+                bounds.width().toFloat(), bounds.height().toFloat(),
+                paint.ascent().absoluteValue, paint.descent().absoluteValue,
+                0.5f * (paint.ascent() + paint.descent())
+            )
         }
     }
 }

@@ -42,6 +42,7 @@ import de.moekadu.tuner.preferenceResources
 import de.moekadu.tuner.viewmodels.TunerViewModel
 import de.moekadu.tuner.views.*
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 class TunerFragment : Fragment() {
     val viewModel: TunerViewModel by viewModels {
@@ -110,45 +111,11 @@ class TunerFragment : Fragment() {
         volumeMeter = view.findViewById(R.id.volume_meter)
         recordFab = view.findViewById(R.id.record)
 
-        spectrumPlot?.setXTicks(
-            floatArrayOf(0f, 250f, 500f, 750f, 1000f, 1250f, 1500f, 1750f, 2000f, 2250f, 2500f,
-                2750f, 3000f, 3250f, 3500f, 3750f, 4000f, 4500f, 5000f, 5500f, 6000f,
-                6500f, 7000f, 7500f, 8000f, 8500f, 9000f, 9500f, 10000f, 11000f, 12000f, 13000f, 14000f,
-                15000f, 16000f, 17000f, 18000f, 19000f, 20000f, 25000f, 30000f, 35000f, 40000f)
-        ) { _, i ->
-            getString(R.string.hertz, i)
-        }
+        addTicksToSpectrumPlot()
         spectrumPlot?.setYTouchLimits(0f, Float.POSITIVE_INFINITY)
 
-        correlationPlot?.setXTicks(
-            floatArrayOf(
-                1 / 1600f,
-                1 / 150f,
-                1 / 80f,
-                1 / 50f,
-                1 / 38f,
-                1 / 30f,
-                1 / 25f,
-                1 / 20f,
-                1 / 17f,
-                1 / 15f,
-                1 / 13f,
-                1 / 11f,
-                1 / 10f,
-                1 / 9f,
-                1 / 8f,
-                1 / 7f,
-                1 / 6f,
-                1 / 5f,
-                1 / 4f,
-                1 / 3f,
-                1 / 2f,
-                1 / 1f,
-            )
-        ) { _, i ->
-            getString(R.string.hertz, 1 / i)
-        }
-        correlationPlot?.setYTicks(floatArrayOf(0f)) { _, _ -> "" }
+        addTicksToCorrelationPlot()
+        correlationPlot?.addYTicksLevel(floatArrayOf(0f)) { _, _ -> "" }
 
         viewModel.spectrumPlotModel.observe(viewLifecycleOwner) { model ->
 //            Log.v("Tuner", "TunerFragment: spectrumModel.observe: changeId=${model.changeId}, noteDetectionId=${model.noteDetectionChangeId}, targetId=${model.targetChangeId}")
@@ -214,11 +181,7 @@ class TunerFragment : Fragment() {
                 pitchPlotChangeId = -1
 
             if (model.musicalScaleChangeId > pitchPlotChangeId || model.notePrintOptionsChangeId > pitchPlotChangeId) {
-                pitchPlot?.setYTicks(model.musicalScaleFrequencies,
-                    noteNameScale = model.musicalScale.noteNameScale,
-                    noteIndexBegin = model.musicalScale.noteIndexBegin,
-                    notePrintOptions = model.notePrintOptions
-                )
+                addTicksToHistoryPlot(model)
 
                 pitchPlot?.setYTouchLimits(model.musicalScaleFrequencies[0], model.musicalScaleFrequencies.last(), 0L)
                 pitchPlot?.enableExtraPadding = model.useExtraPadding
@@ -349,6 +312,73 @@ class TunerFragment : Fragment() {
     override fun onStop() {
         viewModel.stopSampling()
         super.onStop()
+    }
+
+    private fun addTicksToSpectrumPlot() {
+        val resolutions = intArrayOf(10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000)
+        val maxValue = 50_000
+        for (resolution in resolutions) {
+            val numValues = if (maxValue % resolution == 0)
+                maxValue / resolution + 1
+            else
+                maxValue / resolution
+            val ticks = FloatArray(numValues) { (it * resolution).toFloat() }
+            spectrumPlot?.addXTicksLevel(
+                ticks,
+                maxLabelBounds = { paint ->
+                    val longestLabel = getString(R.string.hertz_str, maxValue.toString())
+                    StringLabel.getBounds(longestLabel, paint)
+                },
+                labelCreator = { i, _, _, paint, backgroundPaint, gravity, paddingHorizontal, paddingVertical, cornerRadius ->
+                    StringLabel(
+                        getString(R.string.hertz_str, (i * resolution).toString()),
+                        paint, backgroundPaint, cornerRadius, gravity,
+                        paddingHorizontal, paddingHorizontal,
+                        paddingVertical, paddingVertical
+                    )
+                }
+            )
+        }
+    }
+
+    private fun addTicksToCorrelationPlot() {
+        val resolutions = floatArrayOf(0.0001f, 0.0002f, 0.0004f, 0.0008f, 0.0016f, 0.0032f, 0.0064f, 0.0128f, 0.0256f)
+        val maxValue = 0.1f
+        for (resolution in resolutions) {
+            val numValues = (maxValue / resolution).toInt()
+            val ticks = FloatArray(numValues) {
+                val proposedTick = (it + 1) * resolution // we can't use 0 * resolution, otherwise we get division by zero later ...
+                val closestIntegerFrequency = (1.0f / proposedTick).roundToInt()
+                1.0f / closestIntegerFrequency
+            }
+            correlationPlot?.addXTicksLevel(
+                ticks,
+                maxLabelBounds = { paint ->
+                    val longestLabel = getString(R.string.hertz_str, (1.0 / resolutions[0]).roundToInt().toString())
+                    StringLabel.getBounds(longestLabel, paint)
+                },
+                labelCreator = { i, _, _, paint, backgroundPaint, gravity, paddingHorizontal, paddingVertical, cornerRadius ->
+                    val proposedTick = (i + 1) * resolution // do it the same way as the ticks-computation a few lines before
+                    val closestIntegerFrequency = (1.0f / proposedTick).roundToInt()
+                    StringLabel(
+                        getString(R.string.hertz_str, closestIntegerFrequency.toString()),
+                        paint, backgroundPaint, cornerRadius, gravity,
+                        paddingHorizontal, paddingHorizontal,
+                        paddingVertical, paddingVertical
+                    )
+                }
+            )
+        }
+    }
+
+    private fun addTicksToHistoryPlot(model: PitchHistoryModel) {
+        pitchPlot?.clearYTicks()
+
+        pitchPlot?.addYTicksLevel(model.musicalScaleFrequencies,
+            noteNameScale = model.musicalScale.noteNameScale,
+            noteIndexBegin = model.musicalScale.noteIndexBegin,
+            notePrintOptions = model.notePrintOptions
+        )
     }
 
     companion object{

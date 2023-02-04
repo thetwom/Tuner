@@ -204,7 +204,7 @@ class TunerFragmentSimple : Fragment() {
                 pitchPlotChangeId = -1
 
             if (model.musicalScaleChangeId > pitchPlotChangeId || model.notePrintOptionsChangeId > pitchPlotChangeId) {
-                pitchPlot?.setYTicks(model.musicalScaleFrequencies,
+                pitchPlot?.addYTicksLevel(model.musicalScaleFrequencies,
                     noteNameScale = model.musicalScale.noteNameScale,
                     noteIndexBegin = model.musicalScale.noteIndexBegin,
                     notePrintOptions = model.notePrintOptions
