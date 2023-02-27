@@ -24,8 +24,10 @@ fun NoteModifier.flatSharpIndex(): Int {
     return this.ordinal - NoteModifier.None.ordinal
 }
 
-data class NoteNameStem(val baseNote: BaseNote, val modifier: NoteModifier,
-                        val enharmonicBaseNote: BaseNote, val enharmonicModifier: NoteModifier) {
+data class NoteNameStem(val baseNote: BaseNote,
+                        val modifier: NoteModifier = NoteModifier.None,
+                        val enharmonicBaseNote: BaseNote = BaseNote.None,
+                        val enharmonicModifier: NoteModifier = NoteModifier.None) {
     companion object {
         fun fromMusicalNote(note: MusicalNote): NoteNameStem {
             return NoteNameStem(note.base, note.modifier, note.enharmonicBase, note.enharmonicModifier)

@@ -16,10 +16,7 @@ import androidx.core.view.ViewCompat
 import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
-import de.moekadu.tuner.temperaments.NoteNamePrinter
-import de.moekadu.tuner.temperaments.NoteNameScale
+import de.moekadu.tuner.temperaments.*
 import kotlin.math.*
 
 class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
@@ -112,15 +109,12 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private val gestureDetector = GestureDetector(context, gestureListener)
 
     /** Class for measuring and printing notes. */
-    private val noteNamePrinter = NoteNamePrinter(context)
+    private var noteNamePrinter = createNoteNamePrinter(context, NotationType.Standard, NoteNamePrinter.SharpFlatPreference.None)
 
     /** For each style we store the label of all notes.
      *  We use lazy creation, so they are only non-null if needed.
      */
     private val noteLabels = Array<Array<MusicalNoteLabel?> >(NUM_STYLES) { arrayOf(null) }
-
-    /** Print options for printing the notes (prefer flat/sharp ...). */
-    private var notePrintOptions = MusicalNotePrintOptions.None
 
     /** Paint for drawing the labels.
      *  Index 0 is the paint which draws the active note (the one inside the rectangle window)
@@ -258,7 +252,6 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 octaveEnd,
                 textPaint,
                 noteNamePrinter,
-                printOptions = this.notePrintOptions,
                 enableOctaveIndex = enableOctaveIndex
             )
             maxHeight = max(maxHeight, measures.maxDistanceAboveBaseline + measures.maxDistanceBelowBaseline)
@@ -333,8 +326,11 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                     existingLabel
                 } else {
                     val newLabel = noteNameScale?.let { scale ->
-                        MusicalNoteLabel(scale.getNoteOfIndex(arrayIndex + noteIndexBegin), labelPaint[styleIndex], noteNamePrinter,
-                            printOptions = notePrintOptions, enableOctaveIndex = enableOctaveIndex)
+                        MusicalNoteLabel(
+                            scale.getNoteOfIndex(arrayIndex + noteIndexBegin),
+                            labelPaint[styleIndex], noteNamePrinter,
+                            enableOctaveIndex = enableOctaveIndex
+                        )
                     }
                     noteLabels[styleIndex][arrayIndex] = newLabel
                     newLabel
@@ -363,11 +359,11 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param noteNameScale Note names.
      * @param newActiveNote Set the new note to this value if possible. If this is null, we
      *   keep the selected value. If it is not part of the new scale, we choose something.
-     * @param notePrintOptions Options for printing the label (prefer flat/sharp, ...)
+     * @param noteNamePrinter Object which does note name printing.
      */
     fun setNotes(noteIndexBegin: Int, noteIndexEnd: Int, noteNameScale: NoteNameScale,
-                 newActiveNote: MusicalNote?, notePrintOptions: MusicalNotePrintOptions) {
-        this.notePrintOptions = notePrintOptions
+                 newActiveNote: MusicalNote?, noteNamePrinter: NoteNamePrinter) {
+        this.noteNamePrinter = noteNamePrinter
         val activeNoteBackup = activeNote
         val activeNoteIndexBackupPercent = if (numNotes > 0)
             (activeNoteArrayIndex).toDouble() / (numNotes).toDouble()
@@ -454,7 +450,6 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 octaveEnd,
                 textPaint,
                 noteNamePrinter,
-                printOptions = notePrintOptions,
                 enableOctaveIndex = enableOctaveIndex
             )
 

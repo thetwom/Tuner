@@ -132,23 +132,24 @@ class TunerFragmentSimple : Fragment() {
 
             if (model.settingsChangeId > stringViewChangeId) {
                 stringView?.enableExtraPadding = model.useExtraPadding
-                if (model.instrument.isChromatic) {
+                val printer = model.noteNamePrinter
+                if (model.instrument.isChromatic && printer != null) {
                     stringView?.setStrings(
                         null,
                         true,
                         model.musicalScale.noteNameScale,
                         model.musicalScale.noteIndexBegin,
                         model.musicalScale.noteIndexEnd,
-                        model.notePrintOptions
+                        printer
                     )
-                } else {
+                } else if (printer != null) {
                     stringView?.setStrings(
                         model.instrument.strings,
                         false,
                         model.musicalScale.noteNameScale,
                         model.musicalScale.noteIndexBegin,
                         model.musicalScale.noteIndexEnd,
-                        model.notePrintOptions
+                        printer
                     )
                 }
 
@@ -204,12 +205,15 @@ class TunerFragmentSimple : Fragment() {
                 pitchPlotChangeId = -1
 
             if (model.musicalScaleChangeId > pitchPlotChangeId || model.notePrintOptionsChangeId > pitchPlotChangeId) {
-                pitchPlot?.addYTicksLevel(model.musicalScaleFrequencies,
-                    noteNameScale = model.musicalScale.noteNameScale,
-                    noteIndexBegin = model.musicalScale.noteIndexBegin,
-                    notePrintOptions = model.notePrintOptions
-                )
-
+                model.noteNamePrinter?.let { printer ->
+                    pitchPlot?.clearYTicks()
+                    pitchPlot?.addYTicksLevel(
+                        model.musicalScaleFrequencies,
+                        noteNameScale = model.musicalScale.noteNameScale,
+                        noteIndexBegin = model.musicalScale.noteIndexBegin,
+                        noteNamePrinter = printer
+                    )
+                }
                 pitchPlot?.setYTouchLimits(model.musicalScaleFrequencies[0], model.musicalScaleFrequencies.last(), 0L)
                 pitchPlot?.enableExtraPadding = model.useExtraPadding
             }
@@ -235,11 +239,12 @@ class TunerFragmentSimple : Fragment() {
 
             if (model.targetNoteChangeId > pitchPlotChangeId || model.notePrintOptionsChangeId > pitchPlotChangeId) {
                 val targetNote = model.targetNote
-                if (model.targetNoteFrequency > 0f && targetNote != null) {
+                val printer = model.noteNamePrinter
+                if (model.targetNoteFrequency > 0f && targetNote != null && printer != null) {
                     pitchPlot?.setYMark(
                         model.targetNoteFrequency,
                         targetNote,
-                        model.notePrintOptions,
+                        printer,
                         PitchHistoryModel.TARGET_NOTE_MARK_TAG,
                         LabelAnchor.East,
                         model.targetNoteMarkStyle,

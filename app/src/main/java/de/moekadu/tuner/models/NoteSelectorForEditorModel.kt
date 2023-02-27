@@ -8,7 +8,7 @@ class NoteSelectorForEditorModel {
 
     var musicalScale = MusicalScaleFactory.create(TemperamentType.EDO12)
         private set
-    var notePrintOptions = MusicalNotePrintOptions.None
+    var noteNamePrinter: NoteNamePrinter? = null
         private set
     var scaleChangeId = 0
         private set
@@ -21,7 +21,7 @@ class NoteSelectorForEditorModel {
     fun changeSettings(
         selectedNote: MusicalNote? = null,
         musicalScale: MusicalScale? = null,
-        notePrintOptions: MusicalNotePrintOptions = this.notePrintOptions
+        noteNamePrinter: NoteNamePrinter? = null
     ) {
         changeId++
 
@@ -30,8 +30,8 @@ class NoteSelectorForEditorModel {
             selectedNoteId = changeId
         }
 
-        if (notePrintOptions != this.notePrintOptions) {
-            this.notePrintOptions = notePrintOptions
+        if (noteNamePrinter != null) {
+            this.noteNamePrinter = noteNamePrinter
             scaleChangeId = changeId
         }
 

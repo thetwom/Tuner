@@ -22,7 +22,6 @@ package de.moekadu.tuner.fragments
 import android.content.res.Configuration
 import android.os.Bundle
 import android.text.SpannableStringBuilder
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -38,7 +37,6 @@ import de.moekadu.tuner.dialogs.AboutDialog
 import de.moekadu.tuner.dialogs.ResetSettingsDialog
 import de.moekadu.tuner.preferenceResources
 import de.moekadu.tuner.preferences.*
-import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
 import de.moekadu.tuner.temperaments.NoteNamePrinter
 import de.moekadu.tuner.temperaments.getTuningNameResourceId
 import kotlinx.coroutines.launch
@@ -69,8 +67,7 @@ fun nightModeStringToID(string: String) = when(string) {
     else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
 }
 
-/// Compute pitch history duration in seconds based on a percent value.
-/**
+/** Compute pitch history duration in seconds based on a percent value.
  * This uses a exponential scale for setting the duration.
  * @param percent Percentage value where 0 stands for the minimum duration and 100 for the maximum.
  * @param durationAtFiftyPercent Duration in seconds at fifty percent.
@@ -81,25 +78,9 @@ fun percentToPitchHistoryDuration(percent: Int, durationAtFiftyPercent: Float = 
 }
 
 class SettingsFragment : PreferenceFragmentCompat() {
-//    private val viewModel: SettingsViewModel by viewModels {
-//        Log.v("Tuner", "SettingsFragment: creating view model")
-//        SettingsViewModel.Factory(
-//                PreferenceManager.getDefaultSharedPreferences(requireContext().applicationContext)
-//        )
-//    }
-//    private var preferFlatPreference: SwitchPreferenceCompat? = null
     private var referenceNotePreference: Preference? = null
     private var temperamentPreference: Preference? = null
     private var appearancePreference: AppearancePreference? = null
-    private var noteNamePrinter: NoteNamePrinter? = null
-//  override fun onCreate(savedInstanceState: Bundle?) {
-//    super.onCreate(savedInstanceState)
-//
-//    setFragmentResultListener("reference_note_tag") {key, result ->
-//      Log.v("Tuner", "SettingsFragment: request result: $key, $result")
-//    }
-//
-//  }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
@@ -110,10 +91,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-//        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-
-        noteNamePrinter = NoteNamePrinter(requireContext())
-
         appearancePreference = findPreference("appearance")
             ?: throw RuntimeException("No appearance preference")
 
@@ -131,11 +108,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                //viewModel.pref.appearance.collect {
                 requireContext().preferenceResources.appearance.collect {
                     setAppearanceSummary(it.mode)
-                    //AppCompatDelegate.setDefaultNightMode(it.mode)
-                    //(activity as MainActivity?)?.recreate()
                 }
             }
         }
@@ -156,39 +130,25 @@ class SettingsFragment : PreferenceFragmentCompat() {
             true
         }
 
-//        preferFlatPreference =
-//            findPreference("prefer_flat") ?: throw RuntimeException("No prefer_flat preference")
-
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                //viewModel.pref.appearance.collect {
-                requireContext().preferenceResources.notePrintOptions.collect {
-                    setTemperamentAndReferenceNoteSummary(notePrintOptions = it)
+                requireContext().preferenceResources.noteNamePrinter.collect {
+                    setTemperamentAndReferenceNoteSummary(noteNamePrinter = it)
                 }
             }
         }
-//        preferFlatPreference?.setOnPreferenceChangeListener { _, newValue ->
-////      Log.v("Tuner", "SettingsFragment: preferFlatPreference changed")
-//            setTemperamentAndReferenceNoteSummary(preferFlat = newValue as Boolean)
-//            true
-//        }
 
         val notation = findPreference<ListPreference?>("notation")
         notation?.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
-        Log.v("Tuner", "SettingsFragment: notation = ${notation?.value}")
+//        Log.v("Tuner", "SettingsFragment: notation = ${notation?.value}")
 
         referenceNotePreference = findPreference("reference_note")
             ?: throw RuntimeException("no reference_note preference")
         referenceNotePreference?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            //val preferFlat = preferFlatPreference?.isChecked ?: false
-            val printOption = requireContext().preferenceResources.notePrintOptions.value
-               // if (preferFlat) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
-            //val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
             val currentPrefs = requireContext().preferenceResources.temperamentAndReferenceNote.value
             val dialog = ReferenceNotePreferenceDialog.newInstance(
                 currentPrefs,
-                warningMessage = null,
-                printOption
+                warningMessage = null
             )
 
             dialog.show(parentFragmentManager, "tag")
@@ -199,21 +159,16 @@ class SettingsFragment : PreferenceFragmentCompat() {
         temperamentPreference =
             findPreference("temperament") ?: throw RuntimeException("no temperament preference")
         temperamentPreference?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-//            val preferFlat = preferFlatPreference?.isChecked ?: false
-//            val printOption =
-//                if (preferFlat) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
-            val printOption = requireContext().preferenceResources.notePrintOptions.value
             val currentPrefs = requireContext().preferenceResources.temperamentAndReferenceNote.value
             //val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
             val dialog = TemperamentPreferenceDialog.newInstance(
-                currentPrefs,
-                printOption
+                currentPrefs
             )
 
             dialog.show(parentFragmentManager, "tag")
             false
         }
-        //setTemperamentAndReferenceNoteSummary()
+
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 requireContext().preferenceResources.temperamentAndReferenceNote.collect {
@@ -337,21 +292,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             return
 
         when (preference) {
-//      is ReferenceNotePreference -> {
-//        val preferFlat = preferFlatPreference?.isChecked ?: false
-//        val printOption = if (preferFlat) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
-//        val temperamentType = temperamentPreference?.value?.temperamentType ?: TemperamentType.EDO12
-//        val dialog = ReferenceNotePreferenceDialog.newInstance(preference.key, "reference_note_tag", temperamentType, printOption)
-//        dialog.show(parentFragmentManager, "reference_note_tag")
-//        dialog.setTargetFragment(this, 0)
-//      }
-//      is TemperamentPreference -> {
-//        val preferFlat = preferFlatPreference?.isChecked ?: false
-//        val printOption = if (preferFlat) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
-//        val dialog = TemperamentPreferenceDialog.newInstance(preference.key, "temperament_tag", printOption)
-//        dialog.show(parentFragmentManager, "temperament_tag")
-//        dialog.setTargetFragment(this, 0)
-//      }
             is AppearancePreference -> {
                 val dialog =
                     AppearancePreferenceDialog.newInstance(preference.key, "appearance_tag")
@@ -403,40 +343,23 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private fun setTemperamentAndReferenceNoteSummary(
         preferenceValue: TemperamentAndReferenceNoteValue? = null,
-        notePrintOptions: MusicalNotePrintOptions ?= null
-        //preferFlat: Boolean? = null
+        noteNamePrinter: NoteNamePrinter? = null
     ) {
 //    Log.v("Tuner", "SettingsFragment.setReferenceNoteSummary: frequency=$frequency, toneIndex=$toneIndex, preferFlat=$preferFlat, f2=${referenceNotePreference?.value?.frequency}, t2=${referenceNotePreference?.value?.toneIndex}")
         context?.let { ctx ->
-//            val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-//            val currentPrefs =
-//                preferenceValue ?: TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
             val currentPrefs = preferenceValue ?: ctx.preferenceResources.temperamentAndReferenceNote.value
-            //val pF = preferFlat ?: (preferFlatPreference?.isChecked ?: false)
-            val printOption = notePrintOptions ?: ctx.preferenceResources.notePrintOptions.value
-//            val printOption =
-//                if (pF) MusicalNotePrintOptions.PreferFlat else MusicalNotePrintOptions.PreferSharp
+            val printer = noteNamePrinter ?: ctx.preferenceResources.noteNamePrinter.value
 
             val referenceNoteSummary = SpannableStringBuilder()
                 .append(
-                    noteNamePrinter!!.noteToCharSequence(
-                        currentPrefs.referenceNote,
-                        printOption,
-                        true
-                    )
+                    printer.noteToCharSequence(currentPrefs.referenceNote, true)
                 )
                 .append(" = ${getString(R.string.hertz_str, currentPrefs.referenceFrequency)}")
             referenceNotePreference?.summary = referenceNoteSummary
             temperamentPreference?.summary = SpannableStringBuilder()
                 .append(ctx.getString(getTuningNameResourceId(currentPrefs.temperamentType)))
                 .append(ctx.getString(R.string.comma_separator))
-                .append(
-                    noteNamePrinter!!.noteToCharSequence(
-                        currentPrefs.rootNote,
-                        printOption,
-                        withOctave = false
-                    )
-                )
+                .append(printer.noteToCharSequence(currentPrefs.rootNote, withOctave = false))
         }
     }
 }

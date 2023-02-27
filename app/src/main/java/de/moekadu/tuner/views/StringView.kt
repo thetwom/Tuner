@@ -17,10 +17,7 @@ import androidx.core.view.ViewCompat
 import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
-import de.moekadu.tuner.temperaments.NoteNamePrinter
-import de.moekadu.tuner.temperaments.NoteNameScale
+import de.moekadu.tuner.temperaments.*
 import kotlinx.parcelize.Parcelize
 import kotlin.math.*
 
@@ -56,7 +53,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private val totalPaddingRight
         get() = paddingRight + (if (enableExtraPadding) extraPaddingRight else 0f)
 
-    private val noteNamePrinter = NoteNamePrinter(context)
+    private var noteNamePrinter = createNoteNamePrinter(context, NotationType.Standard, NoteNamePrinter.SharpFlatPreference.None)
 
     private val stringPaint = arrayOf(
         Paint().apply {
@@ -151,9 +148,6 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private var labelCornerRadius = 0f
 
     private val strings = ArrayList<StringInfo>()
-
-    /** Defines e.g. if we prefer using a flat modifier or a sharp modifier */
-    private var notePrintOptions = MusicalNotePrintOptions.None
 
     /** Style index, which is used for showing active notes. */
     var activeStyleIndex: Int = 1
@@ -692,10 +686,12 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
      * @param noteIndexBegin First note index of musical scale which is considered.
      * @param noteIndexEnd End note index of musical scale which is considered (excluded).
      */
-    fun setStrings(notes: Array<MusicalNote>?, isChromatic: Boolean, noteNameScale: NoteNameScale, noteIndexBegin: Int, noteIndexEnd: Int,
-                   notePrintOptions: MusicalNotePrintOptions) {
+    fun setStrings(notes: Array<MusicalNote>?, isChromatic: Boolean, noteNameScale: NoteNameScale,
+                   noteIndexBegin: Int, noteIndexEnd: Int,
+                   noteNamePrinter: NoteNamePrinter
+    ) {
         strings.clear()
-        this.notePrintOptions = notePrintOptions
+        this.noteNamePrinter = noteNamePrinter
         // create the notes
         if (notes != null) {
             for (note in notes)
@@ -717,7 +713,6 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
                 octaveEnd,
                 paint,
                 noteNamePrinter,
-                notePrintOptions,
                 true
             )
             val boundHeight = 2 * max(
@@ -851,7 +846,6 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         if (stringInfo.styleIndex != styleIndex || stringInfo.label == null) {
             stringInfo.label = MusicalNoteLabel(stringInfo.note, labelPaint[styleIndex], noteNamePrinter,
                 labelBackgroundPaint[styleIndex], labelCornerRadius, LabelGravity.Center,
-                printOptions = notePrintOptions,
                 enableOctaveIndex = true, labelBackgroundPadding, labelBackgroundPadding,
                 labelBackgroundPadding, labelBackgroundPadding)
             stringInfo.styleIndex = styleIndex

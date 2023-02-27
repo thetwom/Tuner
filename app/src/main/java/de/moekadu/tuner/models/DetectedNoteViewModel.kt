@@ -11,8 +11,8 @@ class DetectedNoteViewModel {
     /** Musical scale. */
     var musicalScale = MusicalScaleFactory.create(TemperamentType.EDO12)
         private set
-    /** Note print options .*/
-    var notePrintOptions = MusicalNotePrintOptions.None
+    /** Transfer notes to char sequences .*/
+    var noteNamePrinter: NoteNamePrinter? = null
         private set
     /** ChangeId of last change of musical scale or notePrintOptions. */
     var scaleChangeId = 0
@@ -35,13 +35,13 @@ class DetectedNoteViewModel {
     /** Change view properties.
      * @param note A new detected note (or null if this is not changed.)
      * @param musicalScale New musical scale or null if this is not changed.
-     * @param notePrintOptions New note print options.
+     * @param noteNamePrinter Object which does note name printing.
      * @param noteUpdateInterval Rough duration in seconds between two detected notes.
      */
     fun changeSettings(
         note: MusicalNote? = null,
         musicalScale: MusicalScale? = null,
-        notePrintOptions: MusicalNotePrintOptions = this.notePrintOptions,
+        noteNamePrinter: NoteNamePrinter? = null,
         noteUpdateInterval: Float = this.noteUpdateInterval
     ) {
         changeId++
@@ -51,8 +51,8 @@ class DetectedNoteViewModel {
             noteChangedId = changeId
         }
 
-        if (notePrintOptions != this.notePrintOptions) {
-            this.notePrintOptions = notePrintOptions
+        if (noteNamePrinter != null) {
+            this.noteNamePrinter = noteNamePrinter
             scaleChangeId = changeId
         }
 

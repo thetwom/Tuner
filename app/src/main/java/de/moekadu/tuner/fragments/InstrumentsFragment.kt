@@ -327,9 +327,9 @@ class InstrumentsFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                requireContext().preferenceResources.notePrintOptions.collect {
-                    instrumentsPredefinedAdapter.setNotePrintOptions(notePrintOptions = it, recyclerView)
-                    instrumentsCustomAdapter.setNotePrintOptions(notePrintOptions = it, recyclerView)
+                requireContext().preferenceResources.noteNamePrinter.collect {
+                    instrumentsPredefinedAdapter.setNoteNamePrinter(noteNamePrinter = it, recyclerView)
+                    instrumentsCustomAdapter.setNoteNamePrinter(noteNamePrinter = it, recyclerView)
                 }
             }
         }

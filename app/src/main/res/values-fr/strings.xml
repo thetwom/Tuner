@@ -228,8 +228,8 @@
     <string name="werckmeister_iv_abbr">Werckmeister IV</string>
     <string name="solfege_notation">Notation solfège</string>
     <string name="notation">Notation</string>
-    <string name="notation_standard">Défaut (A-B-C-...)</string>
+    <string name="notation_standard">Défaut (A-B-C-…)</string>
     <string name="notation_solfege">Solfège</string>
-    <string name="notation_international">International (A-B-C-...)</string>
+    <string name="notation_international">International (A-B-C-…)</string>
 
 </resources>

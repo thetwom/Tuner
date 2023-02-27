@@ -208,11 +208,12 @@ class TunerFragment : Fragment() {
 
             if (model.targetNoteChangeId > pitchPlotChangeId || model.notePrintOptionsChangeId > pitchPlotChangeId) {
                 val targetNote = model.targetNote
-                if (model.targetNoteFrequency > 0f && targetNote != null) {
+                val printer = model.noteNamePrinter
+                if (model.targetNoteFrequency > 0f && targetNote != null && printer != null) {
                     pitchPlot?.setYMark(
                         model.targetNoteFrequency,
                         targetNote,
-                        model.notePrintOptions,
+                        printer,
                         PitchHistoryModel.TARGET_NOTE_MARK_TAG,
                         LabelAnchor.East,
                         model.targetNoteMarkStyle,
@@ -373,12 +374,14 @@ class TunerFragment : Fragment() {
 
     private fun addTicksToHistoryPlot(model: PitchHistoryModel) {
         pitchPlot?.clearYTicks()
-
-        pitchPlot?.addYTicksLevel(model.musicalScaleFrequencies,
-            noteNameScale = model.musicalScale.noteNameScale,
-            noteIndexBegin = model.musicalScale.noteIndexBegin,
-            notePrintOptions = model.notePrintOptions
-        )
+        model.noteNamePrinter?.let { printer ->
+            pitchPlot?.addYTicksLevel(
+                model.musicalScaleFrequencies,
+                noteNameScale = model.musicalScale.noteNameScale,
+                noteIndexBegin = model.musicalScale.noteIndexBegin,
+                noteNamePrinter = printer
+            )
+        }
     }
 
     companion object{

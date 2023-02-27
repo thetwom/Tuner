@@ -169,17 +169,17 @@ class TunerViewModel(
             }
         }}
 
-        viewModelScope.launch { pref.notePrintOptions.collect { printOptions ->
+        viewModelScope.launch { pref.noteNamePrinter.collect { printer ->
             if (simpleMode) {
                 _stringsModel.value =
-                    stringsModel.value?.apply { changeSettings(notePrintOptions = printOptions) }
+                    stringsModel.value?.apply { changeSettings(noteNamePrinter = printer) }
             } else {
                 _spectrumPlotModel.value =
-                    spectrumPlotModel.value?.apply { changeSettings(notePrintOptions = printOptions) }
+                    spectrumPlotModel.value?.apply { changeSettings(noteNamePrinter = printer) }
                 _correlationPlotModel.value =
-                    correlationPlotModel.value?.apply { changeSettings(notePrintOptions = printOptions) }
+                    correlationPlotModel.value?.apply { changeSettings(noteNamePrinter = printer) }
             }
-            _pitchHistoryModel.value = pitchHistoryModel.value?.apply{ changeSettings(notePrintOptions = printOptions)}
+            _pitchHistoryModel.value = pitchHistoryModel.value?.apply{ changeSettings(noteNamePrinter = printer)}
         }}
 
         if (simpleMode) {

@@ -25,7 +25,7 @@ class TunerApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        preferenceResources = PreferenceResources(sharedPreferences, MainScope())
+        preferenceResources = PreferenceResources(this, sharedPreferences, MainScope())
         instrumentPreferences = getSharedPreferences("instrument resources", MODE_PRIVATE)
         instrumentResources = InstrumentResources(instrumentPreferences)
 

@@ -7,7 +7,6 @@ import android.text.StaticLayout
 import android.text.TextPaint
 import androidx.core.graphics.withTranslation
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
 import de.moekadu.tuner.temperaments.NoteNamePrinter
 import kotlin.math.max
 
@@ -16,7 +15,6 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint,
                        noteNamePrinter: NoteNamePrinter,
                        backgroundPaint: Paint? = null, cornerRadius: Float = 0f,
                        gravity: LabelGravity = LabelGravity.Center,
-                       printOptions: MusicalNotePrintOptions = MusicalNotePrintOptions.None,
                        val enableOctaveIndex: Boolean = true,
                        paddingLeft: Float = 0f, paddingRight: Float = 0f,
                        paddingTop: Float = 0f, paddingBottom: Float = 0f)
@@ -26,8 +24,8 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint,
         paint.getTextBounds("M", 0, 1, this)
     }
 
-    private val bounds = noteNamePrinter.measure(paint, note, printOptions, enableOctaveIndex)
-    private val spannableString = noteNamePrinter.noteToCharSequence(note, printOptions, enableOctaveIndex)
+    private val bounds = noteNamePrinter.measure(paint, note, enableOctaveIndex)
+    private val spannableString = noteNamePrinter.noteToCharSequence(note, enableOctaveIndex)
     // make sure that the width is wide enough to not have line breaks
     // theoretically, bounds.width() would be enough, but it might be not fully exact ...
     private val desiredWidth = (2 * bounds.width()).toInt() + 10
@@ -76,12 +74,11 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint,
          * @param octaveEnd End octave to be considered (excluded).
          * @param paint Paint which will be used for drawing the notes.
          * @param noteNamePrinter Class for printing notes.
-         * @param printOptions Options for printing the note (prefer flat/sharp, ...)
          * @param enableOctaveIndex Set this to false if you don't want to print the octave index.
          * @return Bounds of the rectangle which fits around each single note.
          */
         fun getLabelSetBounds(notes: Array<MusicalNote>, octaveBegin: Int, octaveEnd: Int, paint: TextPaint, noteNamePrinter: NoteNamePrinter,
-                              printOptions: MusicalNotePrintOptions = MusicalNotePrintOptions.None, enableOctaveIndex: Boolean = true): LabelSetBounds {
+                              enableOctaveIndex: Boolean = true): LabelSetBounds {
             val capitalLetterBounds = Rect().apply {
                 paint.getTextBounds("M", 0, 1, this)
             }
@@ -93,7 +90,7 @@ class MusicalNoteLabel(val note: MusicalNote, paint: TextPaint,
             var maxDistanceAboveBaseline = Float.NEGATIVE_INFINITY
 
             for (n in notes) {
-                val noteBounds = noteNamePrinter.measure(paint, n, printOptions, withOctave = false)
+                val noteBounds = noteNamePrinter.measure(paint, n, withOctave = false)
 
                 maxWidth = max(maxWidth, noteBounds.width())
                 maxHeight = max(maxHeight, noteBounds.height())

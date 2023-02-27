@@ -3,8 +3,7 @@ package de.moekadu.tuner.models
 import android.util.Log
 import de.moekadu.tuner.notedetection.FrequencySpectrum
 import de.moekadu.tuner.notedetection.Harmonics
-import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
-import de.moekadu.tuner.temperaments.Notation
+import de.moekadu.tuner.temperaments.NoteNamePrinter
 import kotlin.math.min
 
 class SpectrumPlotModel {
@@ -46,7 +45,7 @@ class SpectrumPlotModel {
         harmonics: Harmonics? = null,
         detectedFrequency: Float = -1f,
         targetFrequency: Float = -1f,
-        notePrintOptions: MusicalNotePrintOptions? = null
+        noteNamePrinter: NoteNamePrinter? = null
     ) {
 
         ++changeId
@@ -85,8 +84,8 @@ class SpectrumPlotModel {
             targetChangeId = changeId
         }
 
-        notePrintOptions?.let {
-            useExtraPadding = (notePrintOptions.notation == Notation.solfege)
+        noteNamePrinter?.let {
+            useExtraPadding = (it.noteNameWidth == NoteNamePrinter.MaxNoteNameWidth.MultipleLetters)
         }
     }
 }

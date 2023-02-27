@@ -6,7 +6,10 @@ import android.widget.ImageView
 import android.widget.TextView
 import de.moekadu.tuner.MainActivity
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.*
+import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments.NoteNamePrinter
+import de.moekadu.tuner.temperaments.TemperamentType
+import de.moekadu.tuner.temperaments.getTuningNameAbbrResourceId
 
 class PreferenceBarContainer(val activity: MainActivity) {
     private val background = activity.findViewById<View>(R.id.properties_bar)
@@ -46,10 +49,9 @@ class PreferenceBarContainer(val activity: MainActivity) {
         }
     }
 
-    fun setReferenceNote(note: MusicalNote, frequency: String, printOption: MusicalNotePrintOptions) {
-        val printer = NoteNamePrinter(activity)
+    fun setReferenceNote(note: MusicalNote, frequency: String, noteNamePrinter: NoteNamePrinter) {
         val builder = SpannableStringBuilder()
-        builder.append(printer.noteToCharSequence(note, printOption, true))
+        builder.append(noteNamePrinter.noteToCharSequence(note, true))
         builder.append("\n")
         builder.append(activity.getString(R.string.hertz_str, frequency))
         referenceNote.text = builder

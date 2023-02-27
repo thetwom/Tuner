@@ -44,6 +44,7 @@ import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentArchiving
 import de.moekadu.tuner.preferences.ReferenceNotePreferenceDialog
 import de.moekadu.tuner.preferences.TemperamentPreferenceDialog
+import de.moekadu.tuner.temperaments.NoteNamePrinter
 import de.moekadu.tuner.views.PreferenceBarContainer
 import kotlinx.coroutines.launch
 
@@ -103,12 +104,14 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                preferenceResources.notePrintOptions.collect {
-                    preferenceBarContainer.preferFlat = it.isPreferringFlat
+                preferenceResources.noteNamePrinter.collect {
+                    preferenceBarContainer.preferFlat = (it.sharpFlatPreference == NoteNamePrinter.SharpFlatPreference.Flat)
                     val currentPrefs = preferenceResources.temperamentAndReferenceNote.value
                     // update the reference note printing
                     preferenceBarContainer.setReferenceNote(
-                        currentPrefs.referenceNote, currentPrefs.referenceFrequency, preferenceResources.notePrintOptions.value
+                        currentPrefs.referenceNote,
+                        currentPrefs.referenceFrequency,
+                        preferenceResources.noteNamePrinter.value
                     )
                 }
             }
@@ -120,7 +123,7 @@ class MainActivity : AppCompatActivity() {
                     preferenceBarContainer.setTemperament(it.temperamentType)
                     preferenceBarContainer.setReferenceNote(
                         it.referenceNote, it.referenceFrequency,
-                        preferenceResources.notePrintOptions.value
+                        preferenceResources.noteNamePrinter.value
                     )
                 }
             }
@@ -131,7 +134,6 @@ class MainActivity : AppCompatActivity() {
         ) { preferenceResources.setTemperamentAndReferenceNote(it) }
         TemperamentPreferenceDialog.setupFragmentResultListener(
             supportFragmentManager, this, this,
-            {preferenceResources.notePrintOptions.value},
             {preferenceResources.temperamentAndReferenceNote.value}
         ) {
             preferenceResources.setTemperamentAndReferenceNote(it)
@@ -209,16 +211,14 @@ class MainActivity : AppCompatActivity() {
     fun showReferenceNoteDialog() {
         val dialog = ReferenceNotePreferenceDialog.newInstance(
             preferenceResources.temperamentAndReferenceNote.value,
-            warningMessage = null,
-            preferenceResources.notePrintOptions.value
+            warningMessage = null
         )
         dialog.show(supportFragmentManager, "tag")
     }
 
     fun showTemperamentDialog() {
         val dialog = TemperamentPreferenceDialog.newInstance(
-            preferenceResources.temperamentAndReferenceNote.value,
-            preferenceResources.notePrintOptions.value
+            preferenceResources.temperamentAndReferenceNote.value
         )
         dialog.show(supportFragmentManager, "tag")
     }

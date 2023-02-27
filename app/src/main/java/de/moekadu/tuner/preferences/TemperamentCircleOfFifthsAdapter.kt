@@ -86,7 +86,7 @@ class TemperamentCircleOfFifthsAdapter
         private var arrowStroke: ImageView? = null
         private var arrowHead: ImageView? = null
         private var fifthsModification: TextView? = null
-        private var noteNamePrinter = NoteNamePrinter(view.context)
+
         init {
             noteName = view.findViewById(R.id.note_name)
             arrowStroke = view.findViewById(R.id.arrow_stroke)
@@ -94,7 +94,7 @@ class TemperamentCircleOfFifthsAdapter
             fifthsModification = view.findViewById(R.id.fifths_modification)
         }
 
-        fun setEntry(entry: TemperamentCircleOfFifthsEntry, printOptions: MusicalNotePrintOptions) {
+        fun setEntry(entry: TemperamentCircleOfFifthsEntry, noteNamePrinter: NoteNamePrinter) {
             val note = entry.note
             val circleOfFifths = entry.fifthsModification
             if (note != null) {
@@ -102,7 +102,7 @@ class TemperamentCircleOfFifthsAdapter
                 arrowStroke?.visibility = View.GONE
                 arrowHead?.visibility = View.GONE
                 fifthsModification?.visibility = View.GONE
-                noteName?.text = noteNamePrinter.noteToCharSequence(note, printOptions, withOctave = false)
+                noteName?.text = noteNamePrinter.noteToCharSequence(note, withOctave = false)
             } else if (circleOfFifths != null){
                 noteName?.visibility = View.GONE
                 arrowStroke?.visibility = View.VISIBLE
@@ -117,10 +117,13 @@ class TemperamentCircleOfFifthsAdapter
         TemperamentCircleOfFifthsEntry(null, null, it.toLong())
     }
 
-    private var printOptions = MusicalNotePrintOptions.None
+    private var noteNamePrinter: NoteNamePrinter? = null
 
-    fun setEntries(rootNote: MusicalNote?, noteNameScale: NoteNameScale?, circleOfFifths: TemperamentCircleOfFifths?, printOptions: MusicalNotePrintOptions) {
-        this.printOptions = printOptions
+    fun setEntries(
+        rootNote: MusicalNote?, noteNameScale: NoteNameScale?,
+        circleOfFifths: TemperamentCircleOfFifths?, noteNamePrinter: NoteNamePrinter
+    ) {
+        this.noteNamePrinter = noteNamePrinter
         if (rootNote != null && noteNameScale != null) {
             val rootNoteIndex = noteNameScale.getIndexOfNote(rootNote)
 //        Log.v("Tuner", "TemperamentCircleOfFifthsAdapter.setEntries: rootNoteIndex=$rootNoteIndex")
@@ -162,6 +165,8 @@ class TemperamentCircleOfFifthsAdapter
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.setEntry(getItem(position), printOptions)
+        noteNamePrinter?.let { printer ->
+            holder.setEntry(getItem(position), printer)
+        }
     }
 }

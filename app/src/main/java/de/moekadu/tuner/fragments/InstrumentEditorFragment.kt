@@ -176,14 +176,15 @@ class InstrumentEditorFragment : Fragment() {
             if (model.changeId < stringViewChangeId)
                 stringViewChangeId = -1
 
-            if (model.stringChangedId > stringViewChangeId) {
+            val printer = model.noteNamePrinter
+            if (model.stringChangedId > stringViewChangeId && printer != null) {
                 stringView?.setStrings(
                     model.strings,
                     isChromatic = false,
                     model.musicalScale.noteNameScale,
                     model.musicalScale.noteIndexBegin,
                     model.musicalScale.noteIndexEnd,
-                    model.notePrintOptions
+                    printer
                 )
             }
 
@@ -220,10 +221,11 @@ class InstrumentEditorFragment : Fragment() {
             if (model.changeId < noteSelectorChangeId)
                 noteSelectorChangeId = -1
 
-            if (model.scaleChangeId > noteSelectorChangeId) {
+            val printer = model.noteNamePrinter
+            if (model.scaleChangeId > noteSelectorChangeId && printer != null) {
                 noteSelector?.setNotes(
                     model.musicalScale.noteIndexBegin, model.musicalScale.noteIndexEnd,
-                    model.musicalScale.noteNameScale, null, model.notePrintOptions)
+                    model.musicalScale.noteNameScale, null, printer)
             }
             if (model.selectedNoteId > noteSelectorChangeId) {
                 noteSelector?.setActiveNote(model.selectedNote, 150L)
@@ -237,11 +239,13 @@ class InstrumentEditorFragment : Fragment() {
         viewModel.detectedNoteModel.observe(viewLifecycleOwner) { model ->
             if (model.changeId < detectedNoteViewChangeId)
                 detectedNoteViewChangeId = -1
-            if (model.scaleChangeId > detectedNoteViewChangeId) {
+
+            val printer = model.noteNamePrinter
+            if (model.scaleChangeId > detectedNoteViewChangeId && printer != null) {
                 detectedNoteViewer?.setNotes(
                     model.musicalScale.noteNameScale,
                     model.musicalScale.noteIndexBegin, model.musicalScale.noteIndexEnd,
-                    model.notePrintOptions
+                    printer
                 )
             }
             if (model.noteUpdateIntervalChangedId > detectedNoteViewChangeId) {

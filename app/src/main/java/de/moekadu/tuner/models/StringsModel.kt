@@ -5,7 +5,10 @@ import de.moekadu.tuner.instruments.instrumentDatabase
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.notedetection.SortedAndDistinctInstrumentStrings
 import de.moekadu.tuner.notedetection.TuningState
-import de.moekadu.tuner.temperaments.*
+import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.temperaments.NoteNamePrinter
 
 class StringsModel {
     var changeId = 0
@@ -17,7 +20,7 @@ class StringsModel {
         private set
     var instrument = instrumentDatabase[0]
         private set
-    var notePrintOptions = MusicalNotePrintOptions.None
+    var noteNamePrinter: NoteNamePrinter? = null
         private set
     var isIncompatibleInstrument = false
         private set
@@ -39,7 +42,7 @@ class StringsModel {
     fun changeSettings(
         instrument: Instrument? = null,
         musicalScale: MusicalScale? = null,
-        notePrintOptions: MusicalNotePrintOptions? = null,
+        noteNamePrinter: NoteNamePrinter? = null,
         highlightedStringIndex: Int = this.highlightedStringIndex,
         highlightedNote: MusicalNote? = this.highlightedNote,
         tuningState: TuningState? = null
@@ -61,11 +64,10 @@ class StringsModel {
                 this.musicalScale = it
             }
         }
-        notePrintOptions?.let {
-            if (this.notePrintOptions != it)
-                settingsChangeId = changeId
-            this.notePrintOptions = it
-            useExtraPadding = (it.notation == Notation.solfege)
+        noteNamePrinter?.let {
+            settingsChangeId = changeId
+            this.noteNamePrinter = it
+            useExtraPadding = (it.noteNameWidth == NoteNamePrinter.MaxNoteNameWidth.MultipleLetters)
         }
         if (this.highlightedStringIndex != highlightedStringIndex) {
             this.highlightedStringIndex = highlightedStringIndex

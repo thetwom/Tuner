@@ -9,7 +9,7 @@ class StringViewEditorModel {
         private set
     var strings = Array(0) { MusicalNote(BaseNote.A, NoteModifier.None) }
         private set
-    var notePrintOptions = MusicalNotePrintOptions.None
+    var noteNamePrinter: NoteNamePrinter? = null
         private set
     var stringChangedId = 0
         private set
@@ -23,7 +23,7 @@ class StringViewEditorModel {
         strings: Array<MusicalNote>? = null,
         musicalScale: MusicalScale? = null,
         selectedStringIndex: Int = this.selectedStringIndex,
-        notePrintOptions: MusicalNotePrintOptions = this.notePrintOptions
+        noteNamePrinter: NoteNamePrinter? = null
     ) {
         changeId++
 
@@ -32,8 +32,8 @@ class StringViewEditorModel {
             settingsChangedId = changeId
         }
 
-        if (notePrintOptions != this.notePrintOptions) {
-            this.notePrintOptions = notePrintOptions
+        if (noteNamePrinter != null) {
+            this.noteNamePrinter = noteNamePrinter
             stringChangedId = changeId
         }
 

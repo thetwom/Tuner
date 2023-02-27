@@ -27,7 +27,7 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
 
     var noteClickedListener: NoteClickedListener? = null
 
-    class DetectedNote(private var hitCountMin: Int, private var hitCountMax: Int, private val printOption: MusicalNotePrintOptions) {
+    class DetectedNote(private var hitCountMin: Int, private var hitCountMax: Int) {
         var note = MusicalNote(BaseNote.A, NoteModifier.None, 4)
             private set
         var isEnabled = false
@@ -77,7 +77,7 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
             }
 
             if (label == null) {
-                label = MusicalNoteLabel(note, labelPaint, noteNamePrinter, printOptions = printOption)
+                label = MusicalNoteLabel(note, labelPaint, noteNamePrinter)
             }
 
             label?.drawToCanvas(x, y, LabelAnchor.Center, canvas)
@@ -90,7 +90,7 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
     }
 
     /** Class for measuring and printing notes. */
-    private val noteNamePrinter = NoteNamePrinter(context)
+    private var noteNamePrinter = createNoteNamePrinter(context, NotationType.Standard, NoteNamePrinter.SharpFlatPreference.None)
 
     /** Paint for drawing the notes. */
     private val labelPaint = TextPaint().apply {
@@ -103,16 +103,13 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
     /** Note name scale of the notes which can be hit (for measuring the max label size). */
     private var noteNameScale: NoteNameScale? = null
 
-    /** Options for printing the note labels (prefer flat/sharp). */
-    private var notePrintOptions = MusicalNotePrintOptions.None
-
     /** First possible note index. */
     private var noteIndexBegin = 0
     /** End note index (excluded). */
     private var noteIndexEnd = 0
 
     /** Notes for the available spaces of this viewer. */
-    private var notes = Array(1) { DetectedNote((hitCountMax * ratioMinSizeToMaxSize).roundToInt(), hitCountMax, notePrintOptions) }
+    private var notes = Array(1) { DetectedNote((hitCountMax * ratioMinSizeToMaxSize).roundToInt(), hitCountMax) }
     /** Array of notes which were recently hit in the according order (least hit note is the last one). */
     private var leastRecentlyUsedNotes = Array<MusicalNote?>(1){ null }
 
@@ -240,7 +237,6 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
                 octaveEnd,
                 labelPaint,
                 noteNamePrinter,
-                notePrintOptions,
                 enableOctaveIndex = true
             )
 
@@ -251,7 +247,7 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
         val numNotes = setMaximumTextSizeAndReturnNumNotes(w, h)
 
         if (notes.size != numNotes) {
-            notes = Array(numNotes) { DetectedNote((hitCountMax * ratioMinSizeToMaxSize).roundToInt(), hitCountMax, notePrintOptions) }
+            notes = Array(numNotes) { DetectedNote((hitCountMax * ratioMinSizeToMaxSize).roundToInt(), hitCountMax) }
             leastRecentlyUsedNotes = Array(numNotes) { null }
         }
 
@@ -330,17 +326,20 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
      * @param noteNameScale Note name scale of notes which can be shown.
      * @param noteIndexBegin Index of first note.
      * @param noteIndexEnd End index of note (excluded).
-     * @param notePrintOptions Options for printing the note labels (prefer flat/sharp)
+     * @param noteNamePrinter Transfer notes to char sequences.
      */
-    fun setNotes(noteNameScale: NoteNameScale, noteIndexBegin: Int, noteIndexEnd: Int, notePrintOptions: MusicalNotePrintOptions) {
+    fun setNotes(
+        noteNameScale: NoteNameScale, noteIndexBegin: Int, noteIndexEnd: Int,
+        noteNamePrinter: NoteNamePrinter
+    ) {
         this.noteNameScale = noteNameScale
         this.noteIndexBegin = noteIndexBegin
         this.noteIndexEnd = noteIndexEnd
-        this.notePrintOptions = notePrintOptions
+        this.noteNamePrinter = noteNamePrinter
 
         if (isLaidOut) { // if it is not laid out, all the following functions will be called in onSizeChanged
             val numNotes = setMaximumTextSizeAndReturnNumNotes(width, height)
-            notes = Array(numNotes) { DetectedNote((hitCountMax * ratioMinSizeToMaxSize).roundToInt(), hitCountMax, notePrintOptions) }
+            notes = Array(numNotes) { DetectedNote((hitCountMax * ratioMinSizeToMaxSize).roundToInt(), hitCountMax) }
             leastRecentlyUsedNotes = Array(numNotes) { null }
         }
         requestLayout()

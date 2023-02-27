@@ -95,9 +95,9 @@
     <string name="b_note_international" translatable="false">B</string>
 
     <string name="notation">Notation</string>
-    <string name="notation_standard">Default (A-B-C-...)</string>
+    <string name="notation_standard">Default (A-B-C-…)</string>
     <string name="notation_solfege">Solfège</string>
-    <string name="notation_international">International (A-B-C-...)</string>
+    <string name="notation_international">International (A-B-C-…)</string>
 
     <string name="violin_gdae">Violin</string>
     <string name="abort">Abort</string>

@@ -56,7 +56,6 @@ class SoundSource(
 
     /** Capacity of channel. */
     private var channelCapacity: Int
-        private set
 
     init {
         val minBufferSize = AudioRecord.getMinBufferSize(

@@ -4,7 +4,10 @@ import android.content.Context
 import android.os.Parcelable
 import android.text.SpannableStringBuilder
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.*
+import de.moekadu.tuner.temperaments.BaseNote
+import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments.NoteModifier
+import de.moekadu.tuner.temperaments.NoteNamePrinter
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -27,20 +30,19 @@ data class Instrument(private val name: CharSequence?, private val nameResource:
 
     /** Get readable representation of all strings (e.g. "A#4 - C5 - G5")
      * @param context Context for obtaining string resources.
-     * @param notePrintOptions Info of how to print the note (prefer flat/sharp, ...).
+     * @param noteNamePrinter Transfer notes to char sequences.
      */
-    fun getStringsString(context: Context, notePrintOptions: MusicalNotePrintOptions): CharSequence {
+    fun getStringsString(context: Context, noteNamePrinter: NoteNamePrinter): CharSequence {
         return if (isChromatic) {
             context.getString(R.string.chromatic)
         } else {
-            val noteNamePrinter = NoteNamePrinter(context)
             val builder = SpannableStringBuilder()
 //            Log.v("Tuner", "Instrument.getStringsString: printOption=$printOption, preferFlat=$preferFlat")
             if (strings.isNotEmpty())
-                builder.append(noteNamePrinter.noteToCharSequence(strings[0], printOption = notePrintOptions, withOctave = true))
+                builder.append(noteNamePrinter.noteToCharSequence(strings[0], withOctave = true))
             for (i in 1 until strings.size) {
                 builder.append(" - ")
-                builder.append(noteNamePrinter.noteToCharSequence(strings[i], printOption = notePrintOptions, withOctave = true))
+                builder.append(noteNamePrinter.noteToCharSequence(strings[i], withOctave = true))
             }
             builder
 //            strings.joinToString(" - ", "", "") {

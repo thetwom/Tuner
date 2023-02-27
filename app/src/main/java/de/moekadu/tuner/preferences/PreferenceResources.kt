@@ -1,5 +1,6 @@
 package de.moekadu.tuner.preferences
 
+import android.content.Context
 import android.content.SharedPreferences
 import de.moekadu.tuner.fragments.indexToTolerance
 import de.moekadu.tuner.fragments.indexToWindowSize
@@ -7,9 +8,7 @@ import de.moekadu.tuner.fragments.nightModeStringToID
 import de.moekadu.tuner.fragments.percentToPitchHistoryDuration
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.notedetection.WindowingFunction
-import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.temperaments.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -19,7 +18,11 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 
-class PreferenceResources(private val sharedPreferences: SharedPreferences, scope: CoroutineScope) {
+class PreferenceResources(
+    private val context: Context,
+    private val sharedPreferences:
+    SharedPreferences, scope: CoroutineScope
+) {
 
     private val _appearance = MutableStateFlow(obtainAppearance())
     val appearance = _appearance.asStateFlow()
@@ -43,8 +46,8 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
     val toleranceInCents = _toleranceInCents.asStateFlow()
     private val _waveWriterDurationInSeconds = MutableStateFlow(obtainWaveWriterDurationInSeconds())
     val waveWriterDurationInSeconds = _waveWriterDurationInSeconds.asStateFlow()
-    private val _notePrintOptions = MutableStateFlow(obtainNotePrintOptions())
-    val notePrintOptions = _notePrintOptions.asStateFlow()
+    private val _noteNamePrinter = MutableStateFlow(obtainNoteNamePrinter())
+    val noteNamePrinter = _noteNamePrinter.asStateFlow()
 
     private val _musicalScale = MutableStateFlow(musicalScaleFromPreference(obtainTemperamentAndReferenceNote()))
     val musicalScale = _musicalScale.asStateFlow()
@@ -99,9 +102,8 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
                     TOLERANCE_IN_CENTS_KEY -> _toleranceInCents.value = obtainToleranceInCents()
                     WAVE_WRITER_DURATION_IN_SECONDS_KEY -> _waveWriterDurationInSeconds.value =
                         obtainWaveWriterDurationInSeconds()
-                    PREFER_FLAT_KEY -> _notePrintOptions.value = obtainNotePrintOptions()
-                    NOTATION_KEY -> _notePrintOptions.value = obtainNotePrintOptions()
-                    //SOLFEGE_KEY -> _notePrintOptions.value = obtainNotePrintOptions()
+                    PREFER_FLAT_KEY -> _noteNamePrinter.value = obtainNoteNamePrinter()
+                    NOTATION_KEY -> _noteNamePrinter.value = obtainNoteNamePrinter()
                     TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY -> {
                         val value = obtainTemperamentAndReferenceNote()
                         _temperamentAndReferenceNote.value = value
@@ -135,40 +137,20 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
 
     private fun obtainScreenAlwaysOn() = sharedPreferences.getBoolean(SCREEN_ALWAYS_ON, false)
 
-    private fun obtainNotePrintOptions(): MusicalNotePrintOptions {
+    private fun obtainNoteNamePrinter(): NoteNamePrinter {
         val preferFlat = sharedPreferences.getBoolean(PREFER_FLAT_KEY, false)
         val notation = sharedPreferences.getString(NOTATION_KEY, "standard") ?: "standard"
 
-        return if (preferFlat) {
-            when (notation) {
-                "solfege" -> MusicalNotePrintOptions.SolfegePreferFlat
-                "international" -> MusicalNotePrintOptions.InternationalPreferFlat
-                else ->  MusicalNotePrintOptions.PreferFlat
-            }
-        } else {
-            when (notation) {
-                "solfege" -> MusicalNotePrintOptions.SolfegePreferSharp
-                "international" -> MusicalNotePrintOptions.InternationalPreferSharp
-                else ->  MusicalNotePrintOptions.PreferSharp
-            }
+        val notationType = when(notation) {
+            "international" -> NotationType.International
+            "solfege" -> NotationType.Solfege
+            else -> NotationType.Standard
         }
-    }
-
-    private fun obtainNotePrintOptionsOld(): MusicalNotePrintOptions {
-        val preferFlat = sharedPreferences.getBoolean(PREFER_FLAT_KEY, false)
-        val useSolfege = sharedPreferences.getBoolean(SOLFEGE_KEY, false)
-
-        return if (preferFlat) {
-            if (useSolfege)
-                MusicalNotePrintOptions.SolfegePreferFlat
-            else
-                MusicalNotePrintOptions.PreferFlat
-        } else {
-            if (useSolfege)
-                MusicalNotePrintOptions.SolfegePreferSharp
-            else
-                MusicalNotePrintOptions.PreferSharp
-        }
+        val sharpFlatPreference = if (preferFlat)
+            NoteNamePrinter.SharpFlatPreference.Flat
+        else
+            NoteNamePrinter.SharpFlatPreference.Sharp
+        return createNoteNamePrinter(context, notationType, sharpFlatPreference)
     }
 
     private fun obtainWindowing(): WindowingFunction {
@@ -208,10 +190,10 @@ class PreferenceResources(private val sharedPreferences: SharedPreferences, scop
         if (sharedPreferences.contains(SOLFEGE_KEY)) {
             val isSolfege = sharedPreferences.getBoolean(SOLFEGE_KEY, false)
             if (isSolfege) {
-                if (notePrintOptions.value.isPreferringFlat)
-                    _notePrintOptions.value = MusicalNotePrintOptions.SolfegePreferFlat
+                if (noteNamePrinter.value.sharpFlatPreference == NoteNamePrinter.SharpFlatPreference.Flat)
+                    _noteNamePrinter.value = createNoteNamePrinter(context, NotationType.Solfege, NoteNamePrinter.SharpFlatPreference.Flat)
                 else
-                    _notePrintOptions.value = MusicalNotePrintOptions.SolfegePreferSharp
+                    _noteNamePrinter.value = createNoteNamePrinter(context, NotationType.Solfege, NoteNamePrinter.SharpFlatPreference.Sharp)
                 sharedPreferences.edit().putString(NOTATION_KEY, "solfege").apply()
             }
             sharedPreferences.edit().remove(SOLFEGE_KEY).apply()

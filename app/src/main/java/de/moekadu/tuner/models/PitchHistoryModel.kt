@@ -4,7 +4,10 @@ import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.notedetection.TuningTarget
 import de.moekadu.tuner.notedetection.checkTuning
-import de.moekadu.tuner.temperaments.*
+import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.temperaments.NoteNamePrinter
 import kotlin.math.log
 import kotlin.math.max
 import kotlin.math.min
@@ -49,7 +52,7 @@ class PitchHistoryModel {
     var targetNoteChangeId = 0
         private set
 
-    var notePrintOptions = MusicalNotePrintOptions.None
+    var noteNamePrinter: NoteNamePrinter? = null
         private set
     var notePrintOptionsChangeId = 0
         private set
@@ -99,7 +102,7 @@ class PitchHistoryModel {
         tuningTarget: TuningTarget? = null,
         maxNumHistoryValues: Int = -1,
         toleranceInCents: Int = -1,
-        notePrintOptions: MusicalNotePrintOptions? = null,
+        noteNamePrinter: NoteNamePrinter? = null,
         isCurrentlyDetectingNotes: Boolean = this.isCurrentlyDetectingNotes
     ) {
         changeId++
@@ -114,10 +117,10 @@ class PitchHistoryModel {
             musicalScaleChangeId = changeId
         }
 
-        if (notePrintOptions != null) {
-            this.notePrintOptions = notePrintOptions
+        if (noteNamePrinter != null) {
+            this.noteNamePrinter = noteNamePrinter
             notePrintOptionsChangeId = changeId
-            useExtraPadding = (notePrintOptions.notation == Notation.solfege)
+            useExtraPadding = (noteNamePrinter.noteNameWidth == NoteNamePrinter.MaxNoteNameWidth.MultipleLetters)
         }
 
         // handle tuning target

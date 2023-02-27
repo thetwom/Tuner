@@ -113,15 +113,15 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
             restartSamplingIfRunning()
         }}
 
-        viewModelScope.launch { pref.notePrintOptions.collect {
+        viewModelScope.launch { pref.noteNamePrinter.collect {
             _stringViewModel.value = stringViewModel.value?.apply {
-                changeSettings(notePrintOptions = it)
+                changeSettings(noteNamePrinter = it)
             }
             _noteSelectorModel.value = noteSelectorModel.value?.apply {
-                changeSettings(notePrintOptions = it)
+                changeSettings(noteNamePrinter = it)
             }
             _detectedNoteModel.value = detectedNoteModel.value?.apply {
-                changeSettings(notePrintOptions = it)
+                changeSettings(noteNamePrinter = it)
             }
         }}
 

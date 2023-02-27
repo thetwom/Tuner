@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.DefaultValues
+import de.moekadu.tuner.preferenceResources
 import de.moekadu.tuner.temperaments.*
 import de.moekadu.tuner.views.NoteSelector
 import kotlin.math.log
@@ -141,14 +142,11 @@ class ReferenceNotePreferenceDialog: DialogFragment() {
         private const val REQUEST_KEY = "reference_note_preference_dialog.request_key"
         private const val CURRENT_VALUE_KEY = "reference_note_preference_dialog.current_value_key"
         private const val WARNING_MESSAGE_KEY = "reference_note_preference_dialog.warning_message_key"
-        private const val NOTE_PRINT_OPTIONS_KEY = "reference_note_preference_dialog.note_print_options_key"
 
         fun newInstance(currentValue: TemperamentAndReferenceNoteValue,
-                        warningMessage: String?,
-                        notePrintOptions: MusicalNotePrintOptions): ReferenceNotePreferenceDialog {
+                        warningMessage: String?): ReferenceNotePreferenceDialog {
             val args = Bundle(3)
             args.putString(CURRENT_VALUE_KEY, currentValue.toString())
-            args.putString(NOTE_PRINT_OPTIONS_KEY, notePrintOptions.toString())
             if (warningMessage != null)
                 args.putString(WARNING_MESSAGE_KEY, warningMessage)
             val fragment = ReferenceNotePreferenceDialog()
@@ -159,18 +157,11 @@ class ReferenceNotePreferenceDialog: DialogFragment() {
         fun setupFragmentResultListener(
             fragmentManager: FragmentManager,
             lifecycleOwner: LifecycleOwner,
-            //pref: SharedPreferences,
             onPreferenceChanged: (TemperamentAndReferenceNoteValue) -> Unit
         ) {
             fragmentManager.setFragmentResultListener(REQUEST_KEY, lifecycleOwner) { _, bundle ->
                 val newPrefsString = bundle.getString(CURRENT_VALUE_KEY) ?: throw RuntimeException("No value set")
-//                val editor = pref.edit()
                 val newPrefs = TemperamentAndReferenceNoteValue.fromString(newPrefsString) ?: throw RuntimeException("Invalid value")
-//                editor.putString(
-//                    TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY,
-//                    newPrefsString
-//                )
-//                editor.apply()
                 onPreferenceChanged(newPrefs)
             }
         }
@@ -182,7 +173,6 @@ class ReferenceNotePreferenceDialog: DialogFragment() {
     private var initialPrefs: TemperamentAndReferenceNoteValue? = null
     private var savedReferenceNote: MusicalNote? = null
     private var savedFrequencyString: String? = null
-    private var notePrintOptions = MusicalNotePrintOptions.None
 
     override fun onCreate(savedInstanceState: Bundle?) {
 //        Log.v("Tuner","ReferenceNotePreferenceDialog.onCreate: $preference (setting)")
@@ -196,9 +186,6 @@ class ReferenceNotePreferenceDialog: DialogFragment() {
             savedReferenceNote = if (referenceNoteString == null) null else MusicalNote.fromString(referenceNoteString)
             savedFrequencyString = savedInstanceState.getString("reference frequency")
         }
-
-        val notePrintOptionsString = arguments?.getString(NOTE_PRINT_OPTIONS_KEY) ?: MusicalNotePrintOptions.None.toString()
-        notePrintOptions = MusicalNotePrintOptions.valueOf(notePrintOptionsString)
 //        Log.v("Tuner", "ReferenceNoteDialog2.onCreate = initialPrefs = $initialPrefs")
 
         super.onCreate(savedInstanceState)
@@ -265,7 +252,7 @@ class ReferenceNotePreferenceDialog: DialogFragment() {
             noteIndexEnd,
             noteNameScale,
             savedReferenceNote ?: initialPrefs!!.referenceNote,
-            notePrintOptions)
+            requireContext().preferenceResources.noteNamePrinter.value)
 
         editTextView?.setText(savedFrequencyString ?: initialPrefs!!.referenceFrequency)
         editTextView?.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
@@ -278,14 +265,11 @@ class TemperamentPreferenceDialog : DialogFragment() {
     companion object {
         private const val REQUEST_KEY = "temperament_preference_dialog.request_key"
         private const val CURRENT_VALUE_KEY = "reference_note_preference_dialog.current_value_key"
-        private const val NOTE_PRINT_OPTIONS_KEY = "reference_note_preference_dialog.note_print_options_key"
 
-        fun newInstance(currentValue: TemperamentAndReferenceNoteValue,
-                        notePrintOptions: MusicalNotePrintOptions): TemperamentPreferenceDialog {
+        fun newInstance(currentValue: TemperamentAndReferenceNoteValue): TemperamentPreferenceDialog {
             val args = Bundle(2)
             args.putString(CURRENT_VALUE_KEY, currentValue.toString())
 //            Log.v("Tuner", "TemperamentPreferenceDialog2.newInstance: currentValue = $currentValue")
-            args.putString(NOTE_PRINT_OPTIONS_KEY, notePrintOptions.toString())
             val fragment = TemperamentPreferenceDialog()
             fragment.arguments = args
             return fragment
@@ -293,26 +277,18 @@ class TemperamentPreferenceDialog : DialogFragment() {
 
         fun setupFragmentResultListener(fragmentManager: FragmentManager,
                                         lifecycleOwner: LifecycleOwner,
-                                        //pref: SharedPreferences,
                                         context: Context, // needed for getting string resources
-                                        printOption: () -> MusicalNotePrintOptions,
                                         previousPreferences: () -> TemperamentAndReferenceNoteValue,
                                         onPreferenceChanged: (TemperamentAndReferenceNoteValue) -> Unit) {
 
             fragmentManager.setFragmentResultListener(REQUEST_KEY, lifecycleOwner) { _, bundle ->
                 val oldPrefs = previousPreferences() // TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
                 val newPrefsString = bundle.getString(CURRENT_VALUE_KEY) ?: throw RuntimeException("No value set")
-                // val editor = pref.edit()
                 val newPrefs = TemperamentAndReferenceNoteValue.fromString(newPrefsString) ?: throw RuntimeException("Invalid value")
 
                 val newPrefNoteNameScale = NoteNameScaleFactory.create(newPrefs.temperamentType)
 
                 if (newPrefNoteNameScale.hasNote(newPrefs.referenceNote)) {
-//                    editor.putString(
-//                        TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY,
-//                        newPrefsString
-//                    )
-//                    editor.apply()
                     onPreferenceChanged(newPrefs)
                 } else {
                     // fire reference note dialog to get a compatible reference note
@@ -323,8 +299,7 @@ class TemperamentPreferenceDialog : DialogFragment() {
 //                    Log.v("Tuner", "TemperamentPreferenceDialog2.setupFragmentResultListener: initialPrefsWithCompatibleReferenceNote = $initialPrefsWithCompatibleReferenceNote")
                     val dialog = ReferenceNotePreferenceDialog.newInstance(
                         initialPrefsWithCompatibleReferenceNote,
-                        warningMessage = context.getString(R.string.new_temperament_requires_adapting_reference_note),
-                        printOption()
+                        warningMessage = context.getString(R.string.new_temperament_requires_adapting_reference_note)
                     )
                     dialog.show(fragmentManager, "tag")
                 }
@@ -337,7 +312,6 @@ class TemperamentPreferenceDialog : DialogFragment() {
         }
     }
 
-    private var noteNamePrinter: NoteNamePrinter? = null
     private var temperamentSpinner: Spinner? = null
     private var rootNoteSelector: NoteSelector? = null
     private var noteTable: RecyclerView? = null
@@ -347,8 +321,6 @@ class TemperamentPreferenceDialog : DialogFragment() {
     private var circleOfFifthsDesc: TextView? = null
     private var circleOfFifthsTitle: TextView? = null
     private var resetToDefaultButton: MaterialButton? = null
-
-    private var notePrintOptions = MusicalNotePrintOptions.None
 
     private var centArray = FloatArray(0) { 0f }
     private var ratioArray: Array<RationalNumber>? = null
@@ -372,8 +344,6 @@ class TemperamentPreferenceDialog : DialogFragment() {
             savedTemperamentType = if (temperamentTypeString == null) null else TemperamentType.valueOf(temperamentTypeString)
         }
 
-        val notePrintOptionsString = arguments?.getString(NOTE_PRINT_OPTIONS_KEY) ?: MusicalNotePrintOptions.None.toString()
-        notePrintOptions = MusicalNotePrintOptions.valueOf(notePrintOptionsString)
         super.onCreate(savedInstanceState)
     }
 
@@ -389,8 +359,6 @@ class TemperamentPreferenceDialog : DialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        noteNamePrinter = NoteNamePrinter(requireContext())
-
         val view = requireActivity().layoutInflater.inflate(R.layout.temperament_preference, null)
         val dialog = AlertDialog.Builder(requireContext()).apply {
             setTitle(R.string.temperament)
@@ -512,7 +480,8 @@ class TemperamentPreferenceDialog : DialogFragment() {
             null
 
         // set the new note scale in the root note selector and select the required note
-        rootNoteSelector?.setNotes(noteIndexBegin, noteIndexEnd, musicalScaleLocal.noteNameScale, rootNote, notePrintOptions)
+        rootNoteSelector?.setNotes(noteIndexBegin, noteIndexEnd, musicalScaleLocal.noteNameScale,
+            rootNote, requireContext().preferenceResources.noteNamePrinter.value)
 
         val selectedRootNote = rootNoteSelector?.activeNote ?: musicalScaleLocal.noteNameScale.notes[0].copy(octave = 4)
         updateCentAndRatioTable(selectedRootNote, musicalScaleLocal.noteNameScale, centArray, ratioArray)
@@ -538,6 +507,7 @@ class TemperamentPreferenceDialog : DialogFragment() {
     private fun updateCentAndRatioTable(rootNote: MusicalNote, noteNameScale: NoteNameScale,
                                         centArray: FloatArray, ratioArray: Array<RationalNumber>?) {
         val ctx = context ?: return
+        val noteNamePrinter = ctx.preferenceResources.noteNamePrinter.value
         val rootNoteIndex = noteNameScale.getIndexOfNote(rootNote)
         //require(rootNoteIndex >= 0)
 
@@ -545,7 +515,7 @@ class TemperamentPreferenceDialog : DialogFragment() {
             Array(centArray.size) {
                 // delete octave index, so that it is not printed
                 val note = noteNameScale.getNoteOfIndex(rootNoteIndex + it)
-                noteNamePrinter?.noteToCharSequence(note, printOption = notePrintOptions, withOctave = false) ?: ""
+                noteNamePrinter.noteToCharSequence(note, withOctave = false) ?: ""
             },
             centArray,
             ratioArray
@@ -553,7 +523,8 @@ class TemperamentPreferenceDialog : DialogFragment() {
     }
 
     private fun updateCircleOfFifthNoteNames(rootNote:MusicalNote, noteNameScale: NoteNameScale) {
-        circleOfFifthsAdapter.setEntries(rootNote, noteNameScale, null, notePrintOptions)
+        circleOfFifthsAdapter.setEntries(rootNote, noteNameScale, null,
+            requireContext().preferenceResources.noteNamePrinter.value)
     }
 
     private fun updateCircleOfFifthCorrections(fifths: TemperamentCircleOfFifths?) {
@@ -566,6 +537,7 @@ class TemperamentPreferenceDialog : DialogFragment() {
         circleOfFifths?.visibility = View.VISIBLE
         circleOfFifthsDesc?.visibility = View.VISIBLE
         circleOfFifthsTitle?.visibility = View.VISIBLE
-        circleOfFifthsAdapter.setEntries(null, null, fifths, notePrintOptions)
+        circleOfFifthsAdapter.setEntries(null, null, fifths,
+            requireContext().preferenceResources.noteNamePrinter.value)
     }
 }

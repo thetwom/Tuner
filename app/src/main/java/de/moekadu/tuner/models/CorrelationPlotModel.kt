@@ -1,8 +1,7 @@
 package de.moekadu.tuner.models
 
 import de.moekadu.tuner.notedetection.AutoCorrelation
-import de.moekadu.tuner.temperaments.MusicalNotePrintOptions
-import de.moekadu.tuner.temperaments.Notation
+import de.moekadu.tuner.temperaments.NoteNamePrinter
 import kotlin.math.min
 
 class CorrelationPlotModel {
@@ -35,7 +34,7 @@ class CorrelationPlotModel {
         autoCorrelation: AutoCorrelation? = null,
         detectedFrequency: Float = -1f,
         targetFrequency: Float = -1f,
-        notePrintOptions: MusicalNotePrintOptions? = null
+        noteNamePrinter: NoteNamePrinter? = null
     ) {
         ++changeId
         autoCorrelation?.let {
@@ -59,8 +58,8 @@ class CorrelationPlotModel {
             targetChangeId = changeId
         }
 
-        notePrintOptions?.let {
-            useExtraPadding = (notePrintOptions.notation == Notation.solfege)
+        noteNamePrinter?.let {
+            useExtraPadding = (it.noteNameWidth == NoteNamePrinter.MaxNoteNameWidth.MultipleLetters)
         }
 
     }
