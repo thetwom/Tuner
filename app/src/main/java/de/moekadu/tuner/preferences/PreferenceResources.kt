@@ -144,6 +144,8 @@ class PreferenceResources(
         val notationType = when(notation) {
             "international" -> NotationType.International
             "solfege" -> NotationType.Solfege
+            "carnatic" -> NotationType.Carnatic
+            "hindustani" -> NotationType.Hindustani
             else -> NotationType.Standard
         }
         val sharpFlatPreference = if (preferFlat)

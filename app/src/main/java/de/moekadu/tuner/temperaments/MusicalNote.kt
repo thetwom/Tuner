@@ -63,8 +63,8 @@ data class MusicalNote(val base: BaseNote, val modifier: NoteModifier, val octav
     }
 
     /** Return a note, where enharmonic and base represenation are exchanged. */
-    fun switchEnharmonic(): MusicalNote {
-        if (enharmonicBase == BaseNote.None)
+    fun switchEnharmonic(switchAlsoForBaseNone: Boolean = false): MusicalNote {
+        if (enharmonicBase == BaseNote.None && !switchAlsoForBaseNone)
             return this
         return MusicalNote(base = enharmonicBase, modifier = enharmonicModifier, octave = octave,
             octaveOffset = enharmonicOctaveOffset,

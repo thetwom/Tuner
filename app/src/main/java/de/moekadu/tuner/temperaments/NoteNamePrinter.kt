@@ -198,75 +198,85 @@ class NoteNamePrinter(
     }
 
     private fun resolveNoteProperties(note: MusicalNote): ResolvedNoteProperties {
-        // check if there is a direct note name capturing base and modifier
+        return if (preferEnharmonic(note)) {
+            resolveNotePropertiesWithoutEnharmonicCheck(note.switchEnharmonic(switchAlsoForBaseNone = true))
+        } else {
+            resolveNotePropertiesWithoutEnharmonicCheck(note)
+        }
+    }
+
+    private fun resolveNotePropertiesWithoutEnharmonicCheck(note: MusicalNote): ResolvedNoteProperties {
+        // check if we can directly resolve the note
         val stem = NoteNameStem.fromMusicalNote(note)
-        val noteNameOriginal = noteResourceIds[stem]?.let{ context.getString(it) }
-        if (noteNameOriginal != null && noteNameOriginal != "" && noteNameOriginal != "-") {
+        val noteName = noteResourceIds[stem]?.let { context.getString(it) }
+        if (noteName != null && noteName != "" && noteName != "-") {
             return ResolvedNoteProperties(
-                baseName = noteNameOriginal,
+                baseName = noteName,
                 modifier = NoteModifier.None,
                 octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else note.octave + note.octaveOffset
             )
         }
 
-        // check if there is a direct note name of the enharmonic capturing base and modifier
-        val noteEnharmonic = note.switchEnharmonic()
+        // check if we can directly resolve the enharmonic
+        val noteEnharmonic = note.switchEnharmonic(switchAlsoForBaseNone = true)
         val stemEnharmonic = NoteNameStem.fromMusicalNote(noteEnharmonic)
-        val noteNameEnharmonic = noteResourceIds[stemEnharmonic]?.let{ context.getString(it) }
-        if (noteNameEnharmonic != null && noteNameEnharmonic !="" && noteNameEnharmonic != "-") {
+        val noteNameEnharmonic = noteResourceIds[stemEnharmonic]?.let { context.getString(it) }
+
+        if (noteNameEnharmonic != null && noteNameEnharmonic != "" && noteNameEnharmonic != "-") {
             return ResolvedNoteProperties(
                 baseName = noteNameEnharmonic,
                 modifier = NoteModifier.None,
+                octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else noteEnharmonic.octave + noteEnharmonic.octaveOffset
+            )
+        }
+
+        // try to resolve note by base name + modifier
+        val stemBase = NoteNameStem(
+            note.base, NoteModifier.None, BaseNote.None, NoteModifier.None
+        )
+        val noteNameBase = noteResourceIds[stemBase]?.let { context.getString(it) }
+        if (noteNameBase != null && noteNameBase != "" && noteNameBase != "-") {
+            return ResolvedNoteProperties(
+                baseName = noteNameBase,
+                modifier = note.modifier,
                 octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else note.octave + note.octaveOffset
             )
         }
 
-        // construct note name based on base note and modifier -> either for enharmonic, or directly
-        if (preferEnharmonic(note)) {
-            val stemEnharmonicBase = NoteNameStem(
-                noteEnharmonic.base, NoteModifier.None, BaseNote.None, NoteModifier.None
+        // try to resolve note by enharmonic base name + modifier
+        val stemEnharmonicBase = NoteNameStem(
+            noteEnharmonic.base, NoteModifier.None, BaseNote.None, NoteModifier.None
+        )
+        val noteNameEnharmonicBase = noteResourceIds[stemEnharmonicBase]?.let { context.getString(it) }
+        if (noteNameEnharmonicBase != null && noteNameEnharmonicBase != "" && noteNameEnharmonicBase != "-") {
+            return ResolvedNoteProperties(
+                baseName = noteNameEnharmonicBase,
+                modifier = noteEnharmonic.modifier,
+                octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else noteEnharmonic.octave + noteEnharmonic.octaveOffset
             )
-            val noteNameEnharmonicBase =
-                noteResourceIds[stemEnharmonicBase]?.let { context.getString(it) }
-            if (noteNameEnharmonicBase != null && noteNameEnharmonicBase != "" && noteNameEnharmonicBase != "-") {
-                return ResolvedNoteProperties(
-                    baseName = noteNameEnharmonicBase,
-                    modifier = noteEnharmonic.modifier,
-                    octave = if (noteEnharmonic.octave == Int.MAX_VALUE) Int.MAX_VALUE else noteEnharmonic.octave + noteEnharmonic.octaveOffset
-                )
-            }
-        } else {
-            val stemBase = NoteNameStem(
-                note.base, NoteModifier.None, BaseNote.None, NoteModifier.None
-            )
-            val noteNameBase =
-                noteResourceIds[stemBase]?.let { context.getString(it) }
-            if (noteNameBase != null && noteNameBase != "" && noteNameBase != "-") {
-                return ResolvedNoteProperties(
-                    baseName = noteNameBase,
-                    modifier = note.modifier,
-                    octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else note.octave + note.octaveOffset
-                )
-            }
         }
-
-        // note able to resolve note name, print a X
         return ResolvedNoteProperties("X", NoteModifier.None, note.octave)
     }
 
     private fun preferEnharmonic(note: MusicalNote): Boolean {
         if (note.enharmonicBase == BaseNote.None)
-            return false
+            return sharpFlatPreference == SharpFlatPreference.Flat
 
         return when (sharpFlatPreference) {
             SharpFlatPreference.None -> {
                 false
             }
             SharpFlatPreference.Sharp -> {
-                note.enharmonicModifier.flatSharpIndex() > note.modifier.flatSharpIndex()
+                if (note.enharmonicModifier.flatSharpIndex() == note.modifier.flatSharpIndex())
+                    false
+                else
+                    note.enharmonicModifier.flatSharpIndex() > note.modifier.flatSharpIndex()
             }
             SharpFlatPreference.Flat -> {
-                note.enharmonicModifier.flatSharpIndex() < note.modifier.flatSharpIndex()
+                if (note.enharmonicModifier.flatSharpIndex() == note.modifier.flatSharpIndex())
+                    true
+                else
+                    note.enharmonicModifier.flatSharpIndex() < note.modifier.flatSharpIndex()
             }
         }
     }

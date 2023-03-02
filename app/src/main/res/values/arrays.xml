@@ -35,11 +35,15 @@
         <item>"standard"</item>
         <item>"solfege"</item>
         <item>"international"</item>
+        <item>"carnatic"</item>
+        <item>"hindustani"</item>
     </string-array>
 
     <string-array name="notation_names">
         <item>@string/notation_standard</item>
         <item>@string/notation_solfege</item>
         <item>@string/notation_international</item>
+        <item>@string/notation_carnatic</item>
+        <item>@string/notation_hindustani</item>
     </string-array>
 </resources>
