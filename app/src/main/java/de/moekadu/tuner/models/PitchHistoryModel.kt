@@ -126,7 +126,7 @@ class PitchHistoryModel {
         // handle tuning target
         if (tuningTarget != null) {
 //            Log.v("Tuner", "PitchHistoryModel.changeSettings: tuningTarget=$tuningTarget")
-            targetNote = if (tuningTarget.isPartOfInstrument) tuningTarget.note else null
+            targetNote = if (tuningTarget.isPartOfInstrument || tuningTarget.instrumentHasNoStrings) tuningTarget.note else null
             targetNoteFrequency = tuningTarget.frequency
             recomputeYRange = true
             recomputeToleranceBounds = true

@@ -39,6 +39,9 @@ class StringsModel {
     var highlightChangeId = 0
         private set
 
+    var isVisible = true
+        private set
+
     fun changeSettings(
         instrument: Instrument? = null,
         musicalScale: MusicalScale? = null,
@@ -54,6 +57,7 @@ class StringsModel {
             if (this.instrument != it) {
                 settingsChangeId = changeId
                 doCheckInstrumentCompatibility = true
+                isVisible = !(!instrument.isChromatic && instrument.strings.isEmpty())
                 this.instrument = it
             }
         }

@@ -81,7 +81,12 @@ class TunerViewModel(
 
     /** Current tuning target. */
     private val _tuningTarget = MutableStateFlow(
-        TuningTarget(pref.musicalScale.value.referenceNote, pref.musicalScale.value.referenceFrequency, false)
+        TuningTarget(
+            pref.musicalScale.value.referenceNote,
+            pref.musicalScale.value.referenceFrequency,
+            isPartOfInstrument = false,
+            instrumentHasNoStrings = !instrument.value.instrument.isChromatic && instrument.value.instrument.strings.isEmpty()
+        )
     )
     private val tuningTarget = _tuningTarget.asStateFlow()
 

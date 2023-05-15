@@ -131,6 +131,7 @@ class TunerFragmentSimple : Fragment() {
                 stringViewChangeId = -1
 
             if (model.settingsChangeId > stringViewChangeId) {
+                stringView?.visibility = if (model.isVisible) View.VISIBLE else View.GONE
                 stringView?.enableExtraPadding = model.useExtraPadding
                 val printer = model.noteNamePrinter
                 if (model.instrument.isChromatic && printer != null) {

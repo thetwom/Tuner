@@ -7,7 +7,8 @@ import de.moekadu.tuner.temperaments.MusicalScale
 data class TuningTarget(
     val note: MusicalNote,
     val frequency: Float,
-    val isPartOfInstrument: Boolean
+    val isPartOfInstrument: Boolean,
+    val instrumentHasNoStrings: Boolean
 )
 
 class TuningTargetComputer(
@@ -32,7 +33,8 @@ class TuningTargetComputer(
                 return TuningTarget(
                     userDefinedTargetNote,
                     musicalScale.getNoteFrequency(index),
-                    sortedAndDistinctInstrumentStrings.isNotePartOfInstrument(userDefinedTargetNote)
+                    isPartOfInstrument = sortedAndDistinctInstrumentStrings.isNotePartOfInstrument(userDefinedTargetNote),
+                    instrumentHasNoStrings = !instrument.isChromatic && instrument.strings.isEmpty()
                 )
             }
         }
@@ -42,7 +44,8 @@ class TuningTargetComputer(
             return TuningTarget(
                 musicalScale.referenceNote,
                 musicalScale.referenceFrequency,
-                sortedAndDistinctInstrumentStrings.isNotePartOfInstrument(musicalScale.referenceNote)
+                isPartOfInstrument = sortedAndDistinctInstrumentStrings.isNotePartOfInstrument(musicalScale.referenceNote),
+                instrumentHasNoStrings = !instrument.isChromatic && instrument.strings.isEmpty()
             )
         }
 
@@ -54,7 +57,8 @@ class TuningTargetComputer(
             return TuningTarget(
                 detectedTargetNote,
                 musicalScale.getNoteFrequency(index),
-                true
+                isPartOfInstrument = true,
+                instrumentHasNoStrings = !instrument.isChromatic && instrument.strings.isEmpty()
             )
         }
 
@@ -62,6 +66,11 @@ class TuningTargetComputer(
         val chromaticTargetNote = targetNoteAutoDetectionChromatic.detect(frequency, previousTargetNote)
         // the returned note will always be non null for chromatic instruments and non-zero frequencies
         val index = musicalScale.getNoteIndex(chromaticTargetNote!!)
-        return TuningTarget(chromaticTargetNote, musicalScale.getNoteFrequency(index), false)
+        return TuningTarget(
+            chromaticTargetNote,
+            musicalScale.getNoteFrequency(index),
+            isPartOfInstrument = false,
+            instrumentHasNoStrings = !instrument.isChromatic && instrument.strings.isEmpty()
+        )
     }
 }
