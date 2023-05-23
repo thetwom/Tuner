@@ -54,7 +54,8 @@ class NoteNamePrinter(
     private val context: Context,
     val sharpFlatPreference: SharpFlatPreference,
     private val noteResourceIds: Map<NoteNameStem, Int>,
-    val noteNameWidth: MaxNoteNameWidth
+    val noteNameWidth: MaxNoteNameWidth,
+    val hasSharpFlatCounterpart: Boolean = true
 ) {
     enum class MaxNoteNameWidth {
         SingleLetter, // C, D, E, ... or similar

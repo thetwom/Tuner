@@ -226,4 +226,6 @@
     <string name="notation_standard">Standard (A-H-C-…)</string>
     <string name="notation_solfege">Solfège</string>
     <string name="notation_international">International (A-B-C-…)</string>
+    <string name="notation_carnatic">Karnatisch</string>
+    <string name="notation_hindustani">Hindustanisch</string>
 </resources>

@@ -17,12 +17,16 @@ class PreferenceBarContainer(val activity: MainActivity) {
     private val temperament = activity.findViewById<TextView>(R.id.temperament)
     private val preferFlatSwitch = activity.findViewById<ImageView>(R.id.prefer_flat)
 
+    private var isPreferFlatSwitchVisible = true
     var visibility = View.VISIBLE
         set(value) {
             background.visibility = value
             referenceNote.visibility = value
             temperament.visibility = value
-            preferFlatSwitch.visibility = value
+            preferFlatSwitch.visibility = if (isPreferFlatSwitchVisible)
+                value
+            else
+                View.INVISIBLE
             field = value
         }
 
@@ -59,5 +63,12 @@ class PreferenceBarContainer(val activity: MainActivity) {
 
     fun setTemperament(temperamentType: TemperamentType) {
         temperament.text = activity.getString(getTuningNameAbbrResourceId(temperamentType))
+    }
+
+    fun setSharpFlatPreferenceVisibility(isVisible: Boolean) {
+//        Log.v("Tuner", "PreferenceBarContainer.setSharpFlatPreferenceVisibility: isVisible=$isVisible")
+        isPreferFlatSwitchVisible = isVisible
+        if (visibility == View.VISIBLE)
+            preferFlatSwitch.visibility = if (isVisible) View.VISIBLE else View.INVISIBLE
     }
 }

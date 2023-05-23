@@ -253,37 +253,29 @@
     <string name="capture_in_scientific_mode">Capture in scientific mode</string>
     <string name="solfege_notation">Solfège notation</string>
     <string name="sa_carnatic">Sa</string>
-    <string name="ri1_carnatic">Ri₁</string>
-    <string name="ri2_carnatic">Ri₂</string>
-    <string name="ga1_carnatic">Ga₁</string>
-    <string name="ga2_carnatic">Ga₂</string>
-    <string name="ri3_carnatic">Ri₃</string>
-    <string name="ga3_carnatic">Ga₃</string>
-    <string name="ma1_carnatic">Ma₁</string>
-    <string name="ma2_carnatic">Ma₂</string>
-    <string name="pa_carnatic">Pa</string>
-    <string name="dha1_carnatic">Dha₁</string>
-    <string name="dha2_carnatic">Dha₂</string>
-    <string name="ni1_carnatic">Ni₁</string>
-    <string name="ni2_carnatic">Ni₂</string>
-    <string name="dha3_carnatic">Dha₃</string>
-    <string name="ni3_carnatic">Ni₃</string>
+    <string name="ri1_carnatic" translatable="false">Ri₁</string>
+    <string name="ri2_carnatic" translatable="false">Ri₂</string>
+    <string name="ga1_carnatic" translatable="false">Ga₁</string>
+    <string name="ga2_carnatic" translatable="false">Ga₂</string>
+    <string name="ma1_carnatic" translatable="false">Ma₁</string>
+    <string name="ma2_carnatic" translatable="false">Ma₂</string>
+    <string name="pa_carnatic" translatable="false">Pa</string>
+    <string name="dha1_carnatic" translatable="false">Dha₁</string>
+    <string name="dha2_carnatic" translatable="false">Dha₂</string>
+    <string name="ni1_carnatic" translatable="false">Ni₁</string>
+    <string name="ni2_carnatic" translatable="false">Ni₂</string>
     <string name="notation_carnatic">Carnatic</string>
-    <string name="sa_hindustani">Sa</string>
-    <string name="re1_hindustani">Re₁</string>
-    <string name="re2_hindustani">Re₂</string>
-    <string name="ga1_hindustani">Ga₁</string>
-    <string name="ga2_hindustani">Ga₂</string>
-    <string name="re3_hindustani">Re₃</string>
-    <string name="ga3_hindustani">Ga₃</string>
-    <string name="ma1_hindustani">Ma₁</string>
-    <string name="ma2_hindustani">Ma₂</string>
-    <string name="pa_hindustani">Pa</string>
-    <string name="dha1_hindustani">Dha₁</string>
-    <string name="dha2_hindustani">Dha₂</string>
-    <string name="ni1_hindustani">Ni₁</string>
-    <string name="ni2_hindustani">Ni₂</string>
-    <string name="dha3_hindustani">Dha₃</string>
-    <string name="ni3_hindustani">Ni₃</string>
+    <string name="sa_hindustani" translatable="false">Sa</string>
+    <string name="re1_hindustani" translatable="false">Re₁</string>
+    <string name="re2_hindustani" translatable="false">Re₂</string>
+    <string name="ga1_hindustani" translatable="false">Ga₁</string>
+    <string name="ga2_hindustani" translatable="false">Ga₂</string>
+    <string name="ma1_hindustani" translatable="false">Ma₁</string>
+    <string name="ma2_hindustani" translatable="false">Ma₂</string>
+    <string name="pa_hindustani" translatable="false">Pa</string>
+    <string name="dha1_hindustani" translatable="false">Dha₁</string>
+    <string name="dha2_hindustani" translatable="false">Dha₂</string>
+    <string name="ni1_hindustani" translatable="false">Ni₁</string>
+    <string name="ni2_hindustani" translatable="false">Ni₂</string>
     <string name="notation_hindustani">Hindustani</string>
 </resources>

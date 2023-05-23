@@ -113,6 +113,9 @@ class MainActivity : AppCompatActivity() {
                         currentPrefs.referenceFrequency,
                         preferenceResources.noteNamePrinter.value
                     )
+                    preferenceBarContainer.setSharpFlatPreferenceVisibility(
+                        it.hasSharpFlatCounterpart
+                    )
                 }
             }
         }
