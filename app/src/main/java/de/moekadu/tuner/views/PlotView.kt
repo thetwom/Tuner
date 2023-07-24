@@ -910,6 +910,12 @@ private class PlotMarks(transformation: PlotTransformation,
      */
     private var styleIndex = 0
 
+    /** Offset in x-direction in px by which the mark position is shifted. */
+    private var offsetX = 0f
+    /** Offset in y-direction in px by which the mark position is shifted. */
+    private var offsetY = 0f
+
+
     /** Tell if the background should be tightly fitted along a label or all backgrounds
      * should be of same size.
      */
@@ -1063,6 +1069,15 @@ private class PlotMarks(transformation: PlotTransformation,
         plotMarksChangedListener?.onPlotMarksChanged(this, hasNewBoundingBox = false)
     }
 
+    // TODO: bounding boxes must take this into account!
+    fun setOffset(offsetX: Float, offsetY: Float) {
+        if (offsetX == this.offsetX && offsetY == this.offsetY)
+            return
+        this.offsetX = offsetX
+        this.offsetY = offsetY
+        plotMarksChangedListener?.onPlotMarksChanged(this, hasNewBoundingBox = false)
+    }
+
     fun drawToCanvas(canvas: Canvas?) {
         val viewBounds = transformation?.viewPlotBounds ?: return
         val rawBounds = transformation?.rawPlotBounds ?: return
@@ -1111,15 +1126,15 @@ private class PlotMarks(transformation: PlotTransformation,
             // horizontal line
             if (xRaw == DRAW_LINE && yRaw > rawBounds.top && yRaw < rawBounds.bottom) {
                 path.rewind()
-                path.moveTo(viewBounds.left, y)
-                path.lineTo(viewBounds.right, y)
+                path.moveTo(viewBounds.left, y + offsetY)
+                path.lineTo(viewBounds.right, y + offsetY)
                 canvas?.drawPath(path, linePaints[styleIndex])
             }
             // vertical line
             else if (yRaw == DRAW_LINE && xRaw > rawBounds.left && xRaw < rawBounds.right) {
                 path.rewind()
-                path.moveTo(x, viewBounds.bottom)
-                path.lineTo(x, viewBounds.top)
+                path.moveTo(x + offsetX, viewBounds.bottom)
+                path.lineTo(x + offsetX, viewBounds.top)
                 canvas?.drawPath(path, linePaints[styleIndex])
             }
 
@@ -1185,7 +1200,7 @@ private class PlotMarks(transformation: PlotTransformation,
                 if (isMarkInBoundingBox(mark, x, y, labelAnchorResolved)) {
                     if (backgroundSizeType == MarkLabelBackgroundSize.FitLargest) {
                         layout.drawToCanvasWithFixedSizeBackground(
-                            x, y,
+                            x + offsetX, y + offsetY,
                             (maxLabelSizes[styleIndex]?.maxWidth ?: 0f) + 2 * labelPaddingHorizontal,
                             (maxLabelSizes[styleIndex]?.maxHeight ?: 0f) + 2 * labelPaddingVertical,
                             0f,
@@ -1193,7 +1208,7 @@ private class PlotMarks(transformation: PlotTransformation,
                             canvas
                         )
                     } else {
-                        layout.drawToCanvasWithPaddedBackground(x, y, labelAnchorResolved, canvas)
+                        layout.drawToCanvasWithPaddedBackground(x + offsetX, y + offsetY, labelAnchorResolved, canvas)
                     }
                 }
             }
@@ -1791,14 +1806,14 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             flingAnimation.cancel()
             return true
         }
-        override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
+        override fun onScroll(e1: MotionEvent?, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
 //            Log.v("Tuner", "PlotView: gestureListener.OnScroll x=$distanceX, y=$distanceY")
             scrollDistance(distanceX, distanceY)
             return true
         }
 
         override fun onFling(
-            e1: MotionEvent,
+            e1: MotionEvent?,
             e2: MotionEvent,
             velocityX: Float,
             velocityY: Float
@@ -2064,7 +2079,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             yMin = _yRange.rangeMin, yMax = _yRange.rangeMax)
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
         val totalPaddingLeft = paddingLeft + (if (enableExtraPadding) extraPaddingLeft else 0f)
@@ -2095,8 +2110,8 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
 
 //        Log.v("StaticLayoutTest", "PlotView.onDraw: rawViewTransformation: ${rawViewTransformation.rawPlotBounds}, ${rawViewTransformation.viewPlotBounds}")
 //        Log.v("StaticLayoutTest", "PlotView.onDraw: xRange values -> ${_xRange.rangeMin} -- ${_xRange.rangeMax}")
-        canvas?.save()
-        canvas?.clipRect(rawViewTransformation.viewPlotBounds)
+        canvas.save()
+        canvas.clipRect(rawViewTransformation.viewPlotBounds)
         for (l in plotLines.values)
             l.drawToCanvas(canvas)
 
@@ -2106,7 +2121,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         markGroups.filterValues { !it.placeLabelsOutsideBoundsIfPossible }.forEach {
             it.value.drawToCanvas(canvas)
         }
-        canvas?.restore()
+        canvas.restore()
 
         framePaint.color = if (_xRange.isTouchControlled || _yRange.isTouchControlled)
             frameColorOnTouch
@@ -2115,12 +2130,12 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         //canvas?.drawRect(rawViewTransformation.viewPlotBounds, framePaint)
 //        canvas?.drawRect(left + 0.5f * frameStrokeWidth, top + 0.5f * frameStrokeWidth,
 //            right - 0.5f * frameStrokeWidth, bottom - 0.5f * frameStrokeWidth, framePaint)
-        canvas?.drawRoundRect(left + 0.5f * frameStrokeWidth, top + 0.5f * frameStrokeWidth,
+        canvas.drawRoundRect(left + 0.5f * frameStrokeWidth, top + 0.5f * frameStrokeWidth,
             right - 0.5f * frameStrokeWidth, bottom - 0.5f * frameStrokeWidth,
             frameCornerRadius, frameCornerRadius, framePaint)
 
         title?.let {
-            canvas?.drawText(it,
+            canvas.drawText(it,
                 0.5f * (left + right),
                 paddingTop + titleSize,
                 titlePaint)
@@ -2460,6 +2475,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         backgroundSizeType: MarkLabelBackgroundSize = MarkLabelBackgroundSize.FitIndividually,
         placeLabelsOutsideBoundsIfPossible: Boolean = false,
         maxLabelBounds: ((TextPaint) -> Label.LabelSetBounds)? = null,
+        offsetX: Float = 0f, offsetY: Float = 0f,
         labelCreator: ((Int, Float?, Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity:LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float) -> Label?)? = null
     ) {
                  //format: ((Int, Float?, Float?) -> CharSequence?)? = null) {
@@ -2468,6 +2484,7 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
             maxLabelBounds, labelCreator
         )
+        marks.setOffset(offsetX, offsetY)
     }
 
     /** Helper to create a label creator based on note name scales .*/
@@ -2509,13 +2526,15 @@ class PlotView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     fun setMark(xPosition: Float, yPosition: Float, label: String?, tag: Long,
                 anchor: LabelAnchor = LabelAnchor.Center,
                 placeLabelsOutsideBoundsIfPossible: Boolean = false,
-                style: Int = 0
+                style: Int = 0,
+                offsetX: Float = 0f, offsetY: Float = 0f
     ) {
         setMarks(floatArrayOf(xPosition), floatArrayOf(yPosition), tag, style,
             anchors = arrayOf(anchor),
             backgroundSizeType = MarkLabelBackgroundSize.FitIndividually,
             placeLabelsOutsideBoundsIfPossible = placeLabelsOutsideBoundsIfPossible,
             maxLabelBounds = null,
+            offsetX = offsetX, offsetY = offsetY,
             labelCreator = if (label == null) null else stringLabelCreator(label)
         )
     }

@@ -213,7 +213,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
 
         override fun onScroll(
-            e1: MotionEvent,
+            e1: MotionEvent?,
             e2: MotionEvent,
             distanceX: Float,
             distanceY: Float
@@ -225,7 +225,7 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
 
         override fun onFling(
-            e1: MotionEvent,
+            e1: MotionEvent?,
             e2: MotionEvent,
             velocityX: Float,
             velocityY: Float
@@ -501,10 +501,8 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         super.onSizeChanged(w, h, oldw, oldh)
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
 //        Log.v("Tuner", "StringView.onDraw: yOffset = $yOffset")
-        if (canvas == null)
-            return
 //        canvas.drawRect(
 //            paddingLeft.toFloat() + 0.5f * framePaint.strokeWidth,
 //            paddingTop.toFloat() + 0.5f * framePaint.strokeWidth,

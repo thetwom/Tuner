@@ -254,11 +254,8 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
         super.onSizeChanged(w, h, oldw, oldh)
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-
-        if (canvas == null)
-            return
 
         val yPosCenter = 0.5f * (computeBoxContentTop() + computeBoxContentBottom(height))
         val horizontalSpacePerNote = computeHorizontalSpacePerNote()

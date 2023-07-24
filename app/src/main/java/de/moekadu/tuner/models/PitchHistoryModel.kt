@@ -45,6 +45,9 @@ class PitchHistoryModel {
 
     private var tuningState = TuningState.Unknown
 
+    var centDeviationFromTarget: Float = Float.MAX_VALUE
+        private set
+
     var targetNote: MusicalNote? = null
         private set
     var targetNoteFrequency = 0f
@@ -191,11 +194,13 @@ class PitchHistoryModel {
         }
 
         if (recomputeTuning) {
+            val lastFrequency = if (numHistoryValues > 0) historyValues[numHistoryValues - 1] else -1f
             tuningState = checkTuning(
-                if (numHistoryValues > 0) historyValues[numHistoryValues - 1] else -1f,
+                lastFrequency,
                 targetNoteFrequency,
                 this.toleranceInCents.toFloat()
             )
+            centDeviationFromTarget = computeCentDeviationFromTarget(targetNoteFrequency, lastFrequency)
 //            Log.v("Tuner", "PitchHistoryModel.changeSettings: recomputing tuningState=$tuningState")
         }
 
@@ -250,6 +255,8 @@ class PitchHistoryModel {
             targetNoteFrequency,
             toleranceInCents.toFloat()
         )
+        centDeviationFromTarget = computeCentDeviationFromTarget(targetNoteFrequency, frequency)
+
         computeYRange(frequency, targetNote, musicalScale)
         setStyles(tuningState, isCurrentlyDetectingNotes)
 
@@ -330,6 +337,13 @@ class PitchHistoryModel {
         }
     }
 
+    private fun computeCentDeviationFromTarget(targetFrequency: Float, currentFrequency: Float): Float {
+        return if (currentFrequency >= 0 && targetFrequency >= 0)
+            ratioToCents(currentFrequency / targetFrequency)
+        else
+            Float.MAX_VALUE
+    }
+
     companion object {
         const val YRANGE_IN_NOTE_INDICES_AT_TARGET_NOTE = 1.55f
         const val YRANGE_IN_NOTE_INDICES_AT_CLOSEST_NOTE = 0.55f
@@ -339,6 +353,9 @@ class PitchHistoryModel {
         const val TUNING_DIRECTION_POINT_TAG = 3L
         const val TARGET_NOTE_MARK_TAG = 4L
         const val TOLERANCE_MARK_TAG = 5L
+
+        const val CENT_DEVIATION_MARK_TAG = 6L
+        const val CENT_DEVIATION_MARK_STYLE = 1
 
         const val HISTORY_LINE_STYLE_ACTIVE = 0
         const val HISTORY_LINE_STYLE_INACTIVE = 1

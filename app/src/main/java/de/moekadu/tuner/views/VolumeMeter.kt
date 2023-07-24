@@ -103,7 +103,7 @@ class VolumeMeter(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         peakMarkerAnimator.duration = 1000
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
         val minPos = when (orientation) {
@@ -134,7 +134,7 @@ class VolumeMeter(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         }
 
         paint.color = barColor
-        canvas?.drawRect(barRect, paint)
+        canvas.drawRect(barRect, paint)
 
         when (orientation) {
             Orientation.Vertical -> {
@@ -147,7 +147,7 @@ class VolumeMeter(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             }
         }
         paint.color = peakMarkerColor
-        canvas?.drawRect(barRect, paint)
+        canvas.drawRect(barRect, paint)
     }
 
     private fun resetPeakMarker(currentVolume : Float) {

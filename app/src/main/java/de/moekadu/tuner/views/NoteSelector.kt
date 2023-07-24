@@ -60,13 +60,13 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
             return true
         }
 
-        override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
+        override fun onScroll(e1: MotionEvent?, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
 //            Log.v("Tuner", "NoteSelector: gestureListener.OnScroll x=$distanceX, y=$distanceY")
             scrollDistance(distanceX)
             return true
         }
 
-        override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+        override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
             lastFlingValue = 0f
             offsetAnimator.cancel()
             flingAnimation.cancel()
@@ -291,10 +291,8 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
         super.onSizeChanged(w, h, oldw, oldh)
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if (canvas == null)
-            return
 
         val rectangleCenter = getRectangleCenter()
         canvas.clipRect(paddingLeft, 0, width - paddingRight, height)

@@ -42,6 +42,7 @@ import de.moekadu.tuner.preferenceResources
 import de.moekadu.tuner.viewmodels.TunerViewModel
 import de.moekadu.tuner.views.*
 import kotlinx.coroutines.launch
+import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
 class TunerFragment : Fragment() {
@@ -190,10 +191,31 @@ class TunerFragment : Fragment() {
                 if (model.numHistoryValues == 0 || model.currentFrequency <= 0f) {
                     pitchPlot?.removePlotPoints(PitchHistoryModel.CURRENT_FREQUENCY_POINT_TAG)
                     pitchPlot?.removePlotPoints(PitchHistoryModel.TUNING_DIRECTION_POINT_TAG)
+                    pitchPlot?.removePlotMarks(PitchHistoryModel.CENT_DEVIATION_MARK_TAG)
                 } else {
                     val point = floatArrayOf(model.numHistoryValues - 1f, model.currentFrequency)
                     pitchPlot?.setPoints(point, tag = PitchHistoryModel.CURRENT_FREQUENCY_POINT_TAG)
                     pitchPlot?.setPoints(point, tag = PitchHistoryModel.TUNING_DIRECTION_POINT_TAG)
+
+                    // TODO: we must also reset this, when the tolerance changes
+                    if (model.centDeviationFromTarget.absoluteValue > model.toleranceInCents) {
+                        val pointSize = pitchPlot?.pointSizes?.get(model.currentFrequencyPointStyle) ?: 1f
+                        pitchPlot?.setMark(
+                            point[0], point[1],
+                            label = getString(
+                                R.string.cent,
+                                model.centDeviationFromTarget.roundToInt()
+                            ),
+                            tag = PitchHistoryModel.CENT_DEVIATION_MARK_TAG,
+                            anchor = if (model.centDeviationFromTarget < 0)
+                                LabelAnchor.NorthEast else LabelAnchor.SouthEast,
+                            style = PitchHistoryModel.CENT_DEVIATION_MARK_STYLE,
+                            offsetX = pointSize,
+                            offsetY = -pointSize * model.tuningDirectionPointRelativeOffset
+                        )
+                    } else {
+                        pitchPlot?.removePlotMarks(PitchHistoryModel.CENT_DEVIATION_MARK_TAG)
+                    }
                 }
                 pitchPlot?.plot(
                     model.historyValues, PitchHistoryModel.HISTORY_LINE_TAG,
