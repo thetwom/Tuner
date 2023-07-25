@@ -356,6 +356,7 @@ class PitchHistoryModel {
 
         const val CENT_DEVIATION_MARK_TAG = 6L
         const val CENT_DEVIATION_MARK_STYLE = 1
+        const val MAX_SHOWN_CENT_DEVIATION = 100
 
         const val HISTORY_LINE_STYLE_ACTIVE = 0
         const val HISTORY_LINE_STYLE_INACTIVE = 1

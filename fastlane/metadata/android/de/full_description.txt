@@ -1,6 +1,9 @@
-    Einfaches Stimmgerät mit Funktionen wie:
+    Stimmgerät mit Funktionen wie:
     * Bestimmung des Tons anhand von Autokorrelation und FFT Spektrum.
     * Genauigkeitsverbesserung durch Auswerten der Phaseninformation und Verwendung von Polynominterpolation.
     * Anzeigen des Verlaufs der Tonhöhe über der Zeit.
-    * Gleichstufige Stimmung.
-    * Einstellmöglichkeiten für Kammerton, FFT Fensterweite, FFT Fensterfunktion, Überlappung und mehr.
+    * Basisauswahl von voreingestellte Instrumente (Chromatisch, Gitarre, Bass, Geige, ...)
+    * Unterstützung für benutzerdefinierte Instrumente.
+    * Verschiedene Stimmungen wie gleichstufig, rein, Werckmeister, Kirnberger, ...
+    * Stimmungen, welche von 12-Ton-Skalen abweichen (EDO 17, 19, ..., 41, 53)
+    * Wissenschaftliche Eisntellungen wie FFT Fensterweite, FFT Fensterfunktion, Überlappung und mehr.

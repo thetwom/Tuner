@@ -229,8 +229,14 @@ class TunerFragmentSimple : Fragment() {
                     val point = floatArrayOf(model.numHistoryValues - 1f, model.currentFrequency)
                     pitchPlot?.setPoints(point, tag = PitchHistoryModel.CURRENT_FREQUENCY_POINT_TAG)
                     pitchPlot?.setPoints(point, tag = PitchHistoryModel.TUNING_DIRECTION_POINT_TAG)
-                    // TODO: we must also reset this, when the tolerance changes
-                    if (model.centDeviationFromTarget.absoluteValue > model.toleranceInCents) {
+
+                    // In theory this must be also reset, when the tolerance changes, but
+                    // in practice, we this should never be an issue, since after tolerance is
+                    // changed in the settings and when switching back to the tuner, we reevaluate
+                    // the current frequency anyway.
+                    if (model.centDeviationFromTarget.absoluteValue > model.toleranceInCents
+                        && model.centDeviationFromTarget != Float.MAX_VALUE
+                        && model.centDeviationFromTarget.absoluteValue <= PitchHistoryModel.MAX_SHOWN_CENT_DEVIATION) {
                         val pointSize = pitchPlot?.pointSizes?.get(model.currentFrequencyPointStyle) ?: 1f
                         pitchPlot?.setMark(
                             point[0], point[1],

@@ -1,0 +1,12 @@
+v6.3.0:
+- Show current deviation from target note in cents
+
+v6.2.0:
+- Indian notation systems
+
+v6.1.0:
+- Custom instrument with no strings becomes chromatic with just pitch history
+
+v6.0.0:
+- Improved note detection by better evaluation of higher harmonics.
+- A lot of internal refactoring.

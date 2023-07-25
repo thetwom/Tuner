@@ -302,7 +302,7 @@ class PlotRange(private val allowTouchControl: Boolean = true)  {
             AnimationStrategy.ExtendShrink -> rangeAnimator.setObjectValues(
                 floatArrayOf(currentRange[0], currentRange[1]),
                 floatArrayOf(min(currentRange[0], targetRange[0]), max(currentRange[1], targetRange[1])),
-                floatArrayOf(min(currentRange[0], targetRange[0]), max(currentRange[1], targetRange[1])),
+                //floatArrayOf(min(currentRange[0], targetRange[0]), max(currentRange[1], targetRange[1])),
                 floatArrayOf(targetRange[0], targetRange[1])
             )
         }
@@ -1091,23 +1091,38 @@ private class PlotMarks(transformation: PlotTransformation,
         if (hasOnlyXMarks) {
             if (marks.size > 1)
                 require(marks[1].xPositionRaw > marks[0].xPositionRaw)
+            // get label size in raw domain
             temporaryPointTransformed[0] = (maxLabelSizes[styleIndex]?.maxWidth ?: 0f) + 2 * labelPaddingHorizontal
             temporaryPointTransformed[0] = max(temporaryPointTransformed[0], strokeWidthsRawY[styleIndex])
             temporaryPointTransformed[1] = 0f
             transformLabelSizeToRaw(transformation, temporaryPointTransformed, temporaryPointRaw)
             val maxLabelWidthRaw = temporaryPointRaw[0]
-            startIndex = marks.binarySearchBy(rawBounds.left - maxLabelWidthRaw) {it.xPositionRaw}
-            endIndex = marks.binarySearchBy(rawBounds.right + maxLabelWidthRaw) {it.xPositionRaw}
+
+            // get x-offset in raw domain
+            temporaryPointTransformed[0] = offsetX
+            transformLabelSizeToRaw(transformation, temporaryPointTransformed, temporaryPointRaw)
+            val offsetRaw = temporaryPointRaw[0]
+
+            startIndex = marks.binarySearchBy(rawBounds.left - maxLabelWidthRaw + offsetRaw) {it.xPositionRaw}
+            endIndex = marks.binarySearchBy(rawBounds.right + maxLabelWidthRaw+ offsetRaw) {it.xPositionRaw}
         } else if (hasOnlyYMarks) {
             if (marks.size > 1)
                 require(marks[1].yPositionRaw > marks[0].yPositionRaw) // here we should also take equals, since marks could be at the same position, but then, we must make sure that the binary search finds the correct one
+
+            // get label size in raw domain
             temporaryPointTransformed[0] = 0f
             temporaryPointTransformed[1] = (maxLabelSizes[styleIndex]?.maxHeight ?: 0f) + 2 * labelPaddingVertical
             temporaryPointTransformed[1] = max(temporaryPointTransformed[1], strokeWidthsRawX[styleIndex])
             transformLabelSizeToRaw(transformation, temporaryPointTransformed, temporaryPointRaw)
             val maxLabelHeightRaw = temporaryPointRaw[1]
-            startIndex = marks.binarySearchBy(rawBounds.top - maxLabelHeightRaw) {it.yPositionRaw}
-            endIndex = marks.binarySearchBy(rawBounds.bottom + maxLabelHeightRaw) {it.yPositionRaw}
+
+            // get y-offset in raw domain
+            temporaryPointTransformed[1] = offsetY
+            transformLabelSizeToRaw(transformation, temporaryPointTransformed, temporaryPointRaw)
+            val offsetRaw = temporaryPointRaw[1]
+
+            startIndex = marks.binarySearchBy(rawBounds.top - maxLabelHeightRaw + offsetRaw) {it.yPositionRaw}
+            endIndex = marks.binarySearchBy(rawBounds.bottom + maxLabelHeightRaw + offsetRaw) {it.yPositionRaw}
         }
 
         if(startIndex < 0)
@@ -1117,21 +1132,30 @@ private class PlotMarks(transformation: PlotTransformation,
 
         for (i in startIndex until endIndex) {
             val mark = marks[i]
+
+            // get offsets in raw domain
+            temporaryPointTransformed[0] = offsetX
+            temporaryPointTransformed[1] = offsetY
+            transformLabelSizeToRaw(transformation, temporaryPointTransformed, temporaryPointRaw)
+            val offsetXRaw = temporaryPointRaw[0]
+            val offsetYRaw = temporaryPointRaw[1]
+
             // only plot if mark is within bounds
             val xRaw = mark.xPositionRaw
             val yRaw = mark.yPositionRaw
             transformPointToView(transformation, xRaw, yRaw, temporaryPointTransformed)
             var x = temporaryPointTransformed[0]
             var y = temporaryPointTransformed[1]
+
             // horizontal line
-            if (xRaw == DRAW_LINE && yRaw > rawBounds.top && yRaw < rawBounds.bottom) {
+            if (xRaw == DRAW_LINE && yRaw + offsetYRaw > rawBounds.top && yRaw +offsetYRaw < rawBounds.bottom) {
                 path.rewind()
                 path.moveTo(viewBounds.left, y + offsetY)
                 path.lineTo(viewBounds.right, y + offsetY)
                 canvas?.drawPath(path, linePaints[styleIndex])
             }
             // vertical line
-            else if (yRaw == DRAW_LINE && xRaw > rawBounds.left && xRaw < rawBounds.right) {
+            else if (yRaw == DRAW_LINE && xRaw + offsetXRaw > rawBounds.left && xRaw + offsetXRaw < rawBounds.right) {
                 path.rewind()
                 path.moveTo(x + offsetX, viewBounds.bottom)
                 path.lineTo(x + offsetX, viewBounds.top)
@@ -1197,7 +1221,7 @@ private class PlotMarks(transformation: PlotTransformation,
                     labelAnchorResolved = mark.anchor
                 }
 
-                if (isMarkInBoundingBox(mark, x, y, labelAnchorResolved)) {
+                if (isMarkInBoundingBox(mark, x + offsetX, y+ offsetY, labelAnchorResolved)) {
                     if (backgroundSizeType == MarkLabelBackgroundSize.FitLargest) {
                         layout.drawToCanvasWithFixedSizeBackground(
                             x + offsetX, y + offsetY,
