@@ -1,6 +1,10 @@
-    Accordeur simple pour instruments de musique avec des fonctionnalités telles que :
+    Accordeur pour instruments de musique avec des fonctionnalités telles que :
     * Détection de la hauteur grâce à l’autocorrélation et le spectre FFT.
     * Amélioration de la précision par l’évaluation de l’information de la phase du spectre et ajustement polynomial.
     * Affichage des variations de la hauteur dans le temps.
-    * Accordage en tempérament égal.
-    * Paramètres pour choisir la hauteur en concert, la taille de la fenêtre FFT, le type de fenêtrage FFT, le chevauchement et plus.
+    * Base de données d’instruments de base (chromatique, guitare, basse, violon…)
+    * Prise en charge d’instruments personnalisés
+
+    * Plusieurs tempéraments : égal, juste, Werckmeister, Kirnberger…
+    * Tempéraments par division multiple (EDO 17, 19, …, 41, 53)
+    * Réglages scientifiques comme la largeur de la fenêtre FFT, le type de fenêtre FFT, recouvrement et plus.
