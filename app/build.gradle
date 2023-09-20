@@ -14,7 +14,7 @@ android {
         versionName "6.3.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
-        resourceConfigurations += ['cs', 'de', 'en', 'fr']
+        resourceConfigurations += ['cs', 'de', 'en', 'fr', 'zh-rCN']
     }
     buildTypes {
         release {
