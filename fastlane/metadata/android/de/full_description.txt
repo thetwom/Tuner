@@ -6,4 +6,4 @@
     * Unterstützung für benutzerdefinierte Instrumente.
     * Verschiedene Stimmungen wie gleichstufig, rein, Werckmeister, Kirnberger, ...
     * Stimmungen, welche von 12-Ton-Skalen abweichen (EDO 17, 19, ..., 41, 53)
-    * Wissenschaftliche Eisntellungen wie FFT Fensterweite, FFT Fensterfunktion, Überlappung und mehr.
+    * Wissenschaftliche Einstellungen wie FFT Fensterweite, FFT Fensterfunktion, Überlappung und mehr.
