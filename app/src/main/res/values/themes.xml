@@ -48,10 +48,12 @@
         <!--        <item name="actionBarTheme">@style/ThemeOverlay.Material3.Dark.ActionBar</item>-->
         <item name="actionBarTheme">@style/ThemeOverlay.Material3.ActionBar</item>
 
-        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+<!--        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>-->
 
         <item name="alertDialogTheme">@style/AppTheme.M3LikeAlertDialog</item>
         <item name="dialogCornerRadius">28dp</item>
+
+        <item name="preferenceTheme">@style/AppPreferenceThemeOverlay</item>
 
     </style>
 

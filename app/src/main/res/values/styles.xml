@@ -352,4 +352,12 @@
         <item name="volumeMax">1.0</item>
         <item name="orientation">horizontal</item>
     </style>
+
+    <style name="AppPreferenceThemeOverlay" parent="@style/PreferenceThemeOverlay">
+        <item name="switchPreferenceCompatStyle">@style/AppSwitchPreference</item>
+    </style>
+
+    <style name="AppSwitchPreference" parent="@style/Preference.SwitchPreferenceCompat.Material">
+        <item name="widgetLayout">@layout/preference_material_switch</item>
+    </style>
 </resources>
