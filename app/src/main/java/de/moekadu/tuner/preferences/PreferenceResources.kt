@@ -139,20 +139,28 @@ class PreferenceResources(
 
     private fun obtainNoteNamePrinter(): NoteNamePrinter {
         val preferFlat = sharedPreferences.getBoolean(PREFER_FLAT_KEY, false)
-        val notation = sharedPreferences.getString(NOTATION_KEY, "standard") ?: "standard"
 
-        val notationType = when(notation) {
+        val notationValue = NotationPreference.Value("standard", false)
+        notationValue.fromString(sharedPreferences.getString(NOTATION_KEY, ""))
+
+        val notationType = when(notationValue.notation) {
             "international" -> NotationType.International
             "solfege" -> NotationType.Solfege
             "carnatic" -> NotationType.Carnatic
             "hindustani" -> NotationType.Hindustani
             else -> NotationType.Standard
         }
+
         val sharpFlatPreference = if (preferFlat)
             NoteNamePrinter.SharpFlatPreference.Flat
         else
             NoteNamePrinter.SharpFlatPreference.Sharp
-        return createNoteNamePrinter(context, notationType, sharpFlatPreference)
+        return createNoteNamePrinter(
+            context,
+            notationType,
+            sharpFlatPreference,
+            helmholtzNotation = notationValue.helmholtzEnabled
+        )
     }
 
     private fun obtainWindowing(): WindowingFunction {
@@ -193,9 +201,14 @@ class PreferenceResources(
             val isSolfege = sharedPreferences.getBoolean(SOLFEGE_KEY, false)
             if (isSolfege) {
                 if (noteNamePrinter.value.sharpFlatPreference == NoteNamePrinter.SharpFlatPreference.Flat)
-                    _noteNamePrinter.value = createNoteNamePrinter(context, NotationType.Solfege, NoteNamePrinter.SharpFlatPreference.Flat)
+                    _noteNamePrinter.value = createNoteNamePrinter(
+                        context, NotationType.Solfege, NoteNamePrinter.SharpFlatPreference.Flat,
+                        helmholtzNotation = false)
                 else
-                    _noteNamePrinter.value = createNoteNamePrinter(context, NotationType.Solfege, NoteNamePrinter.SharpFlatPreference.Sharp)
+                    _noteNamePrinter.value = createNoteNamePrinter(
+                        context, NotationType.Solfege, NoteNamePrinter.SharpFlatPreference.Sharp,
+                        helmholtzNotation = false
+                    )
                 sharedPreferences.edit().putString(NOTATION_KEY, "solfege").apply()
             }
             sharedPreferences.edit().remove(SOLFEGE_KEY).apply()

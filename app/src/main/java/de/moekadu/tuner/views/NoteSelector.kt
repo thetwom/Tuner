@@ -109,7 +109,10 @@ class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private val gestureDetector = GestureDetector(context, gestureListener)
 
     /** Class for measuring and printing notes. */
-    private var noteNamePrinter = createNoteNamePrinter(context, NotationType.Standard, NoteNamePrinter.SharpFlatPreference.None)
+    private var noteNamePrinter = createNoteNamePrinter(
+        context, NotationType.Standard, NoteNamePrinter.SharpFlatPreference.None,
+        helmholtzNotation = false
+    )
 
     /** For each style we store the label of all notes.
      *  We use lazy creation, so they are only non-null if needed.

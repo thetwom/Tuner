@@ -90,7 +90,10 @@ class DetectedNoteViewer(context: Context, attrs: AttributeSet?, defStyleAttr: I
     }
 
     /** Class for measuring and printing notes. */
-    private var noteNamePrinter = createNoteNamePrinter(context, NotationType.Standard, NoteNamePrinter.SharpFlatPreference.None)
+    private var noteNamePrinter = createNoteNamePrinter(
+        context, NotationType.Standard, NoteNamePrinter.SharpFlatPreference.None,
+        helmholtzNotation = false
+    )
 
     /** Paint for drawing the notes. */
     private val labelPaint = TextPaint().apply {

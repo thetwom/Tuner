@@ -23,7 +23,7 @@
     <string name="use_hint">Použít předchozí hodnoty k vylepšení odhadu výšky tónu</string>
     <string name="num_moving_average">Klouzavý průměr</string>
     <string name="about">O aplikaci</string>
-    <string name="about_message">Tuner app Verze: %s License: GPLv3</string>
+    <string name="about_message">Tuner app Verze: %s License: GPLv3\nhttps://github.com/thetwom/Tuner</string>
     <string name="reset_all_settings">Obnovit výchozí nastavení</string>
     <string name="reset_settings_prompt">Opravdu chcete obnovit výchozí nastavení?</string>
     <string name="yes">Ano</string>

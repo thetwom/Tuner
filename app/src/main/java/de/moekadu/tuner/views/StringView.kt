@@ -53,7 +53,10 @@ class StringView(context: Context, attrs: AttributeSet?, defStyleAttr: Int)
     private val totalPaddingRight
         get() = paddingRight + (if (enableExtraPadding) extraPaddingRight else 0f)
 
-    private var noteNamePrinter = createNoteNamePrinter(context, NotationType.Standard, NoteNamePrinter.SharpFlatPreference.None)
+    private var noteNamePrinter = createNoteNamePrinter(
+        context, NotationType.Standard, NoteNamePrinter.SharpFlatPreference.None,
+        helmholtzNotation = false
+    )
 
     private val stringPaint = arrayOf(
         Paint().apply {

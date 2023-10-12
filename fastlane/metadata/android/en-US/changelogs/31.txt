@@ -1,0 +1,9 @@
+v6.5.0:
+- Option for Helmholtz notation
+- Material3 switches in preferences
+
+v6.3.0:
+- Show current deviation from target note in cents
+
+v6.2.0:
+- Indian notation systems

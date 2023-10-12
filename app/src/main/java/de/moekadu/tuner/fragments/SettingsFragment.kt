@@ -37,6 +37,7 @@ import de.moekadu.tuner.dialogs.AboutDialog
 import de.moekadu.tuner.dialogs.ResetSettingsDialog
 import de.moekadu.tuner.preferenceResources
 import de.moekadu.tuner.preferences.*
+import de.moekadu.tuner.temperaments.NotationType
 import de.moekadu.tuner.temperaments.NoteNamePrinter
 import de.moekadu.tuner.temperaments.getTuningNameResourceId
 import kotlinx.coroutines.launch
@@ -81,6 +82,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private var referenceNotePreference: Preference? = null
     private var temperamentPreference: Preference? = null
     private var appearancePreference: AppearancePreference? = null
+    private var notationPreference: NotationPreference? = null
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
@@ -138,9 +140,16 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
-        val notation = findPreference<ListPreference?>("notation")
-        notation?.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
+        notationPreference = findPreference<NotationPreference?>("notation")
+        //notation?.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
 //        Log.v("Tuner", "SettingsFragment: notation = ${notation?.value}")
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                requireContext().preferenceResources.noteNamePrinter.collect {
+                    setNotationSummary(it.notationType, it.helmholtzNotation)
+                }
+            }
+        }
 
         referenceNotePreference = findPreference("reference_note")
             ?: throw RuntimeException("no reference_note preference")
@@ -298,6 +307,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 dialog.show(parentFragmentManager, "appearance_tag")
                 dialog.setTargetFragment(this, 0)
             }
+            is NotationPreference -> {
+                val dialog =
+                    NotationPreferenceDialog.newInstance(preference.key, "notation_tag")
+                dialog.show(parentFragmentManager, "notation_tag")
+                dialog.setTargetFragment(this, 0)
+            }
             else -> super.onDisplayPreferenceDialog(preference)
         }
     }
@@ -339,6 +354,17 @@ class SettingsFragment : PreferenceFragmentCompat() {
             else -> getString(R.string.system_appearance)
         }
         appearancePreference?.summary = summary
+    }
+
+    private fun setNotationSummary(notationType: NotationType, helmholtzNotation: Boolean) {
+        val summary = when (notationType) {
+            NotationType.Standard -> R.string.notation_standard
+            NotationType.Solfege -> R.string.notation_solfege
+            NotationType.International -> R.string.notation_international
+            NotationType.Carnatic -> R.string.notation_carnatic
+            NotationType.Hindustani -> R.string.notation_hindustani
+        }
+        notationPreference?.summary = getString(summary)
     }
 
     private fun setTemperamentAndReferenceNoteSummary(

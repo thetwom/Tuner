@@ -28,7 +28,7 @@
     <string name="use_hint">Bessere Tonschätzung durch vorherige Werte</string>
     <string name="num_moving_average">Gleitender Mittelwert</string>
     <string name="about">Über</string>
-    <string name="about_message">Tuner app\nVersion: %s\nLizenz: GPLv3</string>
+    <string name="about_message">Tuner app\nVersion: %s\nLizenz: GPLv3\nhttps://github.com/thetwom/Tuner</string>
     <string name="reset_all_settings">Alle Einstellungen zurücksetzen</string>
     <string name="reset_settings_prompt">Sollen wirklich alle Einstellungen zurückgesetzt werden?</string>
     <string name="yes">Ja</string>
@@ -228,4 +228,5 @@
     <string name="notation_international">International (A-B-C-…)</string>
     <string name="notation_carnatic">Karnatisch</string>
     <string name="notation_hindustani">Hindustanisch</string>
+    <string name="helmholtz_notation">Helmholtz-Schreibweise (C, … c\')</string>
 </resources>

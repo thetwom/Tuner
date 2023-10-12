@@ -10,6 +10,7 @@ import android.text.SpannableStringBuilder
 import androidx.core.content.res.ResourcesCompat
 import de.moekadu.tuner.R
 import de.moekadu.tuner.views.CustomTypefaceSpan
+import de.moekadu.tuner.views.SmallSubScriptSpan
 import de.moekadu.tuner.views.SmallSuperScriptSpan
 import kotlin.math.max
 import kotlin.math.min
@@ -50,12 +51,26 @@ private val modifierPrefixStrings = mapOf(
     NoteModifier.NaturalDownDown to "\uE110",
 )
 
+/** Print notes
+ * @param context Context for getting string ressources.
+ * @param sharpFlatPreference Tell if sharp or flat is preferred.
+ * @param noteResourceIds String ressource ids for the different notes.
+ * @param noteNameWidth Extra information for measuring the general width of notes.
+ * @param hasSharpFlatCounterpart Not needed within the class, but allows to disable switch
+ *   buttons for certain note name printers.
+ * @param notationType Note needed within this class, but allows to get informormation about
+ *   the notation type, which created this class.
+ * @param helmholtzNotation Tell if Helmholtz should be used
+ *   (C, - C - c -c' instead of C1,C2, C3, ...)
+ */
 class NoteNamePrinter(
     private val context: Context,
     val sharpFlatPreference: SharpFlatPreference,
     private val noteResourceIds: Map<NoteNameStem, Int>,
     val noteNameWidth: MaxNoteNameWidth,
-    val hasSharpFlatCounterpart: Boolean = true
+    val hasSharpFlatCounterpart: Boolean = true,
+    val notationType: NotationType = NotationType.Standard,
+    val helmholtzNotation: Boolean = true
 ) {
     enum class MaxNoteNameWidth {
         SingleLetter, // C, D, E, ... or similar
@@ -67,7 +82,8 @@ class NoteNamePrinter(
     private class ResolvedNoteProperties(val baseName: String, val modifier: NoteModifier, val octave: Int)
 
     private val typeface = ResourcesCompat.getFont(context, R.font.gonville) ?: throw RuntimeException("Error")
-    private val octaveSpan = SmallSuperScriptSpan()
+    private val octaveSuperSpan = SmallSuperScriptSpan()
+    private val octaveSubSpan = SmallSubScriptSpan()
 
     fun noteToCharSequence(note: MusicalNote, withOctave: Boolean): CharSequence {
         val properties = resolveNoteProperties(note)
@@ -85,7 +101,12 @@ class NoteNamePrinter(
         }
 
         // base note name
-        spannable.append(properties.baseName)
+        spannable.append(
+            if (helmholtzNotation && withOctave && properties.octave >= 3)
+                properties.baseName.lowercase()
+            else
+                properties.baseName
+        )
 
         // postfix with spaces (\u200a is a narrow space)
         if (properties.modifier != NoteModifier.None && modifierPostfixStrings[properties.modifier] != "") {
@@ -111,13 +132,48 @@ class NoteNamePrinter(
         }
 
         if (withOctave && properties.octave != Int.MAX_VALUE) {
-            spannable.append(
-                SpannableString(properties.octave.toString()).apply {
-                    setSpan(SmallSuperScriptSpan(),0, length, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
-                }
-            )
+            spannable.append(getOctaveString(properties.octave))
         }
         return spannable
+    }
+
+    private fun getOctaveString(octave: Int) = if(helmholtzNotation)
+        getOctaveHelmholtz(octave)
+    else
+        getOctaveScientific(octave)
+    private fun getOctaveScientific(octave: Int)
+            = SpannableString(octave.toString()).apply {
+                setSpan(octaveSuperSpan,0, length, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+            }
+
+    private fun getOctaveHelmholtz(octave: Int): SpannableString {
+        return when {
+            octave <= -1 -> {
+                SpannableString((-octave + 2).toString()).apply {
+                    setSpan(octaveSubSpan,0, length, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+                }
+            }
+            octave == 0 -> {
+                SpannableString(",,")
+            }
+            octave == 1 -> {
+                SpannableString(",")
+            }
+            octave == 2 || octave == 3 -> {
+                SpannableString("")
+            }
+            octave == 4 -> {
+                SpannableString("'")
+            }
+            octave == 5 -> {
+                SpannableString("''")
+            }
+            else -> {  // -> octave >= 6
+                SpannableString((octave - 3).toString()).apply {
+                    setSpan(octaveSuperSpan,0, length, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+                }
+            }
+        }
     }
 
     fun measure(paint: Paint, note: MusicalNote, withOctave: Boolean): RectF {
@@ -176,10 +232,10 @@ class NoteNamePrinter(
         val octaveString = octaveIndex.toString()
         paint.getTextBounds(octaveString, 0, octaveString.length, boundsInt)
         return RectF(
-            octaveSpan.scaleTextSize * boundsInt.left,
-            octaveSpan.scaleTextSize * boundsInt.top + octaveSpan.moveUpByPartOfAscent * paint.ascent(),
-            octaveSpan.scaleTextSize * boundsInt.right,
-            octaveSpan.scaleTextSize * boundsInt.bottom + octaveSpan.moveUpByPartOfAscent * paint.ascent(),
+            octaveSuperSpan.scaleTextSize * boundsInt.left,
+            octaveSuperSpan.scaleTextSize * boundsInt.top + octaveSuperSpan.moveUpByPartOfAscent * paint.ascent(),
+            octaveSuperSpan.scaleTextSize * boundsInt.right,
+            octaveSuperSpan.scaleTextSize * boundsInt.bottom + octaveSuperSpan.moveUpByPartOfAscent * paint.ascent(),
         )
     }
 

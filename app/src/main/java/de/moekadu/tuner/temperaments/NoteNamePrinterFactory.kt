@@ -78,38 +78,50 @@ private val noteHindustaniResourceIds = mapOf(
 fun createNoteNamePrinter(
     context: Context,
     notationType: NotationType,
-    sharpFlatPreference: NoteNamePrinter.SharpFlatPreference): NoteNamePrinter {
+    sharpFlatPreference: NoteNamePrinter.SharpFlatPreference,
+    helmholtzNotation: Boolean
+    ): NoteNamePrinter {
     return when (notationType) {
         NotationType.Standard -> {
             NoteNamePrinter(
                 context, sharpFlatPreference, noteResourceIds,
-                NoteNamePrinter.MaxNoteNameWidth.SingleLetter
+                NoteNamePrinter.MaxNoteNameWidth.SingleLetter,
+                notationType = notationType,
+                helmholtzNotation = helmholtzNotation
             )
         }
         NotationType.International -> {
             NoteNamePrinter(
                 context, sharpFlatPreference, noteInternationalResourceIds,
-                NoteNamePrinter.MaxNoteNameWidth.SingleLetter
+                NoteNamePrinter.MaxNoteNameWidth.SingleLetter,
+                notationType = notationType,
+                helmholtzNotation = helmholtzNotation
             )
         }
         NotationType.Solfege -> {
             NoteNamePrinter(
                 context, sharpFlatPreference, noteSolfegeResourceIds,
-                NoteNamePrinter.MaxNoteNameWidth.MultipleLetters
+                NoteNamePrinter.MaxNoteNameWidth.MultipleLetters,
+                notationType = notationType,
+                helmholtzNotation = helmholtzNotation
             )
         }
         NotationType.Carnatic -> {
             NoteNamePrinter(
                 context, sharpFlatPreference, noteCarnaticResourceIds,
                 NoteNamePrinter.MaxNoteNameWidth.MultipleLetters,
-                hasSharpFlatCounterpart = false
+                hasSharpFlatCounterpart = false,
+                notationType = notationType,
+                helmholtzNotation = helmholtzNotation
             )
         }
         NotationType.Hindustani -> {
             NoteNamePrinter(
                 context, sharpFlatPreference, noteHindustaniResourceIds,
                 NoteNamePrinter.MaxNoteNameWidth.MultipleLetters,
-                hasSharpFlatCounterpart = false
+                hasSharpFlatCounterpart = false,
+                notationType = notationType,
+                helmholtzNotation = helmholtzNotation
             )
         }
     }

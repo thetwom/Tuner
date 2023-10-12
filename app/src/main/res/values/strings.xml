@@ -41,7 +41,7 @@
         <item quantity="other">Average over %d pitch results</item>
     </plurals>
     <string name="about">About</string>
-    <string name="about_message">Tuner app\nVersion: %s\nLicense: GPLv3</string>
+    <string name="about_message">Tuner app\nVersion: %s\nLicense: GPLv3\nhttps://github.com/thetwom/Tuner</string>
     <string name="reset_all_settings">Reset all settings</string>
     <string name="reset_settings_prompt">Do you really want to reset all settings?</string>
     <string name="yes">Yes</string>
@@ -278,4 +278,5 @@
     <string name="ni1_hindustani" translatable="false">Ni₁</string>
     <string name="ni2_hindustani" translatable="false">Ni₂</string>
     <string name="notation_hindustani">Hindustani</string>
+    <string name="helmholtz_notation">Helmholtz notation (C, … c\')</string>
 </resources>
