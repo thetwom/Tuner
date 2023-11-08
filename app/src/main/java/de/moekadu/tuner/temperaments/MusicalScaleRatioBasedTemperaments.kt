@@ -65,7 +65,7 @@ open class MusicalScaleRatioBasedTemperaments(
         null
     )
 
-    /** Special constructor for tempereraments based on rational number ratios. */
+    /** Special constructor for temperaments based on rational number ratios. */
     constructor(
         temperamentType: TemperamentType,
         rationalNumbers: Array<RationalNumber>,

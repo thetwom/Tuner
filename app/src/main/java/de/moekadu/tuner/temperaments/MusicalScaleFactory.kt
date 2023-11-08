@@ -1,6 +1,12 @@
 package de.moekadu.tuner.temperaments
 
 import de.moekadu.tuner.misc.DefaultValues
+import kotlin.math.pow
+
+private fun centsToRatio(cents: Double): Double {
+    return 2.0.pow(cents / 1200.0)
+}
+
 
 class MusicalScaleFactory {
     companion object {
@@ -31,6 +37,10 @@ class MusicalScaleFactory {
                 )
                 TemperamentType.QuarterCommaMeanTone -> MusicalScaleRatioBasedTemperaments(
                     temperamentType, circleOfFifthsQuarterCommaMeanTone,
+                    noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
+                )
+                TemperamentType.SplitWolfQuarterCommaMeanTone -> MusicalScaleRatioBasedTemperaments(
+                    temperamentType, splitWolfQuarterCommaMeantone.map { centsToRatio(it) }.toDoubleArray(),
                     noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
                 )
                 TemperamentType.ThirdCommaMeanTone -> MusicalScaleRatioBasedTemperaments(

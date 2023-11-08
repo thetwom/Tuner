@@ -7,6 +7,7 @@ enum class TemperamentType {
     Pythagorean,
     Pure,
     QuarterCommaMeanTone,
+    SplitWolfQuarterCommaMeanTone,
     ThirdCommaMeanTone,
     WerckmeisterIII,
     WerckmeisterIV,
@@ -38,6 +39,7 @@ fun getTuningNameResourceId(temperamentType: TemperamentType) = when(temperament
     TemperamentType.Pythagorean -> R.string.pythagorean_tuning
     TemperamentType.Pure -> R.string.pure_tuning
     TemperamentType.QuarterCommaMeanTone -> R.string.quarter_comma_mean_tone
+    TemperamentType.SplitWolfQuarterCommaMeanTone -> R.string.split_wolf_quarter_comma_mean_tone
     TemperamentType.ThirdCommaMeanTone -> R.string.third_comma_mean_tone
     TemperamentType.WerckmeisterIII -> R.string.werckmeister_iii
     TemperamentType.WerckmeisterIV -> R.string.werckmeister_iv
@@ -68,6 +70,7 @@ fun getTuningDescriptionResourceId(temperamentType: TemperamentType) = when(temp
     TemperamentType.Pythagorean -> null
     TemperamentType.Pure -> R.string.pure_tuning_desc
     TemperamentType.QuarterCommaMeanTone -> R.string.quarter_comma_mean_tone_desc
+    TemperamentType.SplitWolfQuarterCommaMeanTone -> R.string.split_wolf_quarter_comma_mean_tone_desc
     TemperamentType.ThirdCommaMeanTone -> R.string.third_comma_mean_tone_desc
     TemperamentType.WerckmeisterIII -> R.string.werckmeister_iii_desc
     TemperamentType.WerckmeisterIV -> R.string.werckmeister_iv_desc
@@ -98,6 +101,7 @@ fun getTuningNameAbbrResourceId(temperamentType: TemperamentType) = when(tempera
     TemperamentType.Pythagorean -> R.string.pythagorean_tuning_abbr
     TemperamentType.Pure -> R.string.pure_tuning_abbr
     TemperamentType.QuarterCommaMeanTone -> R.string.quarter_comma_mean_tone_abbr
+    TemperamentType.SplitWolfQuarterCommaMeanTone -> R.string.split_wolf_quarter_comma_mean_tone_abbr
     TemperamentType.ThirdCommaMeanTone -> R.string.third_comma_mean_tone_abbr
     TemperamentType.WerckmeisterIII -> R.string.werckmeister_iii_abbr
     TemperamentType.WerckmeisterIV -> R.string.werckmeister_iv_abbr
