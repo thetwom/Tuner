@@ -61,7 +61,11 @@ data class TemperamentAndReferenceNoteValue (
             val values = string.split(" ")
             if (values.size != 4)
                 return null
-            val temperamentType = TemperamentType.valueOf(values[0])
+            val temperamentType = try {
+                TemperamentType.valueOf(values[0])
+            } catch (ex: IllegalArgumentException) {
+                TemperamentType.EDO12
+            }
             val rootNote = try {
                 MusicalNote.fromString(values[1])
             } catch (ex: RuntimeException) {

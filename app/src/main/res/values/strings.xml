@@ -279,7 +279,7 @@
     <string name="ni2_hindustani" translatable="false">Ni₂</string>
     <string name="notation_hindustani">Hindustani</string>
     <string name="helmholtz_notation">Helmholtz notation (C, … c\')</string>
-    <string name="split_wolf_quarter_comma_mean_tone">Split-wolf ¼ comma meantone</string>
-    <string name="split_wolf_quarter_comma_mean_tone_desc">Perfect major third with split wolf</string>
-    <string name="split_wolf_quarter_comma_mean_tone_abbr">Split-wolf ¼ comma meantone</string>
+    <string name="extended_quarter_comma_mean_tone">Extended ¼ comma meantone</string>
+    <string name="extended_quarter_comma_mean_tone_desc">Perfect major third, 15 notes</string>
+    <string name="extended_quarter_comma_mean_tone_abbr">Extended ¼ comma meantone</string>
 </resources>

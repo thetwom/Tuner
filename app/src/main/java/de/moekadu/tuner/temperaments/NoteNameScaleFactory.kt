@@ -24,7 +24,7 @@ class NoteNameScaleFactory {
                 TemperamentType.EDO12, TemperamentType.Pythagorean, TemperamentType.Pure, TemperamentType.QuarterCommaMeanTone, TemperamentType.ThirdCommaMeanTone, TemperamentType.WerckmeisterIII, TemperamentType.WerckmeisterIV, TemperamentType.WerckmeisterV, TemperamentType.WerckmeisterVI, TemperamentType.Kirnberger1, TemperamentType.Kirnberger2, TemperamentType.Kirnberger3, TemperamentType.Neidhardt1, TemperamentType.Neidhardt2, TemperamentType.Neidhardt3, TemperamentType.Valotti, TemperamentType.Young2, TemperamentType.Test -> {
                     createNoteNameScale12Tone(referenceNote)
                 }
-                TemperamentType.SplitWolfQuarterCommaMeanTone -> {
+                TemperamentType.ExtendedQuarterCommaMeanTone -> {
                     createNoteNameScale15Tone(referenceNote)
                 }
                 TemperamentType.EDO17 -> {

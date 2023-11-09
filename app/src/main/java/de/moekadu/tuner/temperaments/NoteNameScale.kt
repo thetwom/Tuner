@@ -151,7 +151,7 @@ fun createNoteNameScale12Tone(referenceNote: MusicalNote?): NoteNameScale {
     )
 }
 
-// e. g. by split-wolf quarter comma mean tone
+// e. g. by extended quarter comma mean tone
 fun createNoteNameScale15Tone(referenceNote: MusicalNote?): NoteNameScale {
     val referenceNoteResolved = referenceNote ?: MusicalNote(BaseNote.A, NoteModifier.None, 4)
     return NoteNameScale(

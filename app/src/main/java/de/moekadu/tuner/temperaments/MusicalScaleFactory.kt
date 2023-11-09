@@ -39,8 +39,8 @@ class MusicalScaleFactory {
                     temperamentType, circleOfFifthsQuarterCommaMeanTone,
                     noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
                 )
-                TemperamentType.SplitWolfQuarterCommaMeanTone -> MusicalScaleRatioBasedTemperaments(
-                    temperamentType, splitWolfQuarterCommaMeantone.map { centsToRatio(it) }.toDoubleArray(),
+                TemperamentType.ExtendedQuarterCommaMeanTone -> MusicalScaleRatioBasedTemperaments(
+                    temperamentType, extendedQuarterCommaMeantone.map { centsToRatio(it) }.toDoubleArray(),
                     noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
                 )
                 TemperamentType.ThirdCommaMeanTone -> MusicalScaleRatioBasedTemperaments(

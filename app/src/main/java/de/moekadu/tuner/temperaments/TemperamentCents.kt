@@ -1,9 +1,6 @@
 package de.moekadu.tuner.temperaments
 
-import kotlin.math.pow
-
-
-val splitWolfQuarterCommaMeantone = doubleArrayOf(
+val extendedQuarterCommaMeantone = doubleArrayOf(
     0.00,  // c
     76.05,  // c#
     193.16,  // d

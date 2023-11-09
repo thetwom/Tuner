@@ -114,8 +114,8 @@
     <string name="pure_tuning_desc">5-Limit, Asymmetrische Skala</string>
     <string name="quarter_comma_mean_tone">¼-Komma mitteltönige Stimmung</string>
     <string name="quarter_comma_mean_tone_desc">Reine große Terz</string>
-    <string name="split_wolf_quarter_comma_mean_tone">Split Wolf ¼-Komma mitteltönige Stimmung</string>
-    <string name="split_wolf_quarter_comma_mean_tone_desc">Reine große Terz mit geteilten Wolftönen</string>
+    <string name="extended_quarter_comma_mean_tone">Erweiterte ¼-Komma mitteltönige Stimmung</string>
+    <string name="extended_quarter_comma_mean_tone_desc">Reine große Terz, 15 Noten</string>
     <string name="third_comma_mean_tone">⅓ Komma mitteltönige Stimmung</string>
     <string name="third_comma_mean_tone_desc">Reine kleine Terz</string>
     <string name="werckmeister_iii">Werckmeister III</string>
@@ -203,7 +203,7 @@
     <string name="werckmeister_iii_abbr">Werckmeister III</string>
     <string name="third_comma_mean_tone_abbr">⅓-Komma mitteltönig</string>
     <string name="quarter_comma_mean_tone_abbr">¼-Komma mitteltönig</string>
-    <string name="split_wolf_quarter_comma_mean_tone_abbr">Split-Wolf ¼-Komma mitteltönig</string>
+    <string name="extended_quarter_comma_mean_tone_abbr">¼-Komma mitteltönig, erweitert</string>
     <string name="pure_tuning_abbr">rein</string>
     <string name="equal_temperament_12_abbr">EDO 12</string>
     <string name="equal_temperament_17_abbr">EDO 17</string>

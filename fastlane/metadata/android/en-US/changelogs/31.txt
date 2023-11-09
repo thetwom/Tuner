@@ -1,6 +1,7 @@
 v6.5.0:
 - Option for Helmholtz notation
 - Material3 switches in preferences
+- Extended 1/4-comma meantone tuning
 
 v6.3.0:
 - Show current deviation from target note in cents
