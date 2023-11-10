@@ -177,10 +177,10 @@
     <string name="pure_tuning_desc">5-limit, asymmetric scale</string>
     <string name="pure_tuning_abbr">Just</string>
     <string name="quarter_comma_mean_tone">¼ comma meantone</string>
-    <string name="quarter_comma_mean_tone_desc">Perfect major third</string>
+    <string name="quarter_comma_mean_tone_desc">Pure major 3rds</string>
     <string name="quarter_comma_mean_tone_abbr">¼ comma meantone</string>
     <string name="third_comma_mean_tone">⅓ comma meantone</string>
-    <string name="third_comma_mean_tone_desc">Perfect minor third</string>
+    <string name="third_comma_mean_tone_desc">Pure minor 3rds</string>
     <string name="third_comma_mean_tone_abbr">⅓ comma meantone</string>
     <string name="werckmeister_iii">Werckmeister III</string>
     <string name="werckmeister_iii_desc">¼ comma divisions</string>
@@ -280,6 +280,6 @@
     <string name="notation_hindustani">Hindustani</string>
     <string name="helmholtz_notation">Helmholtz notation (C, … c\')</string>
     <string name="extended_quarter_comma_mean_tone">Extended ¼ comma meantone</string>
-    <string name="extended_quarter_comma_mean_tone_desc">Perfect major third, 15 notes</string>
+    <string name="extended_quarter_comma_mean_tone_desc">Pure major 3rds, 15 notes</string>
     <string name="extended_quarter_comma_mean_tone_abbr">Extended ¼ comma meantone</string>
 </resources>

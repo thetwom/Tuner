@@ -113,11 +113,11 @@
     <string name="pure_tuning">Reine Stimmung</string>
     <string name="pure_tuning_desc">5-Limit, Asymmetrische Skala</string>
     <string name="quarter_comma_mean_tone">¼-Komma mitteltönige Stimmung</string>
-    <string name="quarter_comma_mean_tone_desc">Reine große Terz</string>
+    <string name="quarter_comma_mean_tone_desc">Reine große Terzen</string>
     <string name="extended_quarter_comma_mean_tone">Erweiterte ¼-Komma mitteltönige Stimmung</string>
-    <string name="extended_quarter_comma_mean_tone_desc">Reine große Terz, 15 Noten</string>
+    <string name="extended_quarter_comma_mean_tone_desc">Reine große Terzen, 15 Noten</string>
     <string name="third_comma_mean_tone">⅓ Komma mitteltönige Stimmung</string>
-    <string name="third_comma_mean_tone_desc">Reine kleine Terz</string>
+    <string name="third_comma_mean_tone_desc">Reine kleine Terzen</string>
     <string name="werckmeister_iii">Werckmeister III</string>
     <string name="werckmeister_iii_desc">¼-Komma Teilung</string>
     <string name="werckmeister_iv">Werckmeister IV</string>
