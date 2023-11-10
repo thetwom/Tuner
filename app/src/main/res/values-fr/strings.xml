@@ -142,9 +142,9 @@
     <string name="pure_tuning">Intonation juste</string>
     <string name="pure_tuning_desc">à quintes et tierces justes</string>
     <string name="quarter_comma_mean_tone">Mésotonique ¼ comma</string>
-    <string name="quarter_comma_mean_tone_desc">Tierce majeure parfaite</string>
+    <string name="quarter_comma_mean_tone_desc">Tierce majeure pure</string>
     <string name="third_comma_mean_tone">Mésotonique ⅓ comma</string>
-    <string name="third_comma_mean_tone_desc">Tierce mineure parfaite</string>
+    <string name="third_comma_mean_tone_desc">Tierce mineure pure</string>
     <string name="werckmeister_iii">Werckmeister III</string>
     <string name="werckmeister_iii_desc">Divisions ¼ comma</string>
     <string name="werckmeister_iv">Werckmeister IV</string>
@@ -231,5 +231,10 @@
     <string name="notation_standard">Défaut (A-B-C-…)</string>
     <string name="notation_solfege">Solfège</string>
     <string name="notation_international">International (A-B-C-…)</string>
+    <string name="notation_hindustani">hindoustanie</string>
+    <string name="helmholtz_notation">Helmholtz (C, … c\')</string>
+    <string name="extended_quarter_comma_mean_tone">Mésotonique ¼ comma étendu</string>
+    <string name="extended_quarter_comma_mean_tone_desc">Tierce majeure pure, 15 notes</string>
+    <string name="extended_quarter_comma_mean_tone_abbr">Mésotonique ¼ comma étendu</string>
 
 </resources>
