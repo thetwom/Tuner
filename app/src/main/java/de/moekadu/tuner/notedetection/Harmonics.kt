@@ -51,11 +51,20 @@ class Harmonics(maxCapacity: Int) {
     }
 }
 
+/** Find global maximum in an array between two given indices.
+ *
+ * Besides of getting the maximum value in-between the two indices, we ensure that it is also
+ * a local maximum. Which in the ends needs to make sure, that the boundaries are not the maximum.
+ * @param indexBegin Index where search is started (included).
+ * @param indexEnd Index where search is ends (excluded).
+ * @param values Array with values where we search the maximum.
+ * return Index of maximum found or -1 if no maximum is found.
+ */
 fun findGlobalMaximumIndex(indexBegin: Int, indexEnd: Int, values: FloatArray): Int {
     // functor for local maximum check
     val isLocalMax = {i: Int, data: FloatArray -> data[i] >= data[i-1] && data[i] >= data[i+1]}
     var globalMaximumIndex = -1
-    var globalMaximumValue = 0.0f
+    var globalMaximumValue = Float.NEGATIVE_INFINITY
     val indexBeginResolved = max(indexBegin, 1)
     val indexEndResolved = min(indexEnd, values.size - 1)
 
@@ -77,7 +86,8 @@ fun findGlobalMaximumIndex(indexBegin: Int, indexEnd: Int, values: FloatArray): 
  *   around a potentially found maximum (the maximum itself is excluded during
  *   the mean computation). The maximum is only considered as a maximum if it
  *   is higher than minimum_factor_over_mean * average.
- * @param meanRadius: Range for computing minimum_factor_over_mean.
+ * @param meanRadius Range for computing minimumFactorOverMean. Mean is computed around the found
+ *   maximum (note the given center).
  * @return Index of the maximum or None if no maximum is found.
  */
 fun findLocalMaximumIndex(
@@ -117,7 +127,26 @@ fun findLocalMaximumIndex(
     return maximumValueIndex
 }
 
-
+/** Extract harmonics from a spectrum
+ *
+ * @param harmonics Harmonics class to which we add the single harmonics.
+ * @param frequency Fundamental frequency. This can e.g. found by autocorrelation.
+ * @param frequencyMin Lowest frequency which is considered.
+ * @param frequencyMax Highest frequency which is considered.
+ * @param spectrum Frequency spectrum on which we find the harmonics.
+ * @param accurateSpectrumPeakFrequency Object for improving the accuracy beyond the resolution
+ *   given in the spectrum.
+ * @param harmonicTolerance Allowed tolerance for a spectrum peak being allowed to be a harmonic.
+ *   This is given as relative value of the base frequency. So harmonicTolerance * baseFrequency
+ *   is the frequency search radius.
+ * @param minimumFactorOverLocalMean  We compute the mean of the search_radius range around a
+ *   potentially found maximum (the maximum itself is excluded during the mean computation). The
+ *   maximum is only considered as a maximum if it is higher than
+ *     minimum_factor_over_mean * average.
+ * @param maxNumFail We start searching from the harmonic of the peak in the frequency searching
+ *   for harmonics. If we don't find successive expected harmonics for the given number, we stop
+ *   searching for more harmonics.
+ */
 fun findHarmonicsFromSpectrum(
     harmonics: Harmonics,
     frequency: Float,
@@ -127,7 +156,8 @@ fun findHarmonicsFromSpectrum(
     accurateSpectrumPeakFrequency: AccurateSpectrumPeakFrequency,
     harmonicTolerance: Float = 0.1f,
     minimumFactorOverLocalMean: Float = 5f,
-    maxNumFail: Int = 2) {
+    maxNumFail: Int = 2
+) {
     harmonics.clear()
 
     val df = spectrum.df
@@ -149,9 +179,9 @@ fun findHarmonicsFromSpectrum(
     harmonics.addHarmonic(harmonicOfGlobalMax, frequencyOfGlobalMax, globalMaximumIndex, ampSpecSqr[globalMaximumIndex])
 
     val searchRadius = harmonicTolerance * globalMaximumIndex / harmonicOfGlobalMax
-    val meanRadius = max(1, (globalMaximumIndex / (2f * harmonicOfGlobalMax).roundToInt()))
+    val meanRadius = max(1, (globalMaximumIndex / (2f * harmonicOfGlobalMax)).roundToInt())
 
-    for (increment in -1 .. 1 step 2) {
+    for (increment in -1 .. 1 step 2) { // this just means, do it once for -1 and once for 1
         var previouslyFoundHarmonicResult = harmonics[0] // this is the global maximum
         var probableHarmonicNumber = previouslyFoundHarmonicResult.harmonicNumber + increment
         var numFail = 0
@@ -177,4 +207,16 @@ fun findHarmonicsFromSpectrum(
             probableHarmonicNumber += increment
         }
     }
+}
+
+fun computeEnergyContentOfHarmonicsInSignal(harmonics: Harmonics, ampspecSqr: FloatArray, radius: Int = 1): Float {
+    val totalEnergy = ampspecSqr.sumOf { it.toDouble() }
+    var harmonicEnergy = 0.0
+    for ( i in 0 until harmonics.size) {
+        val startIndex = max(0, harmonics[i].spectrumIndex - radius)
+        val endIndex = min(ampspecSqr.size, harmonics[i].spectrumIndex + radius + 1)
+        for (j in startIndex until endIndex)
+            harmonicEnergy += ampspecSqr[j]
+    }
+    return (harmonicEnergy / totalEnergy).toFloat()
 }

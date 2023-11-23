@@ -282,4 +282,6 @@
     <string name="extended_quarter_comma_mean_tone">Extended ¼ comma meantone</string>
     <string name="extended_quarter_comma_mean_tone_desc">Pure major 3rds, 15 notes</string>
     <string name="extended_quarter_comma_mean_tone_abbr">Extended ¼ comma meantone</string>
+    <string name="min_harmonic_energy_content">Required signal strength</string>
+    <string name="min_harmonic_energy_content_summary">Ignore input below %d&#x200A;%%.</string>
 </resources>

@@ -161,6 +161,10 @@ class TunerViewModel(
             restartFrequencyEvaluationJob(maxNoise = it)
         }}
 
+        viewModelScope.launch { pref.minHarmonicEnergyContent.collect {
+            restartFrequencyEvaluationJob(minHarmonicEnergyContent = it)
+        }}
+
         viewModelScope.launch { pref.numMovingAverage.collect {
             restartFrequencyEvaluationJob(numMovingAverage = it)
         }}
@@ -297,6 +301,9 @@ class TunerViewModel(
      * @param maxNumFaultyValues Maximum values which don't match the current pitch and we don't
      *   switch to a now pitch.
      * @param maxNoise Maximum relative noise further evaluated a detected frequency.
+     * @param minHarmonicEnergyContent Minimum energy in the harmonics compared to the total
+     *   signal energy, that we consider a signal to be a tone. 0 -> Always consider as a tone,
+     *   1 -> never consider as a tone.
      * @param musicalScale Musical scale.
      * @param instrument Instrument which defines the target notes.
      */
@@ -305,6 +312,7 @@ class TunerViewModel(
         toleranceInCents: Float = pref.toleranceInCents.value.toFloat(),
         maxNumFaultyValues: Int = pref.pitchHistoryMaxNumFaultyValues.value,
         maxNoise: Float = pref.maxNoise.value,
+        minHarmonicEnergyContent: Float = pref.minHarmonicEnergyContent.value,
         musicalScale: MusicalScale = pref.musicalScale.value,
         instrument: Instrument = this.instrument.value.instrument,
     ) {
@@ -316,6 +324,7 @@ class TunerViewModel(
                 toleranceInCents,
                 maxNumFaultyValues,
                 maxNoise,
+                minHarmonicEnergyContent,
                 musicalScale,
                 instrument
             )

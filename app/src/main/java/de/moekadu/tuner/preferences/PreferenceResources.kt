@@ -40,6 +40,8 @@ class PreferenceResources(
     val numMovingAverage = _numMovingAverage.asStateFlow()
     private val _maxNoise = MutableStateFlow(obtainMaxNoise())
     val maxNoise = _maxNoise.asStateFlow()
+    private val _minHarmonicEnergyContent = MutableStateFlow(obtainMinHarmonicEnergyContent())
+    val minHarmonicEnergyContent = _minHarmonicEnergyContent.asStateFlow()
     private val _pitchHistoryMaxNumFaultyValues = MutableStateFlow(obtainPitchHistoryNumFaultyValues())
     val pitchHistoryMaxNumFaultyValues = _pitchHistoryMaxNumFaultyValues.asStateFlow()
     private val _toleranceInCents = MutableStateFlow(obtainToleranceInCents())
@@ -99,6 +101,7 @@ class PreferenceResources(
 //                    USE_HINT_KEY -> _useHint.value = obtainUseHint()
                     NUM_MOVING_AVERAGE_KEY -> _numMovingAverage.value = obtainNumMovingAverage()
                     MAX_NOISE_KEY -> _maxNoise.value = obtainMaxNoise()
+                    MIN_HARMONIC_ENERGY_CONTENT -> _minHarmonicEnergyContent.value = obtainMinHarmonicEnergyContent()
                     TOLERANCE_IN_CENTS_KEY -> _toleranceInCents.value = obtainToleranceInCents()
                     WAVE_WRITER_DURATION_IN_SECONDS_KEY -> _waveWriterDurationInSeconds.value =
                         obtainWaveWriterDurationInSeconds()
@@ -180,6 +183,7 @@ class PreferenceResources(
 //    private fun obtainUseHint() = sharedPreferences.getBoolean(USE_HINT_KEY, true)
     private fun obtainNumMovingAverage() = sharedPreferences.getInt(NUM_MOVING_AVERAGE_KEY, 5)
     private fun obtainMaxNoise() = sharedPreferences.getInt(MAX_NOISE_KEY, 10) / 100f
+    private fun obtainMinHarmonicEnergyContent() = sharedPreferences.getInt(MIN_HARMONIC_ENERGY_CONTENT, 20) / 100f
     private fun obtainToleranceInCents() = indexToTolerance(sharedPreferences.getInt(
         TOLERANCE_IN_CENTS_KEY, 3))
     private fun obtainWaveWriterDurationInSeconds() = sharedPreferences.getInt(
@@ -229,6 +233,7 @@ class PreferenceResources(
 //        const val USE_HINT_KEY = "use_hint"
         const val NUM_MOVING_AVERAGE_KEY = "num_moving_average"
         const val MAX_NOISE_KEY = "max_noise"
+        const val MIN_HARMONIC_ENERGY_CONTENT = "min_harmonic_energy_content"
         const val TOLERANCE_IN_CENTS_KEY = "tolerance_in_cents"
         const val WAVE_WRITER_DURATION_IN_SECONDS_KEY = "wave_writer_duration_in_seconds"
 //        const val INSTRUMENT_ID_KEY = "instrument_id"

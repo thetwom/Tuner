@@ -5,6 +5,39 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
+/** Check if a index in an array is local minimum.
+ * The radius checks that in the direct neighborhood there is no larger value.
+ * @param i Index in array.
+ * @param data Array with data.
+ * @param radius Besides of the direct neighbors being larger, also the extra radius values must be
+ *   larger. A value would 1 be real local minimum, where only the direct neighbors are larger.
+ * @return True if the index is a local minimum, else false.
+ */
+private fun isLocalMin(i: Int, data: FloatArray, radius: Int= 1): Boolean {
+    val startIndex = max(0, i - radius)
+    val endIndex = min(data.size, i + radius + 1)
+    for (j in startIndex until endIndex) {
+        if (i != j && data[j] < data[i])
+            return false
+    }
+    return true
+}
+
+/** Find first minimum in array.
+ * @param data Array with data, where the minimum should be found.
+ * @param radius Besides of the direct neighbors being larger, also the extra radius values must be
+ *   larger. A value would 1 be real local minimum, where only the direct neighbors are larger.
+ * @return Index of first minimum.
+ */
+private fun findFirstMinimum(data: FloatArray, radius: Int = 2): Int {
+    for (i in radius until data.size - radius) {
+        if (isLocalMin(i, data, radius))
+            return i
+    }
+    return data.size
+}
+
+
 /** Result of frequency detection from auto correlation.
  * @param frequency Detected frequency.
  * @param timeShift Time shift which corresponds to the detected frequency.
@@ -51,7 +84,7 @@ fun findCorrelationBasedFrequency(
     frequencyMin: Float = 0f,
     frequencyMax: Float = 0f,
     subharmonicsTolerance: Float = 0.05f,
-    subharmonicPeakRatio: Float = 0.9f
+    subharmonicPeakRatio: Float = 0.8f
 ) {
 
     // functor for local maximum check
@@ -64,14 +97,13 @@ fun findCorrelationBasedFrequency(
         correlation.size - 1
     }
 
-    // find first negative value (or 1 if there is not negative value)
-    val firstNegativeValue = correlation.values.indexOfFirst { it < 0.0f }
+    val  firstLocalMinimum = findFirstMinimum(correlation.values)
 
     val globalIndexBegin = if (frequencyMax > 0f ) {
         val indexShiftFrequencyMax = ceil(1.0 / (correlation.dt * frequencyMax)).toInt()
-        max(indexShiftFrequencyMax, firstNegativeValue)
+        max(indexShiftFrequencyMax, firstLocalMinimum)
     } else {
-        max(1, firstNegativeValue)
+        firstLocalMinimum
     }
 
     if (globalIndexBegin >= globalIndexEnd) {

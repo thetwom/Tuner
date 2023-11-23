@@ -17,6 +17,7 @@ class FrequencyEvaluator(
     toleranceInCents: Float,
     maxNumFaultyValues: Int,
     private val maxNoise: Float,
+    private val minHarmonicEnergyContent: Float,
     musicalScale: MusicalScale,
     instrument: Instrument
 ) {
@@ -47,7 +48,7 @@ class FrequencyEvaluator(
 //        Log.v("Tuner", "FrequencyEvaluator.evaluate: frequencyCollectionResults = $frequencyCollectionResults")
         val newTarget = frequencyCollectionResults?.let {
 //            Log.v("Tuner", "FrequencyEvaluator.evaluate: noise = ${it.noise}, maxNoise=$maxNoise, f=${it.frequency}")
-            if (it.noise < maxNoise) {
+            if (it.noise < maxNoise && it.harmonicEnergyContent >= minHarmonicEnergyContent) {
                 smoothedFrequency = smoother(it.frequency)
                 frequencyDetectionTimeStep = it.timeSeries.framePosition
                 dt = it.timeSeries.dt

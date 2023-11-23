@@ -50,6 +50,9 @@ class FrequencyDetectionCollectedResults(val sizeOfTimeSeries: Int, val sampleRa
     /** Contains statistics of the harmonics, most important the base frequency. */
     val harmonicStatistics = HarmonicStatistics()
 
+    /** Energy content of harmonics in signal. */
+    var harmonicEnergyContent = 0.0f
+
     /** Quick access of the base frequency, obtained through the harmonics in the frequency spectrum. */
     val frequency
         get() = if (harmonicStatistics.frequency != 0f)
@@ -73,7 +76,7 @@ class FrequencyDetectionResultCollector(
     private val frequencyMin: Float,
     private val frequencyMax: Float,
     private val subharmonicsTolerance: Float = 0.05f,
-    private val subharmonicsPeakRatio: Float = 0.9f,
+    private val subharmonicsPeakRatio: Float = 0.8f,
     private val harmonicTolerance: Float = 0.1f,
     private val minimumFactorOverLocalMean: Float = 5f,
     private val maxGapBetweenHarmonics: Int = 10,
@@ -135,7 +138,14 @@ class FrequencyDetectionResultCollector(
             )
             collectedResults.memory.harmonics.sort()
 
-            collectedResults.memory.harmonicStatistics.evaluate(collectedResults.memory.harmonics, acousticWeighting)
+            collectedResults.memory.harmonicStatistics.evaluate(
+                collectedResults.memory.harmonics, acousticWeighting
+            )
+
+            collectedResults.memory.harmonicEnergyContent = computeEnergyContentOfHarmonicsInSignal(
+                collectedResults.memory.harmonics,
+                collectedResults.memory.frequencySpectrum.amplitudeSpectrumSquared
+            )
 
             val inharmonicityDetector = inharmonicityDetectorMemory.get(maxNumHarmonicsForInharmonicity)
             collectedResults.memory.inharmonicity = inharmonicityDetector.memory.computeInharmonicity(

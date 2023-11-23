@@ -232,4 +232,7 @@
     <string name="notation_carnatic">Karnatisch</string>
     <string name="notation_hindustani">Hindustanisch</string>
     <string name="helmholtz_notation">Helmholtz-Schreibweise (C, … c\')</string>
+    <string name="min_harmonic_energy_content">Signalstärke</string>
+    <string name="min_harmonic_energy_content_summary">Keine Töne finden, wenn unter %d&#x200A;%%.</string>
+
 </resources>

@@ -161,7 +161,18 @@
         app:icon="@drawable/ic_noise"
         />
 
-    <SeekBarPreference
+        <SeekBarPreference
+            android:key="min_harmonic_energy_content"
+            app:title="@string/min_harmonic_energy_content"
+            android:defaultValue="20"
+            app:min="0"
+            android:max="100"
+            app:seekBarIncrement="1"
+            app:updatesContinuously="true"
+            app:icon="@drawable/ic_harmonic_energy"
+            />
+
+        <SeekBarPreference
         android:key="pitch_history_num_faulty_values"
         app:title="@string/pitch_history_num_faulty_values"
         app:min="1"

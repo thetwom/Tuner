@@ -247,6 +247,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
         maxNoise.summary = getMaxNoiseSummary(maxNoise.value)
 
+        val minHarmonicEnergy = findPreference<SeekBarPreference>("min_harmonic_energy_content")
+            ?: throw RuntimeException("No min harmonic energy content preference")
+        minHarmonicEnergy.setOnPreferenceChangeListener { preference, newValue ->
+            preference.summary = getMinHarmonicEnergySummary(newValue as Int)
+            true
+        }
+        minHarmonicEnergy.summary = getMinHarmonicEnergySummary(minHarmonicEnergy.value)
+
         val pitchHistoryNumFaultyValues =
             findPreference<SeekBarPreference>("pitch_history_num_faulty_values")
                 ?: throw RuntimeException("No pitch history num fault values preference")
@@ -345,6 +353,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private fun getMaxNoiseSummary(percent: Int): String {
         return getString(R.string.max_noise_summary, percent)
+    }
+
+    private fun getMinHarmonicEnergySummary(percent: Int): String {
+        return getString(R.string.min_harmonic_energy_content_summary, percent)
     }
 
     private fun setAppearanceSummary(mode: Int?) {

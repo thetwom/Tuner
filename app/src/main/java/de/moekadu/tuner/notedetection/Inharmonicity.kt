@@ -6,6 +6,11 @@ import kotlin.math.log
 import kotlin.math.sqrt
 
 /** Class for detecting inharmonicities.
+ *
+ * TODO: maybe we should better change this! It might be best to combine every harmonic
+ *  with every other harmonic. We could limit the whole thing to maxNumHamonics, but I guess
+ *  even 20 harmonics would not be an issue ...
+ *
  * @param maxNumHarmonics Maximum number of harmonics, which should be used for the computation
  *   of harmonics. In theory you can use a big value here, but the underlying algorithm will become
  *   expensive. So better use values between 3 and 10.

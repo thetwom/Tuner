@@ -88,6 +88,10 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
             restartSamplingIfRunning()
         }}
 
+        viewModelScope.launch { pref.minHarmonicEnergyContent.collect {
+            restartSamplingIfRunning()
+        }}
+
         viewModelScope.launch { pref.numMovingAverage.collect {
             restartSamplingIfRunning()
         }}
@@ -309,6 +313,7 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
                 pref.toleranceInCents.value.toFloat(),
                 pref.pitchHistoryMaxNumFaultyValues.value,
                 pref.maxNoise.value,
+                pref.minHarmonicEnergyContent.value,
                 pref.musicalScale.value,
                 Instrument(null, null, arrayOf(), 0, 0, true)
             )
