@@ -25,6 +25,7 @@ import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.instruments.instrumentChromatic
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.misc.MemoryPool
+import de.moekadu.tuner.misc.RestartableJob
 import de.moekadu.tuner.misc.WaveWriter
 import de.moekadu.tuner.models.CorrelationPlotModel
 import de.moekadu.tuner.models.PitchHistoryModel
@@ -36,6 +37,9 @@ import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,10 +62,10 @@ class TunerViewModel(
     /** Simple mode (with string view) or no simple mode (with spectrum and correlation plots). */
     private val simpleMode = (instrumentResources != null)
 
-    /** Job for detecting the peak frequencies. */
-    private var frequencyDetectionJob: Job? = null
+    /** Job for finding frequencies */
+    private var frequencyDetectionJob: RestartableJob? = null
     /** Job for translating frequencies to a target note. */
-    private var frequencyEvaluationJob: Job? = null
+    private var frequencyEvaluationJob: RestartableJob? = null
 
     /** Instrument which is used if there are no instrument resources. */
     private val chromaticInstrumentStateFlow = MutableStateFlow(
@@ -122,24 +126,67 @@ class TunerViewModel(
     private val _timeSinceThereIsNoFrequencyDetectionResult = MutableStateFlow(0f)
     private val timeSinceThereIsNoFrequencyDetectionResult = _timeSinceThereIsNoFrequencyDetectionResult.asStateFlow()
 
-
     init {
+        frequencyDetectionJob = RestartableJob(viewModelScope) {
+            viewModelScope.launch(Dispatchers.Default) {
+                frequencyDetectionFlow(pref, waveWriter)
+                    .collect {
+                        ensureActive()
+                        frequencyDetectionResults.value?.decRef()
+                        _frequencyDetectionResults.value = it
+                    }
+            }
+        }
+
+        frequencyEvaluationJob = RestartableJob(viewModelScope) {
+            viewModelScope.launch(Dispatchers.Default) {
+//            Log.v("Tuner", "TunerViewModel.restartFrequencyEvaluationJob: restarting")
+                val freqEvaluator = FrequencyEvaluator(
+                    pref.numMovingAverage.value,
+                    pref.toleranceInCents.value.toFloat(),
+                    pref.pitchHistoryMaxNumFaultyValues.value,
+                    pref.maxNoise.value,
+                    pref.minHarmonicEnergyContent.value,
+                    pref.musicalScale.value,
+                    instrument.value.instrument,
+                )
+
+                frequencyDetectionResults.combine(userDefinedTargetNote) { noteDetectionRes, userDefinedNote ->
+                    noteDetectionRes?.with {
+//                    Log.v("Tuner", "TunerViewModel: collecting noteDetectionResults, framePosition = ${it.timeSeries.framePosition}")
+                        freqEvaluator.evaluate(it, userDefinedNote?.note)
+                    } ?: freqEvaluator.evaluate(null, userDefinedNote?.note)
+                }.collect {
+                    ensureActive()
+//                Log.v("Tuner", "TunerViewModel: collecting frequencyEvaluationResults, framePosition = ${it.framePosition}")
+//                Log.v("Tuner", "TunerViewModel: evaluating target: $it, $coroutineContext")
+                    it.target?.let{ tuningTarget ->
+                        _tuningTarget.value = tuningTarget
+                    }
+                    _timeSinceThereIsNoFrequencyDetectionResult.value = it.timeSinceThereIsNoFrequencyDetectionResult
+                    if (it.smoothedFrequency > 0f)
+                        _currentFrequency.value = FrequencyWithFramePosition(it.smoothedFrequency, it.framePosition)
+                }
+            }
+        }
+        frequencyEvaluationJob?.restart()
+
         viewModelScope.launch { pref.overlap.collect { overlap ->
             _pitchHistoryModel.value = pitchHistoryModel.value?.apply { changeSettings(maxNumHistoryValues = computePitchHistorySize(overlap = overlap)) }
-            restartSamplingIfRunning()
+            frequencyDetectionJob?.restartIfRunning()
         } }
 
         viewModelScope.launch { pref.windowSize.collect { windowSize ->
             _pitchHistoryModel.value = pitchHistoryModel.value?.apply { changeSettings(maxNumHistoryValues = computePitchHistorySize(windowSize = windowSize)) }
-            restartSamplingIfRunning()
+            frequencyDetectionJob?.restartIfRunning()
         } }
 
         viewModelScope.launch { pref.musicalScale.collect {
             _pitchHistoryModel.value = pitchHistoryModel.value?.apply { changeSettings(musicalScale = it) }
             if (simpleMode)
                 _stringsModel.value = stringsModel.value?.apply { changeSettings(musicalScale = it) }
-            restartFrequencyEvaluationJob(musicalScale = it)
-            restartSamplingIfRunning()
+            frequencyEvaluationJob?.restartIfRunning()
+            frequencyDetectionJob?.restartIfRunning()
         }}
 
         viewModelScope.launch { pref.toleranceInCents.collect {
@@ -149,24 +196,24 @@ class TunerViewModel(
                     changeSettings(tuningState = computeTuningState(toleranceInCents = it))
                 }
             }
-            restartFrequencyEvaluationJob(toleranceInCents = it.toFloat())
-            restartSamplingIfRunning()
+            frequencyEvaluationJob?.restartIfRunning()
+            frequencyDetectionJob?.restartIfRunning()
         }}
 
         viewModelScope.launch { pref.pitchHistoryMaxNumFaultyValues.collect {
-            restartFrequencyEvaluationJob(maxNumFaultyValues = it)
+            frequencyEvaluationJob?.restartIfRunning()
         }}
 
         viewModelScope.launch { pref.maxNoise.collect {
-            restartFrequencyEvaluationJob(maxNoise = it)
+            frequencyEvaluationJob?.restartIfRunning()
         }}
 
         viewModelScope.launch { pref.minHarmonicEnergyContent.collect {
-            restartFrequencyEvaluationJob(minHarmonicEnergyContent = it)
+            frequencyEvaluationJob?.restartIfRunning()
         }}
 
         viewModelScope.launch { pref.numMovingAverage.collect {
-            restartFrequencyEvaluationJob(numMovingAverage = it)
+            frequencyEvaluationJob?.restartIfRunning()
         }}
 
         viewModelScope.launch { pref.waveWriterDurationInSeconds.collect { durationInSeconds ->
@@ -174,7 +221,7 @@ class TunerViewModel(
                 val size = sampleRate * durationInSeconds
                 waveWriter.setBufferSize(size)
                 _showWaveWriterFab.value = (size > 0)
-                restartSamplingIfRunning()
+                frequencyDetectionJob?.restartIfRunning()
             }
         }}
 
@@ -195,8 +242,8 @@ class TunerViewModel(
             viewModelScope.launch { instrument.collect { instrumentAndSection ->
                 _stringsModel.value =
                     stringsModel.value?.apply { changeSettings(instrument = instrumentAndSection.instrument) }
-                restartFrequencyEvaluationJob(instrument = instrumentAndSection.instrument)
-                restartSamplingIfRunning()
+                frequencyEvaluationJob?.restartIfRunning()
+                frequencyDetectionJob?.restartIfRunning()
             } }
         }
 
@@ -295,90 +342,17 @@ class TunerViewModel(
         }
     }
 
-    /** Restart the job for evaluating detected frequencies.
-     * @param numMovingAverage Number of values which are used for the moving average.
-     * @param toleranceInCents Tolerance in cents within which a note is said to be in tune.
-     * @param maxNumFaultyValues Maximum values which don't match the current pitch and we don't
-     *   switch to a now pitch.
-     * @param maxNoise Maximum relative noise further evaluated a detected frequency.
-     * @param minHarmonicEnergyContent Minimum energy in the harmonics compared to the total
-     *   signal energy, that we consider a signal to be a tone. 0 -> Always consider as a tone,
-     *   1 -> never consider as a tone.
-     * @param musicalScale Musical scale.
-     * @param instrument Instrument which defines the target notes.
-     */
-    private fun restartFrequencyEvaluationJob(
-        numMovingAverage: Int = pref.numMovingAverage.value,
-        toleranceInCents: Float = pref.toleranceInCents.value.toFloat(),
-        maxNumFaultyValues: Int = pref.pitchHistoryMaxNumFaultyValues.value,
-        maxNoise: Float = pref.maxNoise.value,
-        minHarmonicEnergyContent: Float = pref.minHarmonicEnergyContent.value,
-        musicalScale: MusicalScale = pref.musicalScale.value,
-        instrument: Instrument = this.instrument.value.instrument,
-    ) {
-        frequencyEvaluationJob?.cancel()
-        frequencyEvaluationJob = viewModelScope.launch(Dispatchers.Default) {
-//            Log.v("Tuner", "TunerViewModel.restartFrequencyEvaluationJob: restarting")
-            val freqEvaluator = FrequencyEvaluator(
-                numMovingAverage,
-                toleranceInCents,
-                maxNumFaultyValues,
-                maxNoise,
-                minHarmonicEnergyContent,
-                musicalScale,
-                instrument
-            )
-
-            frequencyDetectionResults.combine(userDefinedTargetNote) { noteDetectionRes, userDefinedNote ->
-                noteDetectionRes?.with {
-//                    Log.v("Tuner", "TunerViewModel: collecting noteDetectionResults, framePosition = ${it.timeSeries.framePosition}")
-                    freqEvaluator.evaluate(it, userDefinedNote?.note)
-                } ?: freqEvaluator.evaluate(null, userDefinedNote?.note)
-            }.collect {
-                ensureActive()
-//                Log.v("Tuner", "TunerViewModel: collecting frequencyEvaluationResults, framePosition = ${it.framePosition}")
-//                Log.v("Tuner", "TunerViewModel: evaluating target: $it, $coroutineContext")
-                it.target?.let{ tuningTarget ->
-                    _tuningTarget.value = tuningTarget
-                }
-                _timeSinceThereIsNoFrequencyDetectionResult.value = it.timeSinceThereIsNoFrequencyDetectionResult
-                if (it.smoothedFrequency > 0f)
-                    _currentFrequency.value = FrequencyWithFramePosition(it.smoothedFrequency, it.framePosition)
-            }
-        }
-    }
-
-    /** Restart sampling and frequency detection if it is running.
-     * This will use the current preference (pref) to get the current settings.
-     */
-    private fun restartSamplingIfRunning() {
-        if (frequencyDetectionJob != null) {
-            stopSampling()
-            startSampling()
-        }
-    }
-
     /** Start sampling and frequency detection.
      * This will use the current preference (pref) to get the current settings.
      */
     fun startSampling() {
-        frequencyDetectionJob?.cancel()
-        frequencyDetectionJob = viewModelScope.launch(Dispatchers.Default) {
-            frequencyDetectionFlow(pref, waveWriter)
-                .collect {
-                ensureActive()
-                frequencyDetectionResults.value?.decRef()
-                _frequencyDetectionResults.value = it
-//                Log.v("TunerViewModel", "collecting frequencyDetectionFlow")
-            }
-        }
+        frequencyDetectionJob?.restart()
     }
 
     /** Stop sampling. */
     fun stopSampling() {
-//        Log.v("Tuner", "TunerViewModel.stopSampling")
-        frequencyDetectionJob?.cancel()
-        frequencyDetectionJob = null
+        // Log.v("Tuner", "TunerViewModel.stopSampling")
+        frequencyDetectionJob?.stop()
     }
 
     /** Set a new target note and string index.

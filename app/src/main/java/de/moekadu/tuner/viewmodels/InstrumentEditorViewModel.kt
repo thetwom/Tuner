@@ -5,6 +5,7 @@ import androidx.lifecycle.*
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.misc.DefaultValues
+import de.moekadu.tuner.misc.RestartableJob
 import de.moekadu.tuner.models.DetectedNoteViewModel
 import de.moekadu.tuner.models.InstrumentEditorNameModel
 import de.moekadu.tuner.models.NoteSelectorForEditorModel
@@ -38,7 +39,7 @@ private class StringsAndSelection(val strings: Array<MusicalNote>, val selectedI
  */
 class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewModel() {
     /** Job for detecting notes. This is used to show currently detected notes. */
-    private var noteDetectionJob: Job? = null
+    private var noteDetectionJob: RestartableJob? = null
 
     /** Sample rate for the frequency detection. */
     val sampleRate = DefaultValues.SAMPLE_RATE
@@ -71,37 +72,64 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
     val detectedNoteModel: LiveData<DetectedNoteViewModel> get() = _detectedNoteModel
 
     init {
+        noteDetectionJob = RestartableJob(viewModelScope) {
+            viewModelScope.launch(Dispatchers.Main) {
+                val frequencyEvaluator = FrequencyEvaluator(
+                    pref.numMovingAverage.value,
+                    pref.toleranceInCents.value.toFloat(),
+                    pref.pitchHistoryMaxNumFaultyValues.value,
+                    pref.maxNoise.value,
+                    pref.minHarmonicEnergyContent.value,
+                    pref.musicalScale.value,
+                    Instrument(null, null, arrayOf(), 0, 0, true)
+                )
+                frequencyDetectionFlow(pref, null)
+                    .flowOn(Dispatchers.Default)
+                    .collect {
+                        ensureActive()
+                        frequencyEvaluator.evaluate(it.memory, null).target?.note?.let {
+                            _detectedNoteModel.value = detectedNoteModel.value?.apply {
+                                changeSettings(note = it)
+                            }
+                        }
+
+                        it.decRef()
+//                Log.v("TunerViewModel", "collecting frequencyDetectionFlow")
+                    }
+            }
+        }
+
         viewModelScope.launch { pref.overlap.collect { overlap ->
             _detectedNoteModel.value = detectedNoteModel.value?.apply {
                 changeSettings(noteUpdateInterval = computePitchHistoryUpdateInterval(overlap = overlap))
             }
-            restartSamplingIfRunning()
-        } }
+            noteDetectionJob?.restartIfRunning()
+        }}
         viewModelScope.launch { pref.windowSize.collect { windowSize ->
             _detectedNoteModel.value = detectedNoteModel.value?.apply {
                 changeSettings(noteUpdateInterval = computePitchHistoryUpdateInterval(windowSize = windowSize))
             }
-            restartSamplingIfRunning()
-        } }
+            noteDetectionJob?.restartIfRunning()
+        }}
 
         viewModelScope.launch { pref.maxNoise.collect {
-            restartSamplingIfRunning()
+            noteDetectionJob?.restartIfRunning()
         }}
 
         viewModelScope.launch { pref.minHarmonicEnergyContent.collect {
-            restartSamplingIfRunning()
+            noteDetectionJob?.restartIfRunning()
         }}
 
         viewModelScope.launch { pref.numMovingAverage.collect {
-            restartSamplingIfRunning()
+            noteDetectionJob?.restartIfRunning()
         }}
 
         viewModelScope.launch { pref.toleranceInCents.collect {
-            restartSamplingIfRunning()
+            noteDetectionJob?.restartIfRunning()
         }}
 
         viewModelScope.launch { pref.pitchHistoryMaxNumFaultyValues.collect {
-            restartSamplingIfRunning()
+            noteDetectionJob?.restartIfRunning()
         }}
 
         viewModelScope.launch { pref.musicalScale.collect {
@@ -114,7 +142,7 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
             _detectedNoteModel.value = detectedNoteModel.value?.apply {
                 changeSettings(musicalScale = it)
             }
-            restartSamplingIfRunning()
+            noteDetectionJob?.restartIfRunning()
         }}
 
         viewModelScope.launch { pref.noteNamePrinter.collect {
@@ -294,48 +322,16 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
         }
     }
 
-    /** Restart sampling for note detection if it is running.
-     * The app preferences will be used to configure the detection.
-     */
-    private fun restartSamplingIfRunning() {
-        if (noteDetectionJob != null)
-            startSampling()
-    }
-
     /** Start sampling for note detection.
      * The app preferences will be used to configure the detection.
      */
     fun startSampling() {
-        noteDetectionJob?.cancel()
-        noteDetectionJob = viewModelScope.launch(Dispatchers.Main) {
-            val frequencyEvaluator = FrequencyEvaluator(
-                pref.numMovingAverage.value,
-                pref.toleranceInCents.value.toFloat(),
-                pref.pitchHistoryMaxNumFaultyValues.value,
-                pref.maxNoise.value,
-                pref.minHarmonicEnergyContent.value,
-                pref.musicalScale.value,
-                Instrument(null, null, arrayOf(), 0, 0, true)
-            )
-            frequencyDetectionFlow(pref, null)
-                .flowOn(Dispatchers.Default)
-                .collect {
-                    ensureActive()
-                    frequencyEvaluator.evaluate(it.memory, null).target?.note?.let {
-                        _detectedNoteModel.value = detectedNoteModel.value?.apply {
-                            changeSettings(note = it)
-                        }
-                    }
-
-                    it.decRef()
-//                Log.v("TunerViewModel", "collecting frequencyDetectionFlow")
-                }
-        }
+        noteDetectionJob?.restart()
     }
 
     /** Stop the note detection job. */
     fun stopSampling() {
-        noteDetectionJob?.cancel()
+        noteDetectionJob?.stop()
     }
 
     /** Compute duration in seconds, between two new note detection results.
