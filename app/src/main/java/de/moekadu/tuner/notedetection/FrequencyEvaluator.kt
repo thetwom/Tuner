@@ -4,6 +4,7 @@ import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
+import kotlin.math.log10
 
 data class FrequencyEvaluationResult(
     val smoothedFrequency: Float,
@@ -18,6 +19,7 @@ class FrequencyEvaluator(
     maxNumFaultyValues: Int,
     private val maxNoise: Float,
     private val minHarmonicEnergyContent: Float,
+    private val sensitivity: Float,
     musicalScale: MusicalScale,
     instrument: Instrument
 ) {
@@ -48,7 +50,11 @@ class FrequencyEvaluator(
 //        Log.v("Tuner", "FrequencyEvaluator.evaluate: frequencyCollectionResults = $frequencyCollectionResults")
         val newTarget = frequencyCollectionResults?.let {
 //            Log.v("Tuner", "FrequencyEvaluator.evaluate: noise = ${it.noise}, maxNoise=$maxNoise, f=${it.frequency}")
-            if (it.noise < maxNoise && it.harmonicEnergyContent >= minHarmonicEnergyContent) {
+//            Log.v("Tuner", "FrequencyEvaluator.evaluate: energy = ${it.harmonicEnergyAbsolute} signalLevel = ${transformEnergyToLevelFrom0To100(it.harmonicEnergyAbsolute)}, required = $minHarmonicEnergyLevel")
+            if (it.noise < maxNoise
+                && it.harmonicEnergyContentRelative >= minHarmonicEnergyContent
+                && transformEnergyToSensitivityFrom0To100(it.harmonicEnergyAbsolute) <= sensitivity
+                ) {
                 smoothedFrequency = smoother(it.frequency)
                 frequencyDetectionTimeStep = it.timeSeries.framePosition
                 dt = it.timeSeries.dt
@@ -95,4 +101,11 @@ class FrequencyEvaluator(
 //        if (it.smoothedFrequency > 0f)
 //            _currentFrequency.value = it.smoothedFrequency
 //    }
+
+    private fun transformEnergyToSensitivityFrom0To100(energy: Float): Float {
+        val minValue = log10(1e-10f)
+        val maxValue = log10(1f)
+        val energyLevel = log10(energy).coerceIn(minValue, maxValue)
+        return 100 - 100 * (energyLevel - minValue) / (maxValue - minValue)
+    }
 }

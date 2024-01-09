@@ -42,6 +42,8 @@ class PreferenceResources(
     val maxNoise = _maxNoise.asStateFlow()
     private val _minHarmonicEnergyContent = MutableStateFlow(obtainMinHarmonicEnergyContent())
     val minHarmonicEnergyContent = _minHarmonicEnergyContent.asStateFlow()
+    private val _sensitivity = MutableStateFlow(obtainSensitivity())
+    val sensitivity = _sensitivity.asStateFlow()
     private val _pitchHistoryMaxNumFaultyValues = MutableStateFlow(obtainPitchHistoryNumFaultyValues())
     val pitchHistoryMaxNumFaultyValues = _pitchHistoryMaxNumFaultyValues.asStateFlow()
     private val _toleranceInCents = MutableStateFlow(obtainToleranceInCents())
@@ -102,6 +104,7 @@ class PreferenceResources(
                     NUM_MOVING_AVERAGE_KEY -> _numMovingAverage.value = obtainNumMovingAverage()
                     MAX_NOISE_KEY -> _maxNoise.value = obtainMaxNoise()
                     MIN_HARMONIC_ENERGY_CONTENT -> _minHarmonicEnergyContent.value = obtainMinHarmonicEnergyContent()
+                    SENSITIVITY -> _sensitivity.value = obtainSensitivity()
                     TOLERANCE_IN_CENTS_KEY -> _toleranceInCents.value = obtainToleranceInCents()
                     WAVE_WRITER_DURATION_IN_SECONDS_KEY -> _waveWriterDurationInSeconds.value =
                         obtainWaveWriterDurationInSeconds()
@@ -182,8 +185,13 @@ class PreferenceResources(
         PITCH_HISTORY_NUM_FAULTY_VALUES_KEY, 3)
 //    private fun obtainUseHint() = sharedPreferences.getBoolean(USE_HINT_KEY, true)
     private fun obtainNumMovingAverage() = sharedPreferences.getInt(NUM_MOVING_AVERAGE_KEY, 5)
-    private fun obtainMaxNoise() = sharedPreferences.getInt(MAX_NOISE_KEY, 10) / 100f
-    private fun obtainMinHarmonicEnergyContent() = sharedPreferences.getInt(MIN_HARMONIC_ENERGY_CONTENT, 20) / 100f
+
+    // disable this setting for now by hardcoding a good value
+    private fun obtainMaxNoise() = 0.1f// sharedPreferences.getInt(MAX_NOISE_KEY, 10) / 100f
+
+    // disable this setting for now by hardcoding a good value
+    private fun obtainMinHarmonicEnergyContent() = 0.1f // sharedPreferences.getInt(MIN_HARMONIC_ENERGY_CONTENT, 20) / 100f
+    private fun obtainSensitivity() = sharedPreferences.getInt(SENSITIVITY, 90)
     private fun obtainToleranceInCents() = indexToTolerance(sharedPreferences.getInt(
         TOLERANCE_IN_CENTS_KEY, 3))
     private fun obtainWaveWriterDurationInSeconds() = sharedPreferences.getInt(
@@ -234,6 +242,7 @@ class PreferenceResources(
         const val NUM_MOVING_AVERAGE_KEY = "num_moving_average"
         const val MAX_NOISE_KEY = "max_noise"
         const val MIN_HARMONIC_ENERGY_CONTENT = "min_harmonic_energy_content"
+        const val SENSITIVITY = "sensitivity"
         const val TOLERANCE_IN_CENTS_KEY = "tolerance_in_cents"
         const val WAVE_WRITER_DURATION_IN_SECONDS_KEY = "wave_writer_duration_in_seconds"
 //        const val INSTRUMENT_ID_KEY = "instrument_id"

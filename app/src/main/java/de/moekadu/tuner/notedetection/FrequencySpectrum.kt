@@ -12,7 +12,7 @@ class FrequencySpectrum(
     val frequencies = FloatArray(size) { df * it }
     /** Spectrum, where 2*i is the real part and 2*i+1 is the imaginary part. */
     val spectrum = FloatArray(2 * size)
-    /** Squared amplitudes of the spectrum (re*re + im*im) .*/
+    /** Squared amplitudes of the spectrum (re*re + im*im) / (numberOfInputSamples * 2f)**2 .*/
     val amplitudeSpectrumSquared = FloatArray(size)
 
     /** Return the real part of a spectrum value.

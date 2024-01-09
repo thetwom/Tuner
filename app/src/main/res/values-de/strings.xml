@@ -234,5 +234,6 @@
     <string name="helmholtz_notation">Helmholtz-Schreibweise (C, … c\')</string>
     <string name="min_harmonic_energy_content">Signalstärke</string>
     <string name="min_harmonic_energy_content_summary">Keine Töne finden, wenn unter %d&#x200A;%%.</string>
+    <string name="sensitivity">Empfindlichkeit</string>
 
 </resources>

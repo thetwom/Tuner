@@ -209,7 +209,7 @@ fun findHarmonicsFromSpectrum(
     }
 }
 
-fun computeEnergyContentOfHarmonicsInSignal(harmonics: Harmonics, ampspecSqr: FloatArray, radius: Int = 1): Float {
+fun computeEnergyContentOfHarmonicsInSignalRelative(harmonics: Harmonics, ampspecSqr: FloatArray, radius: Int = 1): Float {
     val totalEnergy = ampspecSqr.sumOf { it.toDouble() }
     var harmonicEnergy = 0.0
     for ( i in 0 until harmonics.size) {
@@ -219,4 +219,15 @@ fun computeEnergyContentOfHarmonicsInSignal(harmonics: Harmonics, ampspecSqr: Fl
             harmonicEnergy += ampspecSqr[j]
     }
     return (harmonicEnergy / totalEnergy).toFloat()
+}
+
+fun computeEnergyContentOfHarmonicsInSignalAbsolute(harmonics: Harmonics, ampspecSqr: FloatArray, radius: Int = 1): Float {
+    var harmonicEnergy = 0.0f
+    for ( i in 0 until harmonics.size) {
+        val startIndex = max(0, harmonics[i].spectrumIndex - radius)
+        val endIndex = min(ampspecSqr.size, harmonics[i].spectrumIndex + radius + 1)
+        for (j in startIndex until endIndex)
+            harmonicEnergy += ampspecSqr[j]
+    }
+    return harmonicEnergy
 }

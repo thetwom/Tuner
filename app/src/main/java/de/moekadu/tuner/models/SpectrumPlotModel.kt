@@ -79,7 +79,7 @@ class SpectrumPlotModel {
 
         if (targetFrequency > 0f) {
             this.targetFrequency = targetFrequency
-            Log.v("Tuner", "SpectrumPlotModel.changeSettings: frequencies.size()=${frequencies.size}")
+//            Log.v("Tuner", "SpectrumPlotModel.changeSettings: frequencies.size()=${frequencies.size}")
             frequencyRange[1] = min(3.5f * this.targetFrequency, frequencies.lastOrNull() ?: Float.MAX_VALUE)
             targetChangeId = changeId
         }

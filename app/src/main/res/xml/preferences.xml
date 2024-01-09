@@ -79,6 +79,16 @@
             app:icon="@drawable/ic_solfege"
             />
 
+        <SeekBarPreference
+            android:key="sensitivity"
+            app:title="@string/sensitivity"
+            android:defaultValue="95"
+            app:min="0"
+            android:max="100"
+            app:seekBarIncrement="1"
+            app:updatesContinuously="true"
+            app:icon="@drawable/ic_harmonic_energy"
+            />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/expert">
@@ -150,27 +160,30 @@
         app:icon="@drawable/ic_duration"
         />
 
-    <SeekBarPreference
-        android:key="max_noise"
-        app:title="@string/max_noise"
-        android:defaultValue="10"
-        app:min="0"
-        android:max="100"
-        app:seekBarIncrement="1"
-        app:updatesContinuously="true"
-        app:icon="@drawable/ic_noise"
-        />
+        <!-- NOTE: This is also disabled in the PreferenceResources (see obtainMaxNoise())-->
+<!--    <SeekBarPreference-->
+<!--        android:key="max_noise"-->
+<!--        app:title="@string/max_noise"-->
+<!--        android:defaultValue="10"-->
+<!--        app:min="0"-->
+<!--        android:max="100"-->
+<!--        app:seekBarIncrement="1"-->
+<!--        app:updatesContinuously="true"-->
+<!--        app:icon="@drawable/ic_noise"-->
+<!--        />-->
 
-        <SeekBarPreference
-            android:key="min_harmonic_energy_content"
-            app:title="@string/min_harmonic_energy_content"
-            android:defaultValue="20"
-            app:min="0"
-            android:max="100"
-            app:seekBarIncrement="1"
-            app:updatesContinuously="true"
-            app:icon="@drawable/ic_harmonic_energy"
-            />
+        <!-- NOTE: This is also disabled in the PreferenceResources (see obtainMinHarmonicEnergyContent())-->
+<!--        <SeekBarPreference-->
+<!--            android:key="min_harmonic_energy_content"-->
+<!--            app:title="@string/min_harmonic_energy_content"-->
+<!--            android:defaultValue="20"-->
+<!--            app:min="0"-->
+<!--            android:max="100"-->
+<!--            app:seekBarIncrement="1"-->
+<!--            app:updatesContinuously="true"-->
+<!--            app:icon="@drawable/ic_harmonic_energy"-->
+<!--            />-->
+
 
         <SeekBarPreference
         android:key="pitch_history_num_faulty_values"

@@ -284,4 +284,5 @@
     <string name="extended_quarter_comma_mean_tone_abbr">Extended ¼ comma meantone</string>
     <string name="min_harmonic_energy_content">Required signal strength</string>
     <string name="min_harmonic_energy_content_summary">Ignore input below %d&#x200A;%%.</string>
+    <string name="sensitivity">Sensitivity</string>
 </resources>

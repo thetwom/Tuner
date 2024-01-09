@@ -15,7 +15,6 @@ import de.moekadu.tuner.notedetection.frequencyDetectionFlow
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.MusicalNote
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -80,6 +79,7 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
                     pref.pitchHistoryMaxNumFaultyValues.value,
                     pref.maxNoise.value,
                     pref.minHarmonicEnergyContent.value,
+                    pref.sensitivity.value.toFloat(),
                     pref.musicalScale.value,
                     Instrument(null, null, arrayOf(), 0, 0, true)
                 )
@@ -117,6 +117,10 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
         }}
 
         viewModelScope.launch { pref.minHarmonicEnergyContent.collect {
+            noteDetectionJob?.restartIfRunning()
+        }}
+
+        viewModelScope.launch { pref.sensitivity.collect {
             noteDetectionJob?.restartIfRunning()
         }}
 

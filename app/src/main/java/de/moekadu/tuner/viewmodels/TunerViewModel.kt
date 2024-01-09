@@ -20,7 +20,6 @@
 package de.moekadu.tuner.viewmodels
 
 import androidx.lifecycle.*
-import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.instruments.instrumentChromatic
 import de.moekadu.tuner.misc.DefaultValues
@@ -34,12 +33,7 @@ import de.moekadu.tuner.models.StringsModel
 import de.moekadu.tuner.notedetection.*
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -147,6 +141,7 @@ class TunerViewModel(
                     pref.pitchHistoryMaxNumFaultyValues.value,
                     pref.maxNoise.value,
                     pref.minHarmonicEnergyContent.value,
+                    pref.sensitivity.value.toFloat(),
                     pref.musicalScale.value,
                     instrument.value.instrument,
                 )
@@ -209,6 +204,10 @@ class TunerViewModel(
         }}
 
         viewModelScope.launch { pref.minHarmonicEnergyContent.collect {
+            frequencyEvaluationJob?.restartIfRunning()
+        }}
+
+        viewModelScope.launch { pref.sensitivity.collect {
             frequencyEvaluationJob?.restartIfRunning()
         }}
 

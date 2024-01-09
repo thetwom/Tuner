@@ -239,21 +239,29 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
         pitchHistoryDuration.summary = getPitchHistoryDurationSummary(pitchHistoryDuration.value)
 
-        val maxNoise = findPreference<SeekBarPreference>("max_noise")
-            ?: throw RuntimeException("No max noise preference")
-        maxNoise.setOnPreferenceChangeListener { preference, newValue ->
-            preference.summary = getMaxNoiseSummary(newValue as Int)
-            true
-        }
-        maxNoise.summary = getMaxNoiseSummary(maxNoise.value)
+//        val maxNoise = findPreference<SeekBarPreference>("max_noise")
+//            ?: throw RuntimeException("No max noise preference")
+//        maxNoise.setOnPreferenceChangeListener { preference, newValue ->
+//            preference.summary = getMaxNoiseSummary(newValue as Int)
+//            true
+//        }
+//        maxNoise.summary = getMaxNoiseSummary(maxNoise.value)
 
-        val minHarmonicEnergy = findPreference<SeekBarPreference>("min_harmonic_energy_content")
-            ?: throw RuntimeException("No min harmonic energy content preference")
-        minHarmonicEnergy.setOnPreferenceChangeListener { preference, newValue ->
-            preference.summary = getMinHarmonicEnergySummary(newValue as Int)
+//        val minHarmonicEnergy = findPreference<SeekBarPreference>("min_harmonic_energy_content")
+//            ?: throw RuntimeException("No min harmonic energy content preference")
+//        minHarmonicEnergy.setOnPreferenceChangeListener { preference, newValue ->
+//            preference.summary = getMinHarmonicEnergySummary(newValue as Int)
+//            true
+//        }
+//        minHarmonicEnergy.summary = getMinHarmonicEnergySummary(minHarmonicEnergy.value)
+
+        val minHarmonicEnergyLevel = findPreference<SeekBarPreference>("sensitivity")
+            ?: throw RuntimeException("No sensitivity preference")
+        minHarmonicEnergyLevel.setOnPreferenceChangeListener { preference, newValue ->
+            preference.summary = getSensitivitySummary(newValue as Int)
             true
         }
-        minHarmonicEnergy.summary = getMinHarmonicEnergySummary(minHarmonicEnergy.value)
+        minHarmonicEnergyLevel.summary = getSensitivitySummary(minHarmonicEnergyLevel.value)
 
         val pitchHistoryNumFaultyValues =
             findPreference<SeekBarPreference>("pitch_history_num_faulty_values")
@@ -357,6 +365,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private fun getMinHarmonicEnergySummary(percent: Int): String {
         return getString(R.string.min_harmonic_energy_content_summary, percent)
+    }
+
+    private fun getSensitivitySummary(value: Int): String {
+        return "$value"
     }
 
     private fun setAppearanceSummary(mode: Int?) {

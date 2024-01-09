@@ -50,8 +50,11 @@ class FrequencyDetectionCollectedResults(val sizeOfTimeSeries: Int, val sampleRa
     /** Contains statistics of the harmonics, most important the base frequency. */
     val harmonicStatistics = HarmonicStatistics()
 
-    /** Energy content of harmonics in signal. */
-    var harmonicEnergyContent = 0.0f
+    /** Energy content of harmonics in signal compared to total energy. */
+    var harmonicEnergyContentRelative = 0.0f
+
+    /** Absolute energy content of harmonics in signal. */
+    var harmonicEnergyAbsolute = 0.0f
 
     /** Quick access of the base frequency, obtained through the harmonics in the frequency spectrum. */
     val frequency
@@ -142,7 +145,11 @@ class FrequencyDetectionResultCollector(
                 collectedResults.memory.harmonics, acousticWeighting
             )
 
-            collectedResults.memory.harmonicEnergyContent = computeEnergyContentOfHarmonicsInSignal(
+            collectedResults.memory.harmonicEnergyContentRelative = computeEnergyContentOfHarmonicsInSignalRelative(
+                collectedResults.memory.harmonics,
+                collectedResults.memory.frequencySpectrum.amplitudeSpectrumSquared
+            )
+            collectedResults.memory.harmonicEnergyAbsolute = computeEnergyContentOfHarmonicsInSignalAbsolute(
                 collectedResults.memory.harmonics,
                 collectedResults.memory.frequencySpectrum.amplitudeSpectrumSquared
             )
@@ -202,9 +209,13 @@ class FrequencyDetectionResultCollector(
             spectrum = spectrum.spectrum
         )
 
+        // make sure, that we have a real amplitude spectrum, which is scaled correctly
+        // the factor 2 is needed, since the FFT returns a one sided spectrum.
+        val normalizationFactor = (2f / sampleData.size).pow(2)
         for (i in spectrum.amplitudeSpectrumSquared.indices) {
-            spectrum.amplitudeSpectrumSquared[i] =
-                spectrum.spectrum[2 * i].pow(2) + spectrum.spectrum[2 * i + 1].pow(2)
+            spectrum.amplitudeSpectrumSquared[i] = normalizationFactor * (
+                    spectrum.spectrum[2 * i].pow(2) + spectrum.spectrum[2 * i + 1].pow(2)
+                    )
         }
 
         // register for reuse
