@@ -82,7 +82,7 @@
         <SeekBarPreference
             android:key="sensitivity"
             app:title="@string/sensitivity"
-            android:defaultValue="95"
+            android:defaultValue="100"
             app:min="0"
             android:max="100"
             app:seekBarIncrement="1"

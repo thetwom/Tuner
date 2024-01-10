@@ -39,3 +39,10 @@ fun getWindow(window: WindowingFunction, size: Int) = FloatArray(size) { i ->
 
     }
 }
+
+fun getWindowIntegral(window: WindowingFunction) =
+     when(window) {
+         WindowingFunction.Tophat -> 1.0f
+         WindowingFunction.Hamming -> 0.54f
+         WindowingFunction.Hann -> 0.5f
+     }

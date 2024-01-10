@@ -211,7 +211,7 @@ class FrequencyDetectionResultCollector(
 
         // make sure, that we have a real amplitude spectrum, which is scaled correctly
         // the factor 2 is needed, since the FFT returns a one sided spectrum.
-        val normalizationFactor = (2f / sampleData.size).pow(2)
+        val normalizationFactor = (2f / sampleData.size / getWindowIntegral(windowType)).pow(2)
         for (i in spectrum.amplitudeSpectrumSquared.indices) {
             spectrum.amplitudeSpectrumSquared[i] = normalizationFactor * (
                     spectrum.spectrum[2 * i].pow(2) + spectrum.spectrum[2 * i + 1].pow(2)

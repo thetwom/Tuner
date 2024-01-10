@@ -103,8 +103,10 @@ class FrequencyEvaluator(
 //    }
 
     private fun transformEnergyToSensitivityFrom0To100(energy: Float): Float {
-        val minValue = log10(1e-10f)
-        val maxValue = log10(1f)
+        val minValue = log10(1e-8f)
+        // sine waves of maximum amplitude (1f) would have a level of log10(1f)
+        // but normal levels are normally much below 1, 1e-3 seems good enough
+        val maxValue = log10(1e-3f)
         val energyLevel = log10(energy).coerceIn(minValue, maxValue)
         return 100 - 100 * (energyLevel - minValue) / (maxValue - minValue)
     }
