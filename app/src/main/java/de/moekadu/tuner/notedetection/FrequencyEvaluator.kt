@@ -1,5 +1,6 @@
 package de.moekadu.tuner.notedetection
 
+import android.util.Log
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.temperaments.MusicalNote
@@ -50,10 +51,11 @@ class FrequencyEvaluator(
 //        Log.v("Tuner", "FrequencyEvaluator.evaluate: frequencyCollectionResults = $frequencyCollectionResults")
         val newTarget = frequencyCollectionResults?.let {
 //            Log.v("Tuner", "FrequencyEvaluator.evaluate: noise = ${it.noise}, maxNoise=$maxNoise, f=${it.frequency}")
-//            Log.v("Tuner", "FrequencyEvaluator.evaluate: energy = ${it.harmonicEnergyAbsolute} signalLevel = ${transformEnergyToLevelFrom0To100(it.harmonicEnergyAbsolute)}, required = $minHarmonicEnergyLevel")
+            val requiredEnergyLevel = 100 - sensitivity - 0.0001f // minus a very small number, to make sure, that a level of 0 always enables evaluation for sensitivity 100
+//            Log.v("Tuner", "FrequencyEvaluator.evaluate: energy = ${it.harmonicEnergyAbsolute} signalLevel = ${transformEnergyToLevelFrom0To100(it.harmonicEnergyAbsolute)}, required = $requiredEnergyLevel")
             if (it.noise < maxNoise
                 && it.harmonicEnergyContentRelative >= minHarmonicEnergyContent
-                && transformEnergyToSensitivityFrom0To100(it.harmonicEnergyAbsolute) <= sensitivity
+                && transformEnergyToLevelFrom0To100(it.harmonicEnergyAbsolute) >= requiredEnergyLevel
                 ) {
                 smoothedFrequency = smoother(it.frequency)
                 frequencyDetectionTimeStep = it.timeSeries.framePosition
@@ -102,12 +104,15 @@ class FrequencyEvaluator(
 //            _currentFrequency.value = it.smoothedFrequency
 //    }
 
-    private fun transformEnergyToSensitivityFrom0To100(energy: Float): Float {
-        val minValue = log10(1e-8f)
+    private fun transformEnergyToLevelFrom0To100(energy: Float): Float {
         // sine waves of maximum amplitude (1f) would have a level of log10(1f)
         // but normal levels are normally much below 1, 1e-3 seems good enough
-        val maxValue = log10(1e-3f)
-        val energyLevel = log10(energy).coerceIn(minValue, maxValue)
-        return 100 - 100 * (energyLevel - minValue) / (maxValue - minValue)
+
+        val minValue = 1e-7f
+        val maxValue = 1e-2f
+        val minLevel = log10(minValue)
+        val maxLevel = log10(maxValue)
+        val energyLevel = log10(energy.coerceAtLeast(minValue)) // make sure, that we don't use zero
+        return (100 * (energyLevel - minLevel) / (maxLevel - minLevel)).coerceIn(0f, 100f)
     }
 }
