@@ -1,5 +1,6 @@
 package de.moekadu.tuner.temperaments
 
+import androidx.compose.runtime.Stable
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -15,6 +16,7 @@ import kotlin.math.roundToInt
  * @param defaultReferenceNote Reference note of the scale, which refers to noteIndex 0.
  *   This note must be part of the notes-array.
  */
+@Stable
 class NoteNameScale(
     val notes: Array<MusicalNote>,
     val defaultReferenceNote: MusicalNote
