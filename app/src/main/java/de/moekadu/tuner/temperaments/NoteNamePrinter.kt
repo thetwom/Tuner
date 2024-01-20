@@ -52,13 +52,13 @@ private val modifierPrefixStrings = mapOf(
 )
 
 /** Print notes
- * @param context Context for getting string ressources.
+ * @param context Context for getting string resources.
  * @param sharpFlatPreference Tell if sharp or flat is preferred.
- * @param noteResourceIds String ressource ids for the different notes.
+ * @param noteResourceIds String resource ids for the different notes.
  * @param noteNameWidth Extra information for measuring the general width of notes.
  * @param hasSharpFlatCounterpart Not needed within the class, but allows to disable switch
  *   buttons for certain note name printers.
- * @param notationType Note needed within this class, but allows to get informormation about
+ * @param notationType Note needed within this class, but allows to get information about
  *   the notation type, which created this class.
  * @param helmholtzNotation Tell if Helmholtz should be used
  *   (C, - C - c -c' instead of C1,C2, C3, ...)
