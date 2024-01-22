@@ -17,8 +17,8 @@
     <string name="num_moving_average">移动平均</string>
     <string name="about">关于</string>
     <string name="about_message">Tuner app\n版本：%s\n许可证：GPLv3\nhttps://github.com/thetwom/Tuner</string>
-    <string name="reset_all_settings">重置所有选项</string>
-    <string name="reset_settings_prompt">你确定要重置所有选项吗？</string>
+    <string name="reset_all_settings">重置所有设置</string>
+    <string name="reset_settings_prompt">你确定要重置所有设置吗？</string>
     <string name="yes">是</string>
     <string name="no">否</string>
     <string name="autocorrelation">自相关</string>
@@ -44,9 +44,9 @@
     <string name="b_note_name">B</string>
     <string name="asharp_bflat_note_name">-</string>
     <string name="notation">记谱法</string>
-    <string name="notation_standard">默认 (A-B-C-…)</string>
-    <string name="notation_solfege">唱名</string>
-    <string name="notation_international">国际标准 (A-B-C-…)</string>
+    <string name="notation_standard">默认（A-B-C-…）</string>
+    <string name="notation_solfege">唱名法</string>
+    <string name="notation_international">国际标准（A-B-C-…）</string>
     <string name="violin_gdae">小提琴</string>
     <string name="abort">中止</string>
     <string name="instrument_name">乐器名称</string>
@@ -66,7 +66,7 @@
     <string name="pick_icon">选取图标</string>
     <string name="copy_instrument">复制乐器</string>
     <string name="close_expansion">关闭展开的图标</string>
-    <string name="copy_extension">%s (副本)</string>
+    <string name="copy_extension">%s（副本）</string>
     <string name="failed_to_archive_instruments">无法将乐器写入文件</string>
     <string name="database_saved">将乐器写入到“%s”</string>
     <string name="database_empty">没有可以保存的乐器</string>
@@ -90,8 +90,8 @@
     <string name="prefer_flat">倾向使用 \u266D 而非 \u266F</string>
     <string name="reference_frequency">基准频率</string>
     <string name="tolerance_in_cents">容限</string>
-    <string name="max_noise">允许的最大背景噪音</string>
-    <string name="max_noise_summary">当噪音超过 %d&#x200A;%%.</string>
+    <string name="max_noise">允许最大的背景噪声</string>
+    <string name="max_noise_summary">当噪声超过%d&#x200A;%%时忽略输入</string>
     <string name="scientific_mode">科学模式</string>
     <string name="equal_temperament_12">十二平均律</string>
     <string name="equal_temperament_12_abbr">十二平均律</string>
@@ -116,4 +116,13 @@
     <string name="min_harmonic_energy_content_summary">忽略低于 %d&#x200A;%% 的输入</string>
     <string name="sensitivity">灵敏度</string>
     <string name="incorrect_temperament">不兼容的音律</string>
+    <string name="a4_frequency">A<sup><small>4</small></sup>音符的频率</string>
+    <string name="windowing_function">窗函数</string>
+    <string name="window_hamming">汉明窗</string>
+    <string name="window_hann">汉恩窗</string>
+    <string name="no_window">不使用</string>
+    <string name="overlap">窗重叠</string>
+    <string name="window_size">窗大小</string>
+    <string name="new_temperament_requires_adapting_reference_note">新的音调需要调整基准音符</string>
+    <string name="helmholtz_notation">Helmholtz 记谱法（C, … c’）</string>
 </resources>
