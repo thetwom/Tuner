@@ -504,7 +504,7 @@ class TemperamentPreferenceDialog : DialogFragment() {
         centArray =  FloatArray(musicalScale.numberOfNotesPerOctave + 1) {
             computeCent(musicalScale.getNoteFrequency(it + referenceFrequencyIndex) / musicalScale.referenceFrequency)
         }
-        require(centArray[0] < 1e-3) // first not should be 0 cent
+        require(centArray[0] < 1e-3) // first note should be 0 cent
         ratioArray = musicalScale.rationalNumberRatios
     }
 

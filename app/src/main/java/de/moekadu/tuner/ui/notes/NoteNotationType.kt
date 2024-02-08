@@ -5,12 +5,13 @@ import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.NoteModifier
 import de.moekadu.tuner.temperaments.NoteNameStem
 
+/** Available note notation types. */
 enum class NotationType {
-    Standard,
-    International,
-    Solfege,
-    Carnatic,
-    Hindustani
+    Standard, /**< Default C, D, E, ...*/
+    International,  /**< C, D, E, ..., but using a B and never a H */
+    Solfege, /**< Solfege */
+    Carnatic, /**< Carnatic Indian notation */
+    Hindustani /**< Hindustani Indian notation */
 }
 
 fun NotationType.resourceIds(): Map<NoteNameStem, Int> {
