@@ -1,0 +1,11 @@
+v6.6.2:
+- Update chinese translations.
+
+v6.6.1:
+- Use internally a more suitable sensitivity range.
+
+v6.6.0:
+- Fix: Tuner sometimes stopped tuning after changing settings.
+- Introduce sensitivity option to stop tuning for low signals.
+- Remove the maximum noise option in favour of the sensitivity option.
+- More reliable tuning for some edge cases.

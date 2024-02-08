@@ -10,8 +10,8 @@ android {
         applicationId "de.moekadu.tuner"
         minSdkVersion 23
         targetSdkVersion 34
-        versionCode 33
-        versionName "6.6.1"
+        versionCode 34
+        versionName "6.6.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         resourceConfigurations += ['cs', 'de', 'en', 'fr', 'zh-rCN']
@@ -31,6 +31,9 @@ android {
         jvmTarget = "11"
     }
     namespace 'de.moekadu.tuner'
+    buildFeatures {
+        buildConfig true
+    }
 }
 
 dependencies {
@@ -39,7 +42,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.activity:activity-ktx:1.8.2'
     implementation 'androidx.fragment:fragment-ktx:1.6.2'
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.7.0"
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.preference:preference-ktx:1.2.1'
