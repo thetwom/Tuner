@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -18,9 +19,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.withStyle
@@ -209,6 +212,7 @@ private fun createAnnotatedStringOfNote(
     properties: ResolvedNoteProperties,
     notePrintOptions: NotePrintOptions,
     fontSize: TextUnit,
+    fontWeight: FontWeight?,
     withOctave: Boolean
 ): AnnotatedString {
     return buildAnnotatedString {
@@ -216,7 +220,8 @@ private fun createAnnotatedStringOfNote(
             withStyle(
                 SpanStyle(
                     fontFamily = musicalSymbolFont,
-                    fontSize = fontSize
+                    fontSize = fontSize,
+                    fontWeight = fontWeight
                 )
             ) {
                 append(modifierPrefixStrings[properties.modifier])
@@ -226,7 +231,8 @@ private fun createAnnotatedStringOfNote(
 
         withStyle(
             SpanStyle(
-                fontSize = fontSize
+                fontSize = fontSize,
+                fontWeight = fontWeight
             )
         ) {
             append(
@@ -242,7 +248,8 @@ private fun createAnnotatedStringOfNote(
             withStyle(
                 SpanStyle(
                     fontFamily = musicalSymbolFont,
-                    fontSize = fontSize
+                    fontSize = fontSize,
+                    fontWeight = fontWeight
                 )
             ) {
                 append("\u200a")
@@ -257,7 +264,8 @@ private fun createAnnotatedStringOfNote(
             withStyle(
                 SpanStyle(
                     fontFamily = musicalSymbolFont,
-                    fontSize = fontSize
+                    fontSize = fontSize,
+                    fontWeight = fontWeight
                 )
             ) {
                 append("\u200b")
@@ -276,37 +284,37 @@ private fun createAnnotatedStringOfNote(
                     }
 
                     properties.octave == 0 -> {
-                        withStyle(SpanStyle(fontSize = fontSize)) {
+                        withStyle(SpanStyle(fontSize = fontSize, fontWeight = fontWeight)) {
                             append(",,")
                         }
                     }
 
                     properties.octave == 1 -> {
-                        withStyle(SpanStyle(fontSize = fontSize)) {
+                        withStyle(SpanStyle(fontSize = fontSize, fontWeight = fontWeight)) {
                             append(",")
                         }
                     }
 
                     properties.octave == 2 || properties.octave == 3 -> {
-                        withStyle(SpanStyle(fontSize = fontSize)) {
+                        withStyle(SpanStyle(fontSize = fontSize, fontWeight = fontWeight)) {
                             append("")
                         }
                     }
 
                     properties.octave == 4 -> {
-                        withStyle(SpanStyle(fontSize = fontSize)) {
+                        withStyle(SpanStyle(fontSize = fontSize, fontWeight = fontWeight)) {
                             append("'")
                         }
                     }
 
                     properties.octave == 5 -> {
-                        withStyle(SpanStyle(fontSize = fontSize)) {
+                        withStyle(SpanStyle(fontSize = fontSize, fontWeight = fontWeight)) {
                             append("''")
                         }
                     }
 
                     else -> {  // -> octave >= 6
-                        withStyle(SpanStyle(fontSize = fontSize * 0.7f)) {
+                        withStyle(SpanStyle(fontSize = fontSize * 0.7f, fontWeight = fontWeight)) {
                             withStyle(SpanStyle(baselineShift = BaselineShift(0.5f))) {
                                 append((properties.octave - 3).toString())
                             }
@@ -314,7 +322,7 @@ private fun createAnnotatedStringOfNote(
                     }
                 }
             } else {
-                withStyle(SpanStyle(fontSize = fontSize * 0.7f)) {
+                withStyle(SpanStyle(fontSize = fontSize * 0.7f, fontWeight = fontWeight)) {
                     withStyle(SpanStyle(baselineShift = BaselineShift(0.5f))) {
                         append(properties.octave.toString())
                     }
@@ -338,24 +346,31 @@ fun Note(
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
     withOctave: Boolean = true,
     fontSize: TextUnit = TextUnit.Unspecified,
-    color: Color = Color.Unspecified
+    fontWeight: FontWeight? = null,
+    color: Color = Color.Unspecified,
+    style: TextStyle? = null
 ) {
+    val resources = LocalContext.current.resources
     val fontSizeResolved = fontSize.takeOrElse {
-        LocalTextStyle.current.fontSize.takeOrElse { 12.sp }
+        (style?.fontSize ?: TextUnit.Unspecified).takeOrElse {
+            LocalTextStyle.current.fontSize.takeOrElse { 12.sp }
+        }
     }
+    val fontWeightResolved = fontWeight ?: style?.fontWeight
     val colorResolved = color.takeOrElse {
-        LocalTextStyle.current.color.takeOrElse { Color.Black }
+        style?.color ?: Color.Unspecified
     }
 
-    val properties = resolveNoteProperties(
-        note = musicalNote,
-        notePrintOptions = notePrintOptions,
-        resources = LocalContext.current.resources
-    )
+    val properties = remember(musicalNote, notePrintOptions, resources) {
+        resolveNoteProperties(
+            note = musicalNote,
+            notePrintOptions = notePrintOptions,
+            resources = resources
+        )
+    }
 
-
-    val noteAsString = remember(musicalNote, notePrintOptions, fontSize, withOctave) {
-        createAnnotatedStringOfNote(properties, notePrintOptions, fontSizeResolved, withOctave)
+    val noteAsString = remember(musicalNote, notePrintOptions, fontSizeResolved, fontWeightResolved, withOctave) {
+        createAnnotatedStringOfNote(properties, notePrintOptions, fontSizeResolved, fontWeightResolved, withOctave)
     }
 
     Text(text = noteAsString, modifier = modifier, color = colorResolved)
@@ -376,6 +391,7 @@ fun computeMaxNoteSize(
     noteNameScale: NoteNameScale,
     notePrintOptions: NotePrintOptions,
     fontSize: TextUnit,
+    fontWeight: FontWeight?,
     octaveRange: IntRange?,
     measurer:TextMeasurer,
     resources: Resources
@@ -390,7 +406,7 @@ fun computeMaxNoteSize(
             resources = resources
         )
         val noteString = createAnnotatedStringOfNote(
-            properties, notePrintOptions, fontSize, false
+            properties, notePrintOptions, fontSize, fontWeight, false
         )
         measurer.measure(noteString).size.width
     } ?: return IntSize.Zero
@@ -402,7 +418,7 @@ fun computeMaxNoteSize(
             resources = resources
         )
         val noteString = createAnnotatedStringOfNote(
-            properties, notePrintOptions, fontSize, true
+            properties, notePrintOptions, fontSize, fontWeight, true
         )
         measurer.measure(noteString).size.width
     } ?: Int.MAX_VALUE
@@ -413,7 +429,7 @@ fun computeMaxNoteSize(
         resources = resources
     )
     val noteString = createAnnotatedStringOfNote(
-        properties, notePrintOptions, fontSize, withOctave = (octaveOfWidestNote != Int.MAX_VALUE)
+        properties, notePrintOptions, fontSize, fontWeight, withOctave = (octaveOfWidestNote != Int.MAX_VALUE)
     )
     val measuredWidestNote = measurer.measure(noteString)
 
@@ -434,12 +450,13 @@ fun rememberMaxNoteSize(
     notePrintOptions: NotePrintOptions,
     fontSize: TextUnit,
     octaveRange: IntRange?,
+    fontWeight: FontWeight? = null,
     textMeasurer: TextMeasurer = rememberTextMeasurer()
 ): DpSize {
     val resources = LocalContext.current.resources
     val density = LocalDensity.current
     return remember(noteNameScale, notePrintOptions, fontSize, octaveRange, textMeasurer, resources, density) {
-        val sizePx = computeMaxNoteSize(noteNameScale, notePrintOptions, fontSize, octaveRange, textMeasurer, resources)
+        val sizePx = computeMaxNoteSize(noteNameScale, notePrintOptions, fontSize, fontWeight, octaveRange, textMeasurer, resources)
         DpSize(with(density) { sizePx.width.toDp() }, with(density) { sizePx.height.toDp() }
         )
     }
@@ -451,6 +468,7 @@ private fun NotePreview() {
     val noteNameScale = remember { createNoteNameScale53Tone(null) }
     val musicalNote = noteNameScale.notes[12].copy(octave = 9)
     val fontSize = 100.sp
+    val fontWeight = null // FontWeight.Bold
     val notePrintOptions = remember {
         NotePrintOptions(
             sharpFlatPreference = NotePrintOptions.SharpFlatPreference.Sharp,
@@ -458,20 +476,13 @@ private fun NotePreview() {
             notationType = NotationType.Standard
         )
     }
-    val maxLabelSizePx = computeMaxNoteSize(
+    val maxLabelSize = rememberMaxNoteSize(
         noteNameScale = createNoteNameScale53Tone(null),
         notePrintOptions = notePrintOptions,
         fontSize = fontSize,
-        octaveRange = 0 .. 12,
-        measurer = rememberTextMeasurer(),
-        resources = LocalContext.current.resources
+        fontWeight = fontWeight,
+        octaveRange = 0 .. 12
     )
-    val density = LocalDensity.current
-    val maxLabelSize = DpSize(
-            with(density) { maxLabelSizePx.width.toDp() },
-            with(density) { maxLabelSizePx.height.toDp() }
-        )
-
 
     Box(
       contentAlignment = Alignment.Center,
@@ -480,9 +491,11 @@ private fun NotePreview() {
     ) {
 
         Note(musicalNote,
-            fontSize = fontSize,
             withOctave = true,
-            notePrintOptions = notePrintOptions
+            notePrintOptions = notePrintOptions,
+            fontSize = fontSize,
+            fontWeight = fontWeight,
+            //style = MaterialTheme.typography.displayLarge
         )
     }
 }

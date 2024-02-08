@@ -101,7 +101,7 @@ class NotationPreferenceDialog : PreferenceDialogFragmentCompat() {
 }
 
 class NotationPreference(context: Context, attrs: AttributeSet?)
-    : DialogPreference(context, attrs, R.attr.dialogPreferenceStyle) {
+    : DialogPreference(context, attrs, androidx.preference.R.attr.dialogPreferenceStyle) {
 
     fun interface OnNotationChangedListener {
         fun onPreferenceChanged(preference: NotationPreference, value: Value, notationChanged: Boolean, helmholtzChanged: Boolean)

@@ -135,7 +135,7 @@ class AppearancePreferenceDialog : PreferenceDialogFragmentCompat() {
 }
 
 class AppearancePreference(context: Context, attrs: AttributeSet?)
-    : DialogPreference(context, attrs, R.attr.dialogPreferenceStyle) {
+    : DialogPreference(context, attrs, androidx.preference.R.attr.dialogPreferenceStyle) {
 
     fun interface OnAppearanceChangedListener {
         fun onPreferenceChanged(preference: AppearancePreference, value: Value, modeChanged: Boolean, blackNightChanged: Boolean, useSystemColorsChanged: Boolean)
