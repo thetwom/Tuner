@@ -62,6 +62,22 @@ val circleOfFifthsEDO12 = TemperamentCircleOfFifths(
     FC = FifthModification(pythagoreanComma = RationalNumber(-1, 12))
 )
 
+// quarter-comma meantone -> perfect major third
+val circleOfFifthsFifthCommaMeanTone = TemperamentCircleOfFifths(
+    CG = FifthModification(syntonicComma = RationalNumber(-1, 5)),
+    GD = FifthModification(syntonicComma = RationalNumber(-1, 5)),
+    DA = FifthModification(syntonicComma = RationalNumber(-1, 5)),
+    AE = FifthModification(syntonicComma = RationalNumber(-1, 5)),
+    EB = FifthModification(syntonicComma = RationalNumber(-1, 5)),
+    BFsharp = FifthModification(syntonicComma = RationalNumber(-1, 5)),
+    FsharpCsharp = FifthModification(syntonicComma = RationalNumber(-1, 5)),
+    CsharpGsharp = FifthModification(syntonicComma = RationalNumber(-1, 5)),
+    GsharpEflat = FifthModification(pythagoreanComma = RationalNumber(-1, 1), syntonicComma = RationalNumber(11, 5)),
+    EFlatBflat = FifthModification(syntonicComma = RationalNumber(-1, 5)),
+    BflatF = FifthModification(syntonicComma = RationalNumber(-1, 5)),
+    FC = FifthModification(syntonicComma = RationalNumber(-1, 5))
+)
+
 val circleOfFifthsWerckmeisterIII = TemperamentCircleOfFifths(
     CG = FifthModification(pythagoreanComma = RationalNumber(-1, 4)),
     GD = FifthModification(pythagoreanComma = RationalNumber(-1, 4)),

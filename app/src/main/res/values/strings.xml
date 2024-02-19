@@ -182,6 +182,9 @@
     <string name="third_comma_mean_tone">⅓ comma meantone</string>
     <string name="third_comma_mean_tone_desc">Pure minor 3rds</string>
     <string name="third_comma_mean_tone_abbr">⅓ comma meantone</string>
+    <string name="fifth_comma_mean_tone">⅕ comma meantone</string>
+    <string name="fifth_comma_mean_tone_desc">Pure diatonic semitones</string>
+    <string name="fifth_comma_mean_tone_abbr">⅕ comma meantone</string>
     <string name="werckmeister_iii">Werckmeister III</string>
     <string name="werckmeister_iii_desc">¼ comma divisions</string>
     <string name="werckmeister_iii_abbr">Werckmeister III</string>

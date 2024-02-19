@@ -47,6 +47,10 @@ class MusicalScaleFactory {
                     temperamentType, circleOfFifthsThirdCommaMeanTone,
                     noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
                 )
+                TemperamentType.FifthCommaMeanTone -> MusicalScaleRatioBasedTemperaments(
+                    temperamentType, circleOfFifthsFifthCommaMeanTone,
+                    noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
+                )
                 TemperamentType.WerckmeisterIII -> MusicalScaleRatioBasedTemperaments(
                     temperamentType, circleOfFifthsWerckmeisterIII,
                     noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax
