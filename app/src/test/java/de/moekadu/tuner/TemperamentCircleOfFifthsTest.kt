@@ -29,6 +29,14 @@ class TemperamentCircleOfFifthsTest {
     }
 
     @Test
+    fun fifthCommaMeantone() {
+        val ratios = circleOfFifthsFifthCommaMeanTone.getRatios()
+        ratios.zip(notes).forEach { p ->
+            println("Fifth-comma mean tone: ${p.second}: ${cent(p.first)}")
+        }
+    }
+
+    @Test
     fun werckmeisterIII() {
         val ratios = circleOfFifthsWerckmeisterIII.getRatios()
         ratios.zip(notes).forEach { p ->

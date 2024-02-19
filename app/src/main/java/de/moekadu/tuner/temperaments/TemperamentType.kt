@@ -9,6 +9,7 @@ enum class TemperamentType {
     QuarterCommaMeanTone,
     ExtendedQuarterCommaMeanTone,
     ThirdCommaMeanTone,
+    FifthCommaMeanTone,
     WerckmeisterIII,
     WerckmeisterIV,
     WerckmeisterV,
@@ -41,6 +42,7 @@ fun getTuningNameResourceId(temperamentType: TemperamentType) = when(temperament
     TemperamentType.QuarterCommaMeanTone -> R.string.quarter_comma_mean_tone
     TemperamentType.ExtendedQuarterCommaMeanTone -> R.string.extended_quarter_comma_mean_tone
     TemperamentType.ThirdCommaMeanTone -> R.string.third_comma_mean_tone
+    TemperamentType.FifthCommaMeanTone -> R.string.fifth_comma_mean_tone
     TemperamentType.WerckmeisterIII -> R.string.werckmeister_iii
     TemperamentType.WerckmeisterIV -> R.string.werckmeister_iv
     TemperamentType.WerckmeisterV -> R.string.werckmeister_v
@@ -72,6 +74,7 @@ fun getTuningDescriptionResourceId(temperamentType: TemperamentType) = when(temp
     TemperamentType.QuarterCommaMeanTone -> R.string.quarter_comma_mean_tone_desc
     TemperamentType.ExtendedQuarterCommaMeanTone -> R.string.extended_quarter_comma_mean_tone_desc
     TemperamentType.ThirdCommaMeanTone -> R.string.third_comma_mean_tone_desc
+    TemperamentType.FifthCommaMeanTone -> R.string.fifth_comma_mean_tone_desc
     TemperamentType.WerckmeisterIII -> R.string.werckmeister_iii_desc
     TemperamentType.WerckmeisterIV -> R.string.werckmeister_iv_desc
     TemperamentType.WerckmeisterV -> R.string.werckmeister_v_desc
@@ -103,6 +106,7 @@ fun getTuningNameAbbrResourceId(temperamentType: TemperamentType) = when(tempera
     TemperamentType.QuarterCommaMeanTone -> R.string.quarter_comma_mean_tone_abbr
     TemperamentType.ExtendedQuarterCommaMeanTone -> R.string.extended_quarter_comma_mean_tone_abbr
     TemperamentType.ThirdCommaMeanTone -> R.string.third_comma_mean_tone_abbr
+    TemperamentType.FifthCommaMeanTone -> R.string.fifth_comma_mean_tone_abbr
     TemperamentType.WerckmeisterIII -> R.string.werckmeister_iii_abbr
     TemperamentType.WerckmeisterIV -> R.string.werckmeister_iv_abbr
     TemperamentType.WerckmeisterV -> R.string.werckmeister_v_abbr
