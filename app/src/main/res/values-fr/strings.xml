@@ -145,6 +145,8 @@
     <string name="quarter_comma_mean_tone_desc">Tierce majeure pure</string>
     <string name="third_comma_mean_tone">Mésotonique ⅓ comma</string>
     <string name="third_comma_mean_tone_desc">Tierce mineure pure</string>
+    <string name="fifth_comma_mean_tone">Mésotonique ⅕ comma</string>
+    <string name="fifth_comma_mean_tone_abbr">Mésotonique ⅕ comma</string>
     <string name="werckmeister_iii">Werckmeister III</string>
     <string name="werckmeister_iii_desc">Divisions ¼ comma</string>
     <string name="werckmeister_iv">Werckmeister IV</string>

@@ -126,7 +126,7 @@ class TunerFragment : Fragment() {
                 spectrumPlot?.plot(model.frequencies, model.squaredAmplitudes)
                 spectrumPlot?.setMarks(model.harmonicsFrequencies, null, HARMONIC_ID,
                     indexEnd = model.numHarmonics)
-                val label = getString(R.string.hertz, model.detectedFrequency)
+                val label = getString(R.string.hertz_1f, model.detectedFrequency)
                 if (model.detectedFrequency > 0f) {
                     spectrumPlot?.setXMark(
                         model.detectedFrequency, label, MARK_ID_FREQUENCY, LabelAnchor.SouthWest,
@@ -153,7 +153,7 @@ class TunerFragment : Fragment() {
 
             if (model.noteDetectionChangeId > correlationPlotChangeId) {
                 correlationPlot?.plot(model.timeShifts, model.correlationValues)
-                val label = getString(R.string.hertz, model.detectedFrequency)
+                val label = getString(R.string.hertz_1f, model.detectedFrequency)
                 if (model.detectedFrequency > 0f) {
                     correlationPlot?.setXMark(
                         1.0f / model.detectedFrequency,

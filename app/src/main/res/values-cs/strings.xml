@@ -115,6 +115,8 @@
     <string name="pythagorean_tuning">Pythagorejské ladění</string>
     <string name="pure_tuning">Didymické ladění</string>
     <string name="pure_tuning_desc">Pět-limit tuning</string>
+    <string name="fifth_comma_mean_tone">⅕-koma středotón</string>
+    <string name="fifth_comma_mean_tone_abbr">⅕-koma středotón</string>
     <string name="werckmeister_iii">Werckmeister III</string>
     <string name="werckmeister_iv">Werckmeister IV</string>
     <string name="werckmeister_v">Werckmeister V</string>

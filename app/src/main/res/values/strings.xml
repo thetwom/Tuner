@@ -4,6 +4,7 @@
     <!--    <string name="percent">%d&#x200A;\%</string>-->
     <string name="percent" translatable="false">%d&#x200A;%%</string>
     <string name="hertz" translatable="false">%.0f&#x200A;Hz</string>
+    <string name="hertz_1f" translatable="false">%.1f&#x200A;Hz</string>
     <string name="hertz_2f" translatable="false">%.2f&#x200A;Hz</string>
     <string name="hertz_str" translatable="false">%s&#x200A;Hz</string>
     <string name="seconds" translatable="false">%.2f&#x200A;s</string>

@@ -1,0 +1,4 @@
+v6.7.0:
+- 1/5 comma meantone temperament
+- Show 1 floating point digit for frequencies in scientific mode
+
