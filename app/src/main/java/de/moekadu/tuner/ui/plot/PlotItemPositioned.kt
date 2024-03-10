@@ -5,5 +5,6 @@ import androidx.compose.ui.geometry.Rect
 data class PlotItemPositioned(
     val plotItem: PlotItem,
     val boundingBox: Rect,
-    val globalIndex: Int
+    val indexInGroup: Int,
+    var globalIndex: Int = -1
 )

@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.times
@@ -23,7 +24,11 @@ import kotlin.math.min
 
 private class WrappedPath(val path: Path = Path())
 
-class Line(val lineWidth: Dp) : PlotItem {
+class Line(
+    val lineWidth: Dp,
+    initialXValues: FloatArray? = null,
+    initialYValues: FloatArray? = null,
+) : PlotItem {
 
     private var pathRaw by mutableStateOf(WrappedPath())
     private val pathTransformed = WrappedPath()
@@ -37,10 +42,17 @@ class Line(val lineWidth: Dp) : PlotItem {
 
     override val boundingBox: State<Rect> get() = _boundingBox
 
-    override val extraExtentsOnScreen = DpRect(
-        //5f * lineWidth, 5f * lineWidth, 5f * lineWidth, 5f * lineWidth
-        0.5f * lineWidth, 0.5f * lineWidth, 0.5f * lineWidth, 0.5f * lineWidth
-    )
+    init {
+        if (initialXValues != null && initialYValues != null) {
+            setLine(xValues = initialXValues, yValues = initialYValues)
+        }
+    }
+    override fun getExtraExtentsScreen(density: Density): Rect {
+        return with (density) {
+            val halfLineWidthPx = 0.5f * lineWidth.toPx()
+            Rect(halfLineWidthPx, halfLineWidthPx, halfLineWidthPx, halfLineWidthPx)
+        }
+    }
 
     fun setLine(xValues: FloatArray, yValues: FloatArray, indexBegin: Int = 0, indexEnd: Int = min(xValues.size, yValues.size)) {
         val numAvailableValues = min(xValues.size, yValues.size)
@@ -75,12 +87,15 @@ class Line(val lineWidth: Dp) : PlotItem {
 
 
     @Composable
-    override fun Item(transformToScreen: Matrix) {
-        val pathTransformed = remember(transformToScreen, boundingBox.value) {
+    override fun Item(transformation: Transformation) {
+    //override fun Item(transformToScreen: Matrix) {
+        //val pathTransformed = remember(transformToScreen, boundingBox.value) {
+        val pathTransformed = remember(transformation, boundingBox.value) {
             val path = this.pathTransformed.path
             path.rewind()
             path.addPath(pathRaw.path)
-            path.transform(transformToScreen)
+            //path.transform(transformToScreen)
+            path.transform(transformation.matrixRawToScreen)
             WrappedPath(path)
         }
         Canvas(

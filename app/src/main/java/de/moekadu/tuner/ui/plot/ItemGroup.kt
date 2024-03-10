@@ -3,53 +3,49 @@ package de.moekadu.tuner.ui.plot
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.toRect
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
+import kotlin.math.absoluteValue
 
-data class ItemGroup(
-    val items: PersistentList<PlotItem> = persistentListOf()
-) {
-    val size get() = items.size
+interface ItemGroup2 {
+    val size: Int
+    fun getVisibleItems(
+        transformation: Transformation,
+        density: Density
+    ): Sequence<PlotItemPositioned>
 
-    fun add(plotItem: PlotItem): ItemGroup {
+    operator fun get(index: Int): PlotItem
+}
+
+data class ItemGroupLines(
+    val items: PersistentList<Line> = persistentListOf()
+): ItemGroup2 {
+    override val size = items.size
+
+    fun add(plotItem: Line): ItemGroupLines {
         val modified = items + plotItem
         return this.copy(items = modified)
     }
-    fun numVisibleItems(): Int {
-        // tODO: return real number
-        return size
-    }
 
-    fun getVisibleItems(
-        matrixRawToScreen: Matrix,
-        viewPortScreen: Rect,
-        indexOffset: Int,
-        density: Density
-    ): Sequence<PlotItemPositioned> {
-        // TODO: this should better be configurable, in many cases (when elements are ordered),
-        //  we can "filter" much cheaper
+    override fun getVisibleItems(transformation: Transformation, density: Density)
+            : Sequence<PlotItemPositioned> {
         return items.asSequence()
-            .mapIndexed { index, plotItem ->
-                val boundingBoxScreen = matrixRawToScreen.map(plotItem.boundingBox.value)
-                val extendedBoundingBox = with (density){
-                    Rect(
-                        boundingBoxScreen.left - plotItem.extraExtentsOnScreen.left.roundToPx(),
-                        boundingBoxScreen.top - plotItem.extraExtentsOnScreen.top.roundToPx(),
-                        boundingBoxScreen.right + plotItem.extraExtentsOnScreen.right.roundToPx(),
-                        boundingBoxScreen.bottom + plotItem.extraExtentsOnScreen.bottom.roundToPx(),
-                    )
-                }
+            .mapIndexed { index, item ->
+                val extendedBoundingBox = item.computeExtendedBoundingBoxScreen(
+                    transformation, density
+                )
                 PlotItemPositioned(
-                    plotItem = plotItem,
+                    plotItem = item,
                     boundingBox = extendedBoundingBox,
-                    globalIndex = indexOffset + index
+                    indexInGroup = index
                 )
             }
-            .filter { viewPortScreen.overlaps(it.boundingBox) }
+            .filter { transformation.viewPortScreen.toRect().overlaps(it.boundingBox) }
     }
 
-    operator fun get(index: Int) = items[index]
+    override operator fun get(index: Int) = items[index]
     // Addtionally needed:
     // - max size
     // -
