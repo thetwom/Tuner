@@ -1,5 +1,6 @@
 package de.moekadu.tuner.ui.plot
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.exponentialDecay
@@ -65,7 +66,7 @@ import kotlin.math.sqrt
 
 @OptIn(ExperimentalFoundationApi::class)
 data class PlotItemProvider(
-    val state: PlotState,
+    val state: PlotStateImpl,
     val viewPortScreen: IntRect
 ) : LazyLayoutItemProvider {
 
@@ -74,21 +75,28 @@ data class PlotItemProvider(
     val transformation = Transformation(viewPortScreen, state.viewPortRaw)
 
     fun getVisiblePlotItems(density: Density): Sequence<PlotItemPositioned> {
-        return state.getVisibleItems(
-            transformation.matrixRawToScreen,
-            transformation.viewPortScreen.toRect(),
-            density
-        )
+        return state.getVisibleItems(transformation, density)
     }
 
     fun positionOf(index: Int, localDensity: Density): IntOffset {
-        val topLeftScreen = transformation.toScreen(state[index].boundingBox.value.topLeft)
-        val extraExtentsDp = state[index].extraExtentsOnScreen
-        val extraLeft = with(localDensity) {extraExtentsDp.left.toPx()}
-        val extraTop = with(localDensity) {extraExtentsDp.top.toPx()}
+        val boundingBoxRaw = state[index].boundingBox.value
+        val topLeftRaw = Offset(
+            if (boundingBoxRaw.left == Float.NEGATIVE_INFINITY) 0f else boundingBoxRaw.left,
+            if (boundingBoxRaw.top == Float.POSITIVE_INFINITY) 0f else boundingBoxRaw.top,
+        )
+        val topLeftScreen = transformation.toScreen(topLeftRaw)
+        val extraExtents = state[index].getExtraExtentsScreen(localDensity)
+        val extraLeft = extraExtents.left
+        val extraTop = extraExtents.top
         return IntOffset(
-            (topLeftScreen.x - extraLeft).roundToInt(),
-            (topLeftScreen.y - extraTop).roundToInt()
+            if (boundingBoxRaw.left == Float.NEGATIVE_INFINITY)
+                0
+            else
+                (topLeftScreen.x - extraLeft).roundToInt(),
+            if (boundingBoxRaw.top == Float.POSITIVE_INFINITY)
+                0
+            else
+                (topLeftScreen.y - extraTop).roundToInt()
         )
     }
 
@@ -96,16 +104,27 @@ data class PlotItemProvider(
     override fun Item(index: Int, key: Any) { // can we use the key to get quicker access to the item?
         val localDensity = LocalDensity.current
         val localTransformation = remember(transformation, state[index].boundingBox) {
-            Matrix().apply {
-                val originRaw = transformation.viewPortRaw.topLeft
-                val p = positionOf(index, localDensity).toOffset()
-                val pRaw = transformation.toRaw(p)
-                val translationVector = originRaw - pRaw
-                setFrom(transformation.matrixRawToScreen)
-                translate(translationVector.x, translationVector.y)
-            }
+            // Necessary changes here: not only define a rawToScreenMatrix, but a complete
+            //   transformation. this should also contain info about the screen viewport
+            //   (where are the bounds?)
+            val contentPosition = positionOf(index, localDensity)
+            val screenPosition = transformation.viewPortScreen.topLeft
+            val screenPositionRelative = screenPosition - contentPosition //- screenPosition
+
+            val screenSize = transformation.viewPortScreen.size
+//            Log.v("Tuner", "Plot: Item: contentPosition=$contentPosition, screenPosition=$screenPosition, screenRelativ=$screenPositionRelative, sSize=${transformation.viewPortScreen}, sSizeLoc=${screenSize}")
+            Transformation(IntRect(screenPositionRelative, screenSize), transformation.viewPortRaw)
+//            Matrix().apply {
+//                val originRaw = transformation.viewPortRaw.topLeft
+//                val p = positionOf(index, localDensity).toOffset()
+//                val pRaw = transformation.toRaw(p)
+//                val translationVector = originRaw - pRaw
+//                setFrom(transformation.matrixRawToScreen)
+//                translate(translationVector.x, translationVector.y)
+//            }
         }
-        state[index].Item(transformToScreen = localTransformation)
+        //state[index].Item(transformToScreen = localTransformation)
+        state[index].Item(localTransformation)
     }
 }
 
@@ -126,19 +145,23 @@ fun rememberPlotMeasurePolicy(
             val density = this as Density
 
             val placeables = itemProvider.getVisiblePlotItems(density).map {
+                val bb = it.boundingBox
+                val l = if (bb.left == Float.NEGATIVE_INFINITY) 0 else bb.left.roundToInt()
+                val r = if (bb.right == Float.POSITIVE_INFINITY) containerConstraints.maxWidth else bb.right.roundToInt()
+                val t = if (bb.top == Float.NEGATIVE_INFINITY) 0 else bb.top.roundToInt()
+                val b = if (bb.bottom == Float.POSITIVE_INFINITY) containerConstraints.maxHeight else bb.bottom.roundToInt()
+
                 PositionedPlaceable(
                     measure(
                         it.globalIndex,
                         Constraints.fixed(
-                            it.boundingBox.width.roundToInt(),
-                            it.boundingBox.height.roundToInt()
+                            r - l,
+                            b - t
                         )
                     )[0],
-                    it.boundingBox.left.roundToInt(),
-                    it.boundingBox.top.roundToInt(),
+                    positionX =  l, positionY = t
                 )
             }.toList()
-
 
             layout(containerConstraints.maxWidth, containerConstraints.maxHeight) {
                 placeables.forEach {
@@ -302,25 +325,26 @@ fun Plot(
     BoxWithConstraints(modifier = modifier.background(Color.LightGray)) {
         val widthPx = with(LocalDensity.current) { maxWidth.roundToPx() }
         val heightPx = with(LocalDensity.current) { maxHeight.roundToPx() }
+        // TODO: introduce a kind of padding ofr the viewport
         val viewPortScreen = IntRect(0, 0, widthPx, heightPx)
 
         // use updated state here, to avoid having to recreate of the pointerInput modifier
-        val itemProvider by rememberUpdatedState(PlotItemProvider(state, viewPortScreen))
+        val itemProvider by rememberUpdatedState(PlotItemProvider(state.state, viewPortScreen))
 
 //        Log.v("Tuner", "Plot: screen size: $widthPx x $heightPx")
         val animatedRectRaw = remember {
-            Animatable(state.viewPortRaw, Rect.VectorConverter)
+            Animatable(state.state.viewPortRaw, Rect.VectorConverter)
         }
 
         val measurePolicy = rememberPlotMeasurePolicy { itemProvider }
 
-        val channel = remember { Channel<PlotState.TargetRectForAnimation>(Channel.CONFLATED) }
+        val channel = remember { Channel<PlotStateImpl.TargetRectForAnimation>(Channel.CONFLATED) }
         SideEffect {
-            state.targetRectForAnimation?.let { channel.trySend(it) }
+            state.state.targetRectForAnimation?.let { channel.trySend(it) }
         }
 
         LaunchedEffect(channel) {
-            var targetRect: PlotState.TargetRectForAnimation? = null
+            var targetRect: PlotStateImpl.TargetRectForAnimation? = null
             for (target in channel) {
                 if (target != targetRect) {
                     targetRect = target
@@ -349,7 +373,7 @@ fun Plot(
                                 (originalTopLeft.top - centroid.y) / zoom.height + centroid.y - pan.y,
                             )
                             //Log.v("Tuner", "Plot: original topLeft=$originalTopLeft, modified topLeft=$modifiedTopLeft, zoom=$zoom")
-                            val originalRaw = state.viewPortRaw
+                            val originalRaw = state.state.viewPortRaw
                             val zoomedSize = Size(
                                 originalRaw.size.width / zoom.width,
                                 originalRaw.size.height / zoom.height
@@ -378,24 +402,40 @@ fun Plot(
 private fun PlotPreview() {
     TunerTheme {
         val initialRawSize = Rect(0f, 30f, 30f, 0f)
-        var plotState by remember {
-            mutableStateOf(
-                PlotState.create(1, initialRawSize)
-                    .addLine(floatArrayOf(15f, 28f), floatArrayOf(15f, 28f), 2.dp)
-                    .addLine(floatArrayOf(15f, 2f), floatArrayOf(15f, 28f), 2.dp)
-                    .addLine(floatArrayOf(3f, 10f, 20f), floatArrayOf(2f, 10f, 5f), 2.dp)
-                    .addHorizontalMarks(floatArrayOf(10f, 13f), HorizontalLabelPosition.Center, Anchor.North) { index, yPosition ->
-                        Label(
-                            content = { Text("$index", style = MaterialTheme.typography.bodySmall) },
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        )
-                    }
-            )
+        val plotState = remember {
+            PlotState.create(initialRawSize).apply {
+                addLine(floatArrayOf(15f, 28f), floatArrayOf(15f, 28f), 2.dp)
+                addLine(floatArrayOf(15f, 2f), floatArrayOf(15f, 28f), 2.dp)
+                addLine(floatArrayOf(3f, 10f, 20f), floatArrayOf(2f, 10f, 5f), 2.dp)
+                addHorizontalMarks(
+                    floatArrayOf(0f, 5f, 10f, 15f, 20f),
+                    maxLabelHeight = {d -> with(d){20.dp.toPx()}},
+                    horizontalLabelPosition = 0.1f,
+                    anchor = Anchor.SouthWest,
+                    lineWidth = 1.dp,
+                    lineColor = {_, _ -> MaterialTheme.colorScheme.primary},
+                ) { index, value ->
+                    Text("$index, $value",
+                        modifier = Modifier.background(Color.Cyan))
+                }
+            }
+//            mutableStateOf(
+//                PlotState.create(1, initialRawSize)
+//                    .addLine(floatArrayOf(15f, 28f), floatArrayOf(15f, 28f), 2.dp)
+//                    .addLine(floatArrayOf(15f, 2f), floatArrayOf(15f, 28f), 2.dp)
+//                    .addLine(floatArrayOf(3f, 10f, 20f), floatArrayOf(2f, 10f, 5f), 2.dp)
+//                    .addHorizontalMarks(floatArrayOf(10f, 13f), 0.5f, Anchor.North) { index, yPosition ->
+//                        Label(
+//                            content = { Text("$index", style = MaterialTheme.typography.bodySmall) },
+//                            modifier = Modifier.padding(horizontal = 8.dp)
+//                        )
+//                    }
+//            )
         }
         Plot(plotState,
-            onViewPortChanged = { plotState = plotState.setViewPort(it) },
+            onViewPortChanged = { plotState.setViewPort(it) },
             modifier = Modifier.clickable {
-                plotState = plotState.animateToViewPort(Rect(10f, 40f, 40f, 10f))
+                plotState.animateToViewPort(Rect(10f, 40f, 40f, 10f))
             }
         )
 

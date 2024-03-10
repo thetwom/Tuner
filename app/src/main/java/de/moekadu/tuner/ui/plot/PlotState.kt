@@ -1,20 +1,20 @@
 package de.moekadu.tuner.ui.plot
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationVector4D
-import androidx.compose.animation.core.TwoWayConverter
-import androidx.compose.animation.core.VectorConverter
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpSize
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 
-private fun createIndexRanges(groups: PersistentList<ItemGroup>): IntArray {
+private fun createIndexRanges(groups: PersistentList<ItemGroup2>): IntArray {
     val result = IntArray(groups.size + 1)
     var accumulatedSum = 0
     groups.forEachIndexed { index, itemGroup ->
@@ -26,43 +26,86 @@ private fun createIndexRanges(groups: PersistentList<ItemGroup>): IntArray {
     return result
 }
 
-data class PlotState(
-    private val groups: PersistentList<ItemGroup>,
+class PlotState(
+    initialGroups: PersistentList<ItemGroup2>,
+    initialViewPortRaw: Rect
+) {
+    var state by mutableStateOf(PlotStateImpl(initialGroups, initialViewPortRaw))
+        private set
+
+    fun setViewPort(viewPortRaw: Rect) {
+        state = state.copy(viewPortRaw = viewPortRaw, targetRectForAnimation = null)
+    }
+
+    fun animateToViewPort(viewPortRaw: Rect) {
+         state = state.copy(targetRectForAnimation = PlotStateImpl.TargetRectForAnimation(viewPortRaw))
+    }
+
+    // TODO: instead of returning a line, we should better define a line together with a key
+    fun addLine(xValues: FloatArray, yValues: FloatArray, lineWidth: Dp): Line {
+        val line = Line(lineWidth) // should we maybe directly pass x/y values at creation?
+        line.setLine(xValues, yValues)
+        val modifiedLines = (state.groups[INDEX_LINE] as ItemGroupLines).add(line)
+        state = state.replaceGroup(INDEX_LINE, modifiedLines)
+        return line
+    }
+
+    // TODO: instead of returning group, we should better define a group together with a key
+    fun addHorizontalMarks(
+        yValues: FloatArray,
+        maxLabelHeight: (density: Density) -> Float,
+        horizontalLabelPosition: Float,
+        anchor: Anchor,
+        lineWidth: Dp,
+        lineColor: @Composable (index: Int, y:Float) -> Color = {_,_-> Color.Unspecified},
+        label: (@Composable (index: Int, y: Float) -> Unit)? = null
+    ): HorizontalMarksGroup {
+        val marks = HorizontalMarksGroup(
+            label,
+            yValues,
+            maxLabelHeight,
+            anchor,
+            horizontalLabelPosition,
+            lineWidth,
+            lineColor
+        )
+        state = state.addGroup(marks.group)
+        return marks
+    }
+
+    companion object {
+        const val INDEX_LINE = 0
+
+        fun create(viewPartRaw: Rect): PlotState {
+            return PlotState(
+                persistentListOf(ItemGroupLines()),
+                viewPartRaw
+            )
+        }
+    }
+
+}
+
+data class PlotStateImpl(
+    val groups: PersistentList<ItemGroup2>,
     val viewPortRaw: Rect,
     val targetRectForAnimation: TargetRectForAnimation? = null
-//    val animatedViewPort: Animatable<Rect, AnimationVector4D> = Animatable(viewPortRaw, Rect.VectorConverter)
 ) {
     class TargetRectForAnimation(val target: Rect)
     private val indexRanges = createIndexRanges(groups)
 
     val itemCount get() = indexRanges.last()
 
-    fun setViewPort(viewPortRaw: Rect): PlotState {
-        return this.copy(viewPortRaw = viewPortRaw, targetRectForAnimation = null)
-    }
-
-    fun animateToViewPort(viewPortRaw: Rect): PlotState {
-        return this.copy(targetRectForAnimation = TargetRectForAnimation(viewPortRaw))
-    }
-
-    fun addLine(xValues: FloatArray, yValues: FloatArray, lineWidth: Dp): PlotState {
-        val line = Line(lineWidth)
-        line.setLine(xValues, yValues)
-        return add(line, 0)
-    }
-
-    fun addHorizontalMarks(
-        yPositions: FloatArray,
-        horizontalLabelPosition: HorizontalLabelPosition,
-        anchor: Anchor,
-        content: @Composable (index: Int, yPosition: Float) -> Unit
-    ): PlotState {
-        val mark = HorizontalMark(horizontalLabelPosition, anchor, DpSize.Unspecified)
-        return add(mark, 1)
-    }
-    fun add(item: PlotItem, indexOfGroup: Int): PlotState {
+    fun addGroup(group: ItemGroup2): PlotStateImpl {
         val modified = groups.mutate {
-            it[indexOfGroup] = groups[indexOfGroup].add(item)
+            it.add(group)
+        }
+        return this.copy(groups = modified)
+    }
+
+    fun replaceGroup(indexOfGroup: Int, group: ItemGroup2): PlotStateImpl {
+        val modified = groups.mutate {
+            it[indexOfGroup] = group
         }
         return this.copy(groups = modified)
     }
@@ -74,25 +117,14 @@ data class PlotState(
         return groups[groupIndexResolved][indexLocal]
     }
 
-    fun getVisibleItems(matrixRawToScreen: Matrix, viewPortScreen: Rect, density: Density): Sequence<PlotItemPositioned> {
+    fun getVisibleItems(transformation: Transformation, density: Density): Sequence<PlotItemPositioned> {
         return sequence {
             groups.forEachIndexed { groupIndex, group ->
-                yieldAll(group.getVisibleItems(
-                    matrixRawToScreen,
-                    viewPortScreen,
-                    groupIndex + indexRanges[groupIndex],
-                    density
-                ))
+                yieldAll(group.getVisibleItems(transformation, density).map {
+                    it.globalIndex = it.indexInGroup + indexRanges[groupIndex]
+                    it
+                })
             }
-        }
-    }
-
-    companion object {
-        fun create(numGroups: Int, viewPartRaw: Rect): PlotState {
-            return PlotState(
-                List(numGroups){ ItemGroup() }.toPersistentList(),
-                viewPartRaw
-            )
         }
     }
 }
