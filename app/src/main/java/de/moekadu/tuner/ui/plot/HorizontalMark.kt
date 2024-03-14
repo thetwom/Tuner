@@ -1,7 +1,10 @@
 package de.moekadu.tuner.ui.plot
 
+import android.util.Log
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -9,15 +12,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toRect
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -33,6 +39,8 @@ class HorizontalMarksGroup(
     private val defaultHorizontalLabelPosition: Float = 0.5f,
     private val lineWidth: Dp = 1.dp,
     private val lineColor: @Composable (index: Int, y: Float) -> Color = {_,_ -> Color.Unspecified},
+    private val clipLabelToPlotWindow: Boolean = false,
+    private val onDataUpdated: (oldGroup: HorizontalMarksGroupImpl, newGroup: HorizontalMarksGroupImpl) -> Unit = { _, _ -> }
 ) {
     var group: HorizontalMarksGroupImpl
         private set
@@ -43,7 +51,9 @@ class HorizontalMarksGroup(
         group = HorizontalMarksGroupImpl(createMarks(initialYValues), maxLabelHeight)
     }
     fun setMarks(yValues: FloatArray) {
+        val oldGroup = group
         group = group.copy(items = createMarks(yValues))
+        onDataUpdated(oldGroup, group)
     }
 
     private fun createMarks(
@@ -53,6 +63,7 @@ class HorizontalMarksGroup(
         ): PersistentList<HorizontalMark> {
         return yValues.mapIndexed { index, yValue ->
             HorizontalMark(horizontalLabelPosition, anchor, maxLabelHeight, lineWidth, yValue,
+                clipLabelToPlotWindow  = clipLabelToPlotWindow,
                 lineColor = { lineColor(index, yValue) },
                 label = label?.let{ { it(index, yValue) } }
             )
@@ -114,6 +125,7 @@ class HorizontalMark(
     val maxLabelHeight: (density: Density) -> Float,
     val lineWidth: Dp,
     initialYPosition: Float = 0f,
+    val clipLabelToPlotWindow: Boolean = false,
     var lineColor: @Composable () -> Color = { Color.Unspecified },
     var label: (@Composable () -> Unit)? = null
 ) : PlotItem {
@@ -153,10 +165,26 @@ class HorizontalMark(
             val yOffsetScreen = transformation.toScreen(yOffset)
             yOffsetScreen.y
         }
+//        Log.v("Tuner", "HorizontalMark, draw $yPosition")
         val lineColor = this.lineColor().takeOrElse { MaterialTheme.colorScheme.outline }
+
+        val isLabelVisible = (clipLabelToPlotWindow ||
+                (yTransformed < transformation.viewPortScreen.bottom &&
+                        yTransformed > transformation.viewPortScreen.top))
+        val clipShape = remember(
+            transformation.viewPortScreen, transformation.viewPortCornerRadius) {
+            GenericShape { _, _ ->
+                val r = CornerRadius(transformation.viewPortCornerRadius)
+                addRoundRect(RoundRect(transformation.viewPortScreen.toRect(), r, r, r, r))
+            }
+        }
+
         Box(modifier = Modifier
             .fillMaxSize()
-            .drawBehind {
+        ) {
+            Canvas(
+                modifier = Modifier.fillMaxSize().clip(clipShape)
+            ) {
                 drawLine(
                     lineColor,
                     Offset(transformation.viewPortScreen.left.toFloat(), yTransformed),
@@ -164,33 +192,136 @@ class HorizontalMark(
                     strokeWidth = lineWidth.toPx()
                 )
             }
-            .layout { measurable, constraints ->
-                val p = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
+            val l = label
+            if (isLabelVisible && l != null) {
+                Box(modifier = Modifier
+                    .fillMaxSize()
+                    .then(if (clipLabelToPlotWindow) Modifier.clip(clipShape) else Modifier)
+                    .layout { measurable, constraints ->
+                        val p = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
 
-                layout(constraints.maxWidth, constraints.maxHeight){
-                    val vp = transformation.viewPortScreen
-                    val x = vp.left + horizontalLabelPosition * (vp.width)
-                    val y = yTransformed
-                    val w = p.width
-                    val h = p.height
-                    val l2 = 0.5f * lineWidth.toPx()
+                        layout(constraints.maxWidth, constraints.maxHeight) {
+                            val vp = transformation.viewPortScreen
+                            val x = vp.left + horizontalLabelPosition * (vp.width)
+                            val y = yTransformed
+                            val w = p.width
+                            val h = p.height
+                            val l2 = 0.5f * lineWidth.toPx()
 
-                    // TODO: line width must taken into account for North..., South... nachors
-                    when (anchor) {
-                        Anchor.NorthWest -> p.place(x.roundToInt(), (y + l2).roundToInt())
-                        Anchor.North -> p.place((x - 0.5 * w).roundToInt(), (y + l2).roundToInt())
-                        Anchor.NorthEast -> p.place((x - w).roundToInt(), (y + l2).roundToInt())
-                        Anchor.West -> p.place(x.roundToInt(), (y - 0.5f * h).roundToInt())
-                        Anchor.Center -> p.place((x - 0.5f * w).roundToInt(), (y - 0.5f * h).roundToInt())
-                        Anchor.East -> p.place((x - w).roundToInt(), (y - 0.5f * h).roundToInt())
-                        Anchor.SouthWest -> p.place(x.roundToInt(), (y - h - l2).roundToInt())
-                        Anchor.South -> p.place((x - 0.5 * w).roundToInt(), (y - h - l2).roundToInt())
-                        Anchor.SouthEast -> p.place((x - w).roundToInt(), (y - h - l2).roundToInt())
+                            when (anchor) {
+                                Anchor.NorthWest -> p.place(x.roundToInt(), (y + l2).roundToInt())
+                                Anchor.North -> p.place(
+                                (x - 0.5 * w).roundToInt(),
+                                    (y + l2).roundToInt()
+                                )
+
+                                Anchor.NorthEast -> p.place(
+                                    (x - w).roundToInt(),
+                                    (y + l2).roundToInt()
+                                )
+
+                                Anchor.West -> p.place(x.roundToInt(), (y - 0.5f * h).roundToInt())
+                                Anchor.Center -> p.place(
+                                    (x - 0.5f * w).roundToInt(),
+                                    (y - 0.5f * h).roundToInt()
+                                )
+
+                                Anchor.East -> p.place(
+                                    (x - w).roundToInt(),
+                                    (y - 0.5f * h).roundToInt()
+                                )
+
+                                Anchor.SouthWest -> p.place(
+                                    x.roundToInt(),
+                                    (y - h - l2).roundToInt()
+                                )
+
+                                Anchor.South -> p.place(
+                                    (x - 0.5 * w).roundToInt(),
+                                    (y - h - l2).roundToInt()
+                                )
+
+                                Anchor.SouthEast -> p.place(
+                                    (x - w).roundToInt(),
+                                    (y - h - l2).roundToInt()
+                                )
+                            }
+                        }
                     }
+                ) {
+                    l()
                 }
             }
-        ) {
-            label?.let { it() }
         }
+//        Box(modifier = Modifier
+//            .fillMaxSize()
+//            .then(if (visible) Modifier.drawBehind {
+//                drawLine(
+//                    lineColor,
+//                    Offset(transformation.viewPortScreen.left.toFloat(), yTransformed),
+//                    Offset(transformation.viewPortScreen.right.toFloat(), yTransformed),
+//                    strokeWidth = lineWidth.toPx()
+//                )
+//            } else {
+//                Modifier
+//            })
+//            .layout { measurable, constraints ->
+//                val p = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
+//
+//                layout(constraints.maxWidth, constraints.maxHeight) {
+//
+//                    if (visible) {
+//                        val vp = transformation.viewPortScreen
+//                        val x = vp.left + horizontalLabelPosition * (vp.width)
+//                        val y = yTransformed
+//                        val w = p.width
+//                        val h = p.height
+//                        val l2 = 0.5f * lineWidth.toPx()
+//
+//                        // TODO: line width must taken into account for North..., South... nachors
+//                        when (anchor) {
+//                            Anchor.NorthWest -> p.place(x.roundToInt(), (y + l2).roundToInt())
+//                            Anchor.North -> p.place(
+//                                (x - 0.5 * w).roundToInt(),
+//                                (y + l2).roundToInt()
+//                            )
+//
+//                            Anchor.NorthEast -> p.place(
+//                                (x - w).roundToInt(),
+//                                (y + l2).roundToInt()
+//                            )
+//
+//                            Anchor.West -> p.place(x.roundToInt(), (y - 0.5f * h).roundToInt())
+//                            Anchor.Center -> p.place(
+//                                (x - 0.5f * w).roundToInt(),
+//                                (y - 0.5f * h).roundToInt()
+//                            )
+//
+//                            Anchor.East -> p.place(
+//                                (x - w).roundToInt(),
+//                                (y - 0.5f * h).roundToInt()
+//                            )
+//
+//                            Anchor.SouthWest -> p.place(
+//                                x.roundToInt(),
+//                                (y - h - l2).roundToInt()
+//                            )
+//
+//                            Anchor.South -> p.place(
+//                                (x - 0.5 * w).roundToInt(),
+//                                (y - h - l2).roundToInt()
+//                            )
+//
+//                            Anchor.SouthEast -> p.place(
+//                                (x - w).roundToInt(),
+//                                (y - h - l2).roundToInt()
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        ) {
+//            label?.let { it() }
+//        }
     }
 }

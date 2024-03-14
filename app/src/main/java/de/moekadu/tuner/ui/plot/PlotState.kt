@@ -6,13 +6,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toPersistentList
 
 private fun createIndexRanges(groups: PersistentList<ItemGroup2>): IntArray {
     val result = IntArray(groups.size + 1)
@@ -41,33 +39,34 @@ class PlotState(
          state = state.copy(targetRectForAnimation = PlotStateImpl.TargetRectForAnimation(viewPortRaw))
     }
 
-    // TODO: instead of returning a line, we should better define a line together with a key
-    fun addLine(xValues: FloatArray, yValues: FloatArray, lineWidth: Dp): Line {
-        val line = Line(lineWidth) // should we maybe directly pass x/y values at creation?
-        line.setLine(xValues, yValues)
+    fun addLine(xValues: FloatArray, yValues: FloatArray, lineWidth: Dp,
+                color: @Composable () -> Color = { Color.Unspecified }): Line {
+        val line = Line(lineWidth, xValues, yValues, color)
         val modifiedLines = (state.groups[INDEX_LINE] as ItemGroupLines).add(line)
         state = state.replaceGroup(INDEX_LINE, modifiedLines)
         return line
     }
 
-    // TODO: instead of returning group, we should better define a group together with a key
     fun addHorizontalMarks(
         yValues: FloatArray,
         maxLabelHeight: (density: Density) -> Float,
         horizontalLabelPosition: Float,
         anchor: Anchor,
         lineWidth: Dp,
+        clipLabelToPlotWindow: Boolean = false,
         lineColor: @Composable (index: Int, y:Float) -> Color = {_,_-> Color.Unspecified},
         label: (@Composable (index: Int, y: Float) -> Unit)? = null
     ): HorizontalMarksGroup {
         val marks = HorizontalMarksGroup(
-            label,
-            yValues,
-            maxLabelHeight,
-            anchor,
-            horizontalLabelPosition,
-            lineWidth,
-            lineColor
+            label = label,
+            initialYValues = yValues,
+            initialMaxLabelHeight = maxLabelHeight,
+            defaultAnchor = anchor,
+            defaultHorizontalLabelPosition = horizontalLabelPosition,
+            lineWidth = lineWidth,
+            lineColor = lineColor,
+            clipLabelToPlotWindow = clipLabelToPlotWindow,
+            onDataUpdated = { old, new -> state.replaceGroup(old, new) }
         )
         state = state.addGroup(marks.group)
         return marks
@@ -106,6 +105,15 @@ data class PlotStateImpl(
     fun replaceGroup(indexOfGroup: Int, group: ItemGroup2): PlotStateImpl {
         val modified = groups.mutate {
             it[indexOfGroup] = group
+        }
+        return this.copy(groups = modified)
+    }
+
+    fun replaceGroup(oldGroup: ItemGroup2, newGroup: ItemGroup2): PlotStateImpl {
+        val modified = groups.mutate {
+            val index = it.indexOf(oldGroup)
+            if (index >= 0)
+                it[index] = newGroup
         }
         return this.copy(groups = modified)
     }
