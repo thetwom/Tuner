@@ -10,7 +10,8 @@ import androidx.compose.ui.unit.IntRect
 
 data class Transformation(
     val viewPortScreen: IntRect,
-    val viewPortRaw: Rect
+    val viewPortRaw: Rect,
+    val viewPortCornerRadius: Float = 0f
 ) {
     val matrixRawToScreen = Matrix().apply {
         translate(viewPortScreen.left.toFloat(), viewPortScreen.center.y.toFloat())

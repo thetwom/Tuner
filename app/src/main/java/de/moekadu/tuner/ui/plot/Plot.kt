@@ -1,6 +1,5 @@
 package de.moekadu.tuner.ui.plot
 
-import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.exponentialDecay
@@ -11,8 +10,8 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.layout.LazyLayout
 import androidx.compose.foundation.lazy.layout.LazyLayoutItemProvider
 import androidx.compose.foundation.lazy.layout.LazyLayoutMeasureScope
@@ -22,17 +21,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Matrix
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
@@ -45,16 +45,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toOffset
-import androidx.compose.ui.unit.toRect
+import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMaxOfOrNull
-import de.moekadu.tuner.ui.common.Label
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
@@ -67,12 +67,13 @@ import kotlin.math.sqrt
 @OptIn(ExperimentalFoundationApi::class)
 data class PlotItemProvider(
     val state: PlotStateImpl,
-    val viewPortScreen: IntRect
+    val viewPortScreen: IntRect,
+    val viewPortCornerRadius: Float
 ) : LazyLayoutItemProvider {
 
     override val itemCount get() = state.itemCount
 
-    val transformation = Transformation(viewPortScreen, state.viewPortRaw)
+    val transformation = Transformation(viewPortScreen, state.viewPortRaw, viewPortCornerRadius)
 
     fun getVisiblePlotItems(density: Density): Sequence<PlotItemPositioned> {
         return state.getVisibleItems(transformation, density)
@@ -113,7 +114,11 @@ data class PlotItemProvider(
 
             val screenSize = transformation.viewPortScreen.size
 //            Log.v("Tuner", "Plot: Item: contentPosition=$contentPosition, screenPosition=$screenPosition, screenRelativ=$screenPositionRelative, sSize=${transformation.viewPortScreen}, sSizeLoc=${screenSize}")
-            Transformation(IntRect(screenPositionRelative, screenSize), transformation.viewPortRaw)
+            Transformation(
+                IntRect(screenPositionRelative, screenSize),
+                transformation.viewPortRaw,
+                transformation.viewPortCornerRadius
+                )
 //            Matrix().apply {
 //                val originRaw = transformation.viewPortRaw.topLeft
 //                val p = positionOf(index, localDensity).toOffset()
@@ -315,21 +320,48 @@ suspend fun PointerInputScope.detectPanZoomFlingGesture(
     }
 }
 
+data class PlotWindowOutline(
+    val lineWidth: Dp,
+    val cornerRadius: Dp,
+    val color: Color
+)
+
+object PlotDefaults {
+    @Composable
+    fun windowOutline(
+        lineWidth: Dp = 1.dp,
+        cornerRadius: Dp = 8.dp,
+        color: Color = MaterialTheme.colorScheme.onSurface
+    ) = PlotWindowOutline(lineWidth, cornerRadius, color)
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Plot(
     state: PlotState,
     modifier: Modifier = Modifier,
+    plotWindowPadding: DpRect = DpRect(0.dp, 0.dp, 0.dp, 0.dp),
+    plotWindowOutline: PlotWindowOutline = PlotDefaults.windowOutline(),
     onViewPortChanged: (viewPortScreen: Rect) -> Unit = {}
 ) {
     BoxWithConstraints(modifier = modifier.background(Color.LightGray)) {
         val widthPx = with(LocalDensity.current) { maxWidth.roundToPx() }
         val heightPx = with(LocalDensity.current) { maxHeight.roundToPx() }
-        // TODO: introduce a kind of padding ofr the viewport
-        val viewPortScreen = IntRect(0, 0, widthPx, heightPx)
 
+        val outline2 = with(LocalDensity.current) { (plotWindowOutline.lineWidth / 2).roundToPx() }
+        val viewPortScreen = with(LocalDensity.current) {
+            IntRect(
+                plotWindowPadding.left.roundToPx() + outline2,
+                plotWindowPadding.top.roundToPx() + outline2,
+                widthPx - plotWindowPadding.right.roundToPx() - outline2,
+                heightPx - plotWindowPadding.bottom.roundToPx() - outline2
+            )
+        }
+        val cornerRadiusPx = with(LocalDensity.current) {plotWindowOutline.cornerRadius.toPx()}
         // use updated state here, to avoid having to recreate of the pointerInput modifier
-        val itemProvider by rememberUpdatedState(PlotItemProvider(state.state, viewPortScreen))
+        val itemProvider by rememberUpdatedState(
+            PlotItemProvider(state.state, viewPortScreen, cornerRadiusPx)
+        )
 
 //        Log.v("Tuner", "Plot: screen size: $widthPx x $heightPx")
         val animatedRectRaw = remember {
@@ -361,12 +393,22 @@ fun Plot(
             itemProvider = { itemProvider },
             measurePolicy = measurePolicy,
             modifier = Modifier
+                .drawWithContent {
+                    drawContent()
+                    drawRoundRect(
+                        plotWindowOutline.color,
+                        viewPortScreen.topLeft.toOffset(),
+                        viewPortScreen.size.toSize(),
+                        cornerRadius = CornerRadius(plotWindowOutline.cornerRadius.toPx()),
+                        style = Stroke(plotWindowOutline.lineWidth.toPx())
+                    )
+                }
                 .pointerInput(Unit) {
                     val decay = exponentialDecay<Rect>(1f)
 
                     detectPanZoomFlingGesture(
                         onGestureStart = { animatedRectRaw.stop() },
-                        onGesture = {centroid, pan, zoom ->
+                        onGesture = { centroid, pan, zoom ->
                             val originalTopLeft = itemProvider.viewPortScreen
                             val modifiedTopLeft = Offset(
                                 (originalTopLeft.left - centroid.x) / zoom.width + centroid.x - pan.x,
@@ -383,12 +425,24 @@ fun Plot(
                             val movedRaw = Rect(movedTopLeftRaw, zoomedSize)
                             animatedRectRaw.snapTo(movedRaw)
                         },
-                        onFling = {velocity ->
+                        onFling = { velocity ->
                             val velocityRaw = (
                                     itemProvider.transformation.toRaw(Offset.Zero)
-                                    - itemProvider.transformation.toRaw(Offset(velocity.x, velocity.y))
+                                            - itemProvider.transformation.toRaw(
+                                        Offset(
+                                            velocity.x,
+                                            velocity.y
+                                        )
                                     )
-                            animatedRectRaw.animateDecay(Rect(velocityRaw.x, velocityRaw.y, velocityRaw.x, velocityRaw.y), decay)
+                                    )
+                            animatedRectRaw.animateDecay(
+                                Rect(
+                                    velocityRaw.x,
+                                    velocityRaw.y,
+                                    velocityRaw.x,
+                                    velocityRaw.y
+                                ), decay
+                            )
                         }
                     )
                 }
@@ -405,14 +459,16 @@ private fun PlotPreview() {
         val plotState = remember {
             PlotState.create(initialRawSize).apply {
                 addLine(floatArrayOf(15f, 28f), floatArrayOf(15f, 28f), 2.dp)
-                addLine(floatArrayOf(15f, 2f), floatArrayOf(15f, 28f), 2.dp)
+                addLine(floatArrayOf(15f, 2f), floatArrayOf(15f, 28f), 2.dp, { MaterialTheme.colorScheme.error })
                 addLine(floatArrayOf(3f, 10f, 20f), floatArrayOf(2f, 10f, 5f), 2.dp)
                 addHorizontalMarks(
-                    floatArrayOf(0f, 5f, 10f, 15f, 20f),
+                    floatArrayOf(0f, 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f, 10f, 15f, 20f),
+                    //floatArrayOf(0f),
                     maxLabelHeight = {d -> with(d){20.dp.toPx()}},
-                    horizontalLabelPosition = 0.1f,
-                    anchor = Anchor.SouthWest,
+                    horizontalLabelPosition = 0.5f,
+                    anchor = Anchor.Center, //Anchor.East,
                     lineWidth = 1.dp,
+                    clipLabelToPlotWindow = true,
                     lineColor = {_, _ -> MaterialTheme.colorScheme.primary},
                 ) { index, value ->
                     Text("$index, $value",
@@ -434,7 +490,12 @@ private fun PlotPreview() {
         }
         Plot(plotState,
             onViewPortChanged = { plotState.setViewPort(it) },
-            modifier = Modifier.clickable {
+            plotWindowPadding = DpRect(left = 80.dp, top = 3.dp, right = 10.dp, bottom = 10.dp),
+            plotWindowOutline = PlotDefaults.windowOutline(lineWidth = 4.dp),
+            modifier = Modifier.clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
                 plotState.animateToViewPort(Rect(10f, 40f, 40f, 10f))
             }
         )
