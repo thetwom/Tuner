@@ -8,6 +8,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
@@ -70,6 +71,34 @@ class PlotState(
         )
         state = state.addGroup(marks.group)
         return marks
+    }
+
+    fun addHorizontalMarks2(
+        yValues: ImmutableList<FloatArray>,
+        maxLabelHeight: (density: Density) -> Float,
+        horizontalLabelPosition: Float,
+        anchor: Anchor,
+        lineWidth: Dp,
+        clipLabelToPlotWindow: Boolean = false,
+        lineColor: @Composable () -> Color = { Color.Unspecified },
+        maxNumLabels: Int = 7, // TODO: should this better depend on max height and view port height?
+        label: (@Composable (level: Int, index: Int, y: Float) -> Unit)? = null
+    ): HorizontalMarks2Group {
+        val markLevels = MarkLevelExplicitRanges(yValues)
+        val marks = HorizontalMarks2(
+            label = label,
+            markLevel = markLevels,
+            defaultAnchor = anchor,
+            defaultHorizontalLabelPosition = horizontalLabelPosition,
+            lineWidth = lineWidth,
+            lineColor = lineColor,
+            maxLabelHeight = maxLabelHeight,
+            clipLabelToPlotWindow = clipLabelToPlotWindow,
+            maxNumLabels = maxNumLabels
+        )
+        val group = HorizontalMarks2Group(marks)
+        state = state.addGroup(group)
+        return group
     }
 
     companion object {

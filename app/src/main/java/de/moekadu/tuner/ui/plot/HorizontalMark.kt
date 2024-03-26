@@ -89,6 +89,7 @@ data class HorizontalMarksGroupImpl(
             val rectScreen = Rect(0f, 0f, 1f, maxLabelHeightScreen)
             val rectRaw = transformation.toRaw(rectScreen)
             maxLabelHeightRaw = rectRaw.height.absoluteValue
+            cachedDensity = density
         }
         //
         // 0 1 2 3
