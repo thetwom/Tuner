@@ -56,6 +56,7 @@ import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMaxOfOrNull
 import de.moekadu.tuner.ui.theme.TunerTheme
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -113,7 +114,7 @@ data class PlotItemProvider(
             val screenPositionRelative = screenPosition - contentPosition //- screenPosition
 
             val screenSize = transformation.viewPortScreen.size
-//            Log.v("Tuner", "Plot: Item: contentPosition=$contentPosition, screenPosition=$screenPosition, screenRelativ=$screenPositionRelative, sSize=${transformation.viewPortScreen}, sSizeLoc=${screenSize}")
+//            Log.v("Tuner", "Plot: Item: contentPosition=$contentPosition, screenPosition=$screenPosition, screenRelative=$screenPositionRelative, sSize=${transformation.viewPortScreen}, sSizeLoc=${screenSize}")
             Transformation(
                 IntRect(screenPositionRelative, screenSize),
                 transformation.viewPortRaw,
@@ -461,19 +462,34 @@ private fun PlotPreview() {
                 addLine(floatArrayOf(15f, 28f), floatArrayOf(15f, 28f), 2.dp)
                 addLine(floatArrayOf(15f, 2f), floatArrayOf(15f, 28f), 2.dp, { MaterialTheme.colorScheme.error })
                 addLine(floatArrayOf(3f, 10f, 20f), floatArrayOf(2f, 10f, 5f), 2.dp)
-                addHorizontalMarks(
-                    floatArrayOf(0f, 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f, 10f, 15f, 20f),
+                addHorizontalMarks2(
+                    listOf(
+                        floatArrayOf(0f, 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f, 10f, 15f, 20f)
+                    ).toImmutableList(),
                     //floatArrayOf(0f),
-                    maxLabelHeight = {d -> with(d){20.dp.toPx()}},
+                    maxLabelHeight = {d -> with(d){1.dp.toPx()}}, // TODO: increase again to 20.dp or similar
                     horizontalLabelPosition = 0.5f,
                     anchor = Anchor.Center, //Anchor.East,
                     lineWidth = 1.dp,
                     clipLabelToPlotWindow = true,
-                    lineColor = {_, _ -> MaterialTheme.colorScheme.primary},
-                ) { index, value ->
-                    Text("$index, $value",
+                    lineColor = { MaterialTheme.colorScheme.primary },
+                ) { level, index, value ->
+                    Text("$index, $value, $level",
                         modifier = Modifier.background(Color.Cyan))
                 }
+//                addHorizontalMarks(
+//                    floatArrayOf(0f, 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f, 10f, 15f, 20f),
+//                    //floatArrayOf(0f),
+//                    maxLabelHeight = {d -> with(d){20.dp.toPx()}},
+//                    horizontalLabelPosition = 0.5f,
+//                    anchor = Anchor.Center, //Anchor.East,
+//                    lineWidth = 1.dp,
+//                    clipLabelToPlotWindow = true,
+//                    lineColor = {_, _ -> MaterialTheme.colorScheme.primary},
+//                ) { index, value ->
+//                    Text("$index, $value",
+//                        modifier = Modifier.background(Color.Cyan))
+//                }
             }
 //            mutableStateOf(
 //                PlotState.create(1, initialRawSize)
