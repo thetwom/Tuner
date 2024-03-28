@@ -16,7 +16,10 @@ val instrumentIcons = arrayOf(
     InstrumentIcon(R.drawable.ic_saxophone, "saxophone"),
     InstrumentIcon(R.drawable.ic_flute, "flute"),
     InstrumentIcon(R.drawable.ic_harp, "harp"),
-    InstrumentIcon(R.drawable.ic_piano, "piano"),
+    InstrumentIcon(R.drawable.ic_tar, "tar"),
+    InstrumentIcon(R.drawable.ic_zetar, "zetar"),
+    InstrumentIcon(R.drawable.ic_kamancheh, "kamancheh"),
+    InstrumentIcon(R.drawable.ic_piano, "piano")
 )
 
 fun instrumentIconId2Name(resourceId: Int): String {
