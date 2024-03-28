@@ -1,2 +1,2 @@
 v6.8.0:
-- Icons for tar, zetar, kamancheh (thanks to ahangarha)
+- Icons for Tar, Setar, and Kamancheh (thanks to ahangarha)
