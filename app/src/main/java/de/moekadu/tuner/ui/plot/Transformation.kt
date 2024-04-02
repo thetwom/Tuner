@@ -3,10 +3,16 @@ package de.moekadu.tuner.ui.plot
 //import android.graphics.Matrix
 import android.graphics.RectF
 import android.util.Log
+import androidx.compose.foundation.shape.GenericShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.toRect
 
 data class Transformation(
     val viewPortScreen: IntRect,
@@ -39,4 +45,11 @@ data class Transformation(
     fun toRaw(rect: Rect) = matrixScreenToRaw.map(rect)
     fun toRaw(point: Offset) = matrixScreenToRaw.map(point)
 
+    @Composable
+    fun rememberClipShape() = remember(viewPortScreen, viewPortCornerRadius) {
+        GenericShape { _, _ ->
+            val r = CornerRadius(viewPortCornerRadius)
+            addRoundRect(RoundRect(viewPortScreen.toRect(), r, r, r, r))
+        }
+    }
 }
