@@ -296,8 +296,8 @@ class Line2(
 class LineGroup: PlotGroup {
     private val lines = mutableMapOf<Int, Line2>()
     fun setLine(
+        key: Int,
         xValues: FloatArray, yValues: FloatArray,
-        key: Int = 0,
         indexBegin: Int = 0,
         indexEnd: Int = min(xValues.size, yValues.size),
         lineWidth: Dp? = null,
@@ -382,16 +382,16 @@ private fun LineGroupPreview() {
             val lineGroup = remember {
                 LineGroup().apply {
                     setLine(
+                        key = 1,
                         xValues = floatArrayOf(-9f, -5f, 0f,  7f,  8f),
                         yValues = floatArrayOf(-3f,  5f, 0f, -4f, -2f),
-                        key = 1,
                         lineWidth = 3.dp,
                         lineColor = { MaterialTheme.colorScheme.primary }
                     )
                     setLine(
+                        key = 2,
                         xValues = floatArrayOf(-8f, -6f, 1f,  5f,  7f),
                         yValues = floatArrayOf(-2f,  -3f, 4f, 3f, -2f),
-                        key = 2,
                         lineWidth = 1.dp,
                         lineColor = { MaterialTheme.colorScheme.error }
                     )

@@ -1,6 +1,7 @@
 package de.moekadu.tuner.ui.plot
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -10,11 +11,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -23,29 +26,162 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.ui.theme.TunerTheme
 
+
+interface PointScope {
+    fun drawShape(draw: DrawScope.() -> Unit)
+}
+
+class PointScopeImpl : PointScope {
+    var draw: (DrawScope.() -> Unit)? = null
+    override fun drawShape(draw: DrawScope.() -> Unit) {
+        this.draw = draw
+    }
+
+}
+
 class Point(
     initialPosition: Offset,
-    initialDrawPointShape: DrawScope.(position: Offset, path: Path, color: Color) -> Unit,
-    initialColor: @Composable (position: Offset) -> Color
+    initialContent: @Composable PointScope.() -> Unit,
 ) {
     var position by mutableStateOf(initialPosition)
         private set
-    var drawPointShape by mutableStateOf(initialDrawPointShape)
+    var content by mutableStateOf(initialContent)
         private set
 
-    var color by mutableStateOf(initialColor)
-        private set
     fun setPoint(
         position: Offset? = null,
-        drawPointShape: (DrawScope.(position: Offset, path: Path, color: Color) -> Unit)? = null,
-        color: (@Composable (position: Offset) -> Color)? = null
+        content: (@Composable PointScope.() -> Unit)? = null,
     ) {
         if (position != null)
             this.position = position
-        if (drawPointShape != null)
-            this.drawPointShape = drawPointShape
-        if (color != null)
-            this.color = color
+        if (content != null)
+            this.content = content
+    }
+
+    @Composable
+    fun Draw(transformation: Transformation) {
+        val pointTransformed = remember(transformation, position) {
+            transformation.toScreen(position)
+        }
+        val scope = remember { PointScopeImpl() }
+        scope.content()
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            translate(pointTransformed.x, pointTransformed.y) {
+                scope.draw?.let { it() }
+            }
+        }
+    }
+
+    companion object {
+        fun drawCircle(size: Dp, color: @Composable () -> Color)
+                : (@Composable PointScope.() -> Unit) {
+            return {
+                val c = color()
+                drawShape {
+                    drawCircle(c, size.toPx() / 2, Offset.Zero)
+                }
+            }
+        }
+
+        fun drawUpwardTriangle(
+            size: Dp,
+            color: @Composable () -> Color,
+            offset: DpOffset = DpOffset.Zero
+        )
+                : (@Composable PointScope.() -> Unit) {
+            return {
+                val c = color()
+                val r = with(LocalDensity.current) { size.toPx() / 2 }
+                val dx = with(LocalDensity.current) { offset.x.toPx() }
+                val dy = with(LocalDensity.current) { offset.y.toPx() }
+
+                val path = remember {
+                    Path().also {
+                        it.moveTo(-r + dx, dy)
+                        it.lineTo(r + dx, dy)
+                        it.lineTo(dx, -r + dy)
+                    }
+                }
+                drawShape {
+                    drawPath(path, c)
+                }
+            }
+        }
+
+        fun drawDownwardTriangle(
+            size: Dp,
+            color: @Composable () -> Color,
+            offset: DpOffset = DpOffset.Zero
+        )
+                : (@Composable PointScope.() -> Unit) {
+            return {
+                val c = color()
+                val r = with(LocalDensity.current) { size.toPx() / 2 }
+                val dx = with(LocalDensity.current) { offset.x.toPx() }
+                val dy = with(LocalDensity.current) { offset.y.toPx() }
+
+                val path = remember {
+                    Path().also {
+                        it.moveTo(-r + dx, dy)
+                        it.lineTo(r + dx, dy)
+                        it.lineTo(dx, r + dy)
+                    }
+                }
+                drawShape {
+                    drawPath(path, c)
+                }
+            }
+        }
+
+        fun drawCircleWithUpwardTriangle(
+            size: Dp,
+            color: @Composable () -> Color,
+        )
+                : (@Composable PointScope.() -> Unit) {
+            return {
+                val c = color()
+                val r = with(LocalDensity.current) { size.toPx() / 2 }
+                val rTri = 1.4f * r
+                val dy = -1.6f * r
+
+                val path = remember {
+                    Path().also {
+                        it.moveTo(-rTri, dy)
+                        it.lineTo(rTri, dy)
+                        it.lineTo(0f, -rTri + dy)
+                    }
+                }
+                drawShape {
+                    drawPath(path, c)
+                    drawCircle(c, r, Offset.Zero)
+                }
+            }
+        }
+
+        fun drawCircleWithDownwardTriangle(
+            size: Dp,
+            color: @Composable () -> Color,
+        )
+                : (@Composable PointScope.() -> Unit) {
+            return {
+                val c = color()
+                val r = with(LocalDensity.current) { size.toPx() / 2 }
+                val rTri = 1.4f * r
+                val dy = 1.6f * r
+
+                val path = remember {
+                    Path().also {
+                        it.moveTo(-rTri, dy)
+                        it.lineTo(rTri, dy)
+                        it.lineTo(0f, rTri + dy)
+                    }
+                }
+                drawShape {
+                    drawPath(path, c)
+                    drawCircle(c, r, Offset.Zero)
+                }
+            }
+        }
     }
 }
 
@@ -53,64 +189,27 @@ class PointGroup : PlotGroup {
     private val points = mutableMapOf<Int, Point>()
 
     fun setPoint(
-        position: Offset,
         key: Int = 0,
-        drawPointShape: DrawScope.(position: Offset, path: Path, color: Color) -> Unit,
-        color: @Composable (position: Offset) -> Color
+        position: Offset? = null,
+        content: (@Composable PointScope.() -> Unit)? = null,
     ) {
-        points[key]?.setPoint(position, drawPointShape, color)
+        points[key]?.setPoint(position, content)
         if (key !in points) {
-            points[key] = Point(position, drawPointShape, color)
+            points[key] = Point(
+                position ?: Offset.Zero,
+                content ?: Point.drawCircle(2.dp, { Color.Black })
+            )
         }
     }
 
     @Composable
     override fun Draw(transformation: Transformation) {
-        val path = remember { Path() }
-        Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-            //.background(Color.Gray)
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .clip(transformation.rememberClipShape())
         ) {
-            for (point in points.values) {
-                val transformed = transformation.toScreen(point.position)
-                val func = point.drawPointShape
-                func(transformed, path)
-            }
-        }
-    }
-
-    companion object {
-        fun drawCircle(size: Dp, color: Color)
-                : (DrawScope.(position: Offset, path: Path) -> Unit) {
-            return { p, _ -> drawCircle(color, size.toPx() / 2, p) }
-        }
-
-        fun drawUpwardTriangle(size: Dp, color: Color, offset: DpOffset = DpOffset.Zero)
-                : (DrawScope.(position: Offset, path: Path) -> Unit) {
-            return {p, path ->
-                val r = size.toPx() / 2
-                val dx = offset.x.toPx()
-                val dy = offset.y.toPx()
-                path.rewind()
-                path.moveTo(p.x - r + dx, p.y + dy)
-                path.lineTo(p.x + r + dx, p.y + dy)
-                path.lineTo(p.x + dx, p.y - r + dy)
-                drawPath(path, color)
-            }
-        }
-
-        fun drawDownwardTriangle(size: Dp, color: Color, offset: DpOffset = DpOffset.Zero)
-                : (DrawScope.(position: Offset, path: Path) -> Unit) {
-            return {p, path ->
-                val r = size.toPx() / 2
-                val dx = offset.x.toPx()
-                val dy = offset.y.toPx()
-                path.rewind()
-                path.moveTo(p.x - r + dx, p.y + dy)
-                path.lineTo(p.x + r + dx, p.y + dy)
-                path.lineTo(p.x + dx, p.y + r + dy)
-                drawPath(path, color)
+            points.forEach {
+                it.value.Draw(transformation = transformation)
             }
         }
     }
@@ -144,24 +243,43 @@ private fun PointGroupPreview() {
             val pointGroup = remember {
                 PointGroup().also {
                     it.setPoint(
-                        position = Offset(-5f, -2f),
                         key = 0,
-                        drawPointShape = PointGroup.drawCircle(6.dp, Color.Cyan)
+                        position = Offset(-5f, -2f),
+                        content = Point.drawCircle(6.dp, { MaterialTheme.colorScheme.primary })
                     )
                     it.setPoint(
-                        position = Offset(-5f, -2f),
                         key = 2,
-                        drawPointShape = PointGroup.drawUpwardTriangle(8.dp, Color.Cyan, DpOffset(0.dp, -4.dp))
-                    )
-                    it.setPoint(
                         position = Offset(-5f, -2f),
-                        key = 3,
-                        drawPointShape = PointGroup.drawDownwardTriangle(8.dp, Color.Cyan, DpOffset(0.dp, 4.dp))
+                        content = Point.drawUpwardTriangle(
+                            8.dp,
+                            { MaterialTheme.colorScheme.primary },
+                            DpOffset(0.dp, -5.dp)
+                        )
                     )
                     it.setPoint(
+                        key = 3,
+                        position = Offset(-5f, -2f),
+                        content = Point.drawDownwardTriangle(
+                            8.dp,
+                            { MaterialTheme.colorScheme.primary },
+                            DpOffset(0.dp, 5.dp)
+                        )
+                    )
+                    it.setPoint(
+                        key = 4,
                         position = Offset(5f, 2f),
-                        key = 1,
-                        drawPointShape = PointGroup.drawCircle(6.dp, Color.Cyan)
+                        content = Point.drawCircle(6.dp, { MaterialTheme.colorScheme.primary })
+                    )
+
+                    it.setPoint(
+                        key = 5,
+                        position = Offset(2f, 0.3f),
+                        content = Point.drawCircleWithUpwardTriangle(6.dp, { MaterialTheme.colorScheme.primary })
+                    )
+                    it.setPoint(
+                        key = 6,
+                        position = Offset(-0.5f, 0.3f),
+                        content = Point.drawCircleWithDownwardTriangle(6.dp, { MaterialTheme.colorScheme.primary })
                     )
                 }
             }
