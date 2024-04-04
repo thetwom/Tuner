@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
@@ -61,7 +62,10 @@ class PlotState2(
     val viewPortRaw get() = viewPortRawAnimation.value
 
     private val lines = LineGroup()
+    private val points = PointGroup()
     private val horizontalMarks = mutableMapOf<Int, HorizontalMarks3>()
+    private val verticalMarks = mutableMapOf<Int, VerticalMarks>()
+    private val pointMarks = PointMarkGroup()
 
     fun snapViewPortTo(target: Rect) {
         _viewPortRawTransition.value = ViewPortTransition(target, TargetTransitionType.Snap)
@@ -72,23 +76,31 @@ class PlotState2(
     }
 
     fun setLine(
+        key: Int,
         xValues: FloatArray, yValues: FloatArray,
-        key: Int = 0,
         indexBegin: Int = 0,
         indexEnd: Int = min(xValues.size, yValues.size),
         lineWidth: Dp? = null,
         lineColor: (@Composable () -> Color)? = null
     ) {
-        lines.setLine(xValues, yValues, key, indexBegin, indexEnd, lineWidth, lineColor)
+        lines.setLine(key, xValues, yValues, indexBegin, indexEnd, lineWidth, lineColor)
+    }
+
+    fun setPoint(
+        key: Int,
+        position: Offset,
+        content: (@Composable PointScope.() -> Unit)? = null,
+    ) {
+        points.setPoint(key, position, content)
     }
 
     fun setHorizontalMarks(
+        key: Int,
         yValues: ImmutableList<FloatArray>,
         maxLabelHeight: Density.() -> Float,
         horizontalLabelPosition: Float,
         anchor: Anchor,
         lineWidth: Dp,
-        key: Int = 0,
         clipLabelToPlotWindow: Boolean = false,
         lineColor: @Composable () -> Color = { Color.Unspecified },
         maxNumLabels: Int = -1, // -1 is auto
@@ -108,11 +120,50 @@ class PlotState2(
         )
     }
 
+    fun setVerticalMarks(
+        key: Int,
+        xValues: ImmutableList<FloatArray>,
+        maxLabelWidth: Density.() -> Float,
+        verticalLabelPosition: Float,
+        anchor: Anchor,
+        lineWidth: Dp,
+        clipLabelToPlotWindow: Boolean = false,
+        lineColor: @Composable () -> Color = { Color.Unspecified },
+        maxNumLabels: Int = -1, // -1 is auto
+        label: (@Composable (level: Int, index: Int, y: Float) -> Unit)? = null
+    ) {
+        val markLevels = MarkLevelExplicitRanges3(xValues)
+        verticalMarks[key] = VerticalMarks(
+            label = label,
+            markLevel = markLevels,
+            defaultAnchor = anchor,
+            defaultVerticalLabelPosition = verticalLabelPosition,
+            lineWidth = lineWidth,
+            lineColor = lineColor,
+            maxLabelWidth = maxLabelWidth,
+            clipLabelToPlotWindow = clipLabelToPlotWindow,
+            maxNumLabels = maxNumLabels
+        )
+    }
+
+    fun setPointMark(
+        key: Int,
+        position: Offset,
+        anchor: Anchor = Anchor.Center,
+        screenOffset: DpOffset = DpOffset.Zero,
+        content: (@Composable (modifier: Modifier) -> Unit)? = null
+    ) {
+        pointMarks.setPointMark(key, position, anchor, screenOffset, content)
+    }
+
     @Composable
     fun Draw(transformation: Transformation) {
         Box(modifier = Modifier.fillMaxSize()) {
             horizontalMarks.forEach { it.value.Draw(transformation) }
+            verticalMarks.forEach { it.value.Draw(transformation) }
             lines.Draw(transformation)
+            points.Draw(transformation)
+            pointMarks.Draw(transformation)
         }
     }
 }
@@ -221,12 +272,15 @@ fun Plot2(
 private fun Plot2Preview() {
     TunerTheme {
         val textLabelHeight = rememberTextLabelHeight()
+        val textLabelWidth = rememberTextLabelWidth("XXXXXX")
         val state = remember{
             PlotState2(
                 initialViewPortRaw = Rect(left = 2f, top = 20f, right = 10f, bottom = 3f)
             ).apply {
-                setLine(floatArrayOf(3f, 5f, 7f, 9f), floatArrayOf(4f, 8f, 6f, 15f))
+                setLine(0, floatArrayOf(3f, 5f, 7f, 9f), floatArrayOf(4f, 8f, 6f, 15f))
+                setPoint(0,Offset(3f, 4f), Point.drawCircle(10.dp, { MaterialTheme.colorScheme.primary }))
                 setHorizontalMarks(
+                    0,
                     listOf(
                         floatArrayOf(0f, 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f, 10f, 15f, 20f)
                     ).toImmutableList(),
@@ -239,6 +293,24 @@ private fun Plot2Preview() {
                 ) { level, index, value ->
                     Text("$index, $value, $level",
                         modifier = Modifier.background(Color.Cyan))
+                }
+                setVerticalMarks(
+                    0,
+                    listOf(
+                        floatArrayOf(-5f, 3f, 8f, 15f)
+                    ).toImmutableList(),
+                    maxLabelWidth = { textLabelWidth },
+                    verticalLabelPosition = 0.9f,
+                    anchor = Anchor.Center, //Anchor.East,
+                    lineWidth = 1.dp,
+                    clipLabelToPlotWindow = true,
+                    lineColor = { MaterialTheme.colorScheme.primary },
+                ) { level, index, value ->
+                    Text("$index, $value",
+                        modifier = Modifier.background(Color.Cyan))
+                }
+                setPointMark(0, Offset(5f, 12f)) {
+                    Text("XXX", it.background(MaterialTheme.colorScheme.error))
                 }
             }
 
