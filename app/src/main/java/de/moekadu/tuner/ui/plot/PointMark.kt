@@ -23,11 +23,9 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntRect
-import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlin.math.roundToInt
 
-// TODO: Add an offset
 // TODO: Use ParentDataModifier also for Horizontal/Vertical marks
 class PointMark(
     initialPosition: Offset,
