@@ -36,7 +36,6 @@ class PointScopeImpl : PointScope {
     override fun drawShape(draw: DrawScope.() -> Unit) {
         this.draw = draw
     }
-
 }
 
 class Point(

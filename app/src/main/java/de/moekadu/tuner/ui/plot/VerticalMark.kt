@@ -59,7 +59,7 @@ fun rememberTextLabelWidth(
 
 class VerticalMarks(
     private val label: (@Composable (level: Int, index: Int, y: Float) -> Unit)?,
-    private val markLevel: MarkLevel3,
+    private val markLevel: MarkLevel,
     private val maxLabelWidth: Density.() -> Float,
     private val defaultAnchor: Anchor = Anchor.Center,
     private val defaultVerticalLabelPosition: Float = 0.5f,
@@ -213,7 +213,7 @@ private fun VerticalMarksPreview() {
 
             val marks = VerticalMarks(
                 label = { l, i, y -> Text("$l, $i, $y")},
-                markLevel = MarkLevelExplicitRanges3(
+                markLevel = MarkLevelExplicitRanges(
                     listOf(
                         floatArrayOf(-9f, 0f, 8f),
 //                        floatArrayOf(-3f, -2f, 0f, 4f),
