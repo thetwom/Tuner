@@ -1,6 +1,7 @@
 package de.moekadu.tuner.ui.plot
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +17,8 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.ParentDataModifier
+import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
@@ -23,10 +26,12 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.toImmutableList
+import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
 
@@ -56,28 +61,43 @@ fun rememberTextLabelHeight(
 }
 
 class HorizontalMarks(
-    private val label: (@Composable (level: Int, index: Int, y: Float) -> Unit)?,
+    private val label: (@Composable (modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)?,
     private val markLevel: MarkLevel,
     private val maxLabelHeight: Density.() -> Float,
-    private val defaultAnchor: Anchor = Anchor.Center,
-    private val defaultHorizontalLabelPosition: Float = 0.5f,
+    private val anchor: Anchor = Anchor.Center,
+    private val horizontalLabelPosition: Float = 0.5f,
     private val lineWidth: Dp = 1.dp,
     private val lineColor: @Composable () -> Color = {  Color.Unspecified },
     private val clipLabelToPlotWindow: Boolean = false,
-    private val maxNumLabels: Int = -1
+    private val maxNumLabels: Int = -1,
+    private val screenOffset: DpOffset = DpOffset.Zero
 ): PlotGroup {
+    private data class MeasuredMark(
+        val position: MarkLayoutData,
+        val placeable: Placeable
+    )
+
+    data class MarkLayoutData(val position: Float):
+        ParentDataModifier {
+        override fun Density.modifyParentData(parentData: Any?) = this@MarkLayoutData
+    }
+
     @Composable
     override fun Draw(transformation: Transformation) {
         val density = LocalDensity.current
         val lineWidthPx = with(density) { lineWidth.toPx() }
+        val screenOffsetPx  = with(density) { screenOffset.y.toPx() }
         val maxLabelHeightPx = density.maxLabelHeight()
         val maxNumLabelsResolved = if (maxNumLabels <= 0)
             (transformation.viewPortScreen.height / maxLabelHeightPx / 2f).roundToInt()
         else
             maxNumLabels
-        val range = remember(transformation, maxNumLabelsResolved, markLevel, maxLabelHeightPx) {
+        val range = remember(transformation, maxNumLabelsResolved, markLevel, maxLabelHeightPx, lineWidthPx, screenOffsetPx) {
             val labelHeightScreen = Rect(
-                0f, 0f, 1f, maxLabelHeightPx + 0.5f * lineWidthPx
+                0f,
+                0f,
+                1f,
+                maxLabelHeightPx + 0.5f * lineWidthPx + screenOffsetPx.absoluteValue
             )
 
             val labelHeightRaw = transformation.toRaw(labelHeightScreen).height
@@ -112,7 +132,8 @@ class HorizontalMarks(
                 content = {
                     label?.let { l ->
                         for (i in range.indexBegin until range.indexEnd) {
-                            l(range.level, i, markLevel.getMarkValue(range.level, i))
+                            val y = markLevel.getMarkValue(range.level, i)
+                            l(MarkLayoutData(y), range.level, i, y)
                         }
                     }
                 },
@@ -121,25 +142,27 @@ class HorizontalMarks(
                     .then(if (clipLabelToPlotWindow) Modifier.clip(clipShape) else Modifier)
             ) { measureables, constraints ->
                 val c = constraints.copy(minWidth = 0, minHeight = 0)
-                // TODO: better use parent data to store the position, also in VerticalMarks
-                val placeables = measureables.map { it.measure(c) }
+                val placeables = measureables.map {
+                    MeasuredMark(
+                        it.parentData as MarkLayoutData,
+                        it.measure(c)
+                    )
+                }
 
                 layout(constraints.maxWidth, constraints.maxHeight) {
-                    placeables.forEachIndexed { index, p ->
-                        val yOffset = Offset(
-                            0f,
-                            markLevel.getMarkValue(range.level, range.indexBegin + index)
-                        )
+                    placeables.forEach {
+                        val p = it.placeable
+                        val yOffset = Offset(0f, it.position.position)
                         val yTransformed = transformation.toScreen(yOffset).y
 
                         val vp = transformation.viewPortScreen
-                        val x = vp.left + defaultHorizontalLabelPosition * (vp.width)
-                        val y = yTransformed
+                        val x = vp.left + horizontalLabelPosition * vp.width + screenOffset.x.toPx()
+                        val y = yTransformed + screenOffset.y.toPx()
                         val w = p.width
                         val h = p.height
                         val l2 = 0.5f * lineWidth.toPx()
 
-                        when (defaultAnchor) {
+                        when (anchor) {
                             Anchor.NorthWest -> p.place(x.roundToInt(), (y + l2).roundToInt())
                             Anchor.North -> p.place(
                                 (x - 0.5 * w).roundToInt(),
@@ -200,7 +223,7 @@ private fun rememberTransformation(
 
 @Preview(widthDp = 200, heightDp = 400, showBackground = true)
 @Composable
-private fun HorizontalMarks3Preview() {
+private fun HorizontalMarksPreview() {
     TunerTheme {
         BoxWithConstraints {
             val transformation = rememberTransformation(
@@ -211,7 +234,8 @@ private fun HorizontalMarks3Preview() {
             val textLabelHeight = rememberTextLabelHeight()
 
             val marks = HorizontalMarks(
-                label = { l, i, y -> Text("$l, $i, $y")},
+                label = { m, l, i, y -> Text("$l, $i, $y", modifier = m.background(Color.Magenta))},
+                anchor = Anchor.South,
                 markLevel = MarkLevelExplicitRanges(
                     listOf(
                         floatArrayOf(-3f, -2f, 0f, 4f),
@@ -219,7 +243,8 @@ private fun HorizontalMarks3Preview() {
                         floatArrayOf(-3f, -2.5f, -2f, -1.5f, -1f, 0f, 1f, 2f, 3f, 4f),
                     ).toImmutableList()
                 ),
-                maxLabelHeight = { textLabelHeight }
+                maxLabelHeight = { textLabelHeight },
+                screenOffset = DpOffset(0.dp, (-1).dp)
             )
             
             marks.Draw(transformation = transformation)

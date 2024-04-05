@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.IntRect
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlin.math.roundToInt
 
-// TODO: Use ParentDataModifier also for Horizontal/Vertical marks
 class PointMark(
     initialPosition: Offset,
     initialAnchor: Anchor,

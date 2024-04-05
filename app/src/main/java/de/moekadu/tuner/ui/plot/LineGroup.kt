@@ -51,7 +51,7 @@ class Line(
         )
     )
 
-    val boundingBox: State<Rect> get() = _boundingBox
+    private val boundingBox: State<Rect> get() = _boundingBox
 
     init {
         if (initialXValues != null && initialYValues != null) {
