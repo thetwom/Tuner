@@ -120,14 +120,14 @@ class PlotState(
         clipLabelToPlotWindow: Boolean = false,
         lineColor: @Composable () -> Color = { Color.Unspecified },
         maxNumLabels: Int = -1, // -1 is auto
-        label: (@Composable (level: Int, index: Int, y: Float) -> Unit)? = null
+        label: (@Composable (modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)? = null
     ) {
         val markLevels = MarkLevelExplicitRanges(yValues)
         horizontalMarks[key] = HorizontalMarks(
             label = label,
             markLevel = markLevels,
-            defaultAnchor = anchor,
-            defaultHorizontalLabelPosition = horizontalLabelPosition,
+            anchor = anchor,
+            horizontalLabelPosition = horizontalLabelPosition,
             lineWidth = lineWidth,
             lineColor = lineColor,
             maxLabelHeight = maxLabelHeight,
@@ -146,14 +146,14 @@ class PlotState(
         clipLabelToPlotWindow: Boolean = false,
         lineColor: @Composable () -> Color = { Color.Unspecified },
         maxNumLabels: Int = -1, // -1 is auto
-        label: (@Composable (level: Int, index: Int, y: Float) -> Unit)? = null
+        label: (@Composable (modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)? = null
     ) {
         val markLevels = MarkLevelExplicitRanges(xValues)
         verticalMarks[key] = VerticalMarks(
             label = label,
             markLevel = markLevels,
-            defaultAnchor = anchor,
-            defaultVerticalLabelPosition = verticalLabelPosition,
+            anchor = anchor,
+            verticalLabelPosition = verticalLabelPosition,
             lineWidth = lineWidth,
             lineColor = lineColor,
             maxLabelWidth = maxLabelWidth,
@@ -452,7 +452,7 @@ private fun PlotPreview() {
                 initialViewPortRaw = Rect(left = 2f, top = 20f, right = 10f, bottom = 3f)
             ).apply {
                 setLine(0, floatArrayOf(3f, 5f, 7f, 9f), floatArrayOf(4f, 8f, 6f, 15f))
-                setPoint(0,Offset(3f, 4f), Point.drawCircle(10.dp, { MaterialTheme.colorScheme.primary }))
+                setPoint(0,Offset(3f, 4f), Point.drawCircle(10.dp) { MaterialTheme.colorScheme.primary })
                 setHorizontalMarks(
                     0,
                     listOf(
@@ -464,9 +464,9 @@ private fun PlotPreview() {
                     lineWidth = 1.dp,
                     clipLabelToPlotWindow = true,
                     lineColor = { MaterialTheme.colorScheme.primary },
-                ) { level, index, value ->
+                ) { modifier, level, index, value ->
                     Text("$index, $value, $level",
-                        modifier = Modifier.background(Color.Cyan))
+                        modifier = modifier.background(Color.Cyan))
                 }
                 setVerticalMarks(
                     0,
@@ -479,9 +479,9 @@ private fun PlotPreview() {
                     lineWidth = 1.dp,
                     clipLabelToPlotWindow = true,
                     lineColor = { MaterialTheme.colorScheme.primary },
-                ) { level, index, value ->
+                ) { modifier, level, index, value ->
                     Text("$index, $value",
-                        modifier = Modifier.background(Color.Cyan))
+                        modifier = modifier.background(Color.Cyan))
                 }
                 setPointMark(0, Offset(5f, 12f)) {
                     Text("XXX", it.background(MaterialTheme.colorScheme.error))

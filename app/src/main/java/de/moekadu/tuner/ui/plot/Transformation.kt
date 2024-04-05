@@ -1,8 +1,5 @@
 package de.moekadu.tuner.ui.plot
 
-//import android.graphics.Matrix
-import android.graphics.RectF
-import android.util.Log
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember

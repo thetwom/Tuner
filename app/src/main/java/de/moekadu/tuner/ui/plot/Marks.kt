@@ -19,7 +19,6 @@ data class MarksRange(
     val indexEnd: Int
 )
 
-
 class MarkLevelExplicitRanges(
     private val marks: ImmutableList<FloatArray>
 ) : MarkLevel {

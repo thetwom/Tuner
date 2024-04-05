@@ -196,7 +196,7 @@ class PointGroup : PlotGroup {
         if (key !in points) {
             points[key] = Point(
                 position ?: Offset.Zero,
-                content ?: Point.drawCircle(2.dp, { Color.Black })
+                content ?: Point.drawCircle(2.dp) { Color.Black }
             )
         }
     }
@@ -244,7 +244,7 @@ private fun PointGroupPreview() {
                     it.setPoint(
                         key = 0,
                         position = Offset(-5f, -2f),
-                        content = Point.drawCircle(6.dp, { MaterialTheme.colorScheme.primary })
+                        content = Point.drawCircle(6.dp) { MaterialTheme.colorScheme.primary }
                     )
                     it.setPoint(
                         key = 2,
@@ -252,7 +252,7 @@ private fun PointGroupPreview() {
                         content = Point.drawUpwardTriangle(
                             8.dp,
                             { MaterialTheme.colorScheme.primary },
-                            DpOffset(0.dp, -5.dp)
+                            DpOffset(0.dp, (-5).dp)
                         )
                     )
                     it.setPoint(
@@ -267,18 +267,18 @@ private fun PointGroupPreview() {
                     it.setPoint(
                         key = 4,
                         position = Offset(5f, 2f),
-                        content = Point.drawCircle(6.dp, { MaterialTheme.colorScheme.primary })
+                        content = Point.drawCircle(6.dp) { MaterialTheme.colorScheme.primary }
                     )
 
                     it.setPoint(
                         key = 5,
                         position = Offset(2f, 0.3f),
-                        content = Point.drawCircleWithUpwardTriangle(6.dp, { MaterialTheme.colorScheme.primary })
+                        content = Point.drawCircleWithUpwardTriangle(6.dp) { MaterialTheme.colorScheme.primary }
                     )
                     it.setPoint(
                         key = 6,
                         position = Offset(-0.5f, 0.3f),
-                        content = Point.drawCircleWithDownwardTriangle(6.dp, { MaterialTheme.colorScheme.primary })
+                        content = Point.drawCircleWithDownwardTriangle(6.dp) { MaterialTheme.colorScheme.primary }
                     )
                 }
             }
