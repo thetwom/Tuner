@@ -9,6 +9,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.toRect
 
 data class Transformation(
@@ -41,6 +42,11 @@ data class Transformation(
 
     fun toRaw(rect: Rect) = matrixScreenToRaw.map(rect)
     fun toRaw(point: Offset) = matrixScreenToRaw.map(point)
+
+    fun toRaw(velocity: Velocity): Velocity {
+        val result = (toRaw(Offset.Zero) - toRaw(Offset(velocity.x, velocity.y)))
+        return Velocity(result.x, result.y)
+    }
 
     @Composable
     fun rememberClipShape() = remember(viewPortScreen, viewPortCornerRadius) {
