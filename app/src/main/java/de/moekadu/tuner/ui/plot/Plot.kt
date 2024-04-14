@@ -46,8 +46,6 @@ import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.min
 
-
-// TODO: introduce bounds for drag/zoom
 class PlotState(
     initialViewPortRaw: Rect,
     initialViewPortRawLimits: Rect = Rect.Zero // no limits
@@ -76,7 +74,8 @@ class PlotState(
 
     private val viewPortAnimationDecay = exponentialDecay<Rect>(1f)
     private val viewPortRawAnimation = Animatable(initialViewPortRaw, Rect.VectorConverter)
-    val viewPortRaw get() = viewPortRawAnimation.value
+    var viewPortRaw by mutableStateOf(initialViewPortRaw)
+        private set
 
     private var viewPortLimits = Rect(
         min(initialViewPortRawLimits.left, initialViewPortRawLimits.right),
@@ -116,6 +115,8 @@ class PlotState(
     }
 
     private fun restrictViewPortToLimits(target: Rect): Rect {
+        // the restriction process does not just coerce the values in the min/max, since
+        // when dragging and reaching bounds, we would start zooming.
         return if (viewPortLimits == Rect.Zero) {
             target
         } else {
@@ -157,50 +158,25 @@ class PlotState(
 
         val targetInLimits = restrictViewPortToLimits(target)
         when (transition) {
-            TargetTransitionType.Snap -> viewPortRawAnimation.snapTo(targetInLimits)
-            TargetTransitionType.Animate -> viewPortRawAnimation.animateTo(targetInLimits)
+            TargetTransitionType.Snap -> viewPortRaw = targetInLimits
+            TargetTransitionType.Animate -> {
+                viewPortRawAnimation.snapTo(viewPortRaw)
+                viewPortRawAnimation.animateTo(targetInLimits) {
+                    viewPortRaw = value
+                }
+            }
         }
     }
 
     suspend fun flingViewPort(velocity: Velocity, boundsMode: BoundsMode) {
         this.boundsMode = boundsMode
-
-        val currentViewPort = viewPortRaw
-
-        val lowerBound = Rect(
-            left = if (currentViewPort.left <= currentViewPort.right)
-                viewPortLimits.left else viewPortLimits.left + currentViewPort.width,
-            top = if (currentViewPort.top <= currentViewPort.bottom)
-                viewPortLimits.top else viewPortLimits.top + currentViewPort.height,
-            right = if (currentViewPort.left <= currentViewPort.right)
-                viewPortLimits.left + currentViewPort.width else viewPortLimits.left,
-            bottom = if (currentViewPort.top <= currentViewPort.bottom)
-                viewPortLimits.top + currentViewPort.height else viewPortLimits.top
-        )
-        val upperBoundPre = Rect(
-            left = if (currentViewPort.left <= currentViewPort.right)
-                viewPortLimits.right - currentViewPort.width else viewPortLimits.right,
-            top = if (currentViewPort.top <= currentViewPort.bottom)
-                viewPortLimits.bottom - currentViewPort.height else viewPortLimits.bottom,
-            right = if (currentViewPort.left <= currentViewPort.right)
-                viewPortLimits.right else viewPortLimits.right - currentViewPort.width,
-            bottom = if (currentViewPort.top <= currentViewPort.bottom)
-                viewPortLimits.bottom else viewPortLimits.bottom - currentViewPort.height
-        )
-        val upperBound = Rect(
-            max(upperBoundPre.left, lowerBound.left),
-            max(upperBoundPre.top, lowerBound.top),
-            max(upperBoundPre.right, lowerBound.right),
-            max(upperBoundPre.bottom, lowerBound.bottom),
-        )
-
-        viewPortRawAnimation.updateBounds(lowerBound, upperBound)
-
+        viewPortRawAnimation.snapTo(viewPortRaw)
         viewPortRawAnimation.animateDecay(
             Rect(velocity.x, velocity.y, velocity.x, velocity.y), viewPortAnimationDecay
-        )
-
-        // TODO: viewportrestriction does not really work since can happen that it zooms
+        ) {
+            val targetInLimits = restrictViewPortToLimits(value)
+            viewPortRaw = targetInLimits
+        }
     }
     fun setLine(
         key: Int,
