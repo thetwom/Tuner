@@ -41,7 +41,6 @@ class VerticalMark(
     initialLineWidth: Dp = 1.dp,
     initialLineColor: @Composable () -> Color = {  Color.Unspecified },
     initialScreenOffset: DpOffset = DpOffset.Zero,
-    initialClipLabel: Boolean = true,
     initialContent: @Composable (modifier: Modifier) -> Unit,
 ) {
     data class LayoutData(
@@ -67,9 +66,6 @@ class VerticalMark(
     var content by mutableStateOf(initialContent)
         private set
 
-    var clipLabel = initialClipLabel
-        private set
-
     fun setMark(
         position: Float? = null,
         anchor: Anchor? = null,
@@ -77,7 +73,6 @@ class VerticalMark(
         verticalLabelPosition: Float? = null,
         lineWidth: Dp? = null,
         lineColor: (@Composable () -> Color)? = null,
-        clipLabel: Boolean? = null,
         content: (@Composable (modifier: Modifier) -> Unit)? = null,
     ) {
         this.layoutData = LayoutData(
@@ -91,20 +86,17 @@ class VerticalMark(
         if (lineColor != null)
             this.lineColor = lineColor
 
-        if (clipLabel != null)
-            this.clipLabel = clipLabel
-
         if (content != null)
             this.content = content
     }
 }
 
 private data class MeasuredVerticalMark(val layoutData: VerticalMark.LayoutData, val placeable: Placeable)
-class VerticalMarkGroup : PlotGroup {
+class VerticalMarkGroup(
+    private val clipLabel: Boolean = false,
+    private val sameSizeLabels: Boolean = false
+) : PlotGroup {
     private val marks = mutableMapOf<Int, VerticalMark>()
-
-    private var hasClipMarks by mutableStateOf(false)
-    private var hasNoClipMarks by mutableStateOf(false)
 
     fun setMark(
         key: Int = 0,
@@ -114,7 +106,6 @@ class VerticalMarkGroup : PlotGroup {
         verticalLabelPosition: Float? = null,
         lineWidth: Dp? = null,
         lineColor: (@Composable () -> Color)? = null,
-        clipLabel: Boolean? = null,
         content: (@Composable (modifier: Modifier) -> Unit)? = null,
     ) {
         marks[key]?.setMark(
@@ -124,12 +115,8 @@ class VerticalMarkGroup : PlotGroup {
             verticalLabelPosition,
             lineWidth,
             lineColor,
-            clipLabel,
             content
         )
-
-        // make sure clipLabel is false if the mark is new ...
-        var clipLabelResolved = clipLabel
 
         if (key !in marks) {
             marks[key] = VerticalMark(
@@ -139,63 +126,8 @@ class VerticalMarkGroup : PlotGroup {
                 lineWidth ?: 1.dp,
                 lineColor ?: { Color.Black },
                 screenOffset ?: DpOffset.Zero,
-                clipLabel ?: false,
                 content ?: { Text("x") }
             )
-            clipLabelResolved = false
-        }
-
-        if (clipLabelResolved == true) {
-            this.hasClipMarks = true
-            this.hasNoClipMarks = (marks.values.count { !it.clipLabel } > 0)
-        } else if (clipLabelResolved == false) {
-            this.hasClipMarks = (marks.values.count { it.clipLabel } > 0)
-            this.hasNoClipMarks = true
-        }
-    }
-
-    @Composable
-    private fun MarksLayout(
-        transformation: Transformation,
-        modifier: Modifier = Modifier,
-        filter: (m: VerticalMark) -> Boolean
-    ) {
-        Layout(
-            modifier = modifier,
-            content = {
-                marks.asSequence()
-                    .filter { filter(it.value) }
-                    .forEach { it.value.content(it.value.layoutData) }
-            }
-        ) { measureables, constraints ->
-            val c = constraints.copy(minWidth = 0, minHeight = 0)
-            val placeables = measureables.map {
-                MeasuredVerticalMark(
-                    it.parentData as VerticalMark.LayoutData,
-                    it.measure(c)
-                )
-            }
-
-            layout(constraints.maxWidth, constraints.maxHeight) {
-                placeables.forEach {
-                    val p = it.placeable
-                    val l = it.layoutData
-                    val xOffset = Offset(l.position, 0f)
-                    val xTransformed = transformation.toScreen(xOffset).x
-                    val vp = transformation.viewPortScreen
-
-                    p.place(
-                        it.layoutData.anchor.place(
-                            xTransformed + l.screenOffset.x.toPx(),
-                            vp.top + (1f - l.verticalLabelPosition) * vp.height+ l.screenOffset.y.toPx(),
-                            p.width.toFloat(),
-                            p.height.toFloat(),
-                            0f,
-                            l.lineWidth.toPx()
-                        ).round()
-                    )
-                }
-            }
         }
     }
 
@@ -243,20 +175,51 @@ class VerticalMarkGroup : PlotGroup {
             }
 
             // now draw the labels
-            if (hasClipMarks) {
-                MarksLayout(
-                    transformation = transformation,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(transformation.rememberClipShape())
-                ) { it.clipLabel }
-            }
+            Layout(
+                modifier = (if (clipLabel) Modifier.clip(clipShape) else Modifier)
+                    .fillMaxSize(),
+                content = {
+                    marks.forEach { it.value.content(it.value.layoutData) }
+                }
+            ) { measureables, constraints ->
+                val c = if (sameSizeLabels) {
+                    val maxHeight = measureables.maxOf { it.minIntrinsicHeight(Int.MAX_VALUE) }
+                    val maxWidth = measureables.maxOf { it.maxIntrinsicWidth(maxHeight) }
+                    constraints.copy(
+                        minWidth = maxWidth, minHeight = maxHeight,
+                        maxWidth = maxWidth, maxHeight = maxHeight
+                    )
+                } else {
+                    constraints.copy(minWidth = 0, minHeight = 0)
+                }
 
-            if (hasNoClipMarks) {
-                MarksLayout(
-                    transformation = transformation,
-                    modifier = Modifier.fillMaxSize()
-                ) { !it.clipLabel }
+                val placeables = measureables.map {
+                    MeasuredVerticalMark(
+                        it.parentData as VerticalMark.LayoutData,
+                        it.measure(c)
+                    )
+                }
+
+                layout(constraints.maxWidth, constraints.maxHeight) {
+                    placeables.forEach {
+                        val p = it.placeable
+                        val l = it.layoutData
+                        val xOffset = Offset(l.position, 0f)
+                        val xTransformed = transformation.toScreen(xOffset).x
+                        val vp = transformation.viewPortScreen
+
+                        p.place(
+                            it.layoutData.anchor.place(
+                                xTransformed + l.screenOffset.x.toPx(),
+                                vp.top + (1f - l.verticalLabelPosition) * vp.height+ l.screenOffset.y.toPx(),
+                                p.width.toFloat(),
+                                p.height.toFloat(),
+                                0f,
+                                l.lineWidth.toPx()
+                            ).round()
+                        )
+                    }
+                }
             }
         }
     }
@@ -288,7 +251,7 @@ private fun VerticalMarkGroupPreview() {
             )
 
             val markGroup = remember {
-                VerticalMarkGroup().also {
+                VerticalMarkGroup(sameSizeLabels = true).also {
                     it.setMark(
                         key = 0,
                         position = 0f,
