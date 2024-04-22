@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.round
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlin.math.roundToInt
 
@@ -38,8 +39,6 @@ class PointMark(
     var position by mutableStateOf(LayoutData(initialPosition, initialScreenOffset, initialAnchor))
         private set
     var content by mutableStateOf(initialContent)
-        private set
-    var anchor by mutableStateOf(initialAnchor)
         private set
 
     fun setPointMark(
@@ -102,23 +101,15 @@ class PointMarkGroup : PlotGroup {
                 placeables.forEach {
                     val p = it.placeable
                     val positionScreen = transformation.toScreen(it.position.position)
-                    val x = positionScreen.x + it.position.screenOffset.x.toPx()
-                    val y = positionScreen.y + it.position.screenOffset.y.toPx()
-                    val w = p.width
-                    val h = p.height
-                    val anchor = it.position.anchor
 
-                    when (anchor) {
-                        Anchor.NorthWest -> p.place(x.roundToInt(), y.roundToInt())
-                        Anchor.North -> p.place((x - 0.5f * w).roundToInt(), y.roundToInt())
-                        Anchor.NorthEast -> p.place((x - w).roundToInt(), y.roundToInt())
-                        Anchor.West -> p.place(x.roundToInt(), (y - 0.5f * h).roundToInt())
-                        Anchor.Center -> p.place((x - 0.5f * w).roundToInt(), (y - 0.5f * h).roundToInt())
-                        Anchor.East -> p.place((x - w).roundToInt(), (y - 0.5f * h).roundToInt())
-                        Anchor.SouthWest -> p.place(x.roundToInt(), (y - h).roundToInt())
-                        Anchor.South -> p.place((x - 0.5f * w).roundToInt(), (y - h).roundToInt())
-                        Anchor.SouthEast -> p.place((x - w).roundToInt(), (y - h).roundToInt())
-                    }
+                    p.place(
+                        it.position.anchor.place(
+                            positionScreen.x + it.position.screenOffset.x.toPx(),
+                            positionScreen.y + it.position.screenOffset.y.toPx(),
+                            p.width.toFloat(),
+                            p.height.toFloat()
+                        ).round()
+                    )
                 }
             }
         }
