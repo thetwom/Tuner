@@ -86,8 +86,8 @@ class PlotState(
 
     private val lines = LineGroup()
     private val points = PointGroup()
-    private val horizontalMarks = mutableMapOf<Int, HorizontalMarks>()
-    private val verticalMarks = mutableMapOf<Int, VerticalMarks>()
+    private val yTicks = mutableMapOf<Int, YTicks>()
+    private val xTicks = mutableMapOf<Int, XTicks>()
     private val pointMarks = PointMarkGroup()
 
     var boundsMode by mutableStateOf(BoundsMode.Explicit)
@@ -197,10 +197,10 @@ class PlotState(
         points.setPoint(key, position, content)
     }
 
-    fun setHorizontalMarks(
+    fun setYTicks(
         key: Int,
         yValues: ImmutableList<FloatArray>,
-        maxLabelHeight: Density.() -> Float,
+        maxLabelHeight: @Composable Density.() -> Float,
         horizontalLabelPosition: Float,
         anchor: Anchor,
         lineWidth: Dp,
@@ -209,10 +209,10 @@ class PlotState(
         maxNumLabels: Int = -1, // -1 is auto
         label: (@Composable (modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)? = null
     ) {
-        val markLevels = MarkLevelExplicitRanges(yValues)
-        horizontalMarks[key] = HorizontalMarks(
+        val tickLevels = TickLevelExplicitRanges(yValues)
+        yTicks[key] = YTicks(
             label = label,
-            markLevel = markLevels,
+            tickLevel = tickLevels,
             anchor = anchor,
             horizontalLabelPosition = horizontalLabelPosition,
             lineWidth = lineWidth,
@@ -223,7 +223,7 @@ class PlotState(
         )
     }
 
-    fun setVerticalMarks(
+    fun setXTicks(
         key: Int,
         xValues: ImmutableList<FloatArray>,
         maxLabelWidth: Density.() -> Float,
@@ -235,10 +235,10 @@ class PlotState(
         maxNumLabels: Int = -1, // -1 is auto
         label: (@Composable (modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)? = null
     ) {
-        val markLevels = MarkLevelExplicitRanges(xValues)
-        verticalMarks[key] = VerticalMarks(
+        val tickLevels = TickLevelExplicitRanges(xValues)
+        xTicks[key] = XTicks(
             label = label,
-            markLevel = markLevels,
+            tickLevel = tickLevels,
             anchor = anchor,
             verticalLabelPosition = verticalLabelPosition,
             lineWidth = lineWidth,
@@ -262,8 +262,8 @@ class PlotState(
     @Composable
     fun Draw(transformation: Transformation) {
         Box(modifier = Modifier.fillMaxSize()) {
-            horizontalMarks.forEach { it.value.Draw(transformation) }
-            verticalMarks.forEach { it.value.Draw(transformation) }
+            yTicks.forEach { it.value.Draw(transformation) }
+            xTicks.forEach { it.value.Draw(transformation) }
             lines.Draw(transformation)
             points.Draw(transformation)
             pointMarks.Draw(transformation)
@@ -373,7 +373,7 @@ private fun PlotPreview() {
             ).apply {
                 setLine(0, floatArrayOf(3f, 5f, 7f, 9f), floatArrayOf(4f, 8f, 6f, 15f)) {MaterialTheme.colorScheme.primary}
                 setPoint(0,Offset(3f, 4f), Point.drawCircle(10.dp) { MaterialTheme.colorScheme.primary })
-                setHorizontalMarks(
+                setYTicks(
                     0,
                     listOf(
                         floatArrayOf(0f, 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f, 10f, 15f, 20f)
@@ -388,7 +388,7 @@ private fun PlotPreview() {
                     Text("$index, $value, $level",
                         modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer))
                 }
-                setVerticalMarks(
+                setXTicks(
                     0,
                     listOf(
                         floatArrayOf(0f, 3f, 8f, 15f)
