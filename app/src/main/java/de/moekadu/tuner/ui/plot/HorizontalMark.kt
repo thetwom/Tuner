@@ -22,6 +22,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.ParentDataModifier
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -39,7 +40,6 @@ class HorizontalMark(
     initialLineWidth: Dp = 1.dp,
     initialLineColor: @Composable () -> Color = {  Color.Unspecified },
     initialScreenOffset: DpOffset = DpOffset.Zero,
-    initialClipLabel: Boolean = true,
     initialContent: @Composable (modifier: Modifier) -> Unit,
 ) {
     data class LayoutData(
@@ -65,9 +65,6 @@ class HorizontalMark(
     var content by mutableStateOf(initialContent)
         private set
 
-    var clipLabel = initialClipLabel
-        private set
-
     fun setMark(
         position: Float? = null,
         anchor: Anchor? = null,
@@ -75,7 +72,6 @@ class HorizontalMark(
         horizontalLabelPosition: Float? = null,
         lineWidth: Dp? = null,
         lineColor: (@Composable () -> Color)? = null,
-        clipLabel: Boolean? = null,
         content: (@Composable (modifier: Modifier) -> Unit)? = null,
     ) {
         this.layoutData = LayoutData(
@@ -89,20 +85,17 @@ class HorizontalMark(
         if (lineColor != null)
             this.lineColor = lineColor
 
-        if (clipLabel != null)
-            this.clipLabel = clipLabel
-
         if (content != null)
             this.content = content
     }
 }
 
 private data class MeasuredHorizontalMark(val layoutData: HorizontalMark.LayoutData, val placeable: Placeable)
-class HorizontalMarkGroup : PlotGroup {
+class HorizontalMarkGroup(
+    private val clipLabel: Boolean = false,
+    private val sameSizeLabels: Boolean = false
+) : PlotGroup {
     private val marks = mutableMapOf<Int, HorizontalMark>()
-
-    private var hasClipMarks by mutableStateOf(false)
-    private var hasNoClipMarks by mutableStateOf(false)
 
     fun setMark(
         key: Int = 0,
@@ -112,7 +105,6 @@ class HorizontalMarkGroup : PlotGroup {
         horizontalLabelPosition: Float? = null,
         lineWidth: Dp? = null,
         lineColor: (@Composable () -> Color)? = null,
-        clipLabel: Boolean? = null,
         content: (@Composable (modifier: Modifier) -> Unit)? = null,
     ) {
         marks[key]?.setMark(
@@ -122,12 +114,8 @@ class HorizontalMarkGroup : PlotGroup {
             horizontalLabelPosition,
             lineWidth,
             lineColor,
-            clipLabel,
             content
         )
-
-        // make sure clipLabel is false if the mark is new ...
-        var clipLabelResolved = clipLabel
 
         if (key !in marks) {
             marks[key] = HorizontalMark(
@@ -137,65 +125,11 @@ class HorizontalMarkGroup : PlotGroup {
                 lineWidth ?: 1.dp,
                 lineColor ?: { Color.Black },
                 screenOffset ?: DpOffset.Zero,
-                clipLabel ?: false,
                 content ?: { Text("x") }
             )
-            clipLabelResolved = false
-        }
-
-        if (clipLabelResolved == true) {
-            this.hasClipMarks = true
-            this.hasNoClipMarks = (marks.values.count { !it.clipLabel } > 0)
-        } else if (clipLabelResolved == false) {
-            this.hasClipMarks = (marks.values.count { it.clipLabel } > 0)
-            this.hasNoClipMarks = true
         }
     }
 
-    @Composable
-    private fun MarksLayout(
-        transformation: Transformation,
-        modifier: Modifier = Modifier,
-        filter: (m: HorizontalMark) -> Boolean
-    ) {
-        Layout(
-            modifier = modifier,
-            content = {
-                marks.asSequence()
-                    .filter { filter(it.value) }
-                    .forEach { it.value.content(it.value.layoutData) }
-            }
-        ) { measureables, constraints ->
-            val c = constraints.copy(minWidth = 0, minHeight = 0)
-            val placeables = measureables.map {
-                MeasuredHorizontalMark(
-                    it.parentData as HorizontalMark.LayoutData,
-                    it.measure(c)
-                )
-            }
-
-            layout(constraints.maxWidth, constraints.maxHeight) {
-                placeables.forEach {
-                    val p = it.placeable
-                    val l = it.layoutData
-                    val yOffset = Offset(0f, l.position)
-                    val yTransformed = transformation.toScreen(yOffset).y
-                    val vp = transformation.viewPortScreen
-
-                    p.place(
-                        it.layoutData.anchor.place(
-                            vp.left + l.horizontalLabelPosition * vp.width + l.screenOffset.x.toPx(),
-                            yTransformed + l.screenOffset.y.toPx(),
-                            p.width.toFloat(),
-                            p.height.toFloat(),
-                            l.lineWidth.toPx(),
-                            0f
-                        ).round()
-                    )
-                }
-            }
-        }
-    }
 
     @Composable
     override fun Draw(transformation: Transformation) {
@@ -241,20 +175,51 @@ class HorizontalMarkGroup : PlotGroup {
             }
 
             // now draw the labels
-            if (hasClipMarks) {
-                MarksLayout(
-                    transformation = transformation,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(transformation.rememberClipShape())
-                ) { it.clipLabel }
-            }
+            Layout(
+                modifier = (if (clipLabel) Modifier.clip(clipShape) else Modifier)
+                    .fillMaxSize(),
+                content = {
+                    marks.forEach { it.value.content(it.value.layoutData) }
+                }
+            ) { measureables, constraints ->
+                val c = if (sameSizeLabels) {
+                    val maxHeight = measureables.maxOf { it.minIntrinsicHeight(Int.MAX_VALUE) }
+                    val maxWidth = measureables.maxOf { it.maxIntrinsicWidth(maxHeight) }
+                    constraints.copy(
+                        minWidth = maxWidth, minHeight = maxHeight,
+                        maxWidth = maxWidth, maxHeight = maxHeight
+                    )
+                } else {
+                    constraints.copy(minWidth = 0, minHeight = 0)
+                }
 
-            if (hasNoClipMarks) {
-                MarksLayout(
-                    transformation = transformation,
-                    modifier = Modifier.fillMaxSize()
-                ) { !it.clipLabel }
+                val placeables = measureables.map {
+                    MeasuredHorizontalMark(
+                        it.parentData as HorizontalMark.LayoutData,
+                        it.measure(c)
+                    )
+                }
+
+                layout(constraints.maxWidth, constraints.maxHeight) {
+                    placeables.forEach {
+                        val p = it.placeable
+                        val l = it.layoutData
+                        val yOffset = Offset(0f, l.position)
+                        val yTransformed = transformation.toScreen(yOffset).y
+                        val vp = transformation.viewPortScreen
+
+                        p.place(
+                            it.layoutData.anchor.place(
+                                vp.left + l.horizontalLabelPosition * vp.width + l.screenOffset.x.toPx(),
+                                yTransformed + l.screenOffset.y.toPx(),
+                                p.width.toFloat(),
+                                p.height.toFloat(),
+                                l.lineWidth.toPx(),
+                                0f
+                            ).round()
+                        )
+                    }
+                }
             }
         }
     }
@@ -274,7 +239,7 @@ private fun rememberTransformation(
     return transformation
 }
 
-@Preview(widthDp = 200, heightDp = 100, showBackground = true)
+@Preview(widthDp = 200, heightDp = 150, showBackground = true)
 @Composable
 private fun HorizontalMarkGroupPreview() {
     TunerTheme {
@@ -286,14 +251,14 @@ private fun HorizontalMarkGroupPreview() {
             )
 
             val markGroup = remember {
-                HorizontalMarkGroup().also {
+                HorizontalMarkGroup(sameSizeLabels = true).also {
                     it.setMark(
                         key = 0,
                         position = 0f,
                         anchor = Anchor.NorthEast,
                         horizontalLabelPosition = 0.5f,
                         lineWidth = 3.dp,
-                        content = { modifier -> Text("0NE", modifier = modifier.background(Color.Cyan))}
+                        content = { modifier -> Text("0NE....", modifier = modifier.background(Color.Cyan))}
                     )
                     it.setMark(
                         key = 1,
@@ -307,7 +272,10 @@ private fun HorizontalMarkGroupPreview() {
                         position = 3f,
                         anchor = Anchor.SouthEast,
                         horizontalLabelPosition = 0.9f,
-                        content = { modifier -> Text("3SE", modifier = modifier.background(Color.Green))}
+                        content = { modifier -> Text(
+                            "3SE", modifier = modifier.background(Color.Green),
+                            textAlign = TextAlign.Center
+                        )}
                     )
                 }
             }
