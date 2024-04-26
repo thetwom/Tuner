@@ -1,7 +1,6 @@
 package de.moekadu.tuner.ui.plot
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -11,7 +10,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -39,15 +37,18 @@ class PointScopeImpl : PointScope {
 }
 
 class Point(
-    initialPosition: Offset,
-    initialContent: @Composable PointScope.() -> Unit,
-) {
-    var position by mutableStateOf(initialPosition)
+    position: Offset? = null,
+    content: (@Composable PointScope.() -> Unit)? = null,
+) : PlotItem {
+    override val hasClippedDraw = true
+    override val hasUnclippedDraw = false
+
+    var position by mutableStateOf(position)
         private set
-    var content by mutableStateOf(initialContent)
+    var content by mutableStateOf(content ?: drawCircle(5.dp, { Color.Unspecified }))
         private set
 
-    fun setPoint(
+    fun modify(
         position: Offset? = null,
         content: (@Composable PointScope.() -> Unit)? = null,
     ) {
@@ -58,18 +59,21 @@ class Point(
     }
 
     @Composable
-    fun Draw(transformation: Transformation) {
+    override fun DrawClipped(transformation: Transformation) {
         val pointTransformed = remember(transformation, position) {
-            transformation.toScreen(position)
+            position?.let { transformation.toScreen(it) }
         }
         val scope = remember { PointScopeImpl() }
         scope.content()
         Canvas(modifier = Modifier.fillMaxSize()) {
-            translate(pointTransformed.x, pointTransformed.y) {
-                scope.draw?.let { it() }
+            pointTransformed?.let { p ->
+                translate(p.x, p.y) { scope.draw?.let { it() } }
             }
         }
     }
+
+    @Composable
+    override fun DrawUnclipped(transformation: Transformation) { }
 
     companion object {
         fun drawCircle(size: Dp, color: @Composable () -> Color)
@@ -184,35 +188,6 @@ class Point(
     }
 }
 
-class PointGroup : PlotGroup {
-    private val points = mutableMapOf<Int, Point>()
-
-    fun setPoint(
-        key: Int = 0,
-        position: Offset? = null,
-        content: (@Composable PointScope.() -> Unit)? = null,
-    ) {
-        points[key]?.setPoint(position, content)
-        if (key !in points) {
-            points[key] = Point(
-                position ?: Offset.Zero,
-                content ?: Point.drawCircle(2.dp) { Color.Black }
-            )
-        }
-    }
-
-    @Composable
-    override fun Draw(transformation: Transformation) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .clip(transformation.rememberClipShape())
-        ) {
-            points.forEach {
-                it.value.Draw(transformation = transformation)
-            }
-        }
-    }
-}
 
 @Composable
 private fun rememberTransformation(
@@ -230,7 +205,7 @@ private fun rememberTransformation(
 
 @Preview(widthDp = 100, heightDp = 50, showBackground = true)
 @Composable
-private fun PointGroupPreview() {
+private fun PointPreview() {
     TunerTheme {
         BoxWithConstraints {
             val transformation = rememberTransformation(
@@ -239,50 +214,48 @@ private fun PointGroupPreview() {
                 viewPortRaw = Rect(-10f, 5f, 10f, -5f)
             )
 
-            val pointGroup = remember {
-                PointGroup().also {
-                    it.setPoint(
-                        key = 0,
-                        position = Offset(-5f, -2f),
-                        content = Point.drawCircle(6.dp) { MaterialTheme.colorScheme.primary }
-                    )
-                    it.setPoint(
-                        key = 2,
-                        position = Offset(-5f, -2f),
-                        content = Point.drawUpwardTriangle(
-                            8.dp,
-                            { MaterialTheme.colorScheme.primary },
-                            DpOffset(0.dp, (-5).dp)
-                        )
-                    )
-                    it.setPoint(
-                        key = 3,
-                        position = Offset(-5f, -2f),
-                        content = Point.drawDownwardTriangle(
-                            8.dp,
-                            { MaterialTheme.colorScheme.primary },
-                            DpOffset(0.dp, 5.dp)
-                        )
-                    )
-                    it.setPoint(
-                        key = 4,
-                        position = Offset(5f, 2f),
-                        content = Point.drawCircle(6.dp) { MaterialTheme.colorScheme.primary }
-                    )
+            val point1 = Point(
+                position = Offset(-5f, -2f),
+                content = Point.drawCircle(6.dp) { MaterialTheme.colorScheme.primary }
+            )
+            val point2 = Point(
+                position = Offset(-5f, -2f),
+                content = Point.drawUpwardTriangle(
+                    8.dp,
+                    { MaterialTheme.colorScheme.primary },
+                    DpOffset(0.dp, (-5).dp)
+                )
+            )
+            val point3 = Point(
+                position = Offset(-5f, -2f),
+                content = Point.drawDownwardTriangle(
+                    8.dp,
+                    { MaterialTheme.colorScheme.primary },
+                    DpOffset(0.dp, 5.dp)
+                )
+            )
+            val point4 = Point(
+                position = Offset(5f, 2f),
+                content = Point.drawCircle(6.dp) { MaterialTheme.colorScheme.primary }
+            )
 
-                    it.setPoint(
-                        key = 5,
-                        position = Offset(2f, 0.3f),
-                        content = Point.drawCircleWithUpwardTriangle(6.dp) { MaterialTheme.colorScheme.primary }
-                    )
-                    it.setPoint(
-                        key = 6,
-                        position = Offset(-0.5f, 0.3f),
-                        content = Point.drawCircleWithDownwardTriangle(6.dp) { MaterialTheme.colorScheme.primary }
-                    )
-                }
-            }
-            pointGroup.Draw(transformation = transformation)
+            val point5 = Point(
+                position = Offset(2f, 0.3f),
+                content = Point.drawCircleWithUpwardTriangle(6.dp) { MaterialTheme.colorScheme.primary }
+            )
+            val point6 = Point(
+                position = Offset(-0.5f, 0.3f),
+                content = Point.drawCircleWithDownwardTriangle(6.dp) { MaterialTheme.colorScheme.primary }
+            )
+            val point7 = Point()
+
+            point1.DrawClipped(transformation = transformation)
+            point2.DrawClipped(transformation = transformation)
+            point3.DrawClipped(transformation = transformation)
+            point4.DrawClipped(transformation = transformation)
+            point5.DrawClipped(transformation = transformation)
+            point6.DrawClipped(transformation = transformation)
+            point7.DrawClipped(transformation = transformation)
         }
     }
 }

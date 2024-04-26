@@ -6,9 +6,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.ParentDataModifier
 import androidx.compose.ui.layout.Placeable
@@ -32,16 +32,18 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import de.moekadu.tuner.ui.theme.TunerTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlin.math.roundToInt
 
 class VerticalMark(
-    initialPosition: Float,
-    initialAnchor: Anchor,
-    initialVerticalLabelPosition: Float = 0.5f,
-    initialLineWidth: Dp = 1.dp,
-    initialLineColor: @Composable () -> Color = {  Color.Unspecified },
-    initialScreenOffset: DpOffset = DpOffset.Zero,
-    initialContent: @Composable (modifier: Modifier) -> Unit,
+    position: Float,
+    anchor: Anchor = Anchor.Center,
+    verticalLabelPosition: Float = 0.5f,
+    lineWidth: Dp = 1.dp,
+    lineColor: @Composable () -> Color = {  Color.Unspecified },
+    screenOffset: DpOffset = DpOffset.Zero,
+    content: @Composable (modifier: Modifier) -> Unit,
 ) {
     data class LayoutData(
         val position: Float,
@@ -53,20 +55,20 @@ class VerticalMark(
         override fun Density.modifyParentData(parentData: Any?) = this@LayoutData
     }
     var layoutData by mutableStateOf(LayoutData(
-        initialPosition,
-        initialScreenOffset,
-        initialAnchor,
-        initialVerticalLabelPosition,
-        initialLineWidth,
+        position,
+        screenOffset,
+        anchor,
+        verticalLabelPosition,
+        lineWidth,
     ))
         private set
 
-    var lineColor by mutableStateOf(initialLineColor)
+    var lineColor by mutableStateOf(lineColor)
         private set
-    var content by mutableStateOf(initialContent)
+    var content by mutableStateOf(content)
         private set
 
-    fun setMark(
+    fun modify(
         position: Float? = null,
         anchor: Anchor? = null,
         screenOffset: DpOffset? = null,
@@ -93,13 +95,15 @@ class VerticalMark(
 
 private data class MeasuredVerticalMark(val layoutData: VerticalMark.LayoutData, val placeable: Placeable)
 class VerticalMarkGroup(
+    private val marks: ImmutableList<VerticalMark>,
     private val clipLabel: Boolean = false,
     private val sameSizeLabels: Boolean = false
-) : PlotGroup {
-    private val marks = mutableMapOf<Int, VerticalMark>()
+) : PlotItem {
+    override val hasClippedDraw = true
+    override val hasUnclippedDraw = !clipLabel
 
-    fun setMark(
-        key: Int = 0,
+    fun modify(
+        markIndex: Int,
         position: Float? = null,
         anchor: Anchor? = null,
         screenOffset: DpOffset? = null,
@@ -108,7 +112,7 @@ class VerticalMarkGroup(
         lineColor: (@Composable () -> Color)? = null,
         content: (@Composable (modifier: Modifier) -> Unit)? = null,
     ) {
-        marks[key]?.setMark(
+        marks[markIndex].modify(
             position,
             anchor,
             screenOffset,
@@ -117,22 +121,58 @@ class VerticalMarkGroup(
             lineColor,
             content
         )
+    }
 
-        if (key !in marks) {
-            marks[key] = VerticalMark(
-                position ?: 0f,
-                anchor ?: Anchor.Center,
-                verticalLabelPosition ?: 0.5f,
-                lineWidth ?: 1.dp,
-                lineColor ?: { Color.Black },
-                screenOffset ?: DpOffset.Zero,
-                content ?: { Text("x") }
-            )
+    @Composable
+    private fun DrawLabels(transformation: Transformation) {
+        Layout(modifier = Modifier.fillMaxSize(),
+            content = {
+                marks.forEach { it.content(it.layoutData) }
+            }
+        ) { measureables, constraints ->
+            val c = if (sameSizeLabels) {
+                val maxHeight = measureables.maxOf { it.minIntrinsicHeight(Int.MAX_VALUE) }
+                val maxWidth = measureables.maxOf { it.maxIntrinsicWidth(maxHeight) }
+                constraints.copy(
+                    minWidth = maxWidth, minHeight = maxHeight,
+                    maxWidth = maxWidth, maxHeight = maxHeight
+                )
+            } else {
+                constraints.copy(minWidth = 0, minHeight = 0)
+            }
+
+            val placeables = measureables.map {
+                MeasuredVerticalMark(
+                    it.parentData as VerticalMark.LayoutData,
+                    it.measure(c)
+                )
+            }
+
+            layout(constraints.maxWidth, constraints.maxHeight) {
+                placeables.forEach {
+                    val p = it.placeable
+                    val l = it.layoutData
+                    val xOffset = Offset(l.position, 0f)
+                    val xTransformed = transformation.toScreen(xOffset).x
+                    val vp = transformation.viewPortScreen
+
+                    p.place(
+                        it.layoutData.anchor.place(
+                            xTransformed + l.screenOffset.x.toPx(),
+                            vp.top + (1f - l.verticalLabelPosition) * vp.height+ l.screenOffset.y.toPx(),
+                            p.width.toFloat(),
+                            p.height.toFloat(),
+                            0f,
+                            l.lineWidth.toPx()
+                        ).round()
+                    )
+                }
+            }
         }
     }
 
     @Composable
-    override fun Draw(transformation: Transformation) {
+    override fun DrawClipped(transformation: Transformation) {
 
         Box(Modifier.fillMaxSize()) {
             val clipShape = transformation.rememberClipShape()
@@ -145,10 +185,10 @@ class VerticalMarkGroup(
                 content = {
                     marks.forEach {
                         Spacer(
-                            modifier = it.value.layoutData
+                            modifier = it.layoutData
                                 .fillMaxHeight()
-                                .width(it.value.layoutData.lineWidth)
-                                .background(it.value.lineColor())
+                                .width(it.layoutData.lineWidth)
+                                .background(it.lineColor().takeOrElse { MaterialTheme.colorScheme.outline })
                         )
                     }
                 }
@@ -174,54 +214,15 @@ class VerticalMarkGroup(
                 }
             }
 
-            // now draw the labels
-            Layout(
-                modifier = (if (clipLabel) Modifier.clip(clipShape) else Modifier)
-                    .fillMaxSize(),
-                content = {
-                    marks.forEach { it.value.content(it.value.layoutData) }
-                }
-            ) { measureables, constraints ->
-                val c = if (sameSizeLabels) {
-                    val maxHeight = measureables.maxOf { it.minIntrinsicHeight(Int.MAX_VALUE) }
-                    val maxWidth = measureables.maxOf { it.maxIntrinsicWidth(maxHeight) }
-                    constraints.copy(
-                        minWidth = maxWidth, minHeight = maxHeight,
-                        maxWidth = maxWidth, maxHeight = maxHeight
-                    )
-                } else {
-                    constraints.copy(minWidth = 0, minHeight = 0)
-                }
-
-                val placeables = measureables.map {
-                    MeasuredVerticalMark(
-                        it.parentData as VerticalMark.LayoutData,
-                        it.measure(c)
-                    )
-                }
-
-                layout(constraints.maxWidth, constraints.maxHeight) {
-                    placeables.forEach {
-                        val p = it.placeable
-                        val l = it.layoutData
-                        val xOffset = Offset(l.position, 0f)
-                        val xTransformed = transformation.toScreen(xOffset).x
-                        val vp = transformation.viewPortScreen
-
-                        p.place(
-                            it.layoutData.anchor.place(
-                                xTransformed + l.screenOffset.x.toPx(),
-                                vp.top + (1f - l.verticalLabelPosition) * vp.height+ l.screenOffset.y.toPx(),
-                                p.width.toFloat(),
-                                p.height.toFloat(),
-                                0f,
-                                l.lineWidth.toPx()
-                            ).round()
-                        )
-                    }
-                }
-            }
+            if (clipLabel)
+                DrawLabels(transformation = transformation)
         }
+    }
+
+    @Composable
+    override fun DrawUnclipped(transformation: Transformation) {
+        if (!clipLabel)
+            DrawLabels(transformation = transformation)
     }
 }
 
@@ -251,32 +252,49 @@ private fun VerticalMarkGroupPreview() {
             )
 
             val markGroup = remember {
-                VerticalMarkGroup(sameSizeLabels = true).also {
-                    it.setMark(
-                        key = 0,
-                        position = 0f,
-                        anchor = Anchor.NorthEast,
-                        verticalLabelPosition = 0.5f,
-                        lineWidth = 3.dp,
-                        content = { modifier -> Text("0NE", modifier = modifier.background(Color.Cyan))}
-                    )
-                    it.setMark(
-                        key = 1,
-                        position = -8f,
-                        anchor = Anchor.SouthWest,
-                        verticalLabelPosition = 0.1f,
-                        content = { modifier -> Text("-8SW", modifier = modifier.background(Color.Magenta))}
-                    )
-                    it.setMark(
-                        key = 2,
-                        position = 9f,
-                        anchor = Anchor.NorthEast,
-                        verticalLabelPosition = 0.9f,
-                        content = { modifier -> Text("9SE", modifier = modifier.background(Color.Green))}
-                    )
-                }
+                VerticalMarkGroup(
+                    persistentListOf(
+                        VerticalMark(
+                            position = 0f,
+                            anchor = Anchor.NorthEast,
+                            verticalLabelPosition = 0.5f,
+                            lineWidth = 3.dp,
+                            content = { modifier ->
+                                Text(
+                                    "0NE",
+                                    modifier = modifier.background(Color.Cyan)
+                                )
+                            }
+                        ),
+                        VerticalMark(
+                            position = -8f,
+                            anchor = Anchor.SouthWest,
+                            verticalLabelPosition = 0.1f,
+                            content = { modifier ->
+                                Text(
+                                    "-8SW",
+                                    modifier = modifier.background(Color.Magenta)
+                                )
+                            }
+                        ),
+                        VerticalMark(
+                            position = 9f,
+                            anchor = Anchor.NorthEast,
+                            verticalLabelPosition = 0.9f,
+                            content = { modifier ->
+                                Text(
+                                    "9SE",
+                                    modifier = modifier.background(Color.Green)
+                                )
+                            }
+                        )
+                    ),
+                    sameSizeLabels = true
+                )
             }
-            markGroup.Draw(transformation = transformation)
+
+            markGroup.DrawClipped(transformation = transformation)
+            markGroup.DrawUnclipped(transformation = transformation)
         }
     }
 }

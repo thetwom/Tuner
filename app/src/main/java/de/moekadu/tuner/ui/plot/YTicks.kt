@@ -72,28 +72,76 @@ class YTicks(
     private val clipLabelToPlotWindow: Boolean = false,
     private val maxNumLabels: Int = -1,
     private val screenOffset: DpOffset = DpOffset.Zero
-): PlotGroup {
-    private data class MeasuredTick(
-        val position: TickLayoutData,
-        val placeable: Placeable
-    )
+): PlotItem {
+    override val hasClippedDraw = true
+    override val hasUnclippedDraw = !clipLabelToPlotWindow
 
     data class TickLayoutData(val position: Float):
         ParentDataModifier {
         override fun Density.modifyParentData(parentData: Any?) = this@TickLayoutData
     }
 
+    private data class MeasuredTick(
+        val position: TickLayoutData,
+        val placeable: Placeable
+    )
+
     @Composable
-    override fun Draw(transformation: Transformation) {
+    private fun DrawLabels(transformation: Transformation, range: TicksRange) {
+        Layout(
+            content = {
+                label?.let { l ->
+                    for (i in range.indexBegin until range.indexEnd) {
+                        val y = tickLevel.getTickValue(range.level, i)
+                        l(TickLayoutData(y), range.level, i, y)
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxSize()
+        ) { measureables, constraints ->
+            val c = constraints.copy(minWidth = 0, minHeight = 0)
+            val placeables = measureables.map {
+                MeasuredTick(
+                    it.parentData as TickLayoutData,
+                    it.measure(c)
+                )
+            }
+
+            layout(constraints.maxWidth, constraints.maxHeight) {
+                placeables.forEach {
+                    val p = it.placeable
+                    val yOffset = Offset(0f, it.position.position)
+                    val yTransformed = transformation.toScreen(yOffset).y
+                    val vp = transformation.viewPortScreen
+
+                    p.place(
+                        anchor.place(
+                            vp.left + horizontalLabelPosition * vp.width + screenOffset.x.toPx(),
+                            yTransformed + screenOffset.y.toPx(),
+                            p.width.toFloat(),
+                            p.height.toFloat(),
+                            lineWidth.toPx(),
+                            0f
+                        ).round()
+                    )
+
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun rememberRange(transformation: Transformation): TicksRange {
         val density = LocalDensity.current
-        val lineWidthPx = with(density) { lineWidth.toPx() }
-        val screenOffsetPx  = with(density) { screenOffset.y.toPx() }
         val maxLabelHeightPx = density.maxLabelHeight()
-        val maxNumLabelsResolved = if (maxNumLabels <= 0)
-            (transformation.viewPortScreen.height / maxLabelHeightPx / 2f).roundToInt()
-        else
-            maxNumLabels
-        val range = remember(transformation, maxNumLabelsResolved, tickLevel, maxLabelHeightPx, lineWidthPx, screenOffsetPx) {
+
+        return remember(density, transformation, screenOffset, lineWidth, maxNumLabels) {
+            val screenOffsetPx = with(density) { screenOffset.y.toPx() }
+            val lineWidthPx = with(density) { lineWidth.toPx() }
+            val maxNumLabelsResolved = if (maxNumLabels <= 0)
+                (transformation.viewPortScreen.height / maxLabelHeightPx / 2f).roundToInt()
+            else
+                maxNumLabels
             val labelHeightScreen = Rect(
                 0f,
                 0f,
@@ -109,14 +157,16 @@ class YTicks(
                 labelHeightRaw
             )
         }
+    }
+
+    @Composable
+    override fun DrawClipped(transformation: Transformation) {
+
         Box(Modifier.fillMaxSize()) {
             val lineColor = lineColor().takeOrElse { MaterialTheme.colorScheme.outline }
-            val clipShape = transformation.rememberClipShape()
-            Canvas(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(clipShape)
-            ) {
+            val range = rememberRange(transformation = transformation)
+
+            Canvas(modifier = Modifier.fillMaxSize()) {
                 for (i in range.indexBegin until range.indexEnd) {
                     val yOffset = Offset(0f, tickLevel.getTickValue(range.level, i))
                     val yTransformed = transformation.toScreen(yOffset).y
@@ -129,48 +179,16 @@ class YTicks(
                 }
             }
 
-            Layout(
-                content = {
-                    label?.let { l ->
-                        for (i in range.indexBegin until range.indexEnd) {
-                            val y = tickLevel.getTickValue(range.level, i)
-                            l(TickLayoutData(y), range.level, i, y)
-                        }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(if (clipLabelToPlotWindow) Modifier.clip(clipShape) else Modifier)
-            ) { measureables, constraints ->
-                val c = constraints.copy(minWidth = 0, minHeight = 0)
-                val placeables = measureables.map {
-                    MeasuredTick(
-                        it.parentData as TickLayoutData,
-                        it.measure(c)
-                    )
-                }
+            if (clipLabelToPlotWindow)
+                DrawLabels(transformation = transformation, range = range)
+        }
+    }
 
-                layout(constraints.maxWidth, constraints.maxHeight) {
-                    placeables.forEach {
-                        val p = it.placeable
-                        val yOffset = Offset(0f, it.position.position)
-                        val yTransformed = transformation.toScreen(yOffset).y
-                        val vp = transformation.viewPortScreen
-
-                        p.place(
-                            anchor.place(
-                                vp.left + horizontalLabelPosition * vp.width + screenOffset.x.toPx(),
-                                yTransformed + screenOffsetPx,
-                                p.width.toFloat(),
-                                p.height.toFloat(),
-                                lineWidth.toPx(),
-                                0f
-                            ).round()
-                        )
-
-                    }
-                }
-            }
+    @Composable
+    override fun DrawUnclipped(transformation: Transformation) {
+        if (!clipLabelToPlotWindow) {
+            val range = rememberRange(transformation = transformation)
+            DrawLabels(transformation = transformation, range = range)
         }
     }
 }
@@ -214,8 +232,9 @@ private fun YTicksPreview() {
                 maxLabelHeight = { textLabelHeight },
                 screenOffset = DpOffset(0.dp, (-1).dp)
             )
-            
-            ticks.Draw(transformation = transformation)
+
+            ticks.DrawClipped(transformation = transformation)
+            ticks.DrawUnclipped(transformation = transformation)
         }
     }
 }

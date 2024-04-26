@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.ParentDataModifier
 import androidx.compose.ui.layout.Placeable
@@ -31,16 +33,18 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import de.moekadu.tuner.ui.theme.TunerTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlin.math.roundToInt
 
 class HorizontalMark(
-    initialPosition: Float,
-    initialAnchor: Anchor,
-    initialHorizontalLabelPosition: Float = 0.5f,
-    initialLineWidth: Dp = 1.dp,
-    initialLineColor: @Composable () -> Color = {  Color.Unspecified },
-    initialScreenOffset: DpOffset = DpOffset.Zero,
-    initialContent: @Composable (modifier: Modifier) -> Unit,
+    position: Float,
+    anchor: Anchor = Anchor.Center,
+    horizontalLabelPosition: Float = 0.5f,
+    lineWidth: Dp = 1.dp,
+    lineColor: @Composable () -> Color = {  Color.Unspecified },
+    screenOffset: DpOffset = DpOffset.Zero,
+    content: @Composable (modifier: Modifier) -> Unit,
 ) {
     data class LayoutData(
         val position: Float,
@@ -52,20 +56,20 @@ class HorizontalMark(
         override fun Density.modifyParentData(parentData: Any?) = this@LayoutData
     }
     var layoutData by mutableStateOf(LayoutData(
-        initialPosition,
-        initialScreenOffset,
-        initialAnchor,
-        initialHorizontalLabelPosition,
-        initialLineWidth,
+        position,
+        screenOffset,
+        anchor,
+        horizontalLabelPosition,
+        lineWidth,
     ))
         private set
 
-    var lineColor by mutableStateOf(initialLineColor)
+    var lineColor by mutableStateOf(lineColor)
         private set
-    var content by mutableStateOf(initialContent)
+    var content by mutableStateOf(content)
         private set
 
-    fun setMark(
+    fun modify(
         position: Float? = null,
         anchor: Anchor? = null,
         screenOffset: DpOffset? = null,
@@ -92,13 +96,15 @@ class HorizontalMark(
 
 private data class MeasuredHorizontalMark(val layoutData: HorizontalMark.LayoutData, val placeable: Placeable)
 class HorizontalMarkGroup(
+    private val marks: ImmutableList<HorizontalMark>,
     private val clipLabel: Boolean = false,
-    private val sameSizeLabels: Boolean = false
-) : PlotGroup {
-    private val marks = mutableMapOf<Int, HorizontalMark>()
+    private val sameSizeLabels: Boolean = false,
+) : PlotItem {
+    override val hasClippedDraw = true
+    override val hasUnclippedDraw = !clipLabel
 
-    fun setMark(
-        key: Int = 0,
+    fun modify(
+        markIndex: Int,
         position: Float? = null,
         anchor: Anchor? = null,
         screenOffset: DpOffset? = null,
@@ -107,7 +113,7 @@ class HorizontalMarkGroup(
         lineColor: (@Composable () -> Color)? = null,
         content: (@Composable (modifier: Modifier) -> Unit)? = null,
     ) {
-        marks[key]?.setMark(
+        marks[markIndex].modify(
             position,
             anchor,
             screenOffset,
@@ -116,39 +122,70 @@ class HorizontalMarkGroup(
             lineColor,
             content
         )
+    }
 
-        if (key !in marks) {
-            marks[key] = HorizontalMark(
-                position ?: 0f,
-                anchor ?: Anchor.Center,
-                horizontalLabelPosition ?: 0.5f,
-                lineWidth ?: 1.dp,
-                lineColor ?: { Color.Black },
-                screenOffset ?: DpOffset.Zero,
-                content ?: { Text("x") }
-            )
+    @Composable
+    private fun DrawLabels(transformation: Transformation) {
+        Layout(modifier = Modifier.fillMaxSize(),
+            content = {
+                marks.forEach { it.content(it.layoutData) }
+            }
+        ) { measureables, constraints ->
+            val c = if (sameSizeLabels) {
+                val maxHeight = measureables.maxOf { it.minIntrinsicHeight(Int.MAX_VALUE) }
+                val maxWidth = measureables.maxOf { it.maxIntrinsicWidth(maxHeight) }
+                constraints.copy(
+                    minWidth = maxWidth, minHeight = maxHeight,
+                    maxWidth = maxWidth, maxHeight = maxHeight
+                )
+            } else {
+                constraints.copy(minWidth = 0, minHeight = 0)
+            }
+
+            val placeables = measureables.map {
+                MeasuredHorizontalMark(
+                    it.parentData as HorizontalMark.LayoutData,
+                    it.measure(c)
+                )
+            }
+
+            layout(constraints.maxWidth, constraints.maxHeight) {
+                placeables.forEach {
+                    val p = it.placeable
+                    val l = it.layoutData
+                    val yOffset = Offset(0f, l.position)
+                    val yTransformed = transformation.toScreen(yOffset).y
+                    val vp = transformation.viewPortScreen
+
+                    p.place(
+                        it.layoutData.anchor.place(
+                            vp.left + l.horizontalLabelPosition * vp.width + l.screenOffset.x.toPx(),
+                            yTransformed + l.screenOffset.y.toPx(),
+                            p.width.toFloat(),
+                            p.height.toFloat(),
+                            l.lineWidth.toPx(),
+                            0f
+                        ).round()
+                    )
+                }
+            }
         }
     }
 
-
     @Composable
-    override fun Draw(transformation: Transformation) {
+    override fun DrawClipped(transformation: Transformation) {
 
-        Box(Modifier.fillMaxSize()) {
-            val clipShape = transformation.rememberClipShape()
-
+        Box(modifier = Modifier.fillMaxSize()) {
             // layout to draw the lines
             Layout(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(clipShape),
+                modifier = Modifier.fillMaxSize(),
                 content = {
                     marks.forEach {
                         Spacer(
-                            modifier = it.value.layoutData
+                            modifier = it.layoutData
                                 .fillMaxWidth()
-                                .height(it.value.layoutData.lineWidth)
-                                .background(it.value.lineColor())
+                                .height(it.layoutData.lineWidth)
+                                .background(it.lineColor().takeOrElse { MaterialTheme.colorScheme.outline })
                         )
                     }
                 }
@@ -174,54 +211,15 @@ class HorizontalMarkGroup(
                 }
             }
 
-            // now draw the labels
-            Layout(
-                modifier = (if (clipLabel) Modifier.clip(clipShape) else Modifier)
-                    .fillMaxSize(),
-                content = {
-                    marks.forEach { it.value.content(it.value.layoutData) }
-                }
-            ) { measureables, constraints ->
-                val c = if (sameSizeLabels) {
-                    val maxHeight = measureables.maxOf { it.minIntrinsicHeight(Int.MAX_VALUE) }
-                    val maxWidth = measureables.maxOf { it.maxIntrinsicWidth(maxHeight) }
-                    constraints.copy(
-                        minWidth = maxWidth, minHeight = maxHeight,
-                        maxWidth = maxWidth, maxHeight = maxHeight
-                    )
-                } else {
-                    constraints.copy(minWidth = 0, minHeight = 0)
-                }
-
-                val placeables = measureables.map {
-                    MeasuredHorizontalMark(
-                        it.parentData as HorizontalMark.LayoutData,
-                        it.measure(c)
-                    )
-                }
-
-                layout(constraints.maxWidth, constraints.maxHeight) {
-                    placeables.forEach {
-                        val p = it.placeable
-                        val l = it.layoutData
-                        val yOffset = Offset(0f, l.position)
-                        val yTransformed = transformation.toScreen(yOffset).y
-                        val vp = transformation.viewPortScreen
-
-                        p.place(
-                            it.layoutData.anchor.place(
-                                vp.left + l.horizontalLabelPosition * vp.width + l.screenOffset.x.toPx(),
-                                yTransformed + l.screenOffset.y.toPx(),
-                                p.width.toFloat(),
-                                p.height.toFloat(),
-                                l.lineWidth.toPx(),
-                                0f
-                            ).round()
-                        )
-                    }
-                }
-            }
+            if (clipLabel)
+                DrawLabels(transformation = transformation)
         }
+    }
+
+    @Composable
+    override fun DrawUnclipped(transformation: Transformation) {
+        if (!clipLabel)
+            DrawLabels(transformation = transformation)
     }
 }
 
@@ -251,35 +249,48 @@ private fun HorizontalMarkGroupPreview() {
             )
 
             val markGroup = remember {
-                HorizontalMarkGroup(sameSizeLabels = true).also {
-                    it.setMark(
-                        key = 0,
-                        position = 0f,
-                        anchor = Anchor.NorthEast,
-                        horizontalLabelPosition = 0.5f,
-                        lineWidth = 3.dp,
-                        content = { modifier -> Text("0NE....", modifier = modifier.background(Color.Cyan))}
-                    )
-                    it.setMark(
-                        key = 1,
-                        position = -4f,
-                        anchor = Anchor.SouthWest,
-                        horizontalLabelPosition = 0.1f,
-                        content = { modifier -> Text("-4SW", modifier = modifier.background(Color.Magenta))}
-                    )
-                    it.setMark(
-                        key = 2,
-                        position = 3f,
-                        anchor = Anchor.SouthEast,
-                        horizontalLabelPosition = 0.9f,
-                        content = { modifier -> Text(
-                            "3SE", modifier = modifier.background(Color.Green),
-                            textAlign = TextAlign.Center
-                        )}
-                    )
-                }
+                HorizontalMarkGroup(
+                    persistentListOf(
+                        HorizontalMark(
+                            position = 0f,
+                            anchor = Anchor.NorthEast,
+                            horizontalLabelPosition = 0.5f,
+                            lineWidth = 3.dp,
+                            content = { modifier ->
+                                Text(
+                                    "0NE....",
+                                    modifier = modifier.background(Color.Cyan)
+                                )
+                            }
+                        ),
+                        HorizontalMark(
+                            position = -4f,
+                            anchor = Anchor.SouthWest,
+                            horizontalLabelPosition = 0.1f,
+                            content = { modifier ->
+                                Text(
+                                    "-4SW",
+                                    modifier = modifier.background(Color.Magenta)
+                                )
+                            }
+                        ),
+                        HorizontalMark(
+                            position = 3f,
+                            anchor = Anchor.SouthEast,
+                            horizontalLabelPosition = 0.9f,
+                            content = { modifier ->
+                                Text(
+                                    "3SE", modifier = modifier.background(Color.Green),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        )
+                    ),
+                    clipLabel = true
+                )
             }
-            markGroup.Draw(transformation = transformation)
+            markGroup.DrawClipped(transformation = transformation)
+            markGroup.DrawUnclipped(transformation = transformation)
         }
     }
 }

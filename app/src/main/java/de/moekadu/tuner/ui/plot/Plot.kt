@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
@@ -15,12 +16,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -39,6 +42,7 @@ import androidx.compose.ui.unit.toOffset
 import androidx.compose.ui.unit.toSize
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -47,8 +51,8 @@ import kotlin.math.max
 import kotlin.math.min
 
 class PlotState(
-    initialViewPortRaw: Rect,
-    initialViewPortRawLimits: Rect = Rect.Zero // no limits
+    viewPortRaw: Rect,
+    viewPortRawLimits: Rect = Rect.Zero // no limits
 ) {
     enum class TargetTransitionType {
         Animate,
@@ -67,35 +71,31 @@ class PlotState(
     )
 
     private val _viewPortRawTransition = MutableStateFlow(
-        ViewPortTransition(initialViewPortRaw, TargetTransitionType.Snap, BoundsMode.Explicit)
+        ViewPortTransition(viewPortRaw, TargetTransitionType.Snap, BoundsMode.Explicit)
     )
     val viewPortRawTransition get() = _viewPortRawTransition.asStateFlow()
-    private var viewPortRawExplicit = initialViewPortRaw
+    private var viewPortRawExplicit = viewPortRaw
 
     private val viewPortAnimationDecay = exponentialDecay<Rect>(1f)
-    private val viewPortRawAnimation = Animatable(initialViewPortRaw, Rect.VectorConverter)
-    var viewPortRaw by mutableStateOf(initialViewPortRaw)
+    private val viewPortRawAnimation = Animatable(viewPortRaw, Rect.VectorConverter)
+    var viewPortRaw by mutableStateOf(viewPortRaw)
         private set
 
     private var viewPortLimits = Rect(
-        min(initialViewPortRawLimits.left, initialViewPortRawLimits.right),
-        min(initialViewPortRawLimits.top, initialViewPortRawLimits.bottom),
-        max(initialViewPortRawLimits.left, initialViewPortRawLimits.right),
-        max(initialViewPortRawLimits.top, initialViewPortRawLimits.bottom),
+        min(viewPortRawLimits.left, viewPortRawLimits.right),
+        min(viewPortRawLimits.top, viewPortRawLimits.bottom),
+        max(viewPortRawLimits.left, viewPortRawLimits.right),
+        max(viewPortRawLimits.top, viewPortRawLimits.bottom),
     )
-
-    private val lines = LineGroup()
-    private val points = PointGroup()
-    private val yTicks = mutableMapOf<Int, YTicks>()
-    private val xTicks = mutableMapOf<Int, XTicks>()
-    private val pointMarks = PointMarkGroup()
 
     var boundsMode by mutableStateOf(BoundsMode.Explicit)
         private set
 
+    private val items = mutableStateMapOf<Int, PlotItem>()
+
     fun setViewPortLimits(limits: Rect) {
         viewPortLimits = Rect(
-            min(limits.left, limits.right), min(limits.top, limits.bottom),
+            min(limits.left,limits.right), min(limits.top, limits.bottom),
             max(limits.left, limits.right), max(limits.top, limits.bottom),
         )
 
@@ -180,47 +180,32 @@ class PlotState(
     }
     fun setLine(
         key: Int,
-        xValues: FloatArray, yValues: FloatArray,
-        indexBegin: Int = 0,
-        indexEnd: Int = min(xValues.size, yValues.size),
+        coordinates: Line.Coordinates? = null,
         lineWidth: Dp? = null,
         lineColor: (@Composable () -> Color)? = null
     ) {
-        lines.setLine(key, xValues, yValues, indexBegin, indexEnd, lineWidth, lineColor)
+        val item = items[key]
+        if (item is Line) {
+            item.modify(coordinates, lineWidth, lineColor)
+        } else {
+            val newItem = Line(coordinates, lineWidth, lineColor)
+            items[key] = newItem
+        }
     }
 
     fun setPoint(
         key: Int,
-        position: Offset,
+        position: Offset? = null,
         content: (@Composable PointScope.() -> Unit)? = null,
     ) {
-        points.setPoint(key, position, content)
-    }
-
-    fun setYTicks(
-        key: Int,
-        yValues: ImmutableList<FloatArray>,
-        maxLabelHeight: @Composable Density.() -> Float,
-        horizontalLabelPosition: Float,
-        anchor: Anchor,
-        lineWidth: Dp,
-        clipLabelToPlotWindow: Boolean = false,
-        lineColor: @Composable () -> Color = { Color.Unspecified },
-        maxNumLabels: Int = -1, // -1 is auto
-        label: (@Composable (modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)? = null
-    ) {
-        val tickLevels = TickLevelExplicitRanges(yValues)
-        yTicks[key] = YTicks(
-            label = label,
-            tickLevel = tickLevels,
-            anchor = anchor,
-            horizontalLabelPosition = horizontalLabelPosition,
-            lineWidth = lineWidth,
-            lineColor = lineColor,
-            maxLabelHeight = maxLabelHeight,
-            clipLabelToPlotWindow = clipLabelToPlotWindow,
-            maxNumLabels = maxNumLabels
-        )
+        val item = items[key]
+        if (item is Point) {
+            item.modify(position, content)
+        } else {
+            val newItem = Point(position, content)
+            items[key] = newItem
+        }
+        //points.setPoint(key, position, content)
     }
 
     fun setXTicks(
@@ -236,7 +221,7 @@ class PlotState(
         label: (@Composable (modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)? = null
     ) {
         val tickLevels = TickLevelExplicitRanges(xValues)
-        xTicks[key] = XTicks(
+        items[key] = XTicks(
             label = label,
             tickLevel = tickLevels,
             anchor = anchor,
@@ -248,25 +233,115 @@ class PlotState(
             maxNumLabels = maxNumLabels
         )
     }
-
-    fun setPointMark(
+    fun setYTicks(
         key: Int,
-        position: Offset,
-        anchor: Anchor = Anchor.Center,
-        screenOffset: DpOffset = DpOffset.Zero,
+        yValues: ImmutableList<FloatArray>,
+        maxLabelHeight: @Composable Density.() -> Float,
+        horizontalLabelPosition: Float,
+        anchor: Anchor,
+        lineWidth: Dp,
+        clipLabelToPlotWindow: Boolean = false,
+        lineColor: @Composable () -> Color = { Color.Unspecified },
+        maxNumLabels: Int = -1, // -1 is auto
+        label: (@Composable (modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)? = null
+    ) {
+        val tickLevels = TickLevelExplicitRanges(yValues)
+        items[key] = YTicks(
+            label = label,
+            tickLevel = tickLevels,
+            anchor = anchor,
+            horizontalLabelPosition = horizontalLabelPosition,
+            lineWidth = lineWidth,
+            lineColor = lineColor,
+            maxLabelHeight = maxLabelHeight,
+            clipLabelToPlotWindow = clipLabelToPlotWindow,
+            maxNumLabels = maxNumLabels
+        )
+    }
+
+    fun addHorizontalMarks(
+        key: Int,
+        marks: ImmutableList<HorizontalMark>,
+        clipLabel: Boolean = false,
+        sameSizeLabels: Boolean = false
+    ) {
+        items[key] = HorizontalMarkGroup(marks, clipLabel, sameSizeLabels)
+    }
+
+    fun modifyHorizontalMark(
+        key: Int, markIndex: Int,
+        position: Float? = null,
+        anchor: Anchor? = null,
+        screenOffset: DpOffset? = null,
+        horizontalLabelPosition: Float? = null,
+        lineWidth: Dp? = null,
+        lineColor: (@Composable () -> Color)? = null,
+        content: (@Composable (modifier: Modifier) -> Unit)? = null,
+    ) {
+        val marks = items[key] as HorizontalMarkGroup
+        marks.modify(markIndex,
+            position, anchor, screenOffset, horizontalLabelPosition, lineWidth,
+            lineColor, content
+        )
+    }
+
+    fun addVerticalMarks(
+        key: Int,
+        marks: ImmutableList<VerticalMark>,
+        clipLabel: Boolean = false,
+        sameSizeLabels: Boolean = false
+    ) {
+        items[key] = VerticalMarkGroup(marks, clipLabel, sameSizeLabels)
+    }
+
+    fun modifyVerticalMark(
+        key: Int, markIndex: Int,
+        position: Float? = null,
+        anchor: Anchor? = null,
+        screenOffset: DpOffset? = null,
+        verticalLabelPosition: Float? = null,
+        lineWidth: Dp? = null,
+        lineColor: (@Composable () -> Color)? = null,
+        content: (@Composable (modifier: Modifier) -> Unit)? = null,
+    ) {
+        val marks = items[key] as VerticalMarkGroup
+        marks.modify(markIndex,
+            position, anchor, screenOffset, verticalLabelPosition, lineWidth,
+            lineColor, content
+        )
+    }
+
+    fun addPointMarks(key: Int, marks: ImmutableList<PointMark>) {
+        items[key] = PointMarkGroup(marks)
+    }
+
+    fun modifyPointMark(
+        key: Int, markIndex: Int,
+        position: Offset? = null,
+        anchor: Anchor? = null,
+        screenOffset: DpOffset? = null,
         content: (@Composable (modifier: Modifier) -> Unit)? = null
     ) {
-        pointMarks.setPointMark(key, position, anchor, screenOffset, content)
+        val marks = items[key] as PointMarkGroup
+        marks.modify(markIndex, position, anchor, screenOffset, content)
     }
 
     @Composable
-    fun Draw(transformation: Transformation) {
+    fun DrawClipped(transformation: Transformation) {
+        val clipShape = transformation.rememberClipShape()
+        Box(modifier = Modifier.fillMaxSize().clip(clipShape)) {
+            items.asSequence().filter { it.value.hasClippedDraw }.forEach {
+                it.value.DrawClipped(transformation = transformation)
+            }
+        }
+    }
+
+    @Composable
+    fun DrawUnclipped(transformation: Transformation) {
         Box(modifier = Modifier.fillMaxSize()) {
-            yTicks.forEach { it.value.Draw(transformation) }
-            xTicks.forEach { it.value.Draw(transformation) }
-            lines.Draw(transformation)
-            points.Draw(transformation)
-            pointMarks.Draw(transformation)
+            items.asSequence().filter { it.value.hasUnclippedDraw }.forEach {
+                it.value.DrawUnclipped(transformation = transformation)
+            }
         }
     }
 }
@@ -340,10 +415,13 @@ fun Plot(
             }
         }
 
-        Box(
+        state.DrawClipped(transformation = transformation)
+        state.DrawUnclipped(transformation = transformation)
+
+        Spacer(
             modifier = Modifier
-                .drawWithContent {
-                    drawContent()
+                .fillMaxSize()
+                .drawBehind {
                     drawRoundRect(
                         outlineLineColor,
                         viewPortScreen.topLeft.toOffset(),
@@ -352,10 +430,9 @@ fun Plot(
                         style = Stroke(outlineLineWidth.toPx())
                     )
                 }
-                .dragZoom(state,  {transformation}, lockX = lockX, lockY = lockY)
-        ) {
-            state.Draw(transformation = transformation)
-        }
+                .dragZoom(state, { transformation }, lockX = lockX, lockY = lockY)
+        )
+
     }
 
 }
@@ -368,13 +445,28 @@ private fun PlotPreview() {
         val textLabelWidth = rememberTextLabelWidth("XXXXXX")
         val state = remember{
             PlotState(
-                initialViewPortRaw = Rect(left = 2f, top = 20f, right = 10f, bottom = 3f),
-                initialViewPortRawLimits = Rect(left = -1f, top = 100f, right = 40f, bottom = -2f)
+                viewPortRaw = Rect(left = 2f, top = 20f, right = 10f, bottom = 3f),
+                viewPortRawLimits = Rect(left = -1f, top = 100f, right = 40f, bottom = -2f)
             ).apply {
-                setLine(0, floatArrayOf(3f, 5f, 7f, 9f), floatArrayOf(4f, 8f, 6f, 15f)) {MaterialTheme.colorScheme.primary}
-                setPoint(0,Offset(3f, 4f), Point.drawCircle(10.dp) { MaterialTheme.colorScheme.primary })
+                setLine(
+                    key = 0,
+                    coordinates = Line.Coordinates(
+                        floatArrayOf(3f, 5f, 7f, 9f), floatArrayOf(4f, 8f, 6f, 15f)
+                    ),
+                    lineWidth = 2.dp,
+                    lineColor =  { MaterialTheme.colorScheme.primary }
+                )
+                setLine(
+                    key = 1,
+                    coordinates = Line.Coordinates(
+                        floatArrayOf(3f, 5f, 7f, 9f), floatArrayOf(15f, 18f, 12f, 10f)
+                    ),
+                    lineWidth = 5.dp,
+                    lineColor =  { MaterialTheme.colorScheme.error }
+                )
+                setPoint(10, Offset(3f, 4f), Point.drawCircle(10.dp) { MaterialTheme.colorScheme.primary })
                 setYTicks(
-                    0,
+                    101,
                     listOf(
                         floatArrayOf(0f, 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f, 10f, 15f, 20f)
                     ).toImmutableList(),
@@ -389,7 +481,7 @@ private fun PlotPreview() {
                         modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer))
                 }
                 setXTicks(
-                    0,
+                    100,
                     listOf(
                         floatArrayOf(0f, 3f, 8f, 15f)
                     ).toImmutableList(),
@@ -403,9 +495,37 @@ private fun PlotPreview() {
                     Text("$index, $value",
                         modifier = modifier.background(Color.Cyan))
                 }
-                setPointMark(0, Offset(5f, 12f)) {
-                    Text("XXX", it.background(MaterialTheme.colorScheme.error))
-                }
+                addPointMarks(1010,
+                    persistentListOf(
+                        PointMark(Offset(5f, 12f)) {
+                            Text("XXX", it.background(MaterialTheme.colorScheme.error))
+                        }
+                    )
+                )
+                addHorizontalMarks(
+                    1001,
+                    persistentListOf(
+                        HorizontalMark(12f, anchor = Anchor.West, 0.1f) {
+                            Text("M 12", modifier = it.background(MaterialTheme.colorScheme.primary), color = MaterialTheme.colorScheme.onPrimary)
+                        },
+                        HorizontalMark(11f, anchor = Anchor.West, 0.3f) {
+                            Text("M 11 :-)", modifier = it.background(MaterialTheme.colorScheme.primary), color = MaterialTheme.colorScheme.onPrimary)
+                        }
+                    ),
+                    sameSizeLabels = true
+                )
+                addVerticalMarks(
+                    2001,
+                    persistentListOf(
+                        VerticalMark(5f, anchor = Anchor.West, 0.7f) {
+                            Text("MV 5", modifier = it.background(MaterialTheme.colorScheme.primary), color = MaterialTheme.colorScheme.onPrimary)
+                        },
+                        VerticalMark(7f, anchor = Anchor.East, 0.3f) {
+                            Text("M 7 :-)", modifier = it.background(MaterialTheme.colorScheme.primary), color = MaterialTheme.colorScheme.onPrimary)
+                        }
+                    ),
+                    sameSizeLabels = true
+                )
             }
 
         }
