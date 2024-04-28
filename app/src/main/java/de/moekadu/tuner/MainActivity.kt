@@ -272,7 +272,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 //        Log.v("Tuner", "MainActivity.onNewIntent: intent=$intent")
         handleFileLoadingIntent(intent)
