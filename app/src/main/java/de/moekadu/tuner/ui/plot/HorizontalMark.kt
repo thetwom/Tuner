@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,60 +35,45 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import kotlin.math.roundToInt
 
 class HorizontalMark(
     position: Float,
-    anchor: Anchor = Anchor.Center,
-    horizontalLabelPosition: Float = 0.5f,
-    lineWidth: Dp = 1.dp,
-    lineColor: @Composable () -> Color = {  Color.Unspecified },
-    screenOffset: DpOffset = DpOffset.Zero,
+    styleKey: Int,
     content: @Composable (modifier: Modifier) -> Unit,
 ) {
+    data class Style(
+        val anchor: Anchor = Anchor.Center,
+        val horizontalLabelPosition: Float = 0.5f,
+        val lineWidth: Dp = 1.dp,
+        val lineColor: Color = Color.Unspecified,
+        val screenOffset: DpOffset = DpOffset.Zero
+    ) : PlotStyle
+
     data class LayoutData(
         val position: Float,
-        val screenOffset: DpOffset,
-        val anchor: Anchor,
-        val horizontalLabelPosition: Float,
-        val lineWidth: Dp,
+        val styleKey: Int
     ): ParentDataModifier {
         override fun Density.modifyParentData(parentData: Any?) = this@LayoutData
     }
-    var layoutData by mutableStateOf(LayoutData(
-        position,
-        screenOffset,
-        anchor,
-        horizontalLabelPosition,
-        lineWidth,
-    ))
+    var layoutData by mutableStateOf(LayoutData(position, styleKey))
         private set
 
-    var lineColor by mutableStateOf(lineColor)
-        private set
     var content by mutableStateOf(content)
         private set
 
     fun modify(
         position: Float? = null,
-        anchor: Anchor? = null,
-        screenOffset: DpOffset? = null,
-        horizontalLabelPosition: Float? = null,
-        lineWidth: Dp? = null,
-        lineColor: (@Composable () -> Color)? = null,
+        styleKey: Int? = null,
         content: (@Composable (modifier: Modifier) -> Unit)? = null,
     ) {
         this.layoutData = LayoutData(
             position ?: this.layoutData.position,
-            screenOffset ?: this.layoutData.screenOffset,
-            anchor ?: this.layoutData.anchor,
-            horizontalLabelPosition ?: this.layoutData.horizontalLabelPosition,
-            lineWidth ?: this.layoutData.lineWidth,
+            styleKey ?: this.layoutData.styleKey
         )
-
-        if (lineColor != null)
-            this.lineColor = lineColor
 
         if (content != null)
             this.content = content
@@ -106,26 +92,14 @@ class HorizontalMarkGroup(
     fun modify(
         markIndex: Int,
         position: Float? = null,
-        anchor: Anchor? = null,
-        screenOffset: DpOffset? = null,
-        horizontalLabelPosition: Float? = null,
-        lineWidth: Dp? = null,
-        lineColor: (@Composable () -> Color)? = null,
+        styleKey: Int?,
         content: (@Composable (modifier: Modifier) -> Unit)? = null,
     ) {
-        marks[markIndex].modify(
-            position,
-            anchor,
-            screenOffset,
-            horizontalLabelPosition,
-            lineWidth,
-            lineColor,
-            content
-        )
+        marks[markIndex].modify(position, styleKey, content)
     }
 
     @Composable
-    private fun DrawLabels(transformation: Transformation) {
+    private fun DrawLabels(transformation: Transformation, plotStyles: ImmutableMap<Int, PlotStyle>) {
         Layout(modifier = Modifier.fillMaxSize(),
             content = {
                 marks.forEach { it.content(it.layoutData) }
@@ -157,13 +131,15 @@ class HorizontalMarkGroup(
                     val yTransformed = transformation.toScreen(yOffset).y
                     val vp = transformation.viewPortScreen
 
+                    val style = (plotStyles[l.styleKey] as? HorizontalMark.Style) ?: defaultStyle
+
                     p.place(
-                        it.layoutData.anchor.place(
-                            vp.left + l.horizontalLabelPosition * vp.width + l.screenOffset.x.toPx(),
-                            yTransformed + l.screenOffset.y.toPx(),
+                        style.anchor.place(
+                            vp.left + style.horizontalLabelPosition * vp.width + style.screenOffset.x.toPx(),
+                            yTransformed + style.screenOffset.y.toPx(),
                             p.width.toFloat(),
                             p.height.toFloat(),
-                            l.lineWidth.toPx(),
+                            style.lineWidth.toPx(),
                             0f
                         ).round()
                     )
@@ -173,19 +149,28 @@ class HorizontalMarkGroup(
     }
 
     @Composable
-    override fun DrawClipped(transformation: Transformation) {
-
+    override fun DrawClipped(
+        transformation: Transformation,
+        plotStyles: ImmutableMap<Int, PlotStyle>
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             // layout to draw the lines
             Layout(
                 modifier = Modifier.fillMaxSize(),
                 content = {
                     marks.forEach {
+                        val plotStyle = plotStyles[it.layoutData.styleKey] as? HorizontalMark.Style
+                        val lineColor = (plotStyle?.lineColor ?: Color.Unspecified).takeOrElse {
+                            LocalContentColor.current.takeOrElse {
+                                MaterialTheme.colorScheme.outline
+                            }
+                        }
+
                         Spacer(
                             modifier = it.layoutData
                                 .fillMaxWidth()
-                                .height(it.layoutData.lineWidth)
-                                .background(it.lineColor().takeOrElse { MaterialTheme.colorScheme.outline })
+                                .height(plotStyle?.lineWidth ?: 1.dp)
+                                .background(lineColor)
                         )
                     }
                 }
@@ -203,23 +188,31 @@ class HorizontalMarkGroup(
                         val l = it.layoutData
                         val yOffset = Offset(0f, l.position)
                         val yTransformed = transformation.toScreen(yOffset).y
+                        val style = (plotStyles[l.styleKey] as? HorizontalMark.Style) ?: defaultStyle
                         it.placeable.place(
                             transformation.viewPortScreen.left,
-                            (yTransformed - 0.5f * l.lineWidth.toPx()).roundToInt()
+                            (yTransformed - 0.5f * style.lineWidth.toPx()).roundToInt()
                         )
                     }
                 }
             }
 
             if (clipLabel)
-                DrawLabels(transformation = transformation)
+                DrawLabels(transformation = transformation, plotStyles)
         }
     }
 
     @Composable
-    override fun DrawUnclipped(transformation: Transformation) {
+    override fun DrawUnclipped(
+        transformation: Transformation,
+        plotStyles: ImmutableMap<Int, PlotStyle>
+    ) {
         if (!clipLabel)
-            DrawLabels(transformation = transformation)
+            DrawLabels(transformation = transformation, plotStyles)
+    }
+
+    companion object {
+        private val defaultStyle = HorizontalMark.Style()
     }
 }
 
@@ -247,15 +240,28 @@ private fun HorizontalMarkGroupPreview() {
                 screenHeight = maxHeight,
                 viewPortRaw = Rect(-10f, 5f, 10f, -5f)
             )
+            val plotStyles = persistentMapOf<Int, PlotStyle>(
+                0 to HorizontalMark.Style(
+                    anchor = Anchor.NorthEast,
+                    horizontalLabelPosition = 0.5f,
+                    lineWidth = 3.dp,
+                ),
+                1 to HorizontalMark.Style(
+                    anchor = Anchor.SouthWest,
+                    horizontalLabelPosition = 0.1f,
+                ),
+                2 to HorizontalMark.Style(
+                    anchor = Anchor.SouthEast,
+                    horizontalLabelPosition = 0.9f,
+                )
+            )
 
             val markGroup = remember {
                 HorizontalMarkGroup(
                     persistentListOf(
                         HorizontalMark(
                             position = 0f,
-                            anchor = Anchor.NorthEast,
-                            horizontalLabelPosition = 0.5f,
-                            lineWidth = 3.dp,
+                            styleKey = 0,
                             content = { modifier ->
                                 Text(
                                     "0NE....",
@@ -265,8 +271,7 @@ private fun HorizontalMarkGroupPreview() {
                         ),
                         HorizontalMark(
                             position = -4f,
-                            anchor = Anchor.SouthWest,
-                            horizontalLabelPosition = 0.1f,
+                            styleKey = 1,
                             content = { modifier ->
                                 Text(
                                     "-4SW",
@@ -276,8 +281,7 @@ private fun HorizontalMarkGroupPreview() {
                         ),
                         HorizontalMark(
                             position = 3f,
-                            anchor = Anchor.SouthEast,
-                            horizontalLabelPosition = 0.9f,
+                            styleKey = 2,
                             content = { modifier ->
                                 Text(
                                     "3SE", modifier = modifier.background(Color.Green),
@@ -289,8 +293,8 @@ private fun HorizontalMarkGroupPreview() {
                     clipLabel = true
                 )
             }
-            markGroup.DrawClipped(transformation = transformation)
-            markGroup.DrawUnclipped(transformation = transformation)
+            markGroup.DrawClipped(transformation = transformation, plotStyles = plotStyles)
+            markGroup.DrawUnclipped(transformation = transformation, plotStyles = plotStyles)
         }
     }
 }

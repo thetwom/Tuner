@@ -26,7 +26,9 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.round
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 
 class PointMark(
     position: Offset,
@@ -78,7 +80,10 @@ class PointMarkGroup(
     }
 
     @Composable
-    override fun DrawClipped(transformation: Transformation) {
+    override fun DrawClipped(
+        transformation: Transformation,
+        plotStyles: ImmutableMap<Int, PlotStyle>
+        ) {
         Layout(
             modifier = Modifier.fillMaxSize(),
             content = {
@@ -109,7 +114,10 @@ class PointMarkGroup(
     }
 
     @Composable
-    override fun DrawUnclipped(transformation: Transformation) { }
+    override fun DrawUnclipped(
+        transformation: Transformation,
+        plotStyles: ImmutableMap<Int, PlotStyle>
+    ) { }
 }
 
 @Composable
@@ -136,6 +144,7 @@ private fun PointMarkGroupPreview() {
                 screenHeight = maxHeight,
                 viewPortRaw = Rect(-10f, 5f, 10f, -5f)
             )
+            val plotStyles = persistentMapOf<Int, PlotStyle>()
 
             val pointMarkGroup = remember {
                 PointMarkGroup(
@@ -174,8 +183,8 @@ private fun PointMarkGroupPreview() {
                 )
             }
 
-            pointMarkGroup.DrawClipped(transformation = transformation)
-            pointMarkGroup.DrawUnclipped(transformation = transformation)
+            pointMarkGroup.DrawClipped(transformation = transformation, plotStyles = plotStyles)
+            pointMarkGroup.DrawUnclipped(transformation = transformation, plotStyles = plotStyles)
         }
     }
 }
