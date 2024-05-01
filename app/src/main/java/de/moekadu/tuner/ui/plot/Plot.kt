@@ -42,7 +42,9 @@ import androidx.compose.ui.unit.toOffset
 import androidx.compose.ui.unit.toSize
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -181,28 +183,23 @@ class PlotState(
     fun setLine(
         key: Int,
         coordinates: Line.Coordinates? = null,
-        lineWidth: Dp? = null,
-        lineColor: (@Composable () -> Color)? = null
+        styleKey: Int? = null,
     ) {
         val item = items[key]
         if (item is Line) {
-            item.modify(coordinates, lineWidth, lineColor)
+            item.modify(coordinates, styleKey)
         } else {
-            val newItem = Line(coordinates, lineWidth, lineColor)
+            val newItem = Line(coordinates, styleKey ?: 0)
             items[key] = newItem
         }
     }
 
-    fun setPoint(
-        key: Int,
-        position: Offset? = null,
-        content: (@Composable PointScope.() -> Unit)? = null,
-    ) {
+    fun setPoint(key: Int, position: Offset? = null, styleKey: Int? = null) {
         val item = items[key]
         if (item is Point) {
-            item.modify(position, content)
+            item.modify(position, styleKey)
         } else {
-            val newItem = Point(position, content)
+            val newItem = Point(position, styleKey ?: 0)
             items[key] = newItem
         }
         //points.setPoint(key, position, content)
@@ -237,22 +234,16 @@ class PlotState(
         key: Int,
         yValues: ImmutableList<FloatArray>,
         maxLabelHeight: @Composable Density.() -> Float,
-        horizontalLabelPosition: Float,
-        anchor: Anchor,
-        lineWidth: Dp,
         clipLabelToPlotWindow: Boolean = false,
-        lineColor: @Composable () -> Color = { Color.Unspecified },
         maxNumLabels: Int = -1, // -1 is auto
+        styleKey: Int? = null,
         label: (@Composable (modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)? = null
     ) {
         val tickLevels = TickLevelExplicitRanges(yValues)
         items[key] = YTicks(
+            styleKey = styleKey,
             label = label,
             tickLevel = tickLevels,
-            anchor = anchor,
-            horizontalLabelPosition = horizontalLabelPosition,
-            lineWidth = lineWidth,
-            lineColor = lineColor,
             maxLabelHeight = maxLabelHeight,
             clipLabelToPlotWindow = clipLabelToPlotWindow,
             maxNumLabels = maxNumLabels
@@ -271,18 +262,11 @@ class PlotState(
     fun modifyHorizontalMark(
         key: Int, markIndex: Int,
         position: Float? = null,
-        anchor: Anchor? = null,
-        screenOffset: DpOffset? = null,
-        horizontalLabelPosition: Float? = null,
-        lineWidth: Dp? = null,
-        lineColor: (@Composable () -> Color)? = null,
+        styleKey: Int? = null,
         content: (@Composable (modifier: Modifier) -> Unit)? = null,
     ) {
         val marks = items[key] as HorizontalMarkGroup
-        marks.modify(markIndex,
-            position, anchor, screenOffset, horizontalLabelPosition, lineWidth,
-            lineColor, content
-        )
+        marks.modify(markIndex, position, styleKey, content)
     }
 
     fun addVerticalMarks(
@@ -327,20 +311,20 @@ class PlotState(
     }
 
     @Composable
-    fun DrawClipped(transformation: Transformation) {
+    fun DrawClipped(transformation: Transformation, plotStyles: ImmutableMap<Int, PlotStyle>) {
         val clipShape = transformation.rememberClipShape()
         Box(modifier = Modifier.fillMaxSize().clip(clipShape)) {
             items.asSequence().filter { it.value.hasClippedDraw }.forEach {
-                it.value.DrawClipped(transformation = transformation)
+                it.value.DrawClipped(transformation = transformation, plotStyles)
             }
         }
     }
 
     @Composable
-    fun DrawUnclipped(transformation: Transformation) {
+    fun DrawUnclipped(transformation: Transformation, plotStyles: ImmutableMap<Int, PlotStyle>) {
         Box(modifier = Modifier.fillMaxSize()) {
             items.asSequence().filter { it.value.hasUnclippedDraw }.forEach {
-                it.value.DrawUnclipped(transformation = transformation)
+                it.value.DrawUnclipped(transformation = transformation, plotStyles = plotStyles)
             }
         }
     }
@@ -371,7 +355,8 @@ fun Plot(
     modifier: Modifier = Modifier,
     plotWindowPadding: DpRect = DpRect(0.dp, 0.dp, 0.dp, 0.dp),
     plotWindowOutline: PlotWindowOutline = PlotDefaults.windowOutline(),
-    lockX: Boolean = false, lockY: Boolean = false
+    lockX: Boolean = false, lockY: Boolean = false,
+    plotStyles: ImmutableMap<Int, PlotStyle>
 ){
     BoxWithConstraints(
         modifier = modifier
@@ -415,8 +400,8 @@ fun Plot(
             }
         }
 
-        state.DrawClipped(transformation = transformation)
-        state.DrawUnclipped(transformation = transformation)
+        state.DrawClipped(transformation = transformation, plotStyles = plotStyles)
+        state.DrawUnclipped(transformation = transformation, plotStyles = plotStyles)
 
         Spacer(
             modifier = Modifier
@@ -443,6 +428,19 @@ private fun PlotPreview() {
     TunerTheme {
         val textLabelHeight = rememberTextLabelHeight()
         val textLabelWidth = rememberTextLabelWidth("XXXXXX")
+        val plotStyles = persistentMapOf<Int, PlotStyle>(
+            0 to Line.Style(MaterialTheme.colorScheme.primary, 2.dp),
+            1 to Line.Style(MaterialTheme.colorScheme.error, 5.dp),
+            2 to Point.circleShape(10.dp, MaterialTheme.colorScheme.primary),
+            10 to HorizontalMark.Style(anchor = Anchor.West, 0.1f),
+            11 to HorizontalMark.Style(anchor = Anchor.West, 0.3f),
+            100 to YTicks.Style(
+                horizontalLabelPosition = 0.5f,
+                anchor = Anchor.Center, //Anchor.East,
+                lineWidth = 1.dp,
+                lineColor = MaterialTheme.colorScheme.primary
+            ),
+        )
         val state = remember{
             PlotState(
                 viewPortRaw = Rect(left = 2f, top = 20f, right = 10f, bottom = 3f),
@@ -453,29 +451,25 @@ private fun PlotPreview() {
                     coordinates = Line.Coordinates(
                         floatArrayOf(3f, 5f, 7f, 9f), floatArrayOf(4f, 8f, 6f, 15f)
                     ),
-                    lineWidth = 2.dp,
-                    lineColor =  { MaterialTheme.colorScheme.primary }
+                    styleKey = 0
                 )
                 setLine(
                     key = 1,
                     coordinates = Line.Coordinates(
                         floatArrayOf(3f, 5f, 7f, 9f), floatArrayOf(15f, 18f, 12f, 10f)
                     ),
-                    lineWidth = 5.dp,
-                    lineColor =  { MaterialTheme.colorScheme.error }
+                    styleKey = 1
                 )
-                setPoint(10, Offset(3f, 4f), Point.drawCircle(10.dp) { MaterialTheme.colorScheme.primary })
+                setPoint(10, Offset(3f, 4f), styleKey = 2)
+
                 setYTicks(
                     101,
                     listOf(
                         floatArrayOf(0f, 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f, 10f, 15f, 20f)
                     ).toImmutableList(),
                     maxLabelHeight = { textLabelHeight },
-                    horizontalLabelPosition = 0.5f,
-                    anchor = Anchor.Center, //Anchor.East,
-                    lineWidth = 1.dp,
                     clipLabelToPlotWindow = true,
-                    lineColor = { MaterialTheme.colorScheme.primary },
+                    styleKey = 100
                 ) { modifier, level, index, value ->
                     Text("$index, $value, $level",
                         modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer))
@@ -505,10 +499,10 @@ private fun PlotPreview() {
                 addHorizontalMarks(
                     1001,
                     persistentListOf(
-                        HorizontalMark(12f, anchor = Anchor.West, 0.1f) {
+                        HorizontalMark(12f, styleKey = 10) {
                             Text("M 12", modifier = it.background(MaterialTheme.colorScheme.primary), color = MaterialTheme.colorScheme.onPrimary)
                         },
-                        HorizontalMark(11f, anchor = Anchor.West, 0.3f) {
+                        HorizontalMark(11f, styleKey = 11) {
                             Text("M 11 :-)", modifier = it.background(MaterialTheme.colorScheme.primary), color = MaterialTheme.colorScheme.onPrimary)
                         }
                     ),
@@ -537,7 +531,8 @@ private fun PlotPreview() {
             Plot(
                 state,
                 plotWindowPadding = DpRect(left = 5.dp, top = 10.dp, right = 8.dp, bottom = 3.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                plotStyles = plotStyles
             )
         }
     }

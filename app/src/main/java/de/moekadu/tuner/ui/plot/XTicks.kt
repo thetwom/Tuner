@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import de.moekadu.tuner.ui.theme.TunerTheme
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
@@ -161,7 +163,10 @@ class XTicks(
         }
     }
     @Composable
-    override fun DrawClipped(transformation: Transformation) {
+    override fun DrawClipped(
+        transformation: Transformation,
+        plotStyles: ImmutableMap<Int, PlotStyle>
+    ) {
 
         Box(Modifier.fillMaxSize()) {
             val lineColor = lineColor().takeOrElse { MaterialTheme.colorScheme.outline }
@@ -186,7 +191,10 @@ class XTicks(
     }
 
     @Composable
-    override fun DrawUnclipped(transformation: Transformation) {
+    override fun DrawUnclipped(
+        transformation: Transformation,
+        plotStyles: ImmutableMap<Int, PlotStyle>
+    ) {
         if (!clipLabelToPlotWindow) {
             val range = rememberRange(transformation = transformation)
             DrawLabels(transformation = transformation, range = range)
@@ -218,6 +226,7 @@ private fun VerticalTicksPreview() {
                 screenHeight = maxHeight,
                 viewPortRaw = Rect(-10f, 5f, 10f, -5f)
             )
+            val plotStyles = persistentMapOf<Int, PlotStyle>()
             val textLabelHeight = rememberTextLabelHeight()
 
             val ticks = XTicks(
@@ -235,8 +244,8 @@ private fun VerticalTicksPreview() {
                 screenOffset = DpOffset(1.dp, 0.dp)
             )
 
-            ticks.DrawClipped(transformation = transformation)
-            ticks.DrawUnclipped(transformation = transformation)
+            ticks.DrawClipped(transformation = transformation, plotStyles = plotStyles)
+            ticks.DrawUnclipped(transformation = transformation, plotStyles = plotStyles)
         }
     }
 }

@@ -6,7 +6,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -15,11 +18,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.notedetection.TuningTarget
+import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.temperaments.TemperamentType
@@ -34,9 +39,11 @@ import de.moekadu.tuner.ui.plot.PlotDefaults
 import de.moekadu.tuner.ui.plot.PlotState
 import de.moekadu.tuner.ui.plot.PlotWindowOutline
 import de.moekadu.tuner.ui.plot.Point
+import de.moekadu.tuner.ui.plot.YTicks
 import de.moekadu.tuner.ui.theme.TunerTheme
 import de.moekadu.tuner.ui.theme.tunerColors
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlin.math.max
 import kotlin.math.min
@@ -93,6 +100,14 @@ private fun computeFrequencyRange(musicalScale: MusicalScale)
     return startFrequency..endFrequency
 }
 
+private fun computeToleranceBounds(centerFrequency: Float, toleranceInCents: Int)
+        : ClosedFloatingPointRange<Float> {
+    val ratio = centsToRatio(toleranceInCents.toFloat())
+    val lowerToleranceFreq = centerFrequency / ratio
+    val upperToleranceFreq = centerFrequency * ratio
+    return lowerToleranceFreq .. upperToleranceFreq
+}
+
 private fun computeViewPortSize(noteIndex: Int, musicalScale: MusicalScale, radius: Float, capacity: Int): Rect {
     val range = computeFrequencyRange(noteIndex, musicalScale, radius)
     val viewPortMarginRelative = 0.05f
@@ -118,13 +133,72 @@ class PitchHistoryState(
     val size get() = _values.size
     val values get() = _values.values
 
-    val currentFrequency get() = if (size == 0) 0f else values[size - 1]
+    private val currentFrequency get() = if (size == 0) musicalScale.referenceFrequency else values[size - 1]
+
+    private var targetNote by mutableStateOf<MusicalNote?>(null)
+
+    private var toleranceInCents = 5 // TODO: this must provided on start
 
     private val automaticFrequencyRadius = 1.5f
     val plotState = PlotState(
         computeViewPortSize(noteIndex = 0, musicalScale, automaticFrequencyRadius, capacity),
         computeViewPortLimits(musicalScale, capacity)
-    )
+    ).apply {
+        setLine(KEY_LINE, Line.Coordinates(count, values, 0, size), styleKey = 0) // TODO: style key must be a number and depend on tuning state
+        setPoint(KEY_CURRENT_POINT, null, styleKey = 1) // TODO: style key must be a number and depend on tuning state
+        addHorizontalMarks(KEY_TARGET_NOTE, persistentListOf(
+            HorizontalMark(position = currentFrequency, styleKey = 2) { modifier ->
+                targetNote?.let { note ->
+                    Surface(
+                        modifier = modifier,
+                        color = MaterialTheme.tunerColors.negative,
+                        contentColor = MaterialTheme.tunerColors.onNegative,
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Note(
+                            note,
+                            modifier = Modifier.padding(horizontal = 4.dp), // TODO: add outline width to padding
+                            notePrintOptions = notePrintOptions
+                        )
+                    }
+                }
+            }
+        ))
+
+        val toleranceFrequencies = computeToleranceBounds(currentFrequency, toleranceInCents)
+        addHorizontalMarks(
+            KEY_TOLERANCE,
+            persistentListOf(
+                HorizontalMark(position = toleranceFrequencies.start, styleKey = 3) { modifier ->
+                    Surface(
+                        modifier = modifier,
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.inverseSurface
+                    ) {
+                        Text(
+                            stringResource(id = R.string.cent, -toleranceInCents),
+                            modifier = Modifier.padding(horizontal = 4.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                },
+                HorizontalMark(position = toleranceFrequencies.endInclusive, styleKey = 4) { modifier ->
+                    Surface(
+                        modifier = modifier,
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.inverseSurface
+                    ) {
+                        Text(
+                            stringResource(id = R.string.cent, toleranceInCents),
+                            modifier = Modifier.padding(horizontal = 4.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            ),
+            sameSizeLabels = true
+        )
+    }
 
     init {
         val noteFreqs = listOf(
@@ -138,7 +212,7 @@ class PitchHistoryState(
                 computeMaxNoteSize(
                     musicalScale.noteNameScale,
                     notePrintOptions = notePrintOptions,
-                    fontSize = 12.sp,
+                    fontSize = 12.sp, // TODO: this must com from some style
                     fontWeight = null,
                     octaveRange = musicalScale.getNote(musicalScale.noteIndexBegin).octave..musicalScale.getNote(
                         musicalScale.noteIndexEnd
@@ -147,9 +221,7 @@ class PitchHistoryState(
                     resources = LocalContext.current.resources
                 ).height.toFloat()
             },
-            horizontalLabelPosition = 1f,
-            anchor = Anchor.West,
-            lineWidth = 1.dp
+            styleKey = 5
         ) { modifier, _, index, _ ->
             val note = musicalScale.getNote(musicalScale.noteIndexBegin + index)
             Note(
@@ -164,13 +236,7 @@ class PitchHistoryState(
     fun addFrequency(value: Float) {
         _values.add(value)
         plotState.setLine(KEY_LINE, Line.Coordinates(count, values, 0, size))
-        plotState.setPoint(
-            KEY_CURRENT_POINT,
-            Offset((size - 1).toFloat(), value),
-            Point.drawCircle(
-                8.dp,
-                { MaterialTheme.colorScheme.primary }) // TODO: define other color, point size must come from somewhere else
-        )
+        plotState.setPoint(KEY_CURRENT_POINT, Offset((size - 1).toFloat(), value))
     }
 
     fun changeSettings(
@@ -178,147 +244,15 @@ class PitchHistoryState(
         toleranceInCents: Int = -1,
     ) {
         if (tuningTarget != null) {
-            plotState.setYTicks(
-                KEY_TARGET_NOTE,
-                yValues = listOf(floatArrayOf(tuningTarget.frequency)).toImmutableList(),
-                maxLabelHeight = {
-                    computeMaxNoteSize(
-                        musicalScale.noteNameScale,
-                        notePrintOptions = notePrintOptions,
-                        fontSize = 12.sp,
-                        fontWeight = null,
-                        octaveRange = musicalScale.getNote(musicalScale.noteIndexBegin).octave..musicalScale.getNote(
-                            musicalScale.noteIndexEnd
-                        ).octave,
-                        measurer = rememberTextMeasurer(),
-                        resources = LocalContext.current.resources
-                    ).height.toFloat()
-                },
-                horizontalLabelPosition = 1f,
-                anchor = Anchor.West,
-                lineColor = { MaterialTheme.tunerColors.negative },
-                lineWidth = 2.dp
-            ) { modifier, _, index, _ ->
-                val note = musicalScale.getNote(musicalScale.noteIndexBegin + index)
-                Surface(
-                    modifier = modifier,
-                    color = MaterialTheme.tunerColors.negative,
-                    contentColor = MaterialTheme.tunerColors.onNegative,
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Note(
-                        note,
-                        modifier = modifier.padding(horizontal = 4.dp), // TODO: add outline width to padding
-                        notePrintOptions = notePrintOptions
-                    )
-                }
-            }
+            targetNote = tuningTarget.note
+            plotState.modifyHorizontalMark(KEY_TARGET_NOTE, 0, tuningTarget.frequency)
         }
+
         if (toleranceInCents > 0 && tuningTarget != null) {
-            val ratio = centsToRatio(toleranceInCents.toFloat())
-            val lowerToleranceFreq = tuningTarget.frequency / ratio
-            val upperToleranceFreq = tuningTarget.frequency * ratio
-            plotState.addHorizontalMarks(
-                KEY_TOLERANCE,
-                persistentListOf(
-                    HorizontalMark(
-                        position = lowerToleranceFreq,
-                        anchor = Anchor.NorthWest,
-                        horizontalLabelPosition = 0f,
-                        lineWidth = 1.dp,
-                        lineColor = { MaterialTheme.tunerColors.negative }
-                    ) { modifier ->
-                        Surface(
-                            modifier = modifier,
-                            shape = MaterialTheme.shapes.small,
-                            color = MaterialTheme.colorScheme.inverseSurface
-                        ) {
-                            Text(
-                                stringResource(id = R.string.cent, -toleranceInCents),
-                                modifier = Modifier.padding(horizontal = 4.dp),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    },
-                    HorizontalMark(
-                        position = upperToleranceFreq,
-                        anchor = Anchor.SouthWest,
-                        horizontalLabelPosition = 0f,
-                        lineWidth = 1.dp,
-                        lineColor = { MaterialTheme.tunerColors.negative }
-                    ) { modifier ->
-                        Surface(
-                            modifier = modifier,
-                            shape = MaterialTheme.shapes.small,
-                            color = MaterialTheme.colorScheme.inverseSurface
-                        ) {
-                            Text(
-                                stringResource(id = R.string.cent, toleranceInCents),
-                                modifier = Modifier.padding(horizontal = 4.dp),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                ),
-                sameSizeLabels = true
-            )
-
-//            plotState.setYTicks(
-//                KEY_LOWER_TOLERANCE,
-//                yValues = listOf(floatArrayOf(lowerToleranceFreq)).toImmutableList(),
-//                maxLabelHeight = {
-//                    rememberTextLabelHeight()
-//                },
-//                horizontalLabelPosition = 0f,
-//                anchor = Anchor.NorthWest,
-//                lineColor = { MaterialTheme.tunerColors.negative },
-//                lineWidth = 1.dp
-//            ) { modifier, _, index, _ ->
-//                Surface(
-//                    modifier = modifier,
-//                    color = MaterialTheme.tunerColors.negative,
-//                    contentColor = MaterialTheme.tunerColors.onNegative,
-//                    shape = MaterialTheme.shapes.small
-//                ) {
-//                    Surface(
-//                        modifier = modifier,
-//                        color = MaterialTheme.colorScheme.inverseSurface
-//                    ){
-//                        Text(
-//                            stringResource(id = R.string.cent, -toleranceInCents),
-//                            modifier = Modifier.padding(horizontal = 4.dp)
-//                        )
-//                    }
-//                }
-//            }
-
-//            plotState.setYTicks(
-//                KEY_UPPER_TOLERANCE,
-//                yValues = listOf(floatArrayOf(upperToleranceFreq)).toImmutableList(),
-//                maxLabelHeight = {
-//                    rememberTextLabelHeight()
-//                },
-//                horizontalLabelPosition = 0f,
-//                anchor = Anchor.SouthWest,
-//                lineColor = { MaterialTheme.tunerColors.negative },
-//                lineWidth = 1.dp
-//            ) { modifier, _, index, _ ->
-//                Surface(
-//                    modifier = modifier,
-//                    color = MaterialTheme.tunerColors.negative,
-//                    contentColor = MaterialTheme.tunerColors.onNegative,
-//                    shape = MaterialTheme.shapes.small
-//                ) {
-//                    Surface(
-//                        modifier = modifier,
-//                        color = MaterialTheme.colorScheme.inverseSurface
-//                    ){
-//                        Text(
-//                            stringResource(id = R.string.cent, toleranceInCents),
-//                            modifier = Modifier.padding(horizontal = 4.dp)
-//                        )
-//                    }
-//                }
+            this.toleranceInCents = toleranceInCents
+            val toleranceFrequencies = computeToleranceBounds(tuningTarget.frequency, toleranceInCents)
+            plotState.modifyHorizontalMark(KEY_TOLERANCE, 0, toleranceFrequencies.start)
+            plotState.modifyHorizontalMark(KEY_TOLERANCE, 1, toleranceFrequencies.endInclusive)
         }
     }
 
@@ -381,20 +315,53 @@ class PitchHistoryState(
     }
 }
 
+// TODO: inestaed of taking linestyle and pointstyle, use some historyplot defaults?
 @Composable
 fun PitchHistory(
     state: PitchHistoryState,
     modifier: Modifier = Modifier,
     plotWindowPadding: DpRect = DpRect(0.dp, 0.dp, 0.dp, 0.dp),
-    plotWindowOutline: PlotWindowOutline = PlotDefaults.windowOutline() // TODO: can we remove this and use some system wide defaults?
+    plotWindowOutline: PlotWindowOutline = PlotDefaults.windowOutline(), // TODO: can we remove this and use some system wide defaults?
+    lineStyle: Line.Style = Line.Style(MaterialTheme.colorScheme.primary, 2.dp),
+    pointStyle: Point.Style = Point.circleShape(8.dp, MaterialTheme.colorScheme.primary),
+    targetNoteMarkStyle: HorizontalMark.Style = HorizontalMark.Style( // TODO: different styles for different tunign states
+       anchor = Anchor.West,
+       horizontalLabelPosition = 1f,
+       lineWidth = 1.dp,
+       lineColor = MaterialTheme.colorScheme.error,
+       screenOffset = DpOffset.Zero
+    ),
+    toleranceStyle: HorizontalMark.Style = HorizontalMark.Style( // TODO: different styles for different tunign states
+        horizontalLabelPosition = 0f,
+        lineWidth = 1.dp,
+        lineColor = MaterialTheme.colorScheme.error,
+        screenOffset = DpOffset.Zero
+    ),
+    tickStyle: YTicks.Style = YTicks.Style(
+        horizontalLabelPosition = 1f,
+        anchor = Anchor.West,
+        lineWidth = 1.dp,
+        lineColor = MaterialTheme.colorScheme.outline
+    )
 ) {
+    val plotStyles = remember(pointStyle, lineStyle) {
+        persistentMapOf(
+            0 to lineStyle,
+            1 to pointStyle,
+            2 to targetNoteMarkStyle,
+            3 to toleranceStyle.copy(anchor = Anchor.NorthWest),
+            4 to toleranceStyle.copy(anchor = Anchor.SouthWest),
+            5 to tickStyle
+        )
+    }
     Plot(
         state = state.plotState,
         modifier = modifier,
         plotWindowPadding = plotWindowPadding,
         plotWindowOutline = plotWindowOutline,
         lockX = true,
-        lockY = false
+        lockY = false,
+        plotStyles = plotStyles
     )
 }
 

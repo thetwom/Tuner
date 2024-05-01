@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -24,6 +25,8 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toRect
 import de.moekadu.tuner.ui.theme.TunerTheme
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
 import kotlin.math.max
 import kotlin.math.min
 
@@ -31,9 +34,13 @@ private class WrappedPath(val path: Path = Path())
 
 class Line(
     coordinates: Coordinates? = null,
-    lineWidth: Dp? = null,
-    lineColor: (@Composable () -> Color)? = null
+    styleKey: Int = 0
 ) : PlotItem {
+    data class Style(
+        val color: Color,
+        val lineWidth: Dp
+    ) : PlotStyle
+
     class Coordinates(
         val xValues: FloatArray, val yValues: FloatArray,
         val indexBegin: Int = 0, val indexEnd: Int = min(xValues.size, yValues.size)
@@ -41,8 +48,8 @@ class Line(
     override val hasClippedDraw = true
     override val hasUnclippedDraw = false
 
-    private var lineColor by mutableStateOf(lineColor ?: { Color.Unspecified })
-    private var lineWidth by mutableStateOf(lineWidth ?: 1.dp)
+    private var styleKey by mutableIntStateOf(styleKey)
+
     private var pathRaw by mutableStateOf(WrappedPath())
     private val pathTransformed = WrappedPath()
 
@@ -61,13 +68,10 @@ class Line(
 
     fun modify(
         coordinates: Coordinates? = null,
-        lineWidth: Dp? = null,
-        lineColor: (@Composable () -> Color)? = null
+        styleKey: Int? = null
     ) {
-        if (lineColor != null)
-            this.lineColor = lineColor
-        if (lineWidth != null)
-            this.lineWidth = lineWidth
+        if (styleKey != null)
+            this.styleKey = styleKey
         if (coordinates != null) {
             val xValues = coordinates.xValues
             val yValues = coordinates.yValues
@@ -104,13 +108,21 @@ class Line(
     }
 
     @Composable
-    override fun DrawClipped(transformation: Transformation) {
-        val lineColor = this.lineColor().takeOrElse {
+    override fun DrawClipped(
+        transformation: Transformation,
+        plotStyles: ImmutableMap<Int, PlotStyle>
+    ) {
+        val plotStyle = remember(plotStyles, styleKey) {
+            plotStyles[styleKey] as? Style
+        }
+        val lineColor = (plotStyle?.color ?: Color.Unspecified).takeOrElse {
             LocalContentColor.current.takeOrElse {
                 MaterialTheme.colorScheme.onSurface
             }
         }
-
+        val lineWidth = plotStyle?.lineWidth ?: 1.dp
+        val lineWidthPx = with(LocalDensity.current) { lineWidth.toPx() }
+        
         val pathTransformed = remember(transformation, pathRaw) {
             val path = this.pathTransformed.path
             path.rewind()
@@ -118,8 +130,6 @@ class Line(
             path.transform(transformation.matrixRawToScreen)
             WrappedPath(path)
         }
-
-        val lineWidthPx = with(LocalDensity.current) { lineWidth.toPx() }
 
         val isVisible = remember(transformation, boundingBox.value, lineWidthPx) {
             val bbS = transformation.toScreen(boundingBox.value).inflate(0.5f * lineWidthPx)
@@ -141,7 +151,10 @@ class Line(
     }
 
     @Composable
-    override fun DrawUnclipped(transformation: Transformation) { }
+    override fun DrawUnclipped(
+        transformation: Transformation,
+        plotStyles: ImmutableMap<Int, PlotStyle>
+    ) { }
 }
 
 @Composable
@@ -167,26 +180,30 @@ private fun LinePreview() {
                 screenHeight = maxHeight,
                 viewPortRaw = Rect(-10f, 5f, 10f, -5f)
             )
+            val plotStyles = persistentMapOf<Int, PlotStyle>(
+                0 to Line.Style(MaterialTheme.colorScheme.error, 2.dp),
+                1 to Line.Style(MaterialTheme.colorScheme.primary, 1.dp),
+            )
 
             val line = Line(
                 Line.Coordinates(
                     xValues = floatArrayOf(-9f, -5f, 0f,  7f,  8f),
                     yValues = floatArrayOf(-3f,  5f, 0f, -4f, -2f)
                 ),
-                2.dp
+                styleKey = 0
             )
             
-            line.DrawClipped(transformation = transformation)
+            line.DrawClipped(transformation = transformation, plotStyles = plotStyles)
 
             val line2 = Line(
                 Line.Coordinates(
                     xValues =  floatArrayOf(-9f, -5f, 0f,  7f,  8f),
                     yValues =  floatArrayOf(-30f,  -50f, -30f, -40f, -20f)
                 ),
-                2.dp
+                styleKey = 1
             )
 
-            line2.DrawClipped(transformation = transformation)
+            line2.DrawClipped(transformation = transformation, plotStyles = plotStyles)
         }
     }
 }

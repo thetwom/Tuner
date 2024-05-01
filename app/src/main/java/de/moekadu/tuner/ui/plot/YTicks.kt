@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -31,6 +32,8 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import de.moekadu.tuner.ui.theme.TunerTheme
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
@@ -62,19 +65,23 @@ fun rememberTextLabelHeight(
 }
 
 class YTicks(
+    private val styleKey: Int?,
     private val label: (@Composable (modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)?,
     private val tickLevel: TickLevel,
     private val maxLabelHeight: @Composable Density.() -> Float,
-    private val anchor: Anchor = Anchor.Center,
-    private val horizontalLabelPosition: Float = 0.5f,
-    private val lineWidth: Dp = 1.dp,
-    private val lineColor: @Composable () -> Color = {  Color.Unspecified },
     private val clipLabelToPlotWindow: Boolean = false,
     private val maxNumLabels: Int = -1,
-    private val screenOffset: DpOffset = DpOffset.Zero
 ): PlotItem {
     override val hasClippedDraw = true
     override val hasUnclippedDraw = !clipLabelToPlotWindow
+
+    data class Style(
+        val anchor: Anchor = Anchor.Center,
+        val horizontalLabelPosition: Float = 0.5f,
+        val lineWidth: Dp = 1.dp,
+        val lineColor: Color = Color.Unspecified,
+        val screenOffset: DpOffset = DpOffset.Zero
+    ) : PlotStyle
 
     data class TickLayoutData(val position: Float):
         ParentDataModifier {
@@ -87,7 +94,7 @@ class YTicks(
     )
 
     @Composable
-    private fun DrawLabels(transformation: Transformation, range: TicksRange) {
+    private fun DrawLabels(transformation: Transformation, range: TicksRange, plotStyle: Style) {
         Layout(
             content = {
                 label?.let { l ->
@@ -115,12 +122,12 @@ class YTicks(
                     val vp = transformation.viewPortScreen
 
                     p.place(
-                        anchor.place(
-                            vp.left + horizontalLabelPosition * vp.width + screenOffset.x.toPx(),
-                            yTransformed + screenOffset.y.toPx(),
+                        plotStyle.anchor.place(
+                            vp.left + plotStyle.horizontalLabelPosition * vp.width + plotStyle.screenOffset.x.toPx(),
+                            yTransformed + plotStyle.screenOffset.y.toPx(),
                             p.width.toFloat(),
                             p.height.toFloat(),
-                            lineWidth.toPx(),
+                            plotStyle.lineWidth.toPx(),
                             0f
                         ).round()
                     )
@@ -131,13 +138,13 @@ class YTicks(
     }
 
     @Composable
-    private fun rememberRange(transformation: Transformation): TicksRange {
+    private fun rememberRange(transformation: Transformation, plotStyle: Style): TicksRange {
         val density = LocalDensity.current
         val maxLabelHeightPx = density.maxLabelHeight()
 
-        return remember(density, transformation, screenOffset, lineWidth, maxNumLabels) {
-            val screenOffsetPx = with(density) { screenOffset.y.toPx() }
-            val lineWidthPx = with(density) { lineWidth.toPx() }
+        return remember(density, transformation, plotStyle, maxNumLabels) {
+            val screenOffsetPx = with(density) { plotStyle.screenOffset.y.toPx() }
+            val lineWidthPx = with(density) { plotStyle.lineWidth.toPx() }
             val maxNumLabelsResolved = if (maxNumLabels <= 0)
                 (transformation.viewPortScreen.height / maxLabelHeightPx / 2f).roundToInt()
             else
@@ -160,11 +167,20 @@ class YTicks(
     }
 
     @Composable
-    override fun DrawClipped(transformation: Transformation) {
-
+    override fun DrawClipped(
+        transformation: Transformation,
+        plotStyles: ImmutableMap<Int, PlotStyle>
+    ) {
         Box(Modifier.fillMaxSize()) {
-            val lineColor = lineColor().takeOrElse { MaterialTheme.colorScheme.outline }
-            val range = rememberRange(transformation = transformation)
+            val plotStyle = remember(plotStyles, styleKey) {
+                (plotStyles[styleKey] as? Style) ?: defaultStyle
+            }
+            val lineColor = plotStyle.lineColor.takeOrElse {
+                LocalContentColor.current.takeOrElse {
+                    MaterialTheme.colorScheme.outline
+                }
+            }
+            val range = rememberRange(transformation = transformation, plotStyle = plotStyle)
 
             Canvas(modifier = Modifier.fillMaxSize()) {
                 for (i in range.indexBegin until range.indexEnd) {
@@ -174,22 +190,32 @@ class YTicks(
                         lineColor,
                         Offset(transformation.viewPortScreen.left.toFloat(), yTransformed),
                         Offset(transformation.viewPortScreen.right.toFloat(), yTransformed),
-                        strokeWidth = lineWidth.toPx()
+                        strokeWidth = plotStyle.lineWidth.toPx()
                     )
                 }
             }
 
             if (clipLabelToPlotWindow)
-                DrawLabels(transformation = transformation, range = range)
+                DrawLabels(transformation = transformation, range = range, plotStyle)
         }
     }
 
     @Composable
-    override fun DrawUnclipped(transformation: Transformation) {
+    override fun DrawUnclipped(
+        transformation: Transformation,
+        plotStyles: ImmutableMap<Int, PlotStyle>
+    ) {
         if (!clipLabelToPlotWindow) {
-            val range = rememberRange(transformation = transformation)
-            DrawLabels(transformation = transformation, range = range)
+            val plotStyle = remember(plotStyles, styleKey) {
+                (plotStyles[styleKey] as? Style) ?: defaultStyle
+            }
+            val range = rememberRange(transformation = transformation, plotStyle = plotStyle)
+            DrawLabels(transformation = transformation, range = range, plotStyle = plotStyle)
         }
+    }
+
+    companion object {
+        private val defaultStyle = Style()
     }
 }
 
@@ -217,11 +243,17 @@ private fun YTicksPreview() {
                 screenHeight = maxHeight,
                 viewPortRaw = Rect(-10f, 5f, 10f, -5f)
             )
+            val plotStyles = persistentMapOf<Int, PlotStyle>(
+                0 to YTicks.Style(
+                    anchor = Anchor.South,
+                    screenOffset = DpOffset(0.dp, (-1).dp)
+                )
+            )
             val textLabelHeight = rememberTextLabelHeight()
 
             val ticks = YTicks(
                 label = { m, l, i, y -> Text("$l, $i, $y", modifier = m.background(Color.Magenta))},
-                anchor = Anchor.South,
+                styleKey = 0,
                 tickLevel = TickLevelExplicitRanges(
                     listOf(
                         floatArrayOf(-3f, -2f, 0f, 4f),
@@ -229,12 +261,11 @@ private fun YTicksPreview() {
                         floatArrayOf(-3f, -2.5f, -2f, -1.5f, -1f, 0f, 1f, 2f, 3f, 4f),
                     ).toImmutableList()
                 ),
-                maxLabelHeight = { textLabelHeight },
-                screenOffset = DpOffset(0.dp, (-1).dp)
+                maxLabelHeight = { textLabelHeight }
             )
 
-            ticks.DrawClipped(transformation = transformation)
-            ticks.DrawUnclipped(transformation = transformation)
+            ticks.DrawClipped(transformation = transformation, plotStyles = plotStyles)
+            ticks.DrawUnclipped(transformation = transformation, plotStyles = plotStyles)
         }
     }
 }

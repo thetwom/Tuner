@@ -33,7 +33,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import kotlin.math.roundToInt
 
 class VerticalMark(
@@ -172,7 +174,10 @@ class VerticalMarkGroup(
     }
 
     @Composable
-    override fun DrawClipped(transformation: Transformation) {
+    override fun DrawClipped(
+        transformation: Transformation,
+        plotStyles: ImmutableMap<Int, PlotStyle>
+    ) {
 
         Box(Modifier.fillMaxSize()) {
             val clipShape = transformation.rememberClipShape()
@@ -220,7 +225,10 @@ class VerticalMarkGroup(
     }
 
     @Composable
-    override fun DrawUnclipped(transformation: Transformation) {
+    override fun DrawUnclipped(
+        transformation: Transformation,
+        plotStyles: ImmutableMap<Int, PlotStyle>
+    ) {
         if (!clipLabel)
             DrawLabels(transformation = transformation)
     }
@@ -250,6 +258,7 @@ private fun VerticalMarkGroupPreview() {
                 screenHeight = maxHeight,
                 viewPortRaw = Rect(-10f, 5f, 10f, -5f)
             )
+            val plotStyles = persistentMapOf<Int, PlotStyle>()
 
             val markGroup = remember {
                 VerticalMarkGroup(
@@ -293,8 +302,8 @@ private fun VerticalMarkGroupPreview() {
                 )
             }
 
-            markGroup.DrawClipped(transformation = transformation)
-            markGroup.DrawUnclipped(transformation = transformation)
+            markGroup.DrawClipped(transformation = transformation, plotStyles = plotStyles)
+            markGroup.DrawUnclipped(transformation = transformation, plotStyles = plotStyles)
         }
     }
 }
