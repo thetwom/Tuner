@@ -1,5 +1,6 @@
 package de.moekadu.tuner.ui.tuning
 
+import android.content.pm.Capability
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -7,6 +8,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,11 +38,11 @@ import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.rememberMaxNoteSize
 import de.moekadu.tuner.ui.plot.Anchor
 import de.moekadu.tuner.ui.plot.TickLevelExplicitRanges
+import de.moekadu.tuner.ui.plot3.GestureBasedViewPort
 import de.moekadu.tuner.ui.plot3.HorizontalMark3
 import de.moekadu.tuner.ui.plot3.HorizontalMarks3
 import de.moekadu.tuner.ui.plot3.Line3Coordinates
 import de.moekadu.tuner.ui.plot3.Plot3
-import de.moekadu.tuner.ui.plot3.Plot3State
 import de.moekadu.tuner.ui.plot3.Point3Shape
 import de.moekadu.tuner.ui.plot3.YTicksSettings
 import de.moekadu.tuner.ui.theme.TunerTheme
@@ -94,11 +96,8 @@ private fun ResizeableArray2.toLineCoordinates() =
 
 // TODO: don't input viewport but freq limits and more
 class PitchHistory2State(
-    viewPortRaw: Rect,
-    viewPortRawLimits: Rect,
     capacity: Int
 ) {
-    val plotState = Plot3State(viewPortRaw, viewPortRawLimits)
     private val history = ResizeableArray2(capacity)
 
     var lineCoordinates by mutableStateOf(history.toLineCoordinates())
@@ -107,9 +106,14 @@ class PitchHistory2State(
     var pointCoordinates by mutableStateOf<Offset?>(null)
         private set
 
-    fun setTolerance(toleranceInCents: Int) {
+    var capacity by mutableIntStateOf(capacity)
+        private set
 
+    fun resize(newCapacity: Int) {
+        capacity = newCapacity
+        history.resize(newCapacity)
     }
+
     fun addFrequency(value: Float) {
         history.add(value)
         lineCoordinates = history.toLineCoordinates()
@@ -123,6 +127,7 @@ fun PitchHistory2(
     musicalScale: MusicalScale,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
+    gestureBasedViewPort: GestureBasedViewPort = remember { GestureBasedViewPort() },
     plotWindowPadding: DpRect = DpRect(0.dp, 0.dp, 0.dp, 0.dp),
     tuningState: TuningState = TuningState.Unknown,
     // line properties
@@ -161,6 +166,32 @@ fun PitchHistory2(
                 }).toImmutableList()
         )
     }
+
+    val limits = remember(musicalScale, state.capacity) {
+        Rect(
+            left = 0f,
+            right = state.capacity * 1.1f,
+            top = musicalScale.getNoteFrequency(musicalScale.noteIndexBegin - 0.2f),
+            bottom = musicalScale.getNoteFrequency(musicalScale.noteIndexEnd + 0.2f)
+        )
+    }
+
+    val targetFrequency = remember(musicalScale, targetNote) {
+        val noteIndex = musicalScale.getNoteIndex(targetNote)
+        musicalScale.getNoteFrequency(noteIndex)
+    }
+
+    val viewPort = remember(targetNote, musicalScale, limits) {
+        val noteIndex = musicalScale.getNoteIndex(targetNote)
+        val visibleRangeInIndices = 1.5f
+        Rect(
+            left = limits.left,
+            right = limits.right,
+            top = musicalScale.getNoteFrequency(noteIndex + visibleRangeInIndices),
+            bottom = musicalScale.getNoteFrequency(noteIndex - visibleRangeInIndices)
+        )
+    }
+
     val maxNoteHeight = rememberMaxNoteSize(
         musicalScale.noteNameScale,
         notePrintOptions = notePrintOptions,
@@ -189,8 +220,10 @@ fun PitchHistory2(
     }
 
     Plot3(
-        state = state.plotState,
         modifier = modifier,
+        viewPort = viewPort,
+        viewPortGestureLimits = limits,
+        gestureBasedViewPort = gestureBasedViewPort,
         plotWindowPadding = plotWindowPadding,
         lockX = true
     ) {
@@ -212,11 +245,6 @@ fun PitchHistory2(
                 color = tickLabelColor,
                 notePrintOptions = notePrintOptions
             )
-        }
-
-        val targetFrequency = remember(musicalScale, targetNote) {
-            val noteIndex = musicalScale.getNoteIndex(targetNote)
-            musicalScale.getNoteFrequency(noteIndex)
         }
 
         val toleranceMarks = remember(toleranceInCents, targetFrequency) {
@@ -295,7 +323,6 @@ fun PitchHistory2(
         }
         HorizontalMarks(marks = targetMark, sameSizeLabels = true, clipLabelsToWindow = false)
 
-        // TODO: use inactive linecolor and width when tuning is inactive
         Line(
             data = state.lineCoordinates,
             color = if (tuningState == TuningState.Unknown) lineColorInactive else lineColor,
@@ -324,8 +351,6 @@ fun PitchHistory2Preview() {
         val musicalScale = remember { MusicalScaleFactory.create(TemperamentType.EDO12) }
         val state = remember {
             PitchHistory2State(
-                Rect(left = 0f, top = 500f, right = 10f, bottom = 400f),
-                Rect.Zero,
                 capacity = 9
             ).apply {
                 addFrequency(440f)
