@@ -1,10 +1,8 @@
 package de.moekadu.tuner.ui.tuning
 
-import android.content.pm.Capability
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,7 +23,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.temperaments.MusicalNote
@@ -40,11 +37,9 @@ import de.moekadu.tuner.ui.plot.Anchor
 import de.moekadu.tuner.ui.plot.TickLevelExplicitRanges
 import de.moekadu.tuner.ui.plot3.GestureBasedViewPort
 import de.moekadu.tuner.ui.plot3.HorizontalMark3
-import de.moekadu.tuner.ui.plot3.HorizontalMarks3
 import de.moekadu.tuner.ui.plot3.Line3Coordinates
 import de.moekadu.tuner.ui.plot3.Plot3
 import de.moekadu.tuner.ui.plot3.Point3Shape
-import de.moekadu.tuner.ui.plot3.YTicksSettings
 import de.moekadu.tuner.ui.theme.TunerTheme
 import de.moekadu.tuner.ui.theme.tunerColors
 import kotlinx.collections.immutable.persistentListOf
@@ -229,13 +224,12 @@ fun PitchHistory2(
     ) {
         YTicks(
             tickLevel = noteFrequencies,
-            settings = YTicksSettings(
-                maxNoteHeightPx, // TODO: maxNoteHeight should be remove from YTickSettings and then use settings from input
-                horizontalLabelPosition = 1f, // TODO: this must com from outside (left, right)
-                anchor = Anchor.West, // TODO: this must com from outside (left, right)
-                lineColor = tickLineColor,
-                lineWidth = tickLineWidth
-            )
+            maxLabelHeight = maxNoteHeightPx,
+            horizontalLabelPosition = 1f, // TODO: this must com from outside (left, right)
+            anchor = Anchor.West, // TODO: this must com from outside (left, right)
+            lineColor = tickLineColor,
+            lineWidth = tickLineWidth,
+            clipLabelToPlotWindow = false
         ) { noteModifier, _, index, _ ->
             val note = musicalScale.getNote(musicalScale.noteIndexBegin + index)
             Note(
@@ -325,8 +319,8 @@ fun PitchHistory2(
 
         Line(
             data = state.lineCoordinates,
-            color = if (tuningState == TuningState.Unknown) lineColorInactive else lineColor,
-            width = if (tuningState == TuningState.Unknown) lineWidthInactive else lineWidth
+            lineColor = if (tuningState == TuningState.Unknown) lineColorInactive else lineColor,
+            lineWidth = if (tuningState == TuningState.Unknown) lineWidthInactive else lineWidth
         )
 
         state.pointCoordinates?.let { position ->
