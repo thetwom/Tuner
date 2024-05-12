@@ -172,17 +172,19 @@ suspend fun PointerInputScope.detectPanZoomFlingGesture(
 
 @Composable
 fun Modifier.dragZoom(
-    state: Plot3State, transformation: () -> Transformation,
-    lockX: Boolean = false, lockY: Boolean = false
-    ): Modifier {
+    state: GestureBasedViewPort,
+    limits: () -> Rect?,
+    transformation: () -> Transformation,
+    lockX: Boolean = false,
+    lockY: Boolean = false
+): Modifier {
     return this then if (lockX && lockY) {
         Modifier
     } else if (lockX) {
         pointerInput(state) {
-//            val decay = exponentialDecay<Rect>(1f)
             detectPanZoomFlingGesture(
                 onGestureStart = {
-                    state.stopViewPortAnimation()
+                    state.setViewPort(transformation().viewPortRaw, null)
                 },
                 onGesture = { centroid, pan, zoom ->
                     val t = transformation()
@@ -191,36 +193,26 @@ fun Modifier.dragZoom(
                         (t.viewPortScreen.top - centroid.y) / zoom.height + centroid.y - pan.y,
                     )
                     //Log.v("Tuner", "Plot: original topLeft=$originalTopLeft, modified topLeft=$modifiedTopLeft, zoom=$zoom")
-                    val zoomedHeight= state.viewPortRaw.size.height / zoom.height
+                    val zoomedHeight = state.viewPort.size.height / zoom.height
 
                     val movedTopLeftRaw = t.toRaw(modifiedTopLeft)
                     val newViewPortRaw = t.viewPortRaw.copy(
                         top = movedTopLeftRaw.y,
                         bottom = movedTopLeftRaw.y + zoomedHeight,
                     )
-                    state.setViewPort(
-                        newViewPortRaw,
-                        Plot3State.TargetTransitionType.Snap,
-                        Plot3State.BoundsMode.Gesture
-                    )
+                    state.setViewPort(newViewPortRaw, limits())
                 },
                 onFling = { velocity ->
                     val velocityRaw = transformation().toRaw(velocity)
-                    state.flingViewPort(velocityRaw.copy(x = 0f), Plot3State.BoundsMode.Gesture)
-//                    val t = transformation()
-//                    val velocityRaw = (t.toRaw(Offset.Zero) - t.toRaw(Offset(0f, velocity.y)))
-//                    state.viewPortRawAnimation.animateDecay(
-//                        Rect(0f, velocityRaw.y, 0f, velocityRaw.y), decay
-//                    )
+                    state.flingViewPort(velocityRaw.copy(x = 0f), limits())
                 }
             )
         }
     } else if (lockY) {
         pointerInput(state) {
-//            val decay = exponentialDecay<Rect>(1f)
             detectPanZoomFlingGesture(
                 onGestureStart = {
-                    state.stopViewPortAnimation()
+                    state.setViewPort(transformation().viewPortRaw, null)
                 },
                 onGesture = { centroid, pan, zoom ->
                     val t = transformation()
@@ -229,36 +221,26 @@ fun Modifier.dragZoom(
                         0f
                     )
                     //Log.v("Tuner", "Plot: original topLeft=$originalTopLeft, modified topLeft=$modifiedTopLeft, zoom=$zoom")
-                    val zoomedWidth= state.viewPortRaw.size.width / zoom.width
+                    val zoomedWidth= state.viewPort.size.width / zoom.width
 
                     val movedTopLeftRaw = t.toRaw(modifiedTopLeft)
                     val newViewPortRaw = t.viewPortRaw.copy(
                         left = movedTopLeftRaw.x,
                         right = movedTopLeftRaw.x + zoomedWidth,
                     )
-                    state.setViewPort(
-                        newViewPortRaw,
-                        Plot3State.TargetTransitionType.Snap,
-                        Plot3State.BoundsMode.Gesture
-                    )
+                    state.setViewPort(newViewPortRaw, limits())
                 },
                 onFling = { velocity ->
-                    //val t = transformation()
-                    //val velocityRaw = (t.toRaw(Offset.Zero) - t.toRaw(Offset(velocity.x, 0f)))
                     val velocityRaw = transformation().toRaw(velocity)
-                    state.flingViewPort(velocityRaw.copy(y = 0f), Plot3State.BoundsMode.Gesture)
-//                    state.viewPortRawAnimation.animateDecay(
-//                        Rect(velocityRaw.x, 0f, velocityRaw.x, 0f), decay
-//                    )
+                    state.flingViewPort(velocityRaw.copy(y = 0f), limits())
                 }
             )
         }
     } else {
         pointerInput(state) {
-//            val decay = exponentialDecay<Rect>(1f)
             detectPanZoomFlingGesture(
                 onGestureStart = {
-                    state.stopViewPortAnimation()
+                    state.setViewPort(transformation().viewPortRaw, null)
                 },
                 onGesture = { centroid, pan, zoom ->
                     val t = transformation()
@@ -268,25 +250,16 @@ fun Modifier.dragZoom(
                     )
                     //Log.v("Tuner", "Plot: original topLeft=$originalTopLeft, modified topLeft=$modifiedTopLeft, zoom=$zoom")
                     val zoomedSize = Size(
-                        state.viewPortRaw.size.width / zoom.width,
-                        state.viewPortRaw.size.height / zoom.height
+                        state.viewPort.size.width / zoom.width,
+                        state.viewPort.size.height / zoom.height
                     )
 
                     val movedTopLeftRaw = t.toRaw(modifiedTopLeft)
-                    state.setViewPort(
-                        Rect(movedTopLeftRaw, zoomedSize),
-                        Plot3State.TargetTransitionType.Snap,
-                        Plot3State.BoundsMode.Gesture
-                    )
+                    state.setViewPort(Rect(movedTopLeftRaw, zoomedSize), limits())
                 },
                 onFling = { velocity ->
                     val velocityRaw = transformation().toRaw(velocity)
-                    state.flingViewPort(velocityRaw, Plot3State.BoundsMode.Gesture)
-//                    val t = transformation()
-//                    val velocityRaw = (t.toRaw(Offset.Zero) - t.toRaw(Offset(velocity.x, velocity.y)))
-//                    state.viewPortRawAnimation.animateDecay(
-//                        Rect(velocityRaw.x, velocityRaw.y, velocityRaw.x, velocityRaw.y), decay
-//                    )
+                    state.flingViewPort(velocityRaw, limits())
                 }
             )
         }

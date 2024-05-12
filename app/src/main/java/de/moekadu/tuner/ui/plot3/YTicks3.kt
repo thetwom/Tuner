@@ -185,8 +185,6 @@ private fun YTicks3Lines(
     )
 }
 
-
-
 @Composable
 fun YTicks3(
     label: (@Composable (modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)?,

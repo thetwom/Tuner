@@ -2,7 +2,11 @@ package de.moekadu.tuner.ui.plot3
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.animateRectAsState
 import androidx.compose.animation.core.exponentialDecay
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -45,6 +50,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.min
@@ -156,133 +162,6 @@ class Plot3ScopeImpl(
 
 
 }
-class Plot3State(
-    viewPortRaw: Rect,
-    viewPortRawLimits: Rect = Rect.Zero // no limits
-) {
-    enum class TargetTransitionType {
-        Animate,
-        Snap
-    }
-
-    enum class BoundsMode {
-        Explicit,
-        Gesture
-    }
-
-    class ViewPortTransition(
-        val targetViewPort: Rect,
-        val transition: TargetTransitionType,
-        val boundsMode: BoundsMode
-    )
-
-    private val _viewPortRawTransition = MutableStateFlow(
-        ViewPortTransition(viewPortRaw, TargetTransitionType.Snap, BoundsMode.Explicit)
-    )
-    val viewPortRawTransition get() = _viewPortRawTransition.asStateFlow()
-    private var viewPortRawExplicit = viewPortRaw
-
-    private val viewPortAnimationDecay = exponentialDecay<Rect>(1f)
-    private val viewPortRawAnimation = Animatable(viewPortRaw, Rect.VectorConverter)
-    var viewPortRaw by mutableStateOf(viewPortRaw)
-        private set
-
-    private var viewPortLimits = Rect(
-        min(viewPortRawLimits.left, viewPortRawLimits.right),
-        min(viewPortRawLimits.top, viewPortRawLimits.bottom),
-        max(viewPortRawLimits.left, viewPortRawLimits.right),
-        max(viewPortRawLimits.top, viewPortRawLimits.bottom),
-    )
-
-    var boundsMode by mutableStateOf(BoundsMode.Explicit)
-        private set
-
-    fun setViewPortLimits(limits: Rect) {
-        viewPortLimits = Rect(
-            min(limits.left,limits.right), min(limits.top, limits.bottom),
-            max(limits.left, limits.right), max(limits.top, limits.bottom),
-        )
-
-        val restrictedViewPort = restrictViewPortToLimits(viewPortRaw)
-        if (viewPortRaw != restrictedViewPort) {
-            setViewPort(restrictedViewPort, TargetTransitionType.Snap)
-        }
-    }
-
-    fun setViewPort(target: Rect, transition: TargetTransitionType) {
-        viewPortRawExplicit = target
-        _viewPortRawTransition.value = ViewPortTransition(target, transition, BoundsMode.Explicit)
-    }
-
-    fun resetViewPort(transition: TargetTransitionType) {
-        setViewPort(viewPortRawExplicit, transition)
-    }
-
-    private fun restrictViewPortToLimits(target: Rect): Rect {
-        // the restriction process does not just coerce the values in the min/max, since
-        // when dragging and reaching bounds, we would start zooming.
-        return if (viewPortLimits == Rect.Zero) {
-            target
-        } else {
-            // shrink size if necessary
-            var newTarget = Rect(
-                left = target.left,
-                top = target.top,
-                right = if (target.width.absoluteValue > viewPortLimits.width) {
-                    if (target.width > 0) target.left + viewPortLimits.width else target.left - viewPortLimits.width
-                } else {
-                    target.right
-                },
-                bottom = if (target.height.absoluteValue > viewPortLimits.height) {
-                    if (target.height > 0) target.top + viewPortLimits.height else target.top - viewPortLimits.height
-                } else {
-                    target.bottom
-                },
-            )
-
-            // make sure, that left/top don't exceed limits
-            val translateToMatchX = max(0f, viewPortLimits.left - min(target.left, target.right))
-            val translateToMatchY = max(0f, viewPortLimits.top - min(target.top, target.bottom))
-            newTarget = newTarget.translate(translateToMatchX, translateToMatchY)
-            // make sure, that right/bottom don't exceed limits
-            val translateToMatchX2 = min(0f, viewPortLimits.right - max(target.left, target.right))
-            val translateToMatchY2 = min(0f, viewPortLimits.bottom - max(target.top, target.bottom))
-            newTarget = newTarget.translate(translateToMatchX2, translateToMatchY2)
-
-            return newTarget
-        }
-    }
-    suspend fun stopViewPortAnimation() {
-        viewPortRawAnimation.stop()
-    }
-
-    suspend fun setViewPort(target: Rect, transition: TargetTransitionType, boundsMode: BoundsMode) {
-        this.boundsMode = boundsMode
-        viewPortRawAnimation.updateBounds(null, null)
-
-        val targetInLimits = restrictViewPortToLimits(target)
-        when (transition) {
-            TargetTransitionType.Snap -> viewPortRaw = targetInLimits
-            TargetTransitionType.Animate -> {
-                viewPortRawAnimation.snapTo(viewPortRaw)
-                viewPortRawAnimation.animateTo(targetInLimits) {
-                    viewPortRaw = value
-                }
-            }
-        }
-    }
-
-    suspend fun flingViewPort(velocity: Velocity, boundsMode: BoundsMode) {
-        this.boundsMode = boundsMode
-        viewPortRawAnimation.snapTo(viewPortRaw)
-        viewPortRawAnimation.animateDecay(
-            Rect(velocity.x, velocity.y, velocity.x, velocity.y), viewPortAnimationDecay
-        ) {
-            val targetInLimits = restrictViewPortToLimits(value)
-            viewPortRaw = targetInLimits
-        }
-    }
-}
 
 object Plot3Defaults {
     @Composable
@@ -295,15 +174,16 @@ object Plot3Defaults {
 
 @Composable
 fun Plot3(
-    state: Plot3State,
     modifier: Modifier,
+    viewPort: Rect,
+    viewPortGestureLimits: Rect? = null,
+    gestureBasedViewPort: GestureBasedViewPort = remember { GestureBasedViewPort() },
     plotWindowPadding: DpRect = DpRect(0.dp, 0.dp, 0.dp, 0.dp),
     plotWindowOutline: Plot3WindowOutline = Plot3Defaults.windowOutline(),
     lockX: Boolean = false,
     lockY: Boolean = false,
     content: @Composable Plot3Scope.() -> Unit
 ) {
-
     BoxWithConstraints(modifier = modifier) {
         val widthPx = with(LocalDensity.current) { maxWidth.roundToPx() }
         val heightPx = with(LocalDensity.current) { maxHeight.roundToPx() }
@@ -319,23 +199,32 @@ fun Plot3(
                 )
             }
         }
-
-        // use updated state here, to avoid having to recreate of the pointerInput modifier
-        val transformation by rememberUpdatedState(
-            Transformation(viewPortScreen, state.viewPortRaw, cornerRadiusPx)
+        val resolvedViewPortRaw by animateRectAsState(
+            targetValue = if (gestureBasedViewPort.isActive) gestureBasedViewPort.viewPort else viewPort,
+            label = "animate viewport",
+            animationSpec = if (gestureBasedViewPort.isActive) snap(0) else spring()
         )
-
-        LaunchedEffect(state) {
-            state.viewPortRawTransition.collect {
-//                Log.v("Tuner", "Plot: LaunchedEffect(viewPortRawTransition:collect ${it.targetViewPort}")
-                state.setViewPort(it.targetViewPort, it.transition, it.boundsMode)
+        val resolvedLimits = remember(viewPortGestureLimits) {
+            if (viewPortGestureLimits == null) {
+                null
+            } else {
+                Rect(
+                    min(viewPortGestureLimits.left, viewPortGestureLimits.right),
+                    min(viewPortGestureLimits.top, viewPortGestureLimits.bottom),
+                    max(viewPortGestureLimits.left, viewPortGestureLimits.right),
+                    max(viewPortGestureLimits.top, viewPortGestureLimits.bottom),
+                )
             }
         }
 
-//        // use updated state here, to avoid having to recreate of the pointerInput modifier
-//        val transformation by rememberUpdatedState(
-//            Transformation(viewPortScreen, Rect(-5f, 10f, 5f, -10f))
-//        )
+        // use updated state here, to avoid having to recreate of the pointerInput modifier
+        val transformation by rememberUpdatedState(
+            Transformation(
+                viewPortScreen,
+                if (gestureBasedViewPort.isActive) gestureBasedViewPort.viewPort else resolvedViewPortRaw,
+                cornerRadiusPx
+            )
+        )
 
         val plotScopeClipped = remember { Plot3ScopeImpl(clipped = true, { transformation }) }
         val plotScopeUnclipped = remember { Plot3ScopeImpl(clipped = false, { transformation }) }
@@ -356,7 +245,13 @@ fun Plot3(
         Spacer(
             modifier = Modifier
                 .fillMaxSize()
-                .dragZoom(state, { transformation }, lockX = lockX, lockY = lockY)
+                .dragZoom(
+                    gestureBasedViewPort,
+                    { resolvedLimits },
+                    { transformation },
+                    lockX = lockX,
+                    lockY = lockY
+                )
         )
     }
 }
@@ -365,15 +260,17 @@ fun Plot3(
 @Composable
 private fun Plot3Preview() {
     TunerTheme {
-        val state = remember {
-            Plot3State(
-                viewPortRaw = Rect(left = -5f, top = 10f, right = 5f, bottom = -10f),
-                viewPortRawLimits = Rect(left = -20f, top = 100f, right = 40f, bottom = -100f)
-            )
-        }
+        val viewPortRaw = remember { Rect(left = -5f, top = 10f, right = 5f, bottom = -10f) }
+        val viewPortRawLimits = remember { Rect(left = -20f, top = 100f, right = 40f, bottom = -100f) }
+        val gestureBasedViewPort = remember { GestureBasedViewPort() }
+        val scope = rememberCoroutineScope()
         Plot3(
-            state,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable { scope.launch { gestureBasedViewPort.finish() } },
+            viewPort = viewPortRaw,
+            viewPortGestureLimits = viewPortRawLimits,
+            gestureBasedViewPort = gestureBasedViewPort,
             plotWindowPadding = DpRect(5.dp, 5.dp, 5.dp, 5.dp),
             plotWindowOutline = Plot3Defaults.windowOutline(lineWidth = 2.dp)
         ) {
