@@ -1,9 +1,6 @@
 package de.moekadu.tuner.ui.plot3
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateRectAsState
-import androidx.compose.animation.core.exponentialDecay
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
@@ -16,16 +13,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -33,81 +26,39 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.IntRect
-import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.ui.plot.Anchor
-import de.moekadu.tuner.ui.plot.PlotDefaults
-import de.moekadu.tuner.ui.plot.PlotWindowOutline
 import de.moekadu.tuner.ui.plot.TickLevel
 import de.moekadu.tuner.ui.plot.TickLevelExplicitRanges
 import de.moekadu.tuner.ui.plot.Transformation
 import de.moekadu.tuner.ui.plot.rememberTextLabelHeight
-import de.moekadu.tuner.ui.plot2.Line2
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.min
 
-interface Plot3Scope {
 
+class Plot3Scope(
+    private val clipped: Boolean,
+    private val transformation: () -> Transformation
+) {
     @Composable
     fun Line(
         data: Line3Coordinates,
-        color: Color,
-        width: Dp
-    )
-
-    @Composable
-    fun Point(
-        position: Offset,
-        shape: DrawScope.() -> Unit
-    )
-
-    @Composable
-    fun HorizontalMarks(
-        marks: ImmutableList<HorizontalMark3>,
-        sameSizeLabels: Boolean,
-        clipLabelsToWindow: Boolean
-    )
-
-    @Composable
-    fun PointMarks(
-        marks: ImmutableList<PointMark3>,
-        sameSizeLabels: Boolean,
-        clipLabelsToWindow: Boolean
-    )
-
-    @Composable
-    fun YTicks(
-        tickLevel: TickLevel,
-        settings: YTicksSettings,
-        label: @Composable ((modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)?
-    )
-}
-
-class Plot3ScopeImpl(
-    private val clipped: Boolean,
-    private val transformation: () -> Transformation
-) : Plot3Scope {
-    @Composable
-    override fun Line(
-        data: Line3Coordinates,
-        color: Color,
-        width: Dp
+        lineColor: Color = Color.Unspecified,
+        lineWidth: Dp = 1.dp
     ) {
         if (clipped)
-            Line3(data, color, width, transformation)
+            Line3(data, lineColor, lineWidth, transformation)
     }
 
     @Composable
-    override fun Point(
+    fun Point(
         position: Offset,
         shape: DrawScope.() -> Unit
     ) {
@@ -116,10 +67,10 @@ class Plot3ScopeImpl(
     }
 
     @Composable
-    override fun HorizontalMarks(
+    fun HorizontalMarks(
         marks: ImmutableList<HorizontalMark3>,
-        sameSizeLabels: Boolean,
-        clipLabelsToWindow: Boolean
+        sameSizeLabels: Boolean = true,
+        clipLabelsToWindow: Boolean = true
         ) {
         HorizontalMarks3(
             marks = marks,
@@ -131,10 +82,25 @@ class Plot3ScopeImpl(
     }
 
     @Composable
-    override fun PointMarks(
+    fun VerticalMarks(
+        marks: ImmutableList<VerticalMark3>,
+        sameSizeLabels: Boolean = true,
+        clipLabelsToWindow: Boolean = true
+    ) {
+        VerticalMarks3(
+            marks = marks,
+            clipLabelsToWindow = clipLabelsToWindow,
+            sameSizeLabels = sameSizeLabels,
+            transformation = transformation,
+            clipped = clipped
+        )
+    }
+
+    @Composable
+    fun PointMarks(
         marks: ImmutableList<PointMark3>,
-        sameSizeLabels: Boolean,
-        clipLabelsToWindow: Boolean
+        sameSizeLabels: Boolean = true,
+        clipLabelsToWindow: Boolean = true
     ) {
         PointMarks3(
             marks = marks,
@@ -146,21 +112,62 @@ class Plot3ScopeImpl(
     }
 
     @Composable
-    override fun YTicks(
+    fun XTicks(
         tickLevel: TickLevel,
-        settings: YTicksSettings,
+        maxLabelWidth: Float,
+        anchor: Anchor = Anchor.Center,
+        verticalLabelPosition: Float = 0.5f,
+        lineWidth: Dp = 1.dp,
+        lineColor: Color = MaterialTheme.colorScheme.outline,
+        screenOffset: DpOffset = DpOffset.Zero,
+        maxNumLabels: Int = -1,
+        clipLabelToPlotWindow: Boolean = true,
         label: @Composable ((modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)?
     ) {
-        YTicks3(
+        XTicks3(
             label = label,
             tickLevel = tickLevel,
-            settings = settings,
+            maxLabelWidth = maxLabelWidth,
+            anchor = anchor,
+            verticalLabelPosition = verticalLabelPosition,
+            lineWidth = lineWidth,
+            lineColor = lineColor,
+            screenOffset = screenOffset,
+            maxNumLabels = maxNumLabels,
+            clipLabelToPlotWindow = clipLabelToPlotWindow,
             transformation = transformation,
             clipped = clipped
         )
     }
 
-
+    @Composable
+    fun YTicks(
+        tickLevel: TickLevel,
+        maxLabelHeight: Float,
+        anchor: Anchor = Anchor.Center,
+        horizontalLabelPosition: Float = 0.5f,
+        lineWidth: Dp = 1.dp,
+        lineColor: Color = MaterialTheme.colorScheme.outline,
+        screenOffset: DpOffset = DpOffset.Zero,
+        maxNumLabels: Int = -1,
+        clipLabelToPlotWindow: Boolean = true,
+        label: @Composable ((modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)?
+    ) {
+        YTicks3(
+            label = label,
+            tickLevel = tickLevel,
+            maxLabelHeight = maxLabelHeight,
+            anchor = anchor,
+            horizontalLabelPosition = horizontalLabelPosition,
+            lineWidth = lineWidth,
+            lineColor = lineColor,
+            screenOffset = screenOffset,
+            maxNumLabels = maxNumLabels,
+            clipLabelToPlotWindow = clipLabelToPlotWindow,
+            transformation = transformation,
+            clipped = clipped
+        )
+    }
 }
 
 object Plot3Defaults {
@@ -226,8 +233,8 @@ fun Plot3(
             )
         )
 
-        val plotScopeClipped = remember { Plot3ScopeImpl(clipped = true, { transformation }) }
-        val plotScopeUnclipped = remember { Plot3ScopeImpl(clipped = false, { transformation }) }
+        val plotScopeClipped = remember { Plot3Scope(clipped = true, { transformation }) }
+        val plotScopeUnclipped = remember { Plot3Scope(clipped = false, { transformation }) }
         val clipShape = transformation.rememberClipShape()
         Box(modifier = Modifier
             .fillMaxSize()
@@ -278,16 +285,31 @@ private fun Plot3Preview() {
                 tickLevel = TickLevelExplicitRanges(persistentListOf(
                     floatArrayOf(-24f, -20f, -16f, -12f, -8f, -4f, -0f, 4f, 8f, 12f, 16f, 20f, 24f)
                 )),
-                YTicksSettings(
-                    maxLabelHeight = rememberTextLabelHeight(),
-                    anchor = Anchor.SouthWest,
-                    horizontalLabelPosition = 0f,
-                    maxNumLabels = 6,
-                    clipLabelToPlotWindow = true
-                ),
+                maxLabelHeight = rememberTextLabelHeight(),
+                anchor = Anchor.SouthWest,
+                horizontalLabelPosition = 0f,
+                maxNumLabels = 6,
+                clipLabelToPlotWindow = true
             ) { modifier, level, index, y ->
                 Text(
                     "y=$y",
+                    modifier = modifier,//.background(MaterialTheme.colorScheme.secondary),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            XTicks(
+                tickLevel = TickLevelExplicitRanges(persistentListOf(
+                    floatArrayOf(-3f, 0f, 3f)
+                )),
+                maxLabelWidth = 20f,// TODO: compute this somehow
+                anchor = Anchor.South,
+                verticalLabelPosition = 0f,
+                maxNumLabels = 6,
+                clipLabelToPlotWindow = true
+            ) { modifier, level, index, x ->
+                Text(
+                    "x=$x",
                     modifier = modifier,//.background(MaterialTheme.colorScheme.secondary),
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -297,8 +319,8 @@ private fun Plot3Preview() {
             val y = remember { floatArrayOf(1f, -7f, -5f, 0f, 8f) }
             Line(
                 data = Line3Coordinates(x.size, { x[it] }, { y[it] }),
-                width = 5.dp,
-                color = MaterialTheme.colorScheme.primary
+                lineWidth = 5.dp,
+                lineColor = MaterialTheme.colorScheme.primary
             )
 
             Point(
@@ -324,6 +346,46 @@ private fun Plot3Preview() {
                 ),
                 clipLabelsToWindow = true,
                 sameSizeLabels = true
+            )
+
+            HorizontalMarks(
+                marks = persistentListOf(
+                    HorizontalMark3(
+                        position = 1f,
+                        settings = HorizontalMark3.Settings(
+                            lineWidth = 3.dp,
+                            labelPosition = 1f,
+                            anchor = Anchor.East,
+                            lineColor = MaterialTheme.colorScheme.secondary
+                        )
+                    )  { m ->
+                        Surface(m, color = MaterialTheme.colorScheme.secondary) {
+                            Text("ABC", modifier = Modifier.padding(horizontal = 2.dp))
+                        }
+                    },
+                ),
+                clipLabelsToWindow = true,
+                sameSizeLabels = true
+            )
+
+            VerticalMarks(
+                    marks = persistentListOf(
+                        VerticalMark3(
+                            position = 0.5f,
+                            settings = VerticalMark3.Settings(
+                                lineWidth = 3.dp,
+                                labelPosition = 0.95f,
+                                anchor = Anchor.NorthEast,
+                                lineColor = MaterialTheme.colorScheme.secondary
+                            )
+                        )  { m ->
+                            Surface(m, color = MaterialTheme.colorScheme.secondary) {
+                                Text("ABC", modifier = Modifier.padding(horizontal = 2.dp))
+                            }
+                        },
+                    ),
+            clipLabelsToWindow = true,
+            sameSizeLabels = true
             )
 
             PointMarks(
