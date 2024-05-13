@@ -1,6 +1,5 @@
 package de.moekadu.tuner.ui.tuning
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,11 +34,11 @@ import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.rememberMaxNoteSize
 import de.moekadu.tuner.ui.plot.Anchor
 import de.moekadu.tuner.ui.plot.TickLevelExplicitRanges
-import de.moekadu.tuner.ui.plot3.GestureBasedViewPort
-import de.moekadu.tuner.ui.plot3.HorizontalMark3
-import de.moekadu.tuner.ui.plot3.Line3Coordinates
-import de.moekadu.tuner.ui.plot3.Plot3
-import de.moekadu.tuner.ui.plot3.Point3Shape
+import de.moekadu.tuner.ui.plot.GestureBasedViewPort
+import de.moekadu.tuner.ui.plot.HorizontalMark3
+import de.moekadu.tuner.ui.plot.Line3Coordinates
+import de.moekadu.tuner.ui.plot.Plot3
+import de.moekadu.tuner.ui.plot.Point3Shape
 import de.moekadu.tuner.ui.theme.TunerTheme
 import de.moekadu.tuner.ui.theme.tunerColors
 import kotlinx.collections.immutable.persistentListOf

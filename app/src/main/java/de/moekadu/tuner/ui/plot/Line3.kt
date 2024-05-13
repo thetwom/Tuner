@@ -1,4 +1,4 @@
-package de.moekadu.tuner.ui.plot3
+package de.moekadu.tuner.ui.plot
 
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Spacer
@@ -18,11 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
-import de.moekadu.tuner.ui.plot.Transformation
-import de.moekadu.tuner.ui.plot2.Line2
 import de.moekadu.tuner.ui.theme.TunerTheme
-import kotlin.math.max
-import kotlin.math.min
 
 data class Line3Coordinates(
     val size: Int,

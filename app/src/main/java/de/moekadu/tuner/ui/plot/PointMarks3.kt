@@ -1,21 +1,15 @@
-package de.moekadu.tuner.ui.plot3
+package de.moekadu.tuner.ui.plot
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.ParentDataModifier
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
-import de.moekadu.tuner.ui.plot.Anchor
-import de.moekadu.tuner.ui.plot.Transformation
-import de.moekadu.tuner.ui.plot.place
 import kotlinx.collections.immutable.ImmutableList
 
 

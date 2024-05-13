@@ -1,4 +1,4 @@
-package de.moekadu.tuner.ui.plot3
+package de.moekadu.tuner.ui.plot
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -12,8 +12,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntRect
-import androidx.compose.ui.unit.toOffset
-import androidx.compose.ui.unit.toSize
 
 data class Plot3WindowOutline(
     val lineWidth: Dp,
