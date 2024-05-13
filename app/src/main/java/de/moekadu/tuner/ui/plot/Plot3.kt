@@ -1,4 +1,4 @@
-package de.moekadu.tuner.ui.plot3
+package de.moekadu.tuner.ui.plot
 
 import androidx.compose.animation.core.animateRectAsState
 import androidx.compose.animation.core.snap
@@ -30,11 +30,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
-import de.moekadu.tuner.ui.plot.Anchor
-import de.moekadu.tuner.ui.plot.TickLevel
-import de.moekadu.tuner.ui.plot.TickLevelExplicitRanges
-import de.moekadu.tuner.ui.plot.Transformation
-import de.moekadu.tuner.ui.plot.rememberTextLabelHeight
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf

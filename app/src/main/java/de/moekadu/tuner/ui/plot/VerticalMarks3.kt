@@ -1,4 +1,4 @@
-package de.moekadu.tuner.ui.plot3
+package de.moekadu.tuner.ui.plot
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,12 +15,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
-import de.moekadu.tuner.ui.plot.Anchor
-import de.moekadu.tuner.ui.plot.Transformation
-import de.moekadu.tuner.ui.plot.place
 import kotlinx.collections.immutable.ImmutableList
 
-data class HorizontalMark3(
+data class VerticalMark3(
     val position: Float,
     val settings: Settings,
     val content: @Composable (modifier: Modifier) -> Unit,
@@ -32,17 +29,17 @@ data class HorizontalMark3(
         val lineColor: Color = Color.Unspecified, // TODO: Color.Unspecified is not allowed, how to handle this?
         val screenOffset: DpOffset = DpOffset.Zero
     )
-    override fun Density.modifyParentData(parentData: Any?) = this@HorizontalMark3
+    override fun Density.modifyParentData(parentData: Any?) = this@VerticalMark3
 }
 
-private data class MeasuredHorizontalMark(
+private data class MeasuredVerticalMark(
     val placeable: Placeable,
-    val mark: HorizontalMark3
+    val mark: VerticalMark3
 )
 
 @Composable
-private fun HorizontalMark3Lines(
-    marks: ImmutableList<HorizontalMark3>,
+private fun VerticalMark3Lines(
+    marks: ImmutableList<VerticalMark3>,
     transformation: () -> Transformation
 ) {
     Spacer(
@@ -51,17 +48,17 @@ private fun HorizontalMark3Lines(
             .drawBehind {
                 val transformationInstance = transformation()
                 marks.forEach { mark ->
-                    val yOffset = Offset(0f, mark.position)
-                    val yTransformed = transformationInstance.toScreen(yOffset).y
+                    val xOffset = Offset(mark.position, 0f)
+                    val xTransformed = transformationInstance.toScreen(xOffset).x
                     drawLine(
                         mark.settings.lineColor, // TODO: resolve Color.Unspecified
                         Offset(
-                            transformationInstance.viewPortScreen.left.toFloat(),
-                            yTransformed
+                            xTransformed,
+                            transformationInstance.viewPortScreen.top.toFloat(),
                         ),
                         Offset(
-                            transformationInstance.viewPortScreen.right.toFloat(),
-                            yTransformed
+                            xTransformed,
+                            transformationInstance.viewPortScreen.bottom.toFloat(),
                         ),
                         strokeWidth = mark.settings.lineWidth.toPx()
                     )
@@ -71,8 +68,8 @@ private fun HorizontalMark3Lines(
 }
 
 @Composable
-private fun HorizontalMark3Labels(
-    marks: ImmutableList<HorizontalMark3>,
+private fun VerticalMark3Labels(
+    marks: ImmutableList<VerticalMark3>,
     sameSizeLabels: Boolean,
     transformation: () -> Transformation
 ) {
@@ -93,7 +90,7 @@ private fun HorizontalMark3Labels(
         }
 
         val placeables = measureables.map {
-            MeasuredHorizontalMark(it.measure(c), it.parentData as HorizontalMark3)
+            MeasuredVerticalMark(it.measure(c), it.parentData as VerticalMark3)
         }
 
         layout(constraints.maxWidth, constraints.maxHeight) {
@@ -101,18 +98,18 @@ private fun HorizontalMark3Labels(
             placeables.forEach { measuredMark ->
                 val p = measuredMark.placeable
                 val mark = measuredMark.mark
-                val yOffset = Offset(0f, mark.position)
-                val yTransformed = transform.toScreen(yOffset).y
+                val xOffset = Offset(mark.position, 0f)
+                val xTransformed = transform.toScreen(xOffset).x
                 val vp = transform.viewPortScreen
                 val settings = mark.settings
                 p.place(
                     settings.anchor.place(
-                        vp.left + settings.labelPosition * vp.width + settings.screenOffset.x.toPx(),
-                        yTransformed + settings.screenOffset.y.toPx(),
+                        xTransformed + settings.screenOffset.x.toPx(),
+                        vp.top + (1f - settings.labelPosition) * vp.height+ settings.screenOffset.y.toPx(),
                         p.width.toFloat(),
                         p.height.toFloat(),
-                        settings.lineWidth.toPx(),
-                        0f
+                        0f,
+                        settings.lineWidth.toPx()
                     ).round()
                 )
             }
@@ -122,19 +119,19 @@ private fun HorizontalMark3Labels(
 
 
 @Composable
-fun HorizontalMarks3(
-    marks: ImmutableList<HorizontalMark3>,
+fun VerticalMarks3(
+    marks: ImmutableList<VerticalMark3>,
     clipLabelsToWindow: Boolean = false,
     sameSizeLabels: Boolean = false,
     clipped: Boolean,
     transformation: () -> Transformation
 ) {
     if (clipped) {
-        HorizontalMark3Lines(marks = marks, transformation = transformation)
+        VerticalMark3Lines(marks = marks, transformation = transformation)
     }
 
     if (clipLabelsToWindow == clipped) {
-        HorizontalMark3Labels(
+        VerticalMark3Labels(
             marks = marks,
             sameSizeLabels = sameSizeLabels,
             transformation = transformation
