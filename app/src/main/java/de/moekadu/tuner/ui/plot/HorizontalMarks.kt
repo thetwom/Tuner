@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import kotlinx.collections.immutable.ImmutableList
 
-data class VerticalMark3(
+data class HorizontalMark(
     val position: Float,
     val settings: Settings,
     val content: @Composable (modifier: Modifier) -> Unit,
@@ -29,17 +29,17 @@ data class VerticalMark3(
         val lineColor: Color = Color.Unspecified, // TODO: Color.Unspecified is not allowed, how to handle this?
         val screenOffset: DpOffset = DpOffset.Zero
     )
-    override fun Density.modifyParentData(parentData: Any?) = this@VerticalMark3
+    override fun Density.modifyParentData(parentData: Any?) = this@HorizontalMark
 }
 
-private data class MeasuredVerticalMark(
+private data class MeasuredHorizontalMark(
     val placeable: Placeable,
-    val mark: VerticalMark3
+    val mark: HorizontalMark
 )
 
 @Composable
-private fun VerticalMark3Lines(
-    marks: ImmutableList<VerticalMark3>,
+private fun HorizontalMarkLines(
+    marks: ImmutableList<HorizontalMark>,
     transformation: () -> Transformation
 ) {
     Spacer(
@@ -48,17 +48,17 @@ private fun VerticalMark3Lines(
             .drawBehind {
                 val transformationInstance = transformation()
                 marks.forEach { mark ->
-                    val xOffset = Offset(mark.position, 0f)
-                    val xTransformed = transformationInstance.toScreen(xOffset).x
+                    val yOffset = Offset(0f, mark.position)
+                    val yTransformed = transformationInstance.toScreen(yOffset).y
                     drawLine(
                         mark.settings.lineColor, // TODO: resolve Color.Unspecified
                         Offset(
-                            xTransformed,
-                            transformationInstance.viewPortScreen.top.toFloat(),
+                            transformationInstance.viewPortScreen.left.toFloat(),
+                            yTransformed
                         ),
                         Offset(
-                            xTransformed,
-                            transformationInstance.viewPortScreen.bottom.toFloat(),
+                            transformationInstance.viewPortScreen.right.toFloat(),
+                            yTransformed
                         ),
                         strokeWidth = mark.settings.lineWidth.toPx()
                     )
@@ -68,9 +68,10 @@ private fun VerticalMark3Lines(
 }
 
 @Composable
-private fun VerticalMark3Labels(
-    marks: ImmutableList<VerticalMark3>,
+private fun HorizontalMarkLabels(
+    marks: ImmutableList<HorizontalMark>,
     sameSizeLabels: Boolean,
+    clipLabelsToWindow: Boolean,
     transformation: () -> Transformation
 ) {
     Layout(modifier = Modifier.fillMaxSize(),
@@ -90,7 +91,7 @@ private fun VerticalMark3Labels(
         }
 
         val placeables = measureables.map {
-            MeasuredVerticalMark(it.measure(c), it.parentData as VerticalMark3)
+            MeasuredHorizontalMark(it.measure(c), it.parentData as HorizontalMark)
         }
 
         layout(constraints.maxWidth, constraints.maxHeight) {
@@ -98,20 +99,23 @@ private fun VerticalMark3Labels(
             placeables.forEach { measuredMark ->
                 val p = measuredMark.placeable
                 val mark = measuredMark.mark
-                val xOffset = Offset(mark.position, 0f)
-                val xTransformed = transform.toScreen(xOffset).x
+                val yOffset = Offset(0f, mark.position)
+                val yTransformed = transform.toScreen(yOffset).y
                 val vp = transform.viewPortScreen
                 val settings = mark.settings
-                p.place(
-                    settings.anchor.place(
-                        xTransformed + settings.screenOffset.x.toPx(),
-                        vp.top + (1f - settings.labelPosition) * vp.height+ settings.screenOffset.y.toPx(),
-                        p.width.toFloat(),
-                        p.height.toFloat(),
-                        0f,
-                        settings.lineWidth.toPx()
-                    ).round()
-                )
+                val visible = yTransformed in vp.top.toFloat() .. vp.bottom.toFloat()
+                if (clipLabelsToWindow || visible) {
+                    p.place(
+                        settings.anchor.place(
+                            vp.left + settings.labelPosition * vp.width + settings.screenOffset.x.toPx(),
+                            yTransformed + settings.screenOffset.y.toPx(),
+                            p.width.toFloat(),
+                            p.height.toFloat(),
+                            settings.lineWidth.toPx(),
+                            0f
+                        ).round()
+                    )
+                }
             }
         }
     }
@@ -119,21 +123,22 @@ private fun VerticalMark3Labels(
 
 
 @Composable
-fun VerticalMarks3(
-    marks: ImmutableList<VerticalMark3>,
+fun HorizontalMarks(
+    marks: ImmutableList<HorizontalMark>,
     clipLabelsToWindow: Boolean = false,
     sameSizeLabels: Boolean = false,
     clipped: Boolean,
     transformation: () -> Transformation
 ) {
     if (clipped) {
-        VerticalMark3Lines(marks = marks, transformation = transformation)
+        HorizontalMarkLines(marks = marks, transformation = transformation)
     }
 
     if (clipLabelsToWindow == clipped) {
-        VerticalMark3Labels(
+        HorizontalMarkLabels(
             marks = marks,
             sameSizeLabels = sameSizeLabels,
+            clipLabelsToWindow = clipLabelsToWindow,
             transformation = transformation
         )
     }

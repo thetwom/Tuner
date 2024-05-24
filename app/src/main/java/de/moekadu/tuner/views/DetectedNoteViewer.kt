@@ -11,6 +11,7 @@ import android.view.MotionEvent
 import android.view.View
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.*
+import de.moekadu.tuner.ui.notes.NotationType
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min

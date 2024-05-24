@@ -1,11 +1,19 @@
 package de.moekadu.tuner.instruments
 
+import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import javax.inject.Inject
 
-class InstrumentResources(private val sharedPreferences: SharedPreferences) {
+class InstrumentResources @Inject constructor(
+    @ApplicationContext context: Context
+    //private val sharedPreferences: SharedPreferences
+) {
+    private val sharedPreferences = context.getSharedPreferences("instrument resources", MODE_PRIVATE)
     enum class Section {Predefined, Custom, Undefined }
     data class InstrumentAndSection(val instrument: Instrument, val section: Section)
 

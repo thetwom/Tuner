@@ -12,15 +12,16 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.dp
 
-data class Plot3WindowOutline(
-    val lineWidth: Dp,
-    val cornerRadius: Dp,
-    val color: Color
+data class PlotWindowOutline(
+    val lineWidth: Dp = 1.dp,
+    val cornerRadius: Dp = 8.dp,
+    val color: Color = Color.Unspecified
 )
 
 @Composable
-fun Modifier.createPlotWindowOutline(outline: Plot3WindowOutline, viewPort: () -> IntRect): Modifier {
+fun Modifier.createPlotWindowOutline(outline: PlotWindowOutline, viewPort: () -> IntRect): Modifier {
     val color = outline.color.takeOrElse { MaterialTheme.colorScheme.onSurface }
     return this.drawBehind {
         val vP = viewPort()
