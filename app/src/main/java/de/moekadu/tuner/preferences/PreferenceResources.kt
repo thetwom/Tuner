@@ -2,6 +2,8 @@ package de.moekadu.tuner.preferences
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.preference.PreferenceManager
+import dagger.hilt.android.qualifiers.ApplicationContext
 import de.moekadu.tuner.fragments.indexToTolerance
 import de.moekadu.tuner.fragments.indexToWindowSize
 import de.moekadu.tuner.fragments.nightModeStringToID
@@ -9,7 +11,10 @@ import de.moekadu.tuner.fragments.percentToPitchHistoryDuration
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.notedetection.WindowingFunction
 import de.moekadu.tuner.temperaments.*
+import de.moekadu.tuner.ui.notes.NotationType
+import de.moekadu.tuner.ui.notes.NotePrintOptions
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,13 +22,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class PreferenceResources(
-    private val context: Context,
-    private val sharedPreferences:
-    SharedPreferences, scope: CoroutineScope
+@Singleton
+class PreferenceResources @Inject constructor (
+    @ApplicationContext private val context: Context,
+    // private val sharedPreferences: SharedPreferences,
+    //scope: CoroutineScope
 ) {
+    private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
+    val sampleRate = 44100
     private val _appearance = MutableStateFlow(obtainAppearance())
     val appearance = _appearance.asStateFlow()
     private val _screenAlwaysOn = MutableStateFlow(obtainScreenAlwaysOn())
@@ -50,8 +60,11 @@ class PreferenceResources(
     val toleranceInCents = _toleranceInCents.asStateFlow()
     private val _waveWriterDurationInSeconds = MutableStateFlow(obtainWaveWriterDurationInSeconds())
     val waveWriterDurationInSeconds = _waveWriterDurationInSeconds.asStateFlow()
+    // TODO: delete noteNamePrinter
     private val _noteNamePrinter = MutableStateFlow(obtainNoteNamePrinter())
     val noteNamePrinter = _noteNamePrinter.asStateFlow()
+    private val _notePrintOptions = MutableStateFlow(obtainNotePrintOptions())
+    val notePrintOptions = _notePrintOptions.asStateFlow()
 
     private val _musicalScale = MutableStateFlow(musicalScaleFromPreference(obtainTemperamentAndReferenceNote()))
     val musicalScale = _musicalScale.asStateFlow()
@@ -88,7 +101,7 @@ class PreferenceResources(
             }
         }
 
-        scope.launch {
+        MainScope().launch {
             sharedPrefFlow.buffer(Channel.CONFLATED).collect { key ->
                 when (key) {
                     APPEARANCE_KEY -> _appearance.value = obtainAppearance()
@@ -108,8 +121,14 @@ class PreferenceResources(
                     TOLERANCE_IN_CENTS_KEY -> _toleranceInCents.value = obtainToleranceInCents()
                     WAVE_WRITER_DURATION_IN_SECONDS_KEY -> _waveWriterDurationInSeconds.value =
                         obtainWaveWriterDurationInSeconds()
-                    PREFER_FLAT_KEY -> _noteNamePrinter.value = obtainNoteNamePrinter()
-                    NOTATION_KEY -> _noteNamePrinter.value = obtainNoteNamePrinter()
+                    PREFER_FLAT_KEY -> {
+                        _noteNamePrinter.value = obtainNoteNamePrinter()
+                        _notePrintOptions.value = obtainNotePrintOptions()
+                    }
+                    NOTATION_KEY -> {
+                        _noteNamePrinter.value = obtainNoteNamePrinter()
+                        _notePrintOptions.value = obtainNotePrintOptions()
+                    }
                     TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY -> {
                         val value = obtainTemperamentAndReferenceNote()
                         _temperamentAndReferenceNote.value = value
@@ -166,6 +185,31 @@ class PreferenceResources(
             notationType,
             sharpFlatPreference,
             helmholtzNotation = notationValue.helmholtzEnabled
+        )
+    }
+
+    private fun obtainNotePrintOptions(): NotePrintOptions {
+        val preferFlat = sharedPreferences.getBoolean(PREFER_FLAT_KEY, false)
+
+        val notationValue = NotationPreference.Value("standard", false)
+        notationValue.fromString(sharedPreferences.getString(NOTATION_KEY, ""))
+
+        val notationType = when(notationValue.notation) {
+            "international" -> NotationType.International
+            "solfege" -> NotationType.Solfege
+            "carnatic" -> NotationType.Carnatic
+            "hindustani" -> NotationType.Hindustani
+            else -> NotationType.Standard
+        }
+
+        val sharpFlatPreference = if (preferFlat)
+            NotePrintOptions.SharpFlatPreference.Flat
+        else
+            NotePrintOptions.SharpFlatPreference.Sharp
+        return NotePrintOptions(
+            sharpFlatPreference,
+            notationValue.helmholtzEnabled,
+            notationType,
         )
     }
 

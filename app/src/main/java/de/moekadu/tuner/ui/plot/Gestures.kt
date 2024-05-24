@@ -23,8 +23,54 @@ import androidx.compose.ui.util.fastMaxOfOrNull
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sqrt
+
+private fun Rect.scale(
+    scaleX: Float = 1f, scaleY: Float = 1f,
+    centerX: Float = 0f, centerY: Float = 0f
+): Rect {
+    return Rect(
+        left = (this.left - centerX) * scaleX + centerX,
+        top = (this.top - centerY) * scaleY + centerY,
+        right = (this.right - centerX) * scaleX + centerX,
+        bottom = (this.bottom - centerY) * scaleY + centerY,
+    )
+}
+
+private fun Rect.fitInto(limits: Rect?): Rect {
+    if (limits == null)
+        return this
+    return Rect(
+        left = this.left.coerceIn(limits.left, limits.right),
+        top = this.top.coerceIn(limits.top, limits.bottom),
+        right = this.right.coerceIn(limits.left, limits.right),
+        bottom = this.bottom.coerceIn(limits.top, limits.bottom),
+    )
+}
+
+private fun Rect.translateWithinLimits(translateX: Float, translateY: Float, limits: Rect?): Rect {
+    if (limits == null)
+        return this.translate(translateX, translateY)
+    val xLimited = if (translateX < 0f) {
+        val left = min(this.left, this.right)
+        max(limits.left - left, translateX)
+    } else {
+        val right = max(this.left, this.right)
+        min(limits.right - right, translateX)
+    }
+
+    val yLimited = if (translateY < 0f) {
+        val top = min(this.top, this.bottom)
+        max(limits.top - top, translateY)
+    } else {
+        val bottom = max(this.top, this.bottom)
+        min(limits.bottom - bottom, translateY)
+    }
+    return this.translate(xLimited, yLimited)
+}
 
 fun PointerEvent.calculateCentroidSizeComponentWise(useCurrent: Boolean = true): Size {
     val centroid = calculateCentroid(useCurrent)
@@ -187,19 +233,27 @@ fun Modifier.dragZoom(
                 },
                 onGesture = { centroid, pan, zoom ->
                     val t = transformation()
-                    val modifiedTopLeft = Offset(
-                        0f,
-                        (t.viewPortScreen.top - centroid.y) / zoom.height + centroid.y - pan.y,
-                    )
-                    //Log.v("Tuner", "Plot: original topLeft=$originalTopLeft, modified topLeft=$modifiedTopLeft, zoom=$zoom")
-                    val zoomedHeight = state.viewPort.size.height / zoom.height
-
-                    val movedTopLeftRaw = t.toRaw(modifiedTopLeft)
-                    val newViewPortRaw = t.viewPortRaw.copy(
-                        top = movedTopLeftRaw.y,
-                        bottom = movedTopLeftRaw.y + zoomedHeight,
-                    )
-                    state.setViewPort(newViewPortRaw, limits())
+                    val panRaw = t.toRaw(pan) - t.toRaw(Offset.Zero)
+                    val centroidRaw = t.toRaw(centroid)
+                    val transformed = state.viewPort
+                        .scale(scaleY = 1.0f / zoom.height, centerY = centroidRaw.y)
+                        .fitInto(limits())
+                        .translateWithinLimits(0f, translateY = -panRaw.y, limits())
+                    state.setViewPort(transformed, null)
+//
+//                    val modifiedTopLeft = Offset(
+//                        0f,
+//                        (t.viewPortScreen.top - centroid.y) / zoom.height + centroid.y - pan.y,
+//                    )
+//                    //Log.v("Tuner", "Plot: original topLeft=$originalTopLeft, modified topLeft=$modifiedTopLeft, zoom=$zoom")
+//                    val zoomedHeight = state.viewPort.size.height / zoom.height
+//
+//                    val movedTopLeftRaw = t.toRaw(modifiedTopLeft)
+//                    val newViewPortRaw = t.viewPortRaw.copy(
+//                        top = movedTopLeftRaw.y,
+//                        bottom = movedTopLeftRaw.y + zoomedHeight,
+//                    )
+//                    state.setViewPort(newViewPortRaw, limits())
                 },
                 onFling = { velocity ->
                     val velocityRaw = transformation().toRaw(velocity)
@@ -215,19 +269,27 @@ fun Modifier.dragZoom(
                 },
                 onGesture = { centroid, pan, zoom ->
                     val t = transformation()
-                    val modifiedTopLeft = Offset(
-                        (transformation().viewPortScreen.left - centroid.x) / zoom.width + centroid.x - pan.x,
-                        0f
-                    )
-                    //Log.v("Tuner", "Plot: original topLeft=$originalTopLeft, modified topLeft=$modifiedTopLeft, zoom=$zoom")
-                    val zoomedWidth= state.viewPort.size.width / zoom.width
+                    val panRaw = t.toRaw(pan) - t.toRaw(Offset.Zero)
+                    val centroidRaw = t.toRaw(centroid)
+                    val transformed = state.viewPort
+                        .scale(scaleX = 1.0f / zoom.width, centerX = centroidRaw.x)
+                        .fitInto(limits())
+                        .translateWithinLimits(-panRaw.x, 0f, limits())
+                    state.setViewPort(transformed, null)
 
-                    val movedTopLeftRaw = t.toRaw(modifiedTopLeft)
-                    val newViewPortRaw = t.viewPortRaw.copy(
-                        left = movedTopLeftRaw.x,
-                        right = movedTopLeftRaw.x + zoomedWidth,
-                    )
-                    state.setViewPort(newViewPortRaw, limits())
+//                    val modifiedTopLeft = Offset(
+//                        (transformation().viewPortScreen.left - centroid.x) / zoom.width + centroid.x - pan.x,
+//                        0f
+//                    )
+//                    //Log.v("Tuner", "Plot: original topLeft=$originalTopLeft, modified topLeft=$modifiedTopLeft, zoom=$zoom")
+//                    val zoomedWidth = state.viewPort.size.width / zoom.width
+//
+//                    val movedTopLeftRaw = t.toRaw(modifiedTopLeft)
+//                    val newViewPortRaw = t.viewPortRaw.copy(
+//                        left = movedTopLeftRaw.x,
+//                        right = movedTopLeftRaw.x + zoomedWidth,
+//                    )
+//                    state.setViewPort(newViewPortRaw, limits())
                 },
                 onFling = { velocity ->
                     val velocityRaw = transformation().toRaw(velocity)
@@ -243,18 +305,28 @@ fun Modifier.dragZoom(
                 },
                 onGesture = { centroid, pan, zoom ->
                     val t = transformation()
-                    val modifiedTopLeft = Offset(
-                        (t.viewPortScreen.left - centroid.x) / zoom.width + centroid.x - pan.x,
-                        (t.viewPortScreen.top - centroid.y) / zoom.height + centroid.y - pan.y,
-                    )
-                    //Log.v("Tuner", "Plot: original topLeft=$originalTopLeft, modified topLeft=$modifiedTopLeft, zoom=$zoom")
-                    val zoomedSize = Size(
-                        state.viewPort.size.width / zoom.width,
-                        state.viewPort.size.height / zoom.height
-                    )
-
-                    val movedTopLeftRaw = t.toRaw(modifiedTopLeft)
-                    state.setViewPort(Rect(movedTopLeftRaw, zoomedSize), limits())
+                    val panRaw = t.toRaw(pan) - t.toRaw(Offset.Zero)
+                    val centroidRaw = t.toRaw(centroid)
+                    val transformed = state.viewPort
+                        .scale(
+                            scaleX = 1.0f / zoom.width, scaleY = 1.0f / zoom.height,
+                            centerX = centroidRaw.x, centerY = centroidRaw.y
+                        )
+                        .fitInto(limits())
+                        .translateWithinLimits(-panRaw.x, -panRaw.y, limits())
+                    state.setViewPort(transformed, null)
+//                    val modifiedTopLeft = Offset(
+//                        (t.viewPortScreen.left - centroid.x) / zoom.width + centroid.x - pan.x,
+//                        (t.viewPortScreen.top - centroid.y) / zoom.height + centroid.y - pan.y,
+//                    )
+//                    //Log.v("Tuner", "Plot: original topLeft=$originalTopLeft, modified topLeft=$modifiedTopLeft, zoom=$zoom")
+//                    val zoomedSize = Size(
+//                        state.viewPort.size.width / zoom.width,
+//                        state.viewPort.size.height / zoom.height
+//                    )
+//
+//                    val movedTopLeftRaw = t.toRaw(modifiedTopLeft)
+//                    state.setViewPort(Rect(movedTopLeftRaw, zoomedSize), limits())
                 },
                 onFling = { velocity ->
                     val velocityRaw = transformation().toRaw(velocity)

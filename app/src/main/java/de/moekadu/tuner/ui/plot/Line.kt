@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.ui.theme.TunerTheme
 
-data class Line3Coordinates(
+data class LineCoordinates(
     val size: Int,
     val x: (i: Int) -> Float,
     val y: (i: Int) -> Float,
@@ -30,8 +30,8 @@ data class Line3Coordinates(
 //    val indexBegin: Int = 0, val indexEnd: Int = min(xValues.size, yValues.size)
 //)
 
-private data class Line3Cache(
-    private var coordinates: Line3Coordinates,
+private data class LineCache(
+    private var coordinates: LineCoordinates,
     private var transformation: Transformation
 ) {
     val path = Path()
@@ -40,41 +40,30 @@ private data class Line3Cache(
         _update(coordinates, transformation, init = true)
     }
 
-    fun update(coordinates: Line3Coordinates, transformation: Transformation) {
+    fun update(coordinates: LineCoordinates, transformation: Transformation) {
         _update(coordinates, transformation, init = false)
     }
-    private fun _update(coordinates: Line3Coordinates, transformation: Transformation, init: Boolean) {
+    private fun _update(coordinates: LineCoordinates, transformation: Transformation, init: Boolean) {
         if (coordinates == this.coordinates && transformation == this.transformation && !init)
             return
         this.coordinates = coordinates
         this.transformation = transformation
         path.rewind()
-//        val xValues = coordinates.xValues
-//        val yValues = coordinates.yValues
-//        val numAvailableValues = min(xValues.size, yValues.size)
-//        val indexBeginResolved = max(0, coordinates.indexBegin)
-//
-//        val indexEndResolved = min(coordinates.indexEnd, numAvailableValues)
-//        val numValuesResolved = max(0, indexEndResolved - indexBeginResolved)
 
         path.rewind()
-//        if (numValuesResolved > 0) {
         if (coordinates.size > 0) {
-//            Log.v("Tuner", "Line: move to ${xValues[0]}, ${yValues[0]}")
-            //path.moveTo(xValues[0], yValues[0])
             path.moveTo(coordinates.x(0), coordinates.y(0))
         }
-        //for (i in indexBeginResolved + 1 until indexEndResolved) {
+
         for (i in 1 until coordinates.size) {
-            //path.lineTo(xValues[i], yValues[i])
             path.lineTo(coordinates.x(i), coordinates.y(i))
         }
         path.transform(transformation.matrixRawToScreen)
     }
 }
 @Composable
-fun Line3(
-    data: Line3Coordinates,
+fun Line(
+    data: LineCoordinates,
     color: Color,
     width: Dp,
     transformation: () -> Transformation
@@ -84,7 +73,7 @@ fun Line3(
     Spacer(modifier = Modifier
         .fillMaxSize()
         .drawWithCache {
-            val cachedData = Line3Cache(data, transformation())
+            val cachedData = LineCache(data, transformation())
             onDrawBehind {
                 cachedData.update(data, transformation())
                 drawPath(
@@ -113,13 +102,13 @@ private fun rememberTransformation(
 
 @Preview(widthDp = 200, heightDp = 200, showBackground = true)
 @Composable
-private fun Line3Preview() {
+private fun LinePreview() {
     TunerTheme {
         BoxWithConstraints {
             val x = remember { floatArrayOf(0f, 1f, 2f, 3f, 4f) }
             val y = remember { floatArrayOf(3f, 1f, 2f, -2f, 0f) }
             val coords = remember {
-                Line3Coordinates(
+                LineCoordinates(
                     size = 5, x = { x[it] }, y = { y[it] }
                 )
             }
@@ -129,7 +118,7 @@ private fun Line3Preview() {
                 viewPortRaw = Rect(-1f, 5f, 5f, -3f)
             )
 
-            Line3(coords, MaterialTheme.colorScheme.primary, 2.dp, { transformation })
+            Line(coords, MaterialTheme.colorScheme.primary, 2.dp, { transformation })
         }
     }
 }

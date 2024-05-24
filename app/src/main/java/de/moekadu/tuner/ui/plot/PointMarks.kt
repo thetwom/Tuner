@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.round
 import kotlinx.collections.immutable.ImmutableList
 
 
-data class PointMark3(
+data class PointMark(
     val position: Offset,
     val settings: Settings,
     val content: @Composable (modifier: Modifier) -> Unit,
@@ -22,17 +22,17 @@ data class PointMark3(
         val anchor: Anchor = Anchor.Center,
         val screenOffset: DpOffset = DpOffset.Zero
     )
-    override fun Density.modifyParentData(parentData: Any?) = this@PointMark3
+    override fun Density.modifyParentData(parentData: Any?) = this@PointMark
 }
 
 private data class MeasuredPointMark(
     val placeable: Placeable,
-    val mark: PointMark3
+    val mark: PointMark
 )
 
 @Composable
-private fun PointMark3Labels(
-    marks: ImmutableList<PointMark3>,
+private fun PointMarkLabels(
+    marks: ImmutableList<PointMark>,
     sameSizeLabels: Boolean,
     transformation: () -> Transformation
 ) {
@@ -53,7 +53,7 @@ private fun PointMark3Labels(
         }
 
         val placeables = measureables.map {
-            MeasuredPointMark(it.measure(c), it.parentData as PointMark3)
+            MeasuredPointMark(it.measure(c), it.parentData as PointMark)
         }
 
         layout(constraints.maxWidth, constraints.maxHeight) {
@@ -77,15 +77,15 @@ private fun PointMark3Labels(
 }
 
 @Composable
-fun PointMarks3(
-    marks: ImmutableList<PointMark3>,
+fun PointMarks(
+    marks: ImmutableList<PointMark>,
     clipLabelsToWindow: Boolean = false,
     sameSizeLabels: Boolean = false,
     clipped: Boolean,
     transformation: () -> Transformation
 ) {
     if (clipLabelsToWindow == clipped) {
-        PointMark3Labels(
+        PointMarkLabels(
             marks = marks,
             sameSizeLabels = sameSizeLabels,
             transformation = transformation

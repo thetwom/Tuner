@@ -17,7 +17,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 
-class Point3Shape {
+class PointShape {
     companion object {
         @Composable
         fun circle(size: Dp, color: Color = Color.Unspecified): (DrawScope.() -> Unit) {
@@ -104,19 +104,8 @@ class Point3Shape {
     }
 }
 
-//interface Point3Scope {
-//    fun drawShape(draw: DrawScope.() -> Unit)
-//}
-//
-//private class Point3ScopeImpl : Point3Scope {
-//    var draw: (DrawScope.() -> Unit)? = null
-//    override fun drawShape(draw: DrawScope.() -> Unit) {
-//        this.draw = draw
-//    }
-//}
-
 @Composable
-fun Point3(
+fun Point(
     position: Offset,
     shape: DrawScope.() -> Unit,
     transformation: () -> Transformation

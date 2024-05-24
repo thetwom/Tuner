@@ -37,9 +37,9 @@ import de.moekadu.tuner.dialogs.AboutDialog
 import de.moekadu.tuner.dialogs.ResetSettingsDialog
 import de.moekadu.tuner.preferenceResources
 import de.moekadu.tuner.preferences.*
-import de.moekadu.tuner.temperaments.NotationType
 import de.moekadu.tuner.temperaments.NoteNamePrinter
 import de.moekadu.tuner.temperaments.getTuningNameResourceId
+import de.moekadu.tuner.ui.notes.NotationType
 import kotlinx.coroutines.launch
 import kotlin.math.pow
 import kotlin.math.roundToInt

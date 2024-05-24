@@ -18,6 +18,7 @@ import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.*
+import de.moekadu.tuner.ui.notes.NotationType
 import kotlinx.parcelize.Parcelize
 import kotlin.math.*
 

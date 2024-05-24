@@ -2,14 +2,15 @@ package de.moekadu.tuner.temperaments
 
 import android.content.Context
 import de.moekadu.tuner.R
+import de.moekadu.tuner.ui.notes.NotationType
 
-enum class NotationType {
-    Standard,
-    International,
-    Solfege,
-    Carnatic,
-    Hindustani
-}
+//enum class NotationType {
+//    Standard,
+//    International,
+//    Solfege,
+//    Carnatic,
+//    Hindustani
+//}
 
 // if more special note names are needed, (like ashparp_bflat -> B in German), this can easily
 // be added here. Just make sure that the standard translation is "-", such that it will be ignored

@@ -17,6 +17,7 @@ import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.*
+import de.moekadu.tuner.ui.notes.NotationType
 import kotlin.math.*
 
 class NoteSelector(context: Context, attrs: AttributeSet?, defStyleAttr: Int)

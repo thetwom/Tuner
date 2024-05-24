@@ -9,6 +9,7 @@ import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import androidx.core.content.res.ResourcesCompat
 import de.moekadu.tuner.R
+import de.moekadu.tuner.ui.notes.NotationType
 import de.moekadu.tuner.views.CustomTypefaceSpan
 import de.moekadu.tuner.views.SmallSubScriptSpan
 import de.moekadu.tuner.views.SmallSuperScriptSpan

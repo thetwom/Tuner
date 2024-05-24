@@ -6,6 +6,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -38,18 +39,18 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-class Plot3Scope(
+class PlotScope(
     private val clipped: Boolean,
     private val transformation: () -> Transformation
 ) {
     @Composable
     fun Line(
-        data: Line3Coordinates,
+        data: LineCoordinates,
         lineColor: Color = Color.Unspecified,
         lineWidth: Dp = 1.dp
     ) {
         if (clipped)
-            Line3(data, lineColor, lineWidth, transformation)
+            Line(data, lineColor, lineWidth, transformation)
     }
 
     @Composable
@@ -58,16 +59,36 @@ class Plot3Scope(
         shape: DrawScope.() -> Unit
     ) {
         if (clipped)
-            Point3(position, shape, transformation)
+            Point(position, shape, transformation)
+    }
+
+    @Composable
+    fun VerticalLines(
+        positions: VerticalLinesPositions,
+        color: Color = Color.Unspecified,
+        lineWidth: Dp = 1.dp
+    ) {
+        if (clipped)
+            VerticalLines(positions, color, lineWidth, transformation)
+    }
+
+    @Composable
+    fun HorizontalLines(
+        positions: HorizontalLinesPositions,
+        color: Color = Color.Unspecified,
+        lineWidth: Dp = 1.dp
+    ) {
+        if (clipped)
+            HorizontalLines(positions, color, lineWidth, transformation)
     }
 
     @Composable
     fun HorizontalMarks(
-        marks: ImmutableList<HorizontalMark3>,
+        marks: ImmutableList<HorizontalMark>,
         sameSizeLabels: Boolean = true,
         clipLabelsToWindow: Boolean = true
         ) {
-        HorizontalMarks3(
+        HorizontalMarks(
             marks = marks,
             clipLabelsToWindow = clipLabelsToWindow,
             sameSizeLabels = sameSizeLabels,
@@ -78,11 +99,11 @@ class Plot3Scope(
 
     @Composable
     fun VerticalMarks(
-        marks: ImmutableList<VerticalMark3>,
+        marks: ImmutableList<VerticalMark>,
         sameSizeLabels: Boolean = true,
         clipLabelsToWindow: Boolean = true
     ) {
-        VerticalMarks3(
+        VerticalMarks(
             marks = marks,
             clipLabelsToWindow = clipLabelsToWindow,
             sameSizeLabels = sameSizeLabels,
@@ -93,11 +114,11 @@ class Plot3Scope(
 
     @Composable
     fun PointMarks(
-        marks: ImmutableList<PointMark3>,
+        marks: ImmutableList<PointMark>,
         sameSizeLabels: Boolean = true,
         clipLabelsToWindow: Boolean = true
     ) {
-        PointMarks3(
+        PointMarks(
             marks = marks,
             clipLabelsToWindow = clipLabelsToWindow,
             sameSizeLabels = sameSizeLabels,
@@ -117,9 +138,9 @@ class Plot3Scope(
         screenOffset: DpOffset = DpOffset.Zero,
         maxNumLabels: Int = -1,
         clipLabelToPlotWindow: Boolean = true,
-        label: @Composable ((modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)?
+        label: @Composable ((modifier: Modifier, level: Int, index: Int, x: Float) -> Unit)?
     ) {
-        XTicks3(
+        XTicks(
             label = label,
             tickLevel = tickLevel,
             maxLabelWidth = maxLabelWidth,
@@ -148,7 +169,7 @@ class Plot3Scope(
         clipLabelToPlotWindow: Boolean = true,
         label: @Composable ((modifier: Modifier, level: Int, index: Int, y: Float) -> Unit)?
     ) {
-        YTicks3(
+        YTicks(
             label = label,
             tickLevel = tickLevel,
             maxLabelHeight = maxLabelHeight,
@@ -165,26 +186,17 @@ class Plot3Scope(
     }
 }
 
-object Plot3Defaults {
-    @Composable
-    fun windowOutline(
-        lineWidth: Dp = 1.dp,
-        cornerRadius: Dp = 8.dp,
-        color: Color = MaterialTheme.colorScheme.onSurface,
-    ) = Plot3WindowOutline(lineWidth, cornerRadius, color)
-}
-
 @Composable
-fun Plot3(
+fun Plot(
     modifier: Modifier,
     viewPort: Rect,
     viewPortGestureLimits: Rect? = null,
     gestureBasedViewPort: GestureBasedViewPort = remember { GestureBasedViewPort() },
     plotWindowPadding: DpRect = DpRect(0.dp, 0.dp, 0.dp, 0.dp),
-    plotWindowOutline: Plot3WindowOutline = Plot3Defaults.windowOutline(),
+    plotWindowOutline: PlotWindowOutline = PlotWindowOutline(),
     lockX: Boolean = false,
     lockY: Boolean = false,
-    content: @Composable Plot3Scope.() -> Unit
+    content: @Composable PlotScope.() -> Unit
 ) {
     BoxWithConstraints(modifier = modifier) {
         val widthPx = with(LocalDensity.current) { maxWidth.roundToPx() }
@@ -228,8 +240,8 @@ fun Plot3(
             )
         )
 
-        val plotScopeClipped = remember { Plot3Scope(clipped = true, { transformation }) }
-        val plotScopeUnclipped = remember { Plot3Scope(clipped = false, { transformation }) }
+        val plotScopeClipped = remember { PlotScope(clipped = true, { transformation }) }
+        val plotScopeUnclipped = remember { PlotScope(clipped = false, { transformation }) }
         val clipShape = transformation.rememberClipShape()
         Box(modifier = Modifier
             .fillMaxSize()
@@ -260,145 +272,166 @@ fun Plot3(
 
 @Preview(widthDp = 250, heightDp = 200, showBackground = true)
 @Composable
-private fun Plot3Preview() {
+private fun PlotPreview() {
     TunerTheme {
         val viewPortRaw = remember { Rect(left = -5f, top = 10f, right = 5f, bottom = -10f) }
-        val viewPortRawLimits = remember { Rect(left = -20f, top = 100f, right = 40f, bottom = -100f) }
+        val viewPortRawLimits =
+            remember { Rect(left = -20f, top = 100f, right = 40f, bottom = -100f) }
         val gestureBasedViewPort = remember { GestureBasedViewPort() }
         val scope = rememberCoroutineScope()
-        Plot3(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable { scope.launch { gestureBasedViewPort.finish() } },
-            viewPort = viewPortRaw,
-            viewPortGestureLimits = viewPortRawLimits,
-            gestureBasedViewPort = gestureBasedViewPort,
-            plotWindowPadding = DpRect(5.dp, 5.dp, 5.dp, 5.dp),
-            plotWindowOutline = Plot3Defaults.windowOutline(lineWidth = 2.dp)
-        ) {
-            YTicks(
-                tickLevel = TickLevelExplicitRanges(persistentListOf(
-                    floatArrayOf(-24f, -20f, -16f, -12f, -8f, -4f, -0f, 4f, 8f, 12f, 16f, 20f, 24f)
-                )),
-                maxLabelHeight = rememberTextLabelHeight(),
-                anchor = Anchor.SouthWest,
-                horizontalLabelPosition = 0f,
-                maxNumLabels = 6,
-                clipLabelToPlotWindow = true
-            ) { modifier, level, index, y ->
-                Text(
-                    "y=$y",
-                    modifier = modifier,//.background(MaterialTheme.colorScheme.secondary),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            XTicks(
-                tickLevel = TickLevelExplicitRanges(persistentListOf(
-                    floatArrayOf(-3f, 0f, 3f)
-                )),
-                maxLabelWidth = 20f,// TODO: compute this somehow
-                anchor = Anchor.South,
-                verticalLabelPosition = 0f,
-                maxNumLabels = 6,
-                clipLabelToPlotWindow = true
-            ) { modifier, level, index, x ->
-                Text(
-                    "x=$x",
-                    modifier = modifier,//.background(MaterialTheme.colorScheme.secondary),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            val x = remember { floatArrayOf(-4f, -2f, 0f, 2f, 4f) }
-            val y = remember { floatArrayOf(1f, -7f, -5f, 0f, 8f) }
-            Line(
-                data = Line3Coordinates(x.size, { x[it] }, { y[it] }),
-                lineWidth = 5.dp,
-                lineColor = MaterialTheme.colorScheme.primary
-            )
-
-            Point(
-                position = Offset(4f, 8f),
-                shape = Point3Shape.circle(size = 20.dp, MaterialTheme.colorScheme.error)
-            )
-
-            HorizontalMarks(
-                marks = persistentListOf(
-                    HorizontalMark3(
-                        position = 1f,
-                        settings = HorizontalMark3.Settings(
-                            lineWidth = 3.dp,
-                            labelPosition = 1f,
-                            anchor = Anchor.East,
-                            lineColor = MaterialTheme.colorScheme.secondary
+        Column {
+            Plot(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable { scope.launch { gestureBasedViewPort.finish() } },
+                viewPort = viewPortRaw,
+                viewPortGestureLimits = viewPortRawLimits,
+                gestureBasedViewPort = gestureBasedViewPort,
+                plotWindowPadding = DpRect(5.dp, 5.dp, 5.dp, 5.dp),
+                plotWindowOutline = PlotWindowOutline(lineWidth = 2.dp)
+            ) {
+                YTicks(
+                    tickLevel = TickLevelExplicitRanges(
+                        persistentListOf(
+                            floatArrayOf(
+                                -24f,
+                                -20f,
+                                -16f,
+                                -12f,
+                                -8f,
+                                -4f,
+                                -0f,
+                                4f,
+                                8f,
+                                12f,
+                                16f,
+                                20f,
+                                24f
+                            )
                         )
-                    )  { m ->
-                        Surface(m, color = MaterialTheme.colorScheme.secondary) {
-                            Text("ABC", modifier = Modifier.padding(horizontal = 2.dp))
-                        }
-                    },
-                ),
-                clipLabelsToWindow = true,
-                sameSizeLabels = true
-            )
+                    ),
+                    maxLabelHeight = rememberTextLabelHeight(),
+                    anchor = Anchor.SouthWest,
+                    horizontalLabelPosition = 0f,
+                    maxNumLabels = 6,
+                    clipLabelToPlotWindow = true
+                ) { modifier, level, index, y ->
+                    Text(
+                        "y=$y",
+                        modifier = modifier,//.background(MaterialTheme.colorScheme.secondary),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
 
-            HorizontalMarks(
-                marks = persistentListOf(
-                    HorizontalMark3(
-                        position = 1f,
-                        settings = HorizontalMark3.Settings(
-                            lineWidth = 3.dp,
-                            labelPosition = 1f,
-                            anchor = Anchor.East,
-                            lineColor = MaterialTheme.colorScheme.secondary
+                XTicks(
+                    tickLevel = TickLevelExplicitRanges(
+                        persistentListOf(
+                            floatArrayOf(-3f, 0f, 3f)
                         )
-                    )  { m ->
-                        Surface(m, color = MaterialTheme.colorScheme.secondary) {
-                            Text("ABC", modifier = Modifier.padding(horizontal = 2.dp))
-                        }
-                    },
-                ),
-                clipLabelsToWindow = true,
-                sameSizeLabels = true
-            )
+                    ),
+                    maxLabelWidth = 20f,// TODO: compute this somehow
+                    anchor = Anchor.South,
+                    verticalLabelPosition = 0f,
+                    maxNumLabels = 6,
+                    clipLabelToPlotWindow = true
+                ) { modifier, level, index, x ->
+                    Text(
+                        "x=$x",
+                        modifier = modifier,//.background(MaterialTheme.colorScheme.secondary),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
 
-            VerticalMarks(
+                val x = remember { floatArrayOf(-4f, -2f, 0f, 2f, 4f) }
+                val y = remember { floatArrayOf(1f, -7f, -5f, 0f, 8f) }
+                Line(
+                    data = LineCoordinates(x.size, { x[it] }, { y[it] }),
+                    lineWidth = 5.dp,
+                    lineColor = MaterialTheme.colorScheme.primary
+                )
+
+                Point(
+                    position = Offset(4f, 8f),
+                    shape = PointShape.circle(size = 20.dp, MaterialTheme.colorScheme.error)
+                )
+
+                HorizontalMarks(
                     marks = persistentListOf(
-                        VerticalMark3(
-                            position = 0.5f,
-                            settings = VerticalMark3.Settings(
+                        HorizontalMark(
+                            position = 1f,
+                            settings = HorizontalMark.Settings(
                                 lineWidth = 3.dp,
-                                labelPosition = 0.95f,
-                                anchor = Anchor.NorthEast,
+                                labelPosition = 1f,
+                                anchor = Anchor.East,
                                 lineColor = MaterialTheme.colorScheme.secondary
                             )
-                        )  { m ->
+                        ) { m ->
                             Surface(m, color = MaterialTheme.colorScheme.secondary) {
                                 Text("ABC", modifier = Modifier.padding(horizontal = 2.dp))
                             }
                         },
                     ),
-            clipLabelsToWindow = true,
-            sameSizeLabels = true
-            )
+                    clipLabelsToWindow = true,
+                    sameSizeLabels = true
+                )
 
-            PointMarks(
-                marks = persistentListOf(
-                    PointMark3(
-                        position = Offset(-3f, -4f),
-                        settings = PointMark3.Settings(
-                            anchor = Anchor.Center,
-                        )
-                    )  { m ->
-                        Surface(m, color = MaterialTheme.colorScheme.secondary) {
-                            Text("ABC", modifier = Modifier.padding(horizontal = 2.dp))
-                        }
-                    },
-                ),
-                clipLabelsToWindow = true,
-                sameSizeLabels = true
-            )
+                HorizontalMarks(
+                    marks = persistentListOf(
+                        HorizontalMark(
+                            position = 1f,
+                            settings = HorizontalMark.Settings(
+                                lineWidth = 3.dp,
+                                labelPosition = 1f,
+                                anchor = Anchor.East,
+                                lineColor = MaterialTheme.colorScheme.secondary
+                            )
+                        ) { m ->
+                            Surface(m, color = MaterialTheme.colorScheme.secondary) {
+                                Text("ABC", modifier = Modifier.padding(horizontal = 2.dp))
+                            }
+                        },
+                    ),
+                    clipLabelsToWindow = true,
+                    sameSizeLabels = true
+                )
+
+                VerticalMarks(
+                    marks = persistentListOf(
+                        VerticalMark(
+                            position = 0.5f,
+                            settings = VerticalMark.Settings(
+                                lineWidth = 3.dp,
+                                labelPosition = 0.95f,
+                                anchor = Anchor.NorthEast,
+                                lineColor = MaterialTheme.colorScheme.secondary
+                            )
+                        ) { m ->
+                            Surface(m, color = MaterialTheme.colorScheme.secondary) {
+                                Text("ABC", modifier = Modifier.padding(horizontal = 2.dp))
+                            }
+                        },
+                    ),
+                    clipLabelsToWindow = true,
+                    sameSizeLabels = true
+                )
+
+                PointMarks(
+                    marks = persistentListOf(
+                        PointMark(
+                            position = Offset(-3f, -4f),
+                            settings = PointMark.Settings(
+                                anchor = Anchor.Center,
+                            )
+                        ) { m ->
+                            Surface(m, color = MaterialTheme.colorScheme.secondary) {
+                                Text("ABC", modifier = Modifier.padding(horizontal = 2.dp))
+                            }
+                        },
+                    ),
+                    clipLabelsToWindow = true,
+                    sameSizeLabels = true
+                )
+            }
         }
     }
 }
