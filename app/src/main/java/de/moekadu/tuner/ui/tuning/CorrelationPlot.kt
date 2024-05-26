@@ -2,6 +2,7 @@ package de.moekadu.tuner.ui.tuning
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -190,7 +191,8 @@ fun CorrelationPlot(
                             content = {
                                 Text(
                                     stringResource(id = R.string.hertz_1f, currentFrequency),
-                                    style = frequencyMarkTextStyle
+                                    style = frequencyMarkTextStyle,
+                                    modifier = Modifier.padding(horizontal = 2.dp)
                                 )
                             },
                             modifier = markModifier,

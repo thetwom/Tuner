@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 
 
@@ -96,13 +98,29 @@ data class TunerColors(
 
 val LocalTunerColors = staticCompositionLocalOf { TunerColors() }
 
-val MaterialTheme.tunerColors:  TunerColors
+val MaterialTheme.tunerColors: TunerColors
     @Composable
     @ReadOnlyComposable
     get() = LocalTunerColors.current
 
 val OnLightTunerColors = TunerColors(light_positive, light_onpositive, light_negative, light_onnegative)
 val OnDarkTunerColors = TunerColors(dark_positive, dark_onpositive, dark_negative, dark_onnegative)
+
+@Immutable
+data class TunerTypography(
+    val plotSmall: TextStyle = TextStyle(fontSize = 14.sp),
+    val plotMedium: TextStyle = TextStyle(fontSize = 16.sp),
+    val plotLarge: TextStyle = TextStyle(fontSize = 22.sp)
+)
+
+val LocalTunerTypography = staticCompositionLocalOf { TunerTypography() }
+
+val MaterialTheme.tunerTypography: TunerTypography
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalTunerTypography.current
+
+val tunerTypography = TunerTypography()
 
 @Composable
 fun TunerTheme(
@@ -133,7 +151,8 @@ fun TunerTheme(
     }
 
     CompositionLocalProvider(
-        LocalTunerColors provides tunerColors
+        LocalTunerColors provides tunerColors,
+        LocalTunerTypography provides tunerTypography
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
