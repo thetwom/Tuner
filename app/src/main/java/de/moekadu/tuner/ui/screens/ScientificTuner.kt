@@ -93,7 +93,7 @@ fun ScientificTuner(
         val noteWidthDp = rememberMaxNoteSize(
             noteNameScale = musicalScaleAsState.noteNameScale,
             notePrintOptions = notePrintOptionsAsState,
-            fontSize = tunerPlotStyle.tickFontStyle.fontSize,
+            fontSize = tunerPlotStyle.stringFontStyle.fontSize,
             octaveRange = musicalScaleAsState.getNote(
                 musicalScaleAsState.noteIndexBegin
             ).octave .. musicalScaleAsState.getNote(
@@ -246,7 +246,7 @@ fun ScientificTuner(
                 toleranceLabelColor = tunerPlotStyle.toleranceColor,
                 tickLineWidth = tunerPlotStyle.tickLineWidth,
                 tickLineColor = tunerPlotStyle.tickLineColor,
-                tickLabelStyle = tunerPlotStyle.tickFontStyle,
+                tickLabelStyle = tunerPlotStyle.stringFontStyle,
                 plotWindowOutline = if (data.pitchHistoryGestureBasedViewPort.isActive)
                     tunerPlotStyle.plotWindowOutlineDuringGesture
                 else
@@ -273,7 +273,7 @@ fun ScientificTunerLandscape(
         val noteWidthDp = rememberMaxNoteSize(
             noteNameScale = musicalScaleAsState.noteNameScale,
             notePrintOptions = notePrintOptionsAsState,
-            fontSize = tunerPlotStyle.tickFontStyle.fontSize,
+            fontSize = tunerPlotStyle.stringFontStyle.fontSize,
             octaveRange = musicalScaleAsState.getNote(
                 musicalScaleAsState.noteIndexBegin
             ).octave .. musicalScaleAsState.getNote(
@@ -427,7 +427,7 @@ fun ScientificTunerLandscape(
                 toleranceLabelColor = tunerPlotStyle.toleranceColor,
                 tickLineWidth = tunerPlotStyle.tickLineWidth,
                 tickLineColor = tunerPlotStyle.tickLineColor,
-                tickLabelStyle = tunerPlotStyle.tickFontStyle,
+                tickLabelStyle = tunerPlotStyle.stringFontStyle,
                 plotWindowOutline = if (data.pitchHistoryGestureBasedViewPort.isActive)
                     tunerPlotStyle.plotWindowOutlineDuringGesture
                 else
