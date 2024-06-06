@@ -296,7 +296,7 @@ fun PitchHistory(
         }
         HorizontalMarks(marks = toleranceMarks, sameSizeLabels = true , clipLabelsToWindow = true)
 
-        val targetMark = remember(targetNote, targetFrequency) {
+        val targetMark = remember(targetNote, targetFrequency, tuningState) {
             persistentListOf(
                 HorizontalMark(
                     targetFrequency,
