@@ -12,7 +12,7 @@
         android:theme="@style/AppTheme"
         android:fullBackupContent="true"
         android:localeConfig="@xml/locales_config">
-        <activity android:name=".MainActivity"
+        <activity android:name=".MainActivity2"
             android:windowSoftInputMode="adjustPan"
             android:exported="true">
             <intent-filter>

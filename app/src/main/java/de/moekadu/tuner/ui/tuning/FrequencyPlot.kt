@@ -4,10 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -35,6 +32,7 @@ import de.moekadu.tuner.ui.plot.rememberTextLabelWidth
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.math.max
+import kotlin.math.min
 
 //class FrequencyPlotModel(musicalScale: MusicalScale) {
 //    var frequencyPlotData by mutableStateOf(FrequencyPlotData(0, { 0f }, { 0f }))
@@ -77,11 +75,17 @@ fun FrequencyPlot(
     // outline
     plotWindowOutline: PlotWindowOutline = PlotWindowOutline()
 ) {
-    val maximumAmplitude = remember(frequencyPlotData) {
+    val maximumValue = remember(frequencyPlotData) {
         var maxValue = 0f
         for (i in 0 until frequencyPlotData.size)
             maxValue = max(maxValue, frequencyPlotData.amplitude(i))
         maxValue
+    }
+    val minimumValue = remember(frequencyPlotData) {
+        var minValue = 0f
+        for (i in 0 until frequencyPlotData.size)
+            minValue = min(minValue, frequencyPlotData.amplitude(i))
+        minValue
     }
     val viewPort = remember(targetNote, musicalScale) {
         val noteIndex = musicalScale.getNoteIndex(targetNote)
@@ -175,12 +179,12 @@ fun FrequencyPlot(
             )
         }
 
-        val maximumAmplitudeInverse = 1.0f / maximumAmplitude
+        val rangeInverse = 1.0f / (maximumValue - minimumValue)
         Line(
             LineCoordinates(
                 frequencyPlotData.size,
                 frequencyPlotData.frequency,
-                { frequencyPlotData.amplitude(it) * maximumAmplitudeInverse },
+                { (frequencyPlotData.amplitude(it) - minimumValue ) * rangeInverse },
             ),
             lineColor = lineColor,
             lineWidth = lineWidth

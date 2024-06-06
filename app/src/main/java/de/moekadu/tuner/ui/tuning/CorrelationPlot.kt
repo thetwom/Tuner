@@ -140,7 +140,7 @@ fun CorrelationPlot(
         val longestTick = remember(resources) {
             resources.getString(R.string.hertz_1f, 1.0f / resolutions[1])
         }
-        Log.v("Tuner", "Longest tick: $longestTick")
+        //Log.v("Tuner", "Longest tick: $longestTick")
         XTicks(
             tickLevel = tickLevel,
             maxLabelWidth = rememberTextLabelWidth(

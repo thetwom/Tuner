@@ -37,7 +37,6 @@ class FrequencyEvaluator(
     private val tuningTargetComputer = TuningTargetComputer(musicalScale, instrument, toleranceInCents)
     private var currentTargetNote: MusicalNote? = null
     private var timeStepOfLastSuccessfulFrequencyDetection = 0
-    private var smoothedFrequency = 0f
 
     private var lastTime = 0
 
@@ -45,7 +44,7 @@ class FrequencyEvaluator(
         frequencyCollectionResults: FrequencyDetectionCollectedResults?,
         userDefinedNote: MusicalNote?
     ): FrequencyEvaluationResult {
-
+        var smoothedFrequency = 0f
         var frequencyDetectionTimeStep = -1
         var dt = -1f
 //        Log.v("Tuner", "FrequencyEvaluator.evaluate: frequencyCollectionResults = $frequencyCollectionResults")
