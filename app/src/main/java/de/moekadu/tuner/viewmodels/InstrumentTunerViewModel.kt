@@ -1,23 +1,17 @@
 package de.moekadu.tuner.viewmodels
 
-import android.util.Log
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.moekadu.tuner.R
-import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.notedetection.FrequencyDetectionCollectedResults
 import de.moekadu.tuner.notedetection.FrequencyEvaluationResult
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.notedetection.checkTuning
-import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.preferences.TemperamentAndReferenceNoteValue
+import de.moekadu.tuner.preferences.PreferenceResources2
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
 import de.moekadu.tuner.tuner.Tuner
@@ -25,39 +19,17 @@ import de.moekadu.tuner.ui.instruments.StringWithInfo
 import de.moekadu.tuner.ui.instruments.StringsState
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.plot.GestureBasedViewPort
-import de.moekadu.tuner.ui.plot.LineCoordinates
-import de.moekadu.tuner.ui.plot.VerticalLinesPositions
 import de.moekadu.tuner.ui.screens.InstrumentTunerData
-import de.moekadu.tuner.ui.screens.ScientificTunerData
 import de.moekadu.tuner.ui.tuning.PitchHistoryState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.log2
-import kotlin.math.max
-import kotlin.math.roundToInt
-
-//private class FrequencyPlotBackingData(
-//    val size: Int,
-//) {
-//    var df = 1f
-//    val y = FloatArray(size)
-//    val harmonics = ArrayList<Float>()
-//}
-//
-//private class CorrelationPlotBackingData(
-//    val size: Int,
-//) {
-//    var dt = 1f
-//    val y = FloatArray(size)
-//}
 
 @HiltViewModel
 class InstrumentTunerViewModel @Inject constructor (
-    val pref: PreferenceResources,
+    val pref: PreferenceResources2,
     val instruments: InstrumentResources
 ) : ViewModel(), InstrumentTunerData {
     private val tuner = Tuner(
@@ -84,8 +56,6 @@ class InstrumentTunerViewModel @Inject constructor (
 
     private var autodetectedTargetNote = musicalScale.value.referenceNote
     private var currentSmoothedFrequency = musicalScale.value.referenceFrequency
-//    private var frequencyPlotBackingData = FrequencyPlotBackingData(0)
-//    private var correlationPlotBackingData = CorrelationPlotBackingData(0)
 
     override val musicalScale: StateFlow<MusicalScale> get() = pref.musicalScale
     override val notePrintOptions: StateFlow<NotePrintOptions> get() = pref.notePrintOptions
@@ -103,10 +73,7 @@ class InstrumentTunerViewModel @Inject constructor (
     override var selectedNoteKey by mutableStateOf<Int?>(null)
 
     override val instrument: StateFlow<InstrumentResources.InstrumentAndSection> get() = instruments.instrument
-//    override var instrumentIconId by mutableStateOf(R.drawable.ic_piano)
-//    override var instrumentName by mutableStateOf<String?>(null)
-//    override var instrumentResourceId by mutableStateOf<Int?>(null)
-//
+
     override var strings by mutableStateOf<ImmutableList<StringWithInfo>?>(
         instrument.value.instrument.strings.mapIndexed { index, note ->
             StringWithInfo(note, index, musicalScale.value.getNoteIndex(note))
