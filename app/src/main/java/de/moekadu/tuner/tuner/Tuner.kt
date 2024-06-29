@@ -11,7 +11,7 @@ import de.moekadu.tuner.notedetection.FrequencyEvaluationResult
 import de.moekadu.tuner.notedetection.FrequencyEvaluator
 import de.moekadu.tuner.notedetection.launchSoundSourceJob
 import de.moekadu.tuner.notedetection.testFunction
-import de.moekadu.tuner.preferences.PreferenceResources
+import de.moekadu.tuner.preferences.PreferenceResources2
 import de.moekadu.tuner.temperaments.MusicalNote
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,7 +30,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class Tuner(
-    private val pref: PreferenceResources,
+    private val pref: PreferenceResources2,
     private val instruments: InstrumentResources,
     private val scope: CoroutineScope,
     private val onResultAvailableListener: OnResultAvailableListener
@@ -72,7 +72,7 @@ class Tuner(
             pref.toleranceInCents.collect { restartChannel.trySend(Command.ChangePreferences) }
         }
         scope.launch {
-            pref.pitchHistoryMaxNumFaultyValues.collect { restartChannel.trySend(Command.ChangePreferences) }
+            pref.pitchHistoryNumFaultyValues.collect { restartChannel.trySend(Command.ChangePreferences) }
         }
         scope.launch {
             pref.maxNoise.collect { restartChannel.trySend(Command.ChangePreferences) }
@@ -166,7 +166,7 @@ class Tuner(
             val freqEvaluator = FrequencyEvaluator(
                 pref.numMovingAverage.value,
                 pref.toleranceInCents.value.toFloat(),
-                pref.pitchHistoryMaxNumFaultyValues.value,
+                pref.pitchHistoryNumFaultyValues.value,
                 pref.maxNoise.value,
                 pref.minHarmonicEnergyContent.value,
                 pref.sensitivity.value.toFloat(),

@@ -1,8 +1,6 @@
 package de.moekadu.tuner.viewmodels
 
-import android.util.Log
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -13,8 +11,7 @@ import de.moekadu.tuner.notedetection.FrequencyDetectionCollectedResults
 import de.moekadu.tuner.notedetection.FrequencyEvaluationResult
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.notedetection.checkTuning
-import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.preferences.TemperamentAndReferenceNoteValue
+import de.moekadu.tuner.preferences.PreferenceResources2
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
 import de.moekadu.tuner.tuner.Tuner
@@ -27,28 +24,10 @@ import de.moekadu.tuner.ui.tuning.PitchHistoryState
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.log2
-import kotlin.math.max
-import kotlin.math.roundToInt
-
-//private class FrequencyPlotBackingData(
-//    val size: Int,
-//) {
-//    var df = 1f
-//    val y = FloatArray(size)
-//    val harmonics = ArrayList<Float>()
-//}
-//
-//private class CorrelationPlotBackingData(
-//    val size: Int,
-//) {
-//    var dt = 1f
-//    val y = FloatArray(size)
-//}
 
 @HiltViewModel
 class ScientificTunerViewModel @Inject constructor (
-    val pref: PreferenceResources,
+    val pref: PreferenceResources2,
     val instruments: InstrumentResources
 ) : ViewModel(), ScientificTunerData {
     private val tuner = Tuner(
@@ -95,9 +74,6 @@ class ScientificTunerViewModel @Inject constructor (
 
         }
     )
-
-//    private var frequencyPlotBackingData = FrequencyPlotBackingData(0)
-//    private var correlationPlotBackingData = CorrelationPlotBackingData(0)
 
     override val musicalScale: StateFlow<MusicalScale> get() = pref.musicalScale
     override val notePrintOptions: StateFlow<NotePrintOptions> get() = pref.notePrintOptions
@@ -156,26 +132,6 @@ class ScientificTunerViewModel @Inject constructor (
         pref.windowSize.value,
         pref.overlap.value
     )
-
-//    // Data specific to frequency plot
-//    var frequencyPlotData by mutableStateOf(FrequencyPlotData(0, { 0f }, { 0f }))
-//    var harmonicFrequencies by mutableStateOf<VerticalLinesPositions?>(null)
-//    val frequencyPlotGestureBasedViewPort = GestureBasedViewPort()
-//
-//    // Data specific to correlation plot
-//    var correlationPlotData by mutableStateOf(CorrelationPlotData(0, { 0f }, { 0f }))
-//    val correlationPlotGestureBasedViewPort = GestureBasedViewPort()
-//
-//    // Data specific to history plot
-//    var pitchHistoryState = PitchHistoryState(PitchHistoryState.computePitchHistorySize(
-//        pref.pitchHistoryDuration.value, pref.sampleRate, pref.windowSize.value, pref.overlap.value
-//    ))
-//    val pitchHistoryGestureBasedViewPort = GestureBasedViewPort()
-//    var tuningState by mutableStateOf(TuningState.Unknown)
-//
-//    // Data shared over different plots
-//    var currentFrequency by mutableStateOf<Float?>(null)
-//    var targetNote by mutableStateOf(pref.musicalScale.value.referenceNote)
 
     companion object {
         const val DURATION_FOR_MARKING_NOTEDETECTION_AS_INACTIVE = 0.5f // in seconds
