@@ -42,14 +42,14 @@ import kotlin.math.min
 //    val gestureBasedViewPort = GestureBasedViewPort()
 //}
 
-data class FrequencyPlotData(
-    val size: Int,
-    val frequency: (i: Int) -> Float,
-    val amplitude: (i: Int) -> Float,
-)
+//data class FrequencyPlotData(
+//    val size: Int,
+//    val frequency: (i: Int) -> Float,
+//    val amplitude: (i: Int) -> Float,
+//)
 @Composable
 fun FrequencyPlot(
-    frequencyPlotData: FrequencyPlotData,
+    frequencyPlotData: LineCoordinates,
     targetNote: MusicalNote,
     musicalScale: MusicalScale,
     modifier: Modifier = Modifier,
@@ -75,18 +75,6 @@ fun FrequencyPlot(
     // outline
     plotWindowOutline: PlotWindowOutline = PlotWindowOutline()
 ) {
-    val maximumValue = remember(frequencyPlotData) {
-        var maxValue = 0f
-        for (i in 0 until frequencyPlotData.size)
-            maxValue = max(maxValue, frequencyPlotData.amplitude(i))
-        maxValue
-    }
-    val minimumValue = remember(frequencyPlotData) {
-        var minValue = 0f
-        for (i in 0 until frequencyPlotData.size)
-            minValue = min(minValue, frequencyPlotData.amplitude(i))
-        minValue
-    }
     val viewPort = remember(targetNote, musicalScale) {
         val noteIndex = musicalScale.getNoteIndex(targetNote)
         val frequency = musicalScale.getNoteFrequency(noteIndex)
@@ -98,7 +86,8 @@ fun FrequencyPlot(
         )
     }
     val maximumFrequency = remember(frequencyPlotData) {
-        frequencyPlotData.frequency(frequencyPlotData.size - 1)
+        frequencyPlotData.coordinates.lastOrNull()?.x ?: 100f
+        //frequencyPlotData.frequency(frequencyPlotData.size - 1)
     }
 
     val viewPortLimits = remember(maximumFrequency) {
@@ -151,6 +140,17 @@ fun FrequencyPlot(
             )
         }
 
+        Line(
+//            LineCoordinates(
+//                frequencyPlotData.size,
+//                frequencyPlotData.frequency,
+//                { (frequencyPlotData.amplitude(it) - minimumValue ) * rangeInverse },
+//            ),
+            frequencyPlotData,
+            lineColor = lineColor,
+            lineWidth = lineWidth
+        )
+
         if (currentFrequency != null) {
             VerticalMarks(
                 marks = persistentListOf(
@@ -178,17 +178,6 @@ fun FrequencyPlot(
                 )
             )
         }
-
-        val rangeInverse = 1.0f / (maximumValue - minimumValue)
-        Line(
-            LineCoordinates(
-                frequencyPlotData.size,
-                frequencyPlotData.frequency,
-                { (frequencyPlotData.amplitude(it) - minimumValue ) * rangeInverse },
-            ),
-            lineColor = lineColor,
-            lineWidth = lineWidth
-        )
     }
 }
 
@@ -202,11 +191,11 @@ private fun FrequencyPlotPreview() {
             1f, 2f, 3f, 3f, 5f, 2f, 1f, 2f, 0f, 0.3f,
         ) }
         val data = remember {
-            FrequencyPlotData(frequencies.size, { frequencies[it] }, { amplitudes[it] })
+            LineCoordinates.create(frequencies, amplitudes)
+            //FrequencyPlotData(frequencies.size, { frequencies[it] }, { amplitudes[it] })
         }
-        val harmonicFrequencies = remember { floatArrayOf(300f, 510f, 800f) }
         val harmonicFrequencyData = remember {
-            VerticalLinesPositions(harmonicFrequencies.size, { harmonicFrequencies[it] })
+            VerticalLinesPositions.create(floatArrayOf(300f, 510f, 800f))
         }
         val musicalScale = remember { MusicalScaleFactory.create(TemperamentType.EDO12) }
         val targetNote = musicalScale.referenceNote

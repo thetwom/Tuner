@@ -35,7 +35,7 @@ class InstrumentResources @Inject constructor(
     val customInstrumentsExpanded: StateFlow<Boolean> get() = _customInstrumentsExpanded
 
     /** Instrument which is currently active together with the section where it is stored.
-     * This depends on the instrument lists, so this must come afte them!
+     * This depends on the instrument lists, so this must come after them!
      */
     private val _instrument = MutableStateFlow(readInstrumentAndSectionFromPreferences(
         sharedPreferences, predefinedInstruments, customInstruments.value

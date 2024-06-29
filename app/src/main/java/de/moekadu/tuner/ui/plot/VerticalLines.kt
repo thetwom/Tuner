@@ -22,10 +22,47 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.ui.theme.TunerTheme
 
-data class VerticalLinesPositions(
-    val size: Int,
-    val x: (i: Int) -> Float
-)
+class VerticalLinesPositions(
+    val x: MutableList<Float> = mutableListOf()
+) {
+    fun mutate(size: Int, x: (i: Int) -> Float): VerticalLinesPositions {
+        if (this.x.size == size) {
+            for (i in 0 until size)
+                this.x[i] = x(i)
+        } else {
+            this.x.clear()
+            for (i in 0 until size)
+                this.x.add(x(i))
+        }
+        return VerticalLinesPositions(this.x)
+    }
+
+    fun mutate(x: FloatArray, from: Int = 0, to: Int = x.size): VerticalLinesPositions {
+        val size = to - from
+        if (this.x.size == size) {
+            for (i in 0 until size)
+                this.x[i] = x[i+from]
+        } else {
+            this.x.clear()
+            for (i in 0 until size)
+                this.x.add(x[i+from])
+        }
+        return VerticalLinesPositions(this.x)
+    }
+    companion object {
+        fun create(size: Int, x: (i: Int) -> Float): VerticalLinesPositions {
+            return VerticalLinesPositions(MutableList(size){ x(it) })
+        }
+        fun create(x: FloatArray): VerticalLinesPositions {
+            return VerticalLinesPositions(x.toMutableList())
+        }
+    }
+}
+
+//data class VerticalLinesPositions(
+//    val size: Int,
+//    val x: (i: Int) -> Float
+//)
 
 //private data class VerticalLineCache(
 //    private var positions: VerticalLinesPositions,
@@ -71,9 +108,9 @@ fun VerticalLines(
     Spacer(modifier = Modifier
         .fillMaxSize()
         .drawBehind {
-            for (i in 0 until data.size) {
+            for (i in 0 until data.x.size) {
                 val transform = transformation()
-                val x = transform.toScreen(Offset(data.x(i), 0f)).x
+                val x = transform.toScreen(Offset(data.x[i], 0f)).x
                 drawLine(
                     c,
                     Offset(x, transform.viewPortScreen.top.toFloat()),
@@ -106,9 +143,9 @@ private fun VerticalLinePreview() {
         BoxWithConstraints {
             val x = remember { floatArrayOf(0f, 1f, 2f, 3f, 4f) }
             val positions = remember {
-                VerticalLinesPositions(
-                    size = 5, x = { x[it] }
-                )
+                VerticalLinesPositions.create(x)//(
+                    //size = 5, x = { x[it] }
+                //)
             }
             val transformation = rememberTransformation(
                 screenWidth = maxWidth,

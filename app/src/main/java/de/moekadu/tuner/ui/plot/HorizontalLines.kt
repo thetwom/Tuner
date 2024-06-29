@@ -1,5 +1,7 @@
 package de.moekadu.tuner.ui.plot
 
+import androidx.collection.MutableFloatList
+import androidx.collection.mutableFloatListOf
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,10 +24,46 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.ui.theme.TunerTheme
 
-data class HorizontalLinesPositions(
-    val size: Int,
-    val y: (i: Int) -> Float
-)
+//data class HorizontalLinesPositions(
+//    val size: Int,
+//    val y: (i: Int) -> Float
+//)
+class HorizontalLinesPositions(
+    val y: MutableList<Float> = mutableListOf()
+) {
+    fun mutate(size: Int, y: (i: Int) -> Float): HorizontalLinesPositions {
+        if (this.y.size == size) {
+            for (i in 0 until size)
+                this.y[i] = y(i)
+        } else {
+            this.y.clear()
+            for (i in 0 until size)
+                this.y.add(y(i))
+        }
+        return HorizontalLinesPositions(this.y)
+    }
+
+    fun mutate(y: FloatArray, from: Int = 0, to: Int = y.size): HorizontalLinesPositions {
+        val size = to - from
+        if (this.y.size == size) {
+            for (i in 0 until size)
+                this.y[i] = y[i+from]
+        } else {
+            this.y.clear()
+            for (i in 0 until size)
+                this.y.add(y[i+from])
+        }
+        return HorizontalLinesPositions(this.y)
+    }
+    companion object {
+        fun create(size: Int, y: (i: Int) -> Float): HorizontalLinesPositions {
+            return HorizontalLinesPositions(MutableList(size){ y(it) })
+        }
+        fun create(y: FloatArray): HorizontalLinesPositions {
+            return HorizontalLinesPositions(y.toMutableList())
+        }
+    }
+}
 
 @Composable
 fun HorizontalLines(
@@ -39,9 +77,9 @@ fun HorizontalLines(
     Spacer(modifier = Modifier
         .fillMaxSize()
         .drawBehind {
-            for (i in 0 until data.size) {
+            for (i in 0 until data.y.size) {
                 val transform = transformation()
-                val y = transform.toScreen(Offset(0f, data.y(i))).y
+                val y = transform.toScreen(Offset(0f, data.y[i])).y
                 drawLine(
                     c,
                     Offset(transform.viewPortScreen.left.toFloat(), y),
@@ -74,9 +112,7 @@ private fun HorizontalLinePreview() {
         BoxWithConstraints {
             val y = remember { floatArrayOf(-1f, 1f, 2f, 3f, 4f) }
             val positions = remember {
-                HorizontalLinesPositions(
-                    size = 5, y = { y[it] }
-                )
+                HorizontalLinesPositions.create(y)
             }
             val transformation = rememberTransformation(
                 screenWidth = maxWidth,

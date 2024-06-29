@@ -69,6 +69,8 @@ dependencies {
     implementation(libs.androidx.runtime.tracing)
     implementation(libs.hilt.android)
     implementation (libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.datastore.preferences)
+
 
     ksp(libs.hilt.compiler)
 

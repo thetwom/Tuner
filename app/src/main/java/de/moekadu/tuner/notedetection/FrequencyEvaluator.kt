@@ -49,6 +49,8 @@ class FrequencyEvaluator(
         var dt = -1f
 //        Log.v("Tuner", "FrequencyEvaluator.evaluate: frequencyCollectionResults = $frequencyCollectionResults")
         val newTarget = frequencyCollectionResults?.let {
+            frequencyDetectionTimeStep = it.timeSeries.framePosition
+            dt = it.timeSeries.dt
 //            Log.v("Tuner", "FrequencyEvaluator.evaluate: noise = ${it.noise}, maxNoise=$maxNoise, f=${it.frequency}")
             val requiredEnergyLevel = 100 - sensitivity - 0.0001f // minus a very small number, to make sure, that a level of 0 always enables evaluation for sensitivity 100
 //            Log.v("Tuner", "FrequencyEvaluator.evaluate: energy = ${it.harmonicEnergyAbsolute} signalLevel = ${transformEnergyToLevelFrom0To100(it.harmonicEnergyAbsolute)}, required = $requiredEnergyLevel")
@@ -57,8 +59,6 @@ class FrequencyEvaluator(
                 && transformEnergyToLevelFrom0To100(it.harmonicEnergyAbsolute) >= requiredEnergyLevel
                 ) {
                 smoothedFrequency = smoother(it.frequency)
-                frequencyDetectionTimeStep = it.timeSeries.framePosition
-                dt = it.timeSeries.dt
 
 //                Log.v("Tuner", "FrequencyEvaluator.evaluate: smoothedFrequency=$smoothedFrequency")
                 if (smoothedFrequency > 0f) {
@@ -81,7 +81,7 @@ class FrequencyEvaluator(
         }
 
         val time = frequencyCollectionResults?.timeSeries?.framePosition ?: 0
-        val diff = time - lastTime
+//        val diff = time - lastTime
         lastTime = time
 //        Log.v("Tuner", "FrequencyEvaluator.evaluate: time since last update = $diff")
         return FrequencyEvaluationResult(

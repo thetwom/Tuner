@@ -20,6 +20,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
@@ -39,16 +40,25 @@ import de.moekadu.tuner.ui.plot.HorizontalMark
 import de.moekadu.tuner.ui.plot.LineCoordinates
 import de.moekadu.tuner.ui.plot.Plot
 import de.moekadu.tuner.ui.plot.PlotWindowOutline
+import de.moekadu.tuner.ui.plot.PointMark
 import de.moekadu.tuner.ui.plot.PointShape
 import de.moekadu.tuner.ui.theme.TunerTheme
+import de.moekadu.tuner.ui.theme.Typography
 import de.moekadu.tuner.ui.theme.tunerColors
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlin.math.log2
+import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
 private fun centsToRatio(cents: Float): Float {
     return (2.0.pow(cents / 1200.0)).toFloat()
+}
+private fun ratioToCents(ratio: Float): Float {
+    // ratio = 2**(cent/1200)
+    // log2(ratio) * 1200
+    return 1200 * log2(ratio)
 }
 
 private fun computeToleranceBounds(centerFrequency: Float, toleranceInCents: Int)
@@ -59,42 +69,68 @@ private fun computeToleranceBounds(centerFrequency: Float, toleranceInCents: Int
     return lowerToleranceFreq .. upperToleranceFreq
 }
 
-private class ResizeableArray(maxNumValues: Int) {
-    var values = FloatArray(maxNumValues)
-        private set
-    var size: Int = 0
+//private class ResizeableArray(maxNumValues: Int) {
+//    var values = FloatArray(maxNumValues)
+//        private set
+//    var size: Int = 0
+//        private set
+//
+//    fun add(value: Float) {
+//        if (size == values.size) {
+//            values.copyInto(values, 0, 1)
+//            size--
+//        }
+//        values[size] = value
+//        size++
+//    }
+//
+//    fun resize(newMaxNumValues: Int) {
+//        val resized = FloatArray(newMaxNumValues)
+//        if (size > newMaxNumValues) {
+//            values.copyInto(resized, 0, size - newMaxNumValues, size)
+//            size = newMaxNumValues
+//        } else {
+//            values.copyInto(resized, 0, 0, size)
+//        }
+//        values = resized
+//    }
+//}
+//
+//private fun ResizeableArray.toLineCoordinates() =
+//    LineCoordinates(this.size, { it.toFloat() }, { this.values[it] })
+
+private class ResizeableArray(private var maxNumValues: Int) {
+    var values = LineCoordinates.create(floatArrayOf())
         private set
 
+    val size get() = values.size
     fun add(value: Float) {
-        if (size == values.size) {
-            values.copyInto(values, 0, 1)
-            size--
-        }
-        values[size] = value
-        size++
+        val c = values.coordinates
+        if (c.size == maxNumValues)
+            c.removeAt(0)
+        c.add(Offset(c.size.toFloat(), value))
+        for (i in 0 until c.size)
+            c[i] = c[i].copy(x = i.toFloat())
+        values = LineCoordinates(c)
     }
 
     fun resize(newMaxNumValues: Int) {
-        val resized = FloatArray(newMaxNumValues)
-        if (size > newMaxNumValues) {
-            values.copyInto(resized, 0, size - newMaxNumValues, size)
-            size = newMaxNumValues
-        } else {
-            values.copyInto(resized, 0, 0, size)
-        }
-        values = resized
+        this.maxNumValues = maxNumValues
+        val c = values.coordinates
+        //val resized = FloatArray(newMaxNumValues)
+        if (maxNumValues < c.size)
+            c.subList(0, c.size - maxNumValues).clear()
+        values = LineCoordinates(c)
     }
 }
-
-private fun ResizeableArray.toLineCoordinates() =
-    LineCoordinates(this.size, { it.toFloat() }, { this.values[it] })
 
 class PitchHistoryState(
     capacity: Int
 ) {
     private val history = ResizeableArray(capacity)
 
-    var lineCoordinates by mutableStateOf(history.toLineCoordinates())
+    //var lineCoordinates by mutableStateOf(history.toLineCoordinates())
+    var lineCoordinates by mutableStateOf(history.values)
         private set
 
     var pointCoordinates by mutableStateOf<Offset?>(null)
@@ -110,11 +146,20 @@ class PitchHistoryState(
 
     fun addFrequency(value: Float) {
         history.add(value)
-        lineCoordinates = history.toLineCoordinates()
+        lineCoordinates = history.values // toLineCoordinates()
         pointCoordinates = Offset(history.size - 1f, value)
     }
 
     companion object {
+        /** Compute number of samples to be stored in pitch history.
+         * @param duration Duration of pitch history in seconds.
+         * @param sampleRate Sample rate of audio signal in Hertz
+         * @param windowSize Number of samples for one chunk of data which is used for evaluation.
+         * @param overlap Overlap between to succeeding data chunks, where 0 is no overlap and 1 is
+         *   100% overlap (1.0 is of course not allowed).
+         * @return Number of samples, which must be stored in the pitch history, so that the we match
+         *   the given duration.
+         */
         fun computePitchHistorySize(
             duration: Float, sampleRate: Int, windowSize: Int, overlap: Float
         ) = (duration / (windowSize.toFloat() / sampleRate.toFloat() * (1.0f - overlap))).roundToInt()
@@ -141,6 +186,9 @@ fun PitchHistory(
     colorInTune: Color = MaterialTheme.tunerColors.positive,
     colorOutOfTune: Color = MaterialTheme.tunerColors.negative,
     colorInactive: Color = MaterialTheme.colorScheme.outline,
+    // current cent deviation properties
+    centDeviationStyle: TextStyle = MaterialTheme.typography.labelSmall,
+    centDeviationColor: Color = MaterialTheme.colorScheme.onSurface,
     // target note properties
     targetNote: MusicalNote = musicalScale.referenceNote,
     targetNoteLineWidth: Dp = 2.dp,
@@ -249,6 +297,79 @@ fun PitchHistory(
             )
         }
 
+        val targetMark = remember(targetNote, targetFrequency, tuningState) {
+            persistentListOf(
+                HorizontalMark(
+                    targetFrequency,
+                    HorizontalMark.Settings(
+                        anchor = Anchor.West,
+                        labelPosition = 1f,
+                        lineWidth = targetNoteLineWidth,
+                        lineColor = tuningColor
+                    ),
+                ){ m ->
+                    Label(
+                        content = {
+                            Note(
+                                targetNote,
+                                modifier = Modifier.padding(horizontal = 4.dp),
+                                notePrintOptions = notePrintOptions,
+                                style = tickLabelStyle,
+                                color = onTuningColor
+                            )
+                        },
+                        color = tuningColor,
+                        modifier = m
+                    )
+                }
+            )
+        }
+        HorizontalMarks(marks = targetMark, sameSizeLabels = true, clipLabelsToWindow = false)
+
+        Line(
+            data = state.lineCoordinates,
+            lineColor = if (tuningState == TuningState.Unknown) lineColorInactive else lineColor,
+            lineWidth = if (tuningState == TuningState.Unknown) lineWidthInactive else lineWidth
+        )
+
+        state.pointCoordinates?.let { position ->
+            val pointShape = when (tuningState) {
+                TuningState.Unknown -> PointShape.circle(pointSizeInactive, tuningColor)
+                TuningState.InTune -> PointShape.circle(pointSize, tuningColor)
+                TuningState.TooLow -> PointShape.circleWithUpwardTriangleShape(pointSize, tuningColor)
+                TuningState.TooHigh -> PointShape.circleWithDownwardTriangleShape(pointSize, tuningColor)
+            }
+            Point(position, pointShape)
+
+            if (tuningState == TuningState.TooHigh || tuningState == TuningState.TooLow) {
+                val centDeviation = remember(targetFrequency, position) {
+                    ratioToCents(position.y / targetFrequency).roundToInt()
+                }
+                val pointMark = persistentListOf(
+                    PointMark(
+                        position,
+                        PointMark.Settings(
+                            anchor = if (tuningState == TuningState.TooHigh) Anchor.South else Anchor.North,
+                            screenOffset = DpOffset(
+                                0.dp,
+                                if (tuningState == TuningState.TooHigh) -pointSize/2 else pointSize/2
+                            )
+                        )
+                    ) {
+                        Text(
+                            stringResource(id = R.string.cent, centDeviation),
+                            modifier = it,
+                            style = centDeviationStyle,
+                            color = centDeviationColor
+                        )
+                    }
+                )
+
+                PointMarks(marks = pointMark)
+
+            }
+        }
+
         val toleranceMarks = remember(toleranceInCents, targetFrequency) {
             val bounds = computeToleranceBounds(targetFrequency, toleranceInCents)
             persistentListOf(
@@ -295,51 +416,6 @@ fun PitchHistory(
             )
         }
         HorizontalMarks(marks = toleranceMarks, sameSizeLabels = true , clipLabelsToWindow = true)
-
-        val targetMark = remember(targetNote, targetFrequency, tuningState) {
-            persistentListOf(
-                HorizontalMark(
-                    targetFrequency,
-                    HorizontalMark.Settings(
-                        anchor = Anchor.West,
-                        labelPosition = 1f,
-                        lineWidth = targetNoteLineWidth,
-                        lineColor = tuningColor
-                    ),
-                ){ m ->
-                    Label(
-                        content = {
-                            Note(
-                                targetNote,
-                                modifier = Modifier.padding(horizontal = 4.dp),
-                                notePrintOptions = notePrintOptions,
-                                style = tickLabelStyle,
-                                color = onTuningColor
-                            )
-                        },
-                        color = tuningColor,
-                        modifier = m
-                    )
-                }
-            )
-        }
-        HorizontalMarks(marks = targetMark, sameSizeLabels = true, clipLabelsToWindow = false)
-
-        Line(
-            data = state.lineCoordinates,
-            lineColor = if (tuningState == TuningState.Unknown) lineColorInactive else lineColor,
-            lineWidth = if (tuningState == TuningState.Unknown) lineWidthInactive else lineWidth
-        )
-
-        state.pointCoordinates?.let { position ->
-            val pointShape = when (tuningState) {
-                TuningState.Unknown -> PointShape.circle(pointSizeInactive, tuningColor)
-                TuningState.InTune -> PointShape.circle(pointSize, tuningColor)
-                TuningState.TooLow -> PointShape.circleWithUpwardTriangleShape(pointSize, tuningColor)
-                TuningState.TooHigh -> PointShape.circleWithDownwardTriangleShape(pointSize, tuningColor)
-            }
-            Point(position, pointShape)
-        }
     }
 }
 
@@ -363,7 +439,7 @@ fun PitchHistory2Preview() {
                 addFrequency(448f)
                 addFrequency(450f)
                 addFrequency(435f)
-                addFrequency(440f)
+                addFrequency(445f)
             }
         }
 
@@ -372,7 +448,7 @@ fun PitchHistory2Preview() {
             musicalScale = musicalScale,
             notePrintOptions = notePrintOptions,
             plotWindowPadding = DpRect(left = 4.dp, top = 0.dp, right=40.dp, bottom = 0.dp),
-            tuningState = TuningState.InTune
+            tuningState = TuningState.TooHigh
         )
     }
 }

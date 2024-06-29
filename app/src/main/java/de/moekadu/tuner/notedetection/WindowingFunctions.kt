@@ -19,13 +19,15 @@
 
 package de.moekadu.tuner.notedetection
 
+import androidx.annotation.StringRes
+import de.moekadu.tuner.R
 import kotlin.math.PI
 import kotlin.math.cos
 
-enum class WindowingFunction {
-    Tophat,
-    Hamming,
-    Hann
+enum class WindowingFunction(@StringRes val stringResourceId: Int) {
+    Tophat(R.string.no_window),
+    Hamming(R.string.window_hamming),
+    Hann(R.string.window_hann)
 }
 
 fun getWindow(window: WindowingFunction, size: Int) = FloatArray(size) { i ->
