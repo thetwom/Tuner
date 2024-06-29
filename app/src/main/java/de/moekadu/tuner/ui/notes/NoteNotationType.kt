@@ -1,17 +1,18 @@
 package de.moekadu.tuner.ui.notes
 
+import androidx.annotation.StringRes
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.NoteModifier
 import de.moekadu.tuner.temperaments.NoteNameStem
 
 /** Available note notation types. */
-enum class NotationType {
-    Standard, /**< Default C, D, E, ...*/
-    International,  /**< C, D, E, ..., but using a B and never a H */
-    Solfege, /**< Solfege */
-    Carnatic, /**< Carnatic Indian notation */
-    Hindustani /**< Hindustani Indian notation */
+enum class NotationType(@StringRes val stringResourceId: Int) {
+    Standard(R.string.notation_standard), /**< Default C, D, E, ...*/
+    International(R.string.notation_international),  /**< C, D, E, ..., but using a B and never a H */
+    Solfege(R.string.notation_solfege), /**< Solfege */
+    Carnatic(R.string.notation_carnatic), /**< Carnatic Indian notation */
+    Hindustani(R.string.notation_hindustani) /**< Hindustani Indian notation */
 }
 
 fun NotationType.resourceIds(): Map<NoteNameStem, Int> {

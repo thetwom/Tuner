@@ -127,9 +127,10 @@ fun TunerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
+    blackNightMode: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
+    val colorSchemeInit = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -137,6 +138,14 @@ fun TunerTheme(
 
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
+    }
+    val colorScheme = if (darkTheme && blackNightMode) {
+        colorSchemeInit.copy(
+            background = Color.Black,
+            surface = Color.Black
+        )
+    } else {
+        colorSchemeInit
     }
 
     val tunerColors = if (darkTheme) OnDarkTunerColors else OnLightTunerColors

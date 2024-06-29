@@ -293,18 +293,22 @@ fun Strings(
     }
 
     val minOctave = remember(strings, musicalScale) {
-        strings?.minOf { it.note.octave }
+        strings?.minOfOrNull { it.note.octave }
             ?: musicalScale.noteNameScale.getNoteOfIndex(musicalScale.noteIndexBegin).octave
     }
     val maxOctave = remember(strings, musicalScale) {
-        strings?.maxOf { it.note.octave }
+        strings?.maxOfOrNull { it.note.octave }
             ?: musicalScale.noteNameScale.getNoteOfIndex(musicalScale.noteIndexEnd - 1).octave
     }
     val minNoteIndex = remember(strings, musicalScale) {
-        strings?.minOf { it.musicalScaleIndex } ?: musicalScale.noteIndexBegin
+        strings?.minOfOrNull {
+            musicalScale.getNoteIndex(it.note)
+        } ?: musicalScale.noteIndexBegin
     }
     val maxNoteIndex = remember(strings, musicalScale) {
-        strings?.maxOf { it.musicalScaleIndex } ?: (musicalScale.noteIndexEnd - 1)
+        strings?.maxOfOrNull {
+            musicalScale.getNoteIndex(it.note)
+        } ?: (musicalScale.noteIndexEnd - 1)
     }
     val numStrings = strings?.size ?: (maxNoteIndex - minNoteIndex)
 
@@ -427,14 +431,18 @@ fun Strings(
                     val noteNameScaleIndex =
                         noteInfo?.musicalScaleIndex ?: (musicalScale.noteIndexBegin + index)
                     val note = noteInfo?.note ?: musicalScale.getNote(noteNameScaleIndex)
-                    val stringColor = if (note != highlightedNote && key != highlightedNoteKey)
-                        defaultColor
-                    else
-                        tuningColor
-                    val onStringColor = if (note != highlightedNote && key != highlightedNoteKey)
-                        onDefaultColor
-                    else
-                        onTuningColor
+
+                    // we prefer key over highlighted note
+                    val stringColor = if (highlightedNoteKey != null) {
+                        if (key == highlightedNoteKey) tuningColor else defaultColor
+                    } else {
+                        if (note == highlightedNote) tuningColor else defaultColor
+                    }
+                    val onStringColor = if (highlightedNoteKey != null) {
+                        if (key == highlightedNoteKey) onTuningColor else onDefaultColor
+                    } else {
+                        if (note == highlightedNote)  onTuningColor else onDefaultColor
+                    }
 
                     SingleString(
                         note = note,
@@ -442,6 +450,7 @@ fun Strings(
                         numPositions = numLabelsPerStair,
                         fontSize = fontSizeResolved,
                         outerPadding = outerLabelPadding,
+                        notePrintOptions = notePrintOptions,
                         stringLineWidth = computeStringLineWidth(
                             noteNameScaleIndex,
                             minStringWidth,
@@ -492,7 +501,7 @@ private fun StringsPreview() {
         val musicalScale = remember { MusicalScaleFactory.create(TemperamentType.EDO12) }
         val noteNameScale = musicalScale.noteNameScale
         val strings = remember(noteNameScale) {
-            listOf(
+            listOf<MusicalNote>(
                 noteNameScale.notes[0].copy(octave = 2),
                 noteNameScale.notes[1].copy(octave = 3),
                 noteNameScale.notes[4].copy(octave = 3),
@@ -516,7 +525,7 @@ private fun StringsPreview() {
             }.toPersistentList()
         }
         val notePrintOptions = NotePrintOptions()
-        var highlightedNote by remember { mutableStateOf(strings[2].note) }
+        var highlightedNote by remember { mutableStateOf(strings.getOrNull(2)?.note) }
         Column {
             Strings(
                 strings = strings,

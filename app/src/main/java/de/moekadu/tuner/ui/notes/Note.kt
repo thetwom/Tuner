@@ -41,6 +41,8 @@ import de.moekadu.tuner.temperaments.NoteNameScale
 import de.moekadu.tuner.temperaments.NoteNameStem
 import de.moekadu.tuner.temperaments.createNoteNameScale53Tone
 import de.moekadu.tuner.temperaments.flatSharpIndex
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 private val modifierPostfixStrings = mapOf(
     NoteModifier.None to "",
@@ -192,6 +194,7 @@ private fun preferEnharmonic(
  *   octaves numbers are printed but instead , and '.
  * @param notationType Notation type used for printing.
  */
+@Serializable
 @Stable
 data class NotePrintOptions(
     val sharpFlatPreference: SharpFlatPreference = SharpFlatPreference.None,
@@ -202,6 +205,7 @@ data class NotePrintOptions(
         Sharp, Flat, None
     }
 
+    @Transient
     private val resourceIds = notationType.resourceIds()
     fun resourceId(noteNameStem: NoteNameStem) = resourceIds[noteNameStem]
 }
@@ -330,6 +334,21 @@ private fun createAnnotatedStringOfNote(
             }
         }
     }
+}
+
+fun MusicalNote.asAnnotatedString(
+    notePrintOptions: NotePrintOptions,
+    fontSize: TextUnit,
+    fontWeight: FontWeight?,
+    withOctave: Boolean,
+    resources: Resources
+) : AnnotatedString {
+    val properties = resolveNoteProperties(
+        this,
+        notePrintOptions,
+        resources
+    )
+    return createAnnotatedStringOfNote(properties, notePrintOptions, fontSize, fontWeight, withOctave)
 }
 
 /** Note.

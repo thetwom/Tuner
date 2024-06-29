@@ -10,6 +10,7 @@ import de.moekadu.tuner.temperaments.NoteModifier
 import de.moekadu.tuner.temperaments.NoteNamePrinter
 import kotlinx.parcelize.Parcelize
 
+// name, should become string instead of charsequence
 @Parcelize
 data class Instrument(private val name: CharSequence?, private val nameResource: Int?, val strings: Array<MusicalNote>,
                       val iconResource: Int, val stableId: Long, val isChromatic: Boolean = false) :

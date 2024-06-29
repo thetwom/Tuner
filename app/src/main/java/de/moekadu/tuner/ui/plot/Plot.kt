@@ -345,7 +345,7 @@ private fun PlotPreview() {
                 val x = remember { floatArrayOf(-4f, -2f, 0f, 2f, 4f) }
                 val y = remember { floatArrayOf(1f, -7f, -5f, 0f, 8f) }
                 Line(
-                    data = LineCoordinates(x.size, { x[it] }, { y[it] }),
+                    data = LineCoordinates.create(x, y),
                     lineWidth = 5.dp,
                     lineColor = MaterialTheme.colorScheme.primary
                 )

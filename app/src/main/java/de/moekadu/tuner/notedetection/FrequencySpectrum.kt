@@ -15,6 +15,9 @@ class FrequencySpectrum(
     /** Squared amplitudes of the spectrum (re*re + im*im) / (numberOfInputSamples * 2f)**2 .*/
     val amplitudeSpectrumSquared = FloatArray(size)
 
+    /** Normalized spectrum for plotting. */
+    val plottingSpectrumNormalized = FloatArray(size)
+
     /** Return the real part of a spectrum value.
      * @param index Index where the value is needed.
      * @return Real part of spectrum at given index.

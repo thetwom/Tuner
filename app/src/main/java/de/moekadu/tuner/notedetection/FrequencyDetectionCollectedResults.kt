@@ -2,6 +2,8 @@ package de.moekadu.tuner.notedetection
 
 import de.moekadu.tuner.misc.MemoryPool
 import kotlinx.coroutines.channels.Channel
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -212,11 +214,37 @@ class FrequencyDetectionResultCollector(
         // make sure, that we have a real amplitude spectrum, which is scaled correctly
         // the factor 2 is needed, since the FFT returns a one sided spectrum.
         val normalizationFactor = (2f / sampleData.size / getWindowIntegral(windowType)).pow(2)
+        var minValueSpectrum = Float.POSITIVE_INFINITY
+        var maxValueSpectrum = Float.NEGATIVE_INFINITY
         for (i in spectrum.amplitudeSpectrumSquared.indices) {
             spectrum.amplitudeSpectrumSquared[i] = normalizationFactor * (
                     spectrum.spectrum[2 * i].pow(2) + spectrum.spectrum[2 * i + 1].pow(2)
                     )
+            minValueSpectrum = min(minValueSpectrum, spectrum.amplitudeSpectrumSquared[i])
+            maxValueSpectrum = max(maxValueSpectrum, spectrum.amplitudeSpectrumSquared[i])
         }
+        val scalingFactorSpectrum = if (maxValueSpectrum == minValueSpectrum)
+            1.0f
+        else
+            1.0f / (maxValueSpectrum - minValueSpectrum)
+        spectrum.amplitudeSpectrumSquared.forEachIndexed { index, ampSqr ->
+            spectrum.plottingSpectrumNormalized[index] = scalingFactorSpectrum * (ampSqr - minValueSpectrum)
+        }
+
+        var minValueCorrelation = Float.POSITIVE_INFINITY
+        var maxValueCorrelation = Float.NEGATIVE_INFINITY
+        autoCorrelation.values.forEach { corr ->
+            minValueCorrelation = min(minValueCorrelation, corr)
+            maxValueCorrelation = max(maxValueCorrelation, corr)
+        }
+        val scalingFactorCorrelation = if (maxValueCorrelation == minValueCorrelation)
+            1.0f
+        else
+            1.0f / (maxValueCorrelation - minValueCorrelation)
+        autoCorrelation.values.forEachIndexed { index, corr ->
+            autoCorrelation.plotValuesNormalized[index] =  scalingFactorCorrelation * (corr - minValueCorrelation)
+        }
+        autoCorrelation.plotValuesNormalizedZero = -scalingFactorCorrelation * minValueCorrelation
 
         // register for reuse
         spectrumAndCorrelation.decRef()

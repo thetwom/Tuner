@@ -2,6 +2,7 @@ package de.moekadu.tuner.temperaments
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 
 enum class BaseNote {
     C, D, E, F, G, A, B, None
@@ -51,6 +52,7 @@ data class NoteNameStem(val baseNote: BaseNote,
  *   has no meaning if enharmonicBase is BaseNote.None
  * @param enharmonicOctaveOffset Same as octaveOffset, but for the enharmonic note
  */
+@Serializable
 @Parcelize
 data class MusicalNote(val base: BaseNote, val modifier: NoteModifier, val octave: Int = Int.MAX_VALUE,
                        val octaveOffset: Int = 0,

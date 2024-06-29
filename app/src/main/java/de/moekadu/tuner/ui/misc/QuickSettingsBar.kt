@@ -1,5 +1,6 @@
 package de.moekadu.tuner.ui.misc
 
+import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
@@ -30,22 +32,29 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.preferences.TemperamentAndReferenceNoteValue
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.temperaments.NoteModifier
 import de.moekadu.tuner.temperaments.TemperamentType
 import de.moekadu.tuner.temperaments.getTuningNameAbbrResourceId
 import de.moekadu.tuner.ui.notes.Note
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.theme.TunerTheme
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 
 @Composable
 fun QuickSettingsBar(
-    temperamentAndReferenceNote: TemperamentAndReferenceNoteValue,
+    musicalScale: MusicalScale,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     onSharpFlatClicked: () -> Unit = {},
     onTemperamentClicked: () -> Unit = {},
     onReferenceNoteClicked: () -> Unit = {}
 ) {
+
+    val decimalFormat = rememberNumberFormatter()
+
     Row(
         modifier = modifier
             .height(48.dp)
@@ -65,13 +74,13 @@ fun QuickSettingsBar(
                 verticalArrangement = Arrangement.Center
             ) {
                 Note(
-                    temperamentAndReferenceNote.referenceNote,
+                    musicalNote = musicalScale.referenceNote,
                     notePrintOptions = notePrintOptions,
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    stringResource(id = R.string.hertz_str, temperamentAndReferenceNote.referenceFrequency),
+                    stringResource(id = R.string.hertz_str, decimalFormat.format(musicalScale.referenceFrequency)),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -89,7 +98,7 @@ fun QuickSettingsBar(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    stringResource(id = getTuningNameAbbrResourceId(temperamentAndReferenceNote.temperamentType)),
+                    stringResource(id = getTuningNameAbbrResourceId(musicalScale.temperamentType)),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -131,14 +140,16 @@ private fun QuickSettingsBarPreview() {
         var notePrintOptions by remember {
             mutableStateOf(NotePrintOptions())
         }
-        val temperamentAndReferenceNote = TemperamentAndReferenceNoteValue(
-            temperamentType = TemperamentType.EDO12,
-            rootNote = MusicalNote(BaseNote.A, NoteModifier.None, octave = 4),
-            referenceNote = MusicalNote(BaseNote.A, NoteModifier.None, octave = 4),
-            referenceFrequency = "440"
-        )
+
+        var musicalScale by remember { mutableStateOf(
+            MusicalScaleFactory.create(
+                TemperamentType.EDO12,
+                referenceFrequency = 432.1554f
+            )
+        ) }
+
         QuickSettingsBar(
-            temperamentAndReferenceNote,
+            musicalScale = musicalScale,
             notePrintOptions = notePrintOptions,
             onSharpFlatClicked = {
                 notePrintOptions = notePrintOptions.copy(
