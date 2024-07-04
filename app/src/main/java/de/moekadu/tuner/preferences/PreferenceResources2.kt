@@ -1,8 +1,11 @@
 package de.moekadu.tuner.preferences
 
+import android.content.Context
 import android.os.Parcelable
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.IOException
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -10,6 +13,8 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStoreFile
+import dagger.hilt.android.qualifiers.ApplicationContext
 import de.moekadu.tuner.notedetection.WindowingFunction
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
@@ -37,9 +42,13 @@ import kotlin.math.roundToInt
 
 @Singleton
 class PreferenceResources2 @Inject constructor (
-    private val dataStore: DataStore<Preferences>
+    @ApplicationContext context: Context
 ) {
-    val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val dataStore = PreferenceDataStoreFactory.create(
+        corruptionHandler = ReplaceFileCorruptionHandler(produceNewData = { emptyPreferences() })
+    ) { context.preferencesDataStoreFile("settings") }
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @Serializable
     data class Appearance(

@@ -28,7 +28,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ScientificTunerViewModel @Inject constructor (
     val pref: PreferenceResources2,
-    val instruments: InstrumentResources
+    val instruments: InstrumentResources // TODO: use instrumentResources2 and put into tuner only the current instrument
 ) : ViewModel(), ScientificTunerData {
     private val tuner = Tuner(
         pref,

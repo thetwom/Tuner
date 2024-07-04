@@ -14,6 +14,7 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.preferences.PreferenceResources2
 import de.moekadu.tuner.temperaments.MusicalScale
 import de.moekadu.tuner.temperaments.NoteNameScaleFactory
+import de.moekadu.tuner.ui.misc.TunerScaffold
 import de.moekadu.tuner.ui.preferences.AboutDialog
 import de.moekadu.tuner.ui.preferences.AppearanceDialog
 import de.moekadu.tuner.ui.preferences.NotationDialog
@@ -30,29 +31,44 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 fun NavGraphBuilder.preferenceGraph(
-    controller: NavController, preferences: PreferenceResources2, scope: CoroutineScope) {
+    controller: NavController,
+    canNavigateUp: Boolean,
+    onNavigateUpClicked: () -> Unit,
+    preferences: PreferenceResources2, scope: CoroutineScope
+) {
     navigation<PreferencesGraphRoute>(
         startDestination = PreferencesRoute,
     ) {
         composable<PreferencesRoute> {
-            val viewModel: PreferencesViewModel = hiltViewModel()
-            Preferences(
-                viewModel = viewModel,
-                onAppearanceClicked = { controller.navigate(AppearanceDialogRoute) },
-                onReferenceFrequencyClicked = {
-                    controller.navigate(
-                        ReferenceFrequencyDialogRoute.create(
-                            preferences.musicalScale.value,
-                            null
+            val musicalScale by preferences.musicalScale.collectAsStateWithLifecycle()
+            val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
+            TunerScaffold(
+                canNavigateUp = canNavigateUp,
+                onNavigateUpClicked = onNavigateUpClicked,
+                showPreferenceButton = false,
+                showBottomBar = false,
+                musicalScale = musicalScale,
+                notePrintOptions = notePrintOptions
+            ) {
+                val viewModel: PreferencesViewModel = hiltViewModel()
+                Preferences(
+                    viewModel = viewModel,
+                    onAppearanceClicked = { controller.navigate(AppearanceDialogRoute) },
+                    onReferenceFrequencyClicked = {
+                        controller.navigate(
+                            ReferenceFrequencyDialogRoute.create(
+                                preferences.musicalScale.value,
+                                null
+                            )
                         )
-                    )
-                },
-                onNotationClicked = { controller.navigate(NotationDialogRoute)},
-                onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
-                onWindowingFunctionClicked = { controller.navigate(WindowingFunctionDialogRoute) },
-                onResetClicked = { controller.navigate(ResetDialogRoute) },
-                onAboutClicked = { controller.navigate(AboutDialogRoute) }
-            )
+                    },
+                    onNotationClicked = { controller.navigate(NotationDialogRoute) },
+                    onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
+                    onWindowingFunctionClicked = { controller.navigate(WindowingFunctionDialogRoute) },
+                    onResetClicked = { controller.navigate(ResetDialogRoute) },
+                    onAboutClicked = { controller.navigate(AboutDialogRoute) }
+                )
+            }
         }
         dialog<AppearanceDialogRoute> {
             val appearance by preferences.appearance.collectAsStateWithLifecycle()
