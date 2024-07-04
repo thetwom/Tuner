@@ -289,4 +289,5 @@
     <string name="min_harmonic_energy_content">Required signal strength</string>
     <string name="min_harmonic_energy_content_summary">Ignore input below %d&#x200A;%%.</string>
     <string name="sensitivity">Sensitivity</string>
+    <string name="delete_instrument">Delete instrument</string>
 </resources>

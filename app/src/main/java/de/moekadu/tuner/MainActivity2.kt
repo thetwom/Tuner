@@ -5,6 +5,7 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -34,7 +35,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import de.moekadu.tuner.navigation.PreferencesGraphRoute
-import de.moekadu.tuner.navigation.PreferencesRoute
 import de.moekadu.tuner.navigation.ReferenceFrequencyDialogRoute
 import de.moekadu.tuner.navigation.TemperamentDialogRoute
 import de.moekadu.tuner.navigation.TunerRoute
@@ -52,7 +52,8 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity2 : ComponentActivity() {
 
-    @Inject lateinit var pref: PreferenceResources2
+    @Inject
+    lateinit var pref: PreferenceResources2
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,72 +100,101 @@ class MainActivity2 : ComponentActivity() {
                     }
                 }
 
-                Scaffold(
-                    topBar = {
-                        TopAppBar(
-                            title = { Text(getString(R.string.app_name)) },
-                            navigationIcon = {
-                                if (canNavigateUp) {
-                                    IconButton(onClick = { controller.navigateUp() }) {
-                                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "back")
-                                    }
-                                }
-                            },
-                            actions = {
-                                if (!inPreferencesGraph) {
-                                    IconButton(onClick = {
-                                        controller.navigate(PreferencesGraphRoute)
-                                    }) {
-                                        Icon(Icons.Filled.Settings, "settings")
-                                    }
-                                }
-                            }
-                        )
-                    },
-                    bottomBar = {
-                        if (!inPreferencesGraph) {
-                            val musicalScale by pref.musicalScale.collectAsStateWithLifecycle()
-                            val notePrintOptions by pref.notePrintOptions.collectAsStateWithLifecycle()
-                            QuickSettingsBar(
-                                musicalScale = musicalScale,
-                                notePrintOptions = notePrintOptions,
-                                onSharpFlatClicked = {
-                                    scope.launch {
-                                        val currentFlatSharpChoice = pref.notePrintOptions.value.sharpFlatPreference
-                                        val newFlatShapeChoice = if (currentFlatSharpChoice == NotePrintOptions.SharpFlatPreference.Flat)
-                                            NotePrintOptions.SharpFlatPreference.Sharp
-                                        else
-                                            NotePrintOptions.SharpFlatPreference.Flat
-                                        pref.writeNotePrintOptions(pref.notePrintOptions.value.copy(
-                                            sharpFlatPreference = newFlatShapeChoice
-                                        ))
-                                    }
-                                },
-                                onReferenceNoteClicked = {
-                                    // provided by musicalScalePropertiesGraph
-                                    controller.navigate(ReferenceFrequencyDialogRoute.create(
-                                        pref.musicalScale.value, null
-                                    ))
-                                },
-                                onTemperamentClicked = {
-                                    // provided by musicalScalePropertiesGraph
-                                    controller.navigate(TemperamentDialogRoute)
-                                }
-                            )
-                        }
-                    }
-                ) { padding ->
-                    NavHost(
-                        modifier = Modifier.padding(padding),
-                        navController = controller,
-                        startDestination = TunerRoute
-                    ) {
-                        tunerGraph(navController = controller, preferences = pref)
-                        preferenceGraph(controller = controller, preferences = pref, scope = scope)
-                        // provides TemperamentDialogRoute and ReferenceNoteDialog
-                        musicalScalePropertiesGraph(controller = controller, preferences = pref, scope = scope)
-                    }
+                NavHost(
+                    modifier = Modifier.fillMaxSize(),
+                    navController = controller,
+                    startDestination = TunerRoute
+                ) {
+                    tunerGraph(
+                        controller = controller,
+                        scope = scope,
+                        canNavigateUp = canNavigateUp,
+                        onNavigateUpClicked = { controller.navigateUp() },
+                        preferences = pref
+                    )
+                    preferenceGraph(
+                        controller = controller,
+                        canNavigateUp = canNavigateUp,
+                        onNavigateUpClicked = { controller.navigateUp() },
+                        preferences = pref,
+                        scope = scope
+                    )
+                    // provides TemperamentDialogRoute and ReferenceNoteDialog
+                    musicalScalePropertiesGraph(
+                        controller = controller,
+                        preferences = pref,
+                        scope = scope
+                    )
                 }
+
+
+//                Scaffold(
+//                    topBar = {
+//                        TopAppBar(
+//                            title = { Text(getString(R.string.app_name)) },
+//                            navigationIcon = {
+//                                if (canNavigateUp) {
+//                                    IconButton(onClick = { controller.navigateUp() }) {
+//                                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "back")
+//                                    }
+//                                }
+//                            },
+//                            actions = {
+//                                if (!inPreferencesGraph) {
+//                                    IconButton(onClick = {
+//                                        controller.navigate(PreferencesGraphRoute)
+//                                    }) {
+//                                        Icon(Icons.Filled.Settings, "settings")
+//                                    }
+//                                }
+//                            }
+//                        )
+//                    },
+//                    bottomBar = {
+//                        if (!inPreferencesGraph) {
+//                            val musicalScale by pref.musicalScale.collectAsStateWithLifecycle()
+//                            val notePrintOptions by pref.notePrintOptions.collectAsStateWithLifecycle()
+//                            QuickSettingsBar(
+//                                musicalScale = musicalScale,
+//                                notePrintOptions = notePrintOptions,
+//                                onSharpFlatClicked = {
+//                                    scope.launch {
+//                                        val currentFlatSharpChoice = pref.notePrintOptions.value.sharpFlatPreference
+//                                        val newFlatShapeChoice = if (currentFlatSharpChoice == NotePrintOptions.SharpFlatPreference.Flat)
+//                                            NotePrintOptions.SharpFlatPreference.Sharp
+//                                        else
+//                                            NotePrintOptions.SharpFlatPreference.Flat
+//                                        pref.writeNotePrintOptions(pref.notePrintOptions.value.copy(
+//                                            sharpFlatPreference = newFlatShapeChoice
+//                                        ))
+//                                    }
+//                                },
+//                                onReferenceNoteClicked = {
+//                                    // provided by musicalScalePropertiesGraph
+//                                    controller.navigate(ReferenceFrequencyDialogRoute.create(
+//                                        pref.musicalScale.value, null
+//                                    ))
+//                                },
+//                                onTemperamentClicked = {
+//                                    // provided by musicalScalePropertiesGraph
+//                                    controller.navigate(TemperamentDialogRoute)
+//                                }
+//                            )
+//                        }
+//                    }
+//                ) { padding ->
+//                    NavHost(
+//                        modifier = Modifier.padding(padding),
+//                        navController = controller,
+//                        startDestination = TunerRoute
+//                    ) {
+//                        tunerGraph(controller = controller, preferences = pref)
+//                        preferenceGraph(controller = controller, preferences = pref, scope = scope)
+//                        // provides TemperamentDialogRoute and ReferenceNoteDialog
+//                        musicalScalePropertiesGraph(controller = controller, preferences = pref, scope = scope)
+//                    }
+//                }
+//            }
             }
         }
     }

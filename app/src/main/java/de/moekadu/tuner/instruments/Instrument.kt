@@ -1,23 +1,35 @@
 package de.moekadu.tuner.instruments
 
 import android.content.Context
+import android.content.res.Resources
 import android.os.Parcelable
 import android.text.SpannableStringBuilder
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
 import de.moekadu.tuner.temperaments.NoteNamePrinter
+import de.moekadu.tuner.ui.notes.NotePrintOptions
+import de.moekadu.tuner.ui.notes.asAnnotatedString
 import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 
 // name, should become string instead of charsequence
+@Serializable
 @Parcelize
+@Immutable
 data class Instrument(private val name: CharSequence?, private val nameResource: Int?, val strings: Array<MusicalNote>,
                       val iconResource: Int, val stableId: Long, val isChromatic: Boolean = false) :
     Parcelable {
     //val stringsSorted = strings.map { it.toFloat() }.toFloatArray().sortedArray()
 
-    /** Get instrument name as a char sequence.
+    /** Get instrument name as a char sequence. TODO: delete this function, do we need charseq here?
      * @param context Context is only needed, if the instrument name is a string resource.
      * @return Name of instrument.
      */
@@ -25,6 +37,18 @@ data class Instrument(private val name: CharSequence?, private val nameResource:
         return when {
             nameResource != null && context != null -> context.getString(nameResource)
             name != null -> name
+            else -> throw RuntimeException("No name given for instrument")
+        }
+    }
+
+    /** Get instrument name as a char sequence.
+     * @param context Context is only needed, if the instrument name is a string resource.
+     * @return Name of instrument.
+     */
+    fun getNameString2(context: Context?): String {
+        return when {
+            nameResource != null && context != null -> context.getString(nameResource)
+            name != null -> name.toString()
             else -> throw RuntimeException("No name given for instrument")
         }
     }
@@ -49,6 +73,44 @@ data class Instrument(private val name: CharSequence?, private val nameResource:
 //            strings.joinToString(" - ", "", "") {
 //                tuningFrequencies.getNoteName(context, it, preferFlat)
 //            }
+        }
+    }
+
+    /** Get readable representation of all strings (e.g. "A#4 - C5 - G5")
+     * @param context Context for obtaining string resources.
+     * @param noteNamePrinter Transfer notes to char sequences.
+     */
+    fun getStringsString2(
+        context: Context,
+        notePrintOptions: NotePrintOptions,
+        fontSize: TextUnit,
+        fontWeight: FontWeight? = null
+        ): AnnotatedString {
+        return if (isChromatic) {
+            buildAnnotatedString { append(context.getString(R.string.chromatic)) }
+        } else {
+            buildAnnotatedString {
+//            Log.v("Tuner", "Instrument.getStringsString: printOption=$printOption, preferFlat=$preferFlat")
+                if (strings.isNotEmpty())
+                    append(strings[0].asAnnotatedString(
+                        notePrintOptions,
+                        fontSize,
+                        fontWeight,
+                        withOctave = true,
+                        resources = context.resources
+                    ))
+
+                for (i in 1 until strings.size) {
+                    append(" - ")
+                    append(strings[i].asAnnotatedString(
+                        notePrintOptions,
+                        fontSize,
+                        fontWeight,
+                        withOctave = true,
+                        resources = context.resources
+                    ))
+                }
+            }
         }
     }
 

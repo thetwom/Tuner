@@ -82,6 +82,7 @@ interface InstrumentTunerData {
 fun InstrumentTuner(
     data: InstrumentTunerData,
     modifier: Modifier = Modifier,
+    onInstrumentButtonClicked: () -> Unit = {},
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create()
 ) {
     BoxWithConstraints(modifier = modifier) {
@@ -121,7 +122,7 @@ fun InstrumentTuner(
                         bottom = 0.dp
                     ),
                 outline = tunerPlotStyle.plotWindowOutline,
-                onClick = {} // TODO: do something
+                onClick = onInstrumentButtonClicked
             )
 
             Strings(
@@ -210,6 +211,7 @@ fun InstrumentTuner(
 fun InstrumentTunerLandscape(
     data: InstrumentTunerData,
     modifier: Modifier = Modifier,
+    onInstrumentButtonClicked: () -> Unit = {},
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create()
 ) {
     Row(
@@ -249,7 +251,7 @@ fun InstrumentTunerLandscape(
                         bottom = 0.dp
                     ),
                 outline = tunerPlotStyle.plotWindowOutline,
-                onClick = {} // TODO: do something
+                onClick = onInstrumentButtonClicked
             )
 
             Strings(
