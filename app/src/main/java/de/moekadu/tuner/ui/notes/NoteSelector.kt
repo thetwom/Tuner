@@ -198,7 +198,7 @@ fun NoteSelector(
 
 /** Select between available notes.
  * @param selectedIndex List index of selected note in noteNameScale.notes
- * @param noteNameScale Scale of the available note names.
+ * @param musicalScale Scale with the available notes.
  * @param notePrintOptions How to print the notes.
  * @param modifier Modifier.
  * @param fontSize Font size of notes.

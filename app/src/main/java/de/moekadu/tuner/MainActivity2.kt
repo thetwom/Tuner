@@ -38,6 +38,7 @@ import de.moekadu.tuner.navigation.PreferencesGraphRoute
 import de.moekadu.tuner.navigation.ReferenceFrequencyDialogRoute
 import de.moekadu.tuner.navigation.TemperamentDialogRoute
 import de.moekadu.tuner.navigation.TunerRoute
+import de.moekadu.tuner.navigation.instrumentEditorGraph
 import de.moekadu.tuner.navigation.musicalScalePropertiesGraph
 import de.moekadu.tuner.navigation.preferenceGraph
 import de.moekadu.tuner.navigation.tunerGraph
@@ -122,6 +123,14 @@ class MainActivity2 : ComponentActivity() {
                     // provides TemperamentDialogRoute and ReferenceNoteDialog
                     musicalScalePropertiesGraph(
                         controller = controller,
+                        preferences = pref,
+                        scope = scope
+                    )
+
+                    instrumentEditorGraph(
+                        controller = controller,
+                        canNavigateUp = true,
+                        onNavigateUpClicked = {},
                         preferences = pref,
                         scope = scope
                     )

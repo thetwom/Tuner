@@ -112,7 +112,9 @@ fun NavGraphBuilder.tunerGraph(
                 //viewModel.setCurrentInstrument(it)
                 controller.navigateUp()
             },
-            onEditInstrumentClicked = {_,_ ->},
+            onEditInstrumentClicked = { _,_ ->
+                controller.navigate(InstrumentEditorGraphRoute)
+            },
             onSharpFlatClicked = { scope.switchSharpFlat(preferences) },
             onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
                 controller.navigate(

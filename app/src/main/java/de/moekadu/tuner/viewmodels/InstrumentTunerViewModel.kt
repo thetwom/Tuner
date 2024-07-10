@@ -76,7 +76,7 @@ class InstrumentTunerViewModel @Inject constructor (
 
     override var strings by mutableStateOf<ImmutableList<StringWithInfo>?>(
         instrument.value.instrument.strings.mapIndexed { index, note ->
-            StringWithInfo(note, index, musicalScale.value.getNoteIndex(note))
+            StringWithInfo(note, index) //, musicalScale.value.getNoteIndex(note))
         }.toImmutableList()
     )
 
@@ -113,8 +113,7 @@ class InstrumentTunerViewModel @Inject constructor (
         viewModelScope.launch {
             instruments.instrument.collect {
                 it.instrument.strings.mapIndexed { index, note ->
-                    // TODO: do we really need the note index in the scale here? If yes, we must reset this also, when the scale changes
-                    StringWithInfo(note, index, musicalScale.value.getNoteIndex(note))
+                    StringWithInfo(note, index) //, musicalScale.value.getNoteIndex(note))
                 }
             }
         }

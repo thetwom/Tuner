@@ -39,6 +39,7 @@ data class TunerPlotStyle(
     val stringFontStyle: TextStyle,
     val plotWindowOutline: PlotWindowOutline,
     val plotWindowOutlineDuringGesture: PlotWindowOutline,
+    val noteSelectorStyle: TextStyle,
     val margin: Dp
 ) {
     companion object {
@@ -78,6 +79,7 @@ data class TunerPlotStyle(
                 cornerRadius = 8.dp,
                 color = MaterialTheme.colorScheme.primary
             ),
+            noteSelectorStyle: TextStyle = MaterialTheme.tunerTypography.plotLarge,
             margin: Dp = 8.dp
         ): TunerPlotStyle {
             return TunerPlotStyle(
@@ -107,6 +109,7 @@ data class TunerPlotStyle(
                 stringFontStyle,
                 plotWindowOutline,
                 plotWindowOutlineDuringGesture,
+                noteSelectorStyle,
                 margin
             )
         }
