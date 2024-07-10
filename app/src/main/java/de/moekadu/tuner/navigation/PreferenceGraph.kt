@@ -82,20 +82,6 @@ fun NavGraphBuilder.preferenceGraph(
                 onDismiss = { controller.navigateUp() }
             )
         }
-//        dialog<ReferenceFrequencyDialogRoute> {
-//            val state = it.toRoute<ReferenceFrequencyDialogRoute>()
-//            val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
-//            ReferenceNoteDialog(
-//                initialState = state.getMusicalScaleProperties(),
-//                onReferenceNoteChange = { newState ->
-//                    scope.launch { preferences.writeMusicalScaleProperties(newState) }
-//                    controller.navigateUp()
-//                },
-//                notePrintOptions = notePrintOptions,
-//                warning = state.warning,
-//                onDismiss = { controller.navigateUp() }
-//            )
-//        }
         dialog<NotationDialogRoute> {
             NotationDialog(
                 notePrintOptions = preferences.notePrintOptions.value,
@@ -111,36 +97,6 @@ fun NavGraphBuilder.preferenceGraph(
                 onDismiss = { controller.navigateUp() }
             )
         }
-//        dialog<TemperamentDialogRoute> {
-//            val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
-//            val resources = LocalContext.current.resources
-//            TemperamentDialog(
-//                initialState = PreferenceResources2.MusicalScaleProperties.create(
-//                    preferences.musicalScale.value
-//                ),
-//                onTemperamentChange = { newProperties ->
-//                    val newNoteNameScale = NoteNameScaleFactory.create(newProperties.temperamentType)
-//                    if (newNoteNameScale.hasNote(newProperties.referenceNote)) {
-//                        scope.launch { preferences.writeMusicalScaleProperties(newProperties) }
-//                        controller.navigateUp()
-//                    } else {
-//                        val proposedCorrectedProperties = newProperties.copy(
-//                            referenceNote = newNoteNameScale.defaultReferenceNote
-//                        )
-//                        controller.navigate(
-//                            ReferenceFrequencyDialogRoute.create(
-//                                proposedCorrectedProperties,
-//                                resources.getString(R.string.new_temperament_requires_adapting_reference_note)
-//                            )
-//                        ) {
-//                            popUpTo(TemperamentDialogRoute) { inclusive = true }
-//                        }
-//                    }
-//                },
-//                notePrintOptions =  notePrintOptions,
-//                onDismiss = { controller.navigateUp() }
-//            )
-//        }
         dialog<WindowingFunctionDialogRoute> {
             WindowingFunctionDialog(
                 initialWindowingFunction = preferences.windowing.value,

@@ -383,7 +383,7 @@ class TestInstrumentTunerData : InstrumentTunerData {
 
     override var strings by mutableStateOf(
         instrument.value.instrument.strings.mapIndexed { index, note ->
-            StringWithInfo(note, index, musicalScale.value.getNoteIndex(note))
+            StringWithInfo(note, index) //, musicalScale.value.getNoteIndex(note))
         }.toPersistentList()
     )
     override var selectedNoteKey by mutableStateOf<Int?>(null)
