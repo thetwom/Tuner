@@ -1,5 +1,6 @@
 package de.moekadu.tuner.ui.instruments
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
@@ -44,7 +45,9 @@ fun InstrumentListSection(
                 )
             }
         },
-        modifier = modifier
+        modifier = modifier.clickable {
+            onExpandClicked(!expanded)
+        }
     )
 }
 

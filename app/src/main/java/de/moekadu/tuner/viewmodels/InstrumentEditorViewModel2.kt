@@ -1,10 +1,15 @@
 package de.moekadu.tuner.viewmodels
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.moekadu.tuner.R
+import de.moekadu.tuner.instruments.instrumentChromatic
+import de.moekadu.tuner.notedetection.FrequencyDetectionCollectedResults
+import de.moekadu.tuner.notedetection.FrequencyEvaluationResult
 import de.moekadu.tuner.preferences.PreferenceResources2
 import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.tuner.Tuner
 import de.moekadu.tuner.ui.instruments.StringWithInfo
 import de.moekadu.tuner.ui.notes.NoteDetectorState
 import de.moekadu.tuner.ui.screens.InstrumentEditorData
@@ -19,8 +24,21 @@ import kotlin.math.min
 class InstrumentEditorViewModel2 @Inject constructor(
     private val pref: PreferenceResources2
 ) : ViewModel(), InstrumentEditorData {
+    private val tuner = Tuner(
+        pref,
+        instrumentChromatic,
+        viewModelScope,
+        onResultAvailableListener = object : Tuner.OnResultAvailableListener {
+            override fun onFrequencyDetected(result: FrequencyDetectionCollectedResults) {}
 
-    // TODO: start note detection and pass notes to
+            override fun onFrequencyEvaluated(result: FrequencyEvaluationResult) {
+                result.target?.let { tuningTarget ->
+                    noteDetectorState.hitNote(tuningTarget.note)
+                }
+            }
+        }
+    )
+
     val musicalScale get() = pref.musicalScale
 
     override val icon = MutableStateFlow(R.drawable.ic_guitar)
@@ -95,5 +113,12 @@ class InstrumentEditorViewModel2 @Inject constructor(
             if (stringsValue.size == 1)
                 initializerNote.value = stringsValue[0].note
         }
+    }
+
+    fun startTuner() {
+        tuner.connect()
+    }
+    fun stopTuner() {
+        tuner.disconnect()
     }
 }

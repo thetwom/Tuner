@@ -34,7 +34,7 @@ class InstrumentTunerViewModel @Inject constructor (
 ) : ViewModel(), InstrumentTunerData {
     private val tuner = Tuner(
         pref,
-        instruments,
+        instruments.instrument.value.instrument,
         viewModelScope,
         onResultAvailableListener = object : Tuner.OnResultAvailableListener {
             override fun onFrequencyDetected(result: FrequencyDetectionCollectedResults) { }
@@ -115,6 +115,7 @@ class InstrumentTunerViewModel @Inject constructor (
                 it.instrument.strings.mapIndexed { index, note ->
                     StringWithInfo(note, index) //, musicalScale.value.getNoteIndex(note))
                 }
+                tuner.changeInstrument(it.instrument)
             }
         }
     }

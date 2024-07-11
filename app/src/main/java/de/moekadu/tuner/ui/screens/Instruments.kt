@@ -3,25 +3,28 @@ package de.moekadu.tuner.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
@@ -92,6 +95,8 @@ fun Instruments(
     BackHandler(enabled = selectedInstruments.isNotEmpty()) {
         scope.launch { state.clearSelectedInstruments() }
     }
+    // TODO: add tools for sharing, exporting, importing
+
     TunerScaffold(
         modifier = modifier,
         actionModeActive = selectedInstruments.isNotEmpty(),
@@ -129,20 +134,28 @@ fun Instruments(
         onTemperamentClicked = onTemperamentClicked,
         onReferenceNoteClicked = onReferenceNoteClicked,
         onSharpFlatClicked = onSharpFlatClicked,
-        onPreferenceButtonClicked = onPreferenceButtonClicked
+        onPreferenceButtonClicked = onPreferenceButtonClicked,
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { /* TODO callback to create new instrument */ }) {
+                Icon(Icons.Default.Add, contentDescription = "create new instrument")
+            }
+        }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier.padding(paddingValues = paddingValues)
         ) {
-            item(contentType = 1) {
-                InstrumentListSection(
-                    title = stringResource(id = R.string.custom_instruments),
-                    expanded = customInstrumentsExpanded
-                ) {
-                    scope.launch { state.expandCustomInstruments(it) }
+            if ( customInstruments.size > 0) {
+                item(contentType = 1) {
+                    InstrumentListSection(
+                        title = stringResource(id = R.string.custom_instruments),
+                        expanded = customInstrumentsExpanded
+                    ) {
+                        scope.launch { state.expandCustomInstruments(it) }
+                    }
                 }
             }
-            if (customInstrumentsExpanded) {
+            if (customInstrumentsExpanded && customInstruments.size > 0) {
                 items(customInstruments, { it.stableId }, { 2 }) { item ->
                     InstrumentItem2(
                         instrument = item,
@@ -179,14 +192,17 @@ fun Instruments(
                 }
             }
 
-            item(contentType = 1) {
-                InstrumentListSection(
-                    title = stringResource(id = R.string.predefined_instruments),
-                    expanded = predefinedInstrumentsExpanded
-                ) {
-                    scope.launch { state.expandPredefinedInstruments(it) }
+            if (customInstruments.size > 0) {
+                item(contentType = 1) {
+                    InstrumentListSection(
+                        title = stringResource(id = R.string.predefined_instruments),
+                        expanded = predefinedInstrumentsExpanded
+                    ) {
+                        scope.launch { state.expandPredefinedInstruments(it) }
+                    }
                 }
             }
+
             if (predefinedInstrumentsExpanded) {
                 items(state.predefinedInstruments, { it.stableId }, { 3 }) { item ->
                     InstrumentItem2(
@@ -203,9 +219,16 @@ fun Instruments(
                         onOptionsClicked = { instrument, task ->
                             if (task == InstrumentItemTask.Copy)
                                 onEditInstrumentClicked(instrument, true)
-                        }
+                        },
+                        isCopyable = !item.isChromatic
                     )
                 }
+            }
+
+            // extra space to allow scrolling up a bit more, such that the last item
+            // doesn't collide with the fab
+            item {
+                Spacer(modifier.height(80.dp))
             }
         }
 
