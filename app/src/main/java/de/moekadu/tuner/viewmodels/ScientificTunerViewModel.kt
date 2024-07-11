@@ -6,7 +6,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentResources
+import de.moekadu.tuner.instruments.instrumentChromatic
+import de.moekadu.tuner.instruments.instrumentDatabase
 import de.moekadu.tuner.notedetection.FrequencyDetectionCollectedResults
 import de.moekadu.tuner.notedetection.FrequencyEvaluationResult
 import de.moekadu.tuner.notedetection.TuningState
@@ -27,12 +30,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ScientificTunerViewModel @Inject constructor (
-    val pref: PreferenceResources2,
-    val instruments: InstrumentResources // TODO: use instrumentResources2 and put into tuner only the current instrument
+    val pref: PreferenceResources2
+//    val instruments: InstrumentResources // TODO: use instrumentResources2 and put into tuner only the current instrument
 ) : ViewModel(), ScientificTunerData {
     private val tuner = Tuner(
         pref,
-        instruments,
+        instrumentChromatic,
         viewModelScope,
         onResultAvailableListener = object : Tuner.OnResultAvailableListener {
             override fun onFrequencyDetected(result: FrequencyDetectionCollectedResults) {

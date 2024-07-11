@@ -99,6 +99,20 @@ class PreferenceResources2 @Inject constructor (
         writeSerializablePreference(NOTE_PRINT_OPTIONS_KEY, notePrintOptions)
     }
 
+    suspend fun switchSharpFlatPreference() {
+        val currentFlatSharpChoice = notePrintOptions.value.sharpFlatPreference
+        val newFlatShapeChoice =
+            if (currentFlatSharpChoice == NotePrintOptions.SharpFlatPreference.Flat)
+                NotePrintOptions.SharpFlatPreference.Sharp
+            else
+                NotePrintOptions.SharpFlatPreference.Flat
+        writeNotePrintOptions(
+            notePrintOptions.value.copy(
+                sharpFlatPreference = newFlatShapeChoice
+            )
+        )
+    }
+
     // scientific mode
     val scientificMode = getPreferenceFlow(SCIENTIFIC_MODE_KEY, ScientificModeDefault)
     suspend fun writeScientificMode(scientificMode: Boolean) {

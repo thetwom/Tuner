@@ -1,6 +1,6 @@
 package de.moekadu.tuner.tuner
 
-import de.moekadu.tuner.instruments.InstrumentResources
+import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.misc.MemoryPool
 import de.moekadu.tuner.misc.WaveWriter
@@ -31,7 +31,7 @@ import kotlinx.coroutines.withContext
 
 class Tuner(
     private val pref: PreferenceResources2,
-    private val instruments: InstrumentResources,
+    @Volatile private var instrument: Instrument,
     private val scope: CoroutineScope,
     private val onResultAvailableListener: OnResultAvailableListener
 ) {
@@ -86,9 +86,6 @@ class Tuner(
         scope.launch {
             pref.musicalScale.collect { restartChannel.trySend(Command.ChangePreferences) }
         }
-        scope.launch {
-            instruments.instrument.collect { restartChannel.trySend(Command.ChangePreferences) }
-        }
 
         scope.launch {
             var job: Job? = null
@@ -118,6 +115,12 @@ class Tuner(
     fun disconnect() {
         channel.trySend(Command.Disconnect)
     }
+
+    fun changeInstrument(instrument: Instrument) {
+        this.instrument = instrument
+        restartChannel.trySend(Command.ChangePreferences)
+    }
+
     private suspend fun run(onResultAvailableListener: OnResultAvailableListener)
             = coroutineScope {
 
@@ -171,7 +174,7 @@ class Tuner(
                 pref.minHarmonicEnergyContent.value,
                 pref.sensitivity.value.toFloat(),
                 pref.musicalScale.value,
-                instruments.instrument.value.instrument,
+                instrument
             )
 
             frequencyDetectionResultsChannel
@@ -186,7 +189,5 @@ class Tuner(
                     onResultAvailableListener.onFrequencyEvaluated(it)
                 }
         }
-
-
     }
 }

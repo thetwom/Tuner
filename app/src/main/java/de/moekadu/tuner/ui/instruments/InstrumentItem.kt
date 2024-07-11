@@ -99,7 +99,8 @@ fun InstrumentItem2(
     onOptionsClicked: (instrument: Instrument, task: InstrumentItemTask) -> Unit = {_, _ ->},
     isActive: Boolean = false,
     isSelected: Boolean = false,
-    readOnly: Boolean = false // disable delete/edit options
+    readOnly: Boolean = false, // disable delete/edit options
+    isCopyable: Boolean = true // disable copy-option
 ) {
     val context = LocalContext.current
     val variantColor = if (isActive)
@@ -163,7 +164,7 @@ fun InstrumentItem2(
                 )
             }
             Box {
-                if (readOnly) {
+                if (readOnly && isCopyable) {
                     IconButton(
                         onClick = { onOptionsClicked(instrument, InstrumentItemTask.Copy) },
                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -174,7 +175,7 @@ fun InstrumentItem2(
                             tint = variantColor
                         )
                     }
-                } else {
+                } else if (!readOnly) {
 
                     IconButton(
                         onClick = { menuExpanded = true },
@@ -198,19 +199,21 @@ fun InstrumentItem2(
                                 onOptionsClicked(instrument, InstrumentItemTask.Edit)
                             }
                         )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(id = R.string.copy_instrument)) },
-                            leadingIcon = {
-                                Icon(
-                                    ImageVector.vectorResource(id = R.drawable.ic_copy),
-                                    contentDescription = "copy"
-                                )
-                            },
-                            onClick = {
-                                menuExpanded = false
-                                onOptionsClicked(instrument, InstrumentItemTask.Copy)
-                            }
-                        )
+                        if (isCopyable) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(id = R.string.copy_instrument)) },
+                                leadingIcon = {
+                                    Icon(
+                                        ImageVector.vectorResource(id = R.drawable.ic_copy),
+                                        contentDescription = "copy"
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onOptionsClicked(instrument, InstrumentItemTask.Copy)
+                                }
+                            )
+                        }
                         HorizontalDivider()
                         DropdownMenuItem(
                             text = { Text(stringResource(id = R.string.delete_instrument)) },

@@ -8,13 +8,11 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import de.moekadu.tuner.preferences.PreferenceResources2
 import de.moekadu.tuner.ui.misc.TunerScaffold
-import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.screens.InstrumentTuner
 import de.moekadu.tuner.ui.screens.Instruments
 import de.moekadu.tuner.ui.screens.ScientificTuner
@@ -25,18 +23,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
-private fun CoroutineScope.switchSharpFlat(pref: PreferenceResources2) {
-    launch {
-        val currentFlatSharpChoice = pref.notePrintOptions.value.sharpFlatPreference
-        val newFlatShapeChoice = if (currentFlatSharpChoice == NotePrintOptions.SharpFlatPreference.Flat)
-            NotePrintOptions.SharpFlatPreference.Sharp
-        else
-            NotePrintOptions.SharpFlatPreference.Flat
-        pref.writeNotePrintOptions(pref.notePrintOptions.value.copy(
-            sharpFlatPreference = newFlatShapeChoice
-        ))
-    }
-}
 
 fun NavGraphBuilder.tunerGraph(
     controller: NavController,
@@ -57,7 +43,7 @@ fun NavGraphBuilder.tunerGraph(
             showPreferenceButton = true,
             onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
             showBottomBar = true,
-            onSharpFlatClicked = { scope.switchSharpFlat(preferences) },
+            onSharpFlatClicked = { scope.launch { preferences.switchSharpFlatPreference() } },
             onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
                 controller.navigate(
                     ReferenceFrequencyDialogRoute.create(
@@ -115,7 +101,7 @@ fun NavGraphBuilder.tunerGraph(
             onEditInstrumentClicked = { _,_ ->
                 controller.navigate(InstrumentEditorGraphRoute)
             },
-            onSharpFlatClicked = { scope.switchSharpFlat(preferences) },
+            onSharpFlatClicked = { scope.launch { preferences.switchSharpFlatPreference() } },
             onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
                 controller.navigate(
                     ReferenceFrequencyDialogRoute.create(
