@@ -1,6 +1,8 @@
 package de.moekadu.tuner.ui.screens
 
+import android.util.Log
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -103,6 +106,7 @@ fun InstrumentEditor(
         musicalScale.getNoteIndex(selectedNote) - musicalScale.noteIndexBegin
     }
 
+//    Log.v("Tuner", "InstrumentEditor: strings: $strings")
     Column(modifier) {
 
         OutlinedTextField(
@@ -140,6 +144,7 @@ fun InstrumentEditor(
                 )
                 .fillMaxWidth()
                 .weight(1f),
+
             tuningState = TuningState.InTune,
             highlightedNoteKey = selectedNoteKey,
             defaultColor = tunerPlotStyle.stringColor,

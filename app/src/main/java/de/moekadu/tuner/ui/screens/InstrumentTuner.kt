@@ -27,9 +27,7 @@ import androidx.compose.ui.unit.times
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
-import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.notedetection.TuningState
-import de.moekadu.tuner.preferences.TemperamentAndReferenceNoteValue
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
@@ -57,7 +55,7 @@ interface InstrumentTunerData {
     val notePrintOptions: StateFlow<NotePrintOptions>
     val toleranceInCents: StateFlow<Int>
 
-    val instrument: StateFlow<InstrumentResources.InstrumentAndSection>
+    val instrument: StateFlow<Instrument>
 //    val instrumentIconId: Int
 //    val instrumentResourceId: Int?
 //    val instrumentName: String?
@@ -109,8 +107,8 @@ fun InstrumentTuner(
             val scope = rememberCoroutineScope()
 
             InstrumentButton(
-                iconResourceId = instrumentAsState.instrument.iconResource,
-                name = instrumentAsState.instrument.getNameString(LocalContext.current).toString(),
+                iconResourceId = instrumentAsState.iconResource,
+                name = instrumentAsState.getNameString(LocalContext.current).toString(),
 //                name = data.instrumentResourceId?.let { stringResource(id = it) }
 //                    ?: data.instrumentName ?: "Unknown",
                 modifier = Modifier
@@ -126,7 +124,7 @@ fun InstrumentTuner(
             )
 
             Strings(
-                strings = if (instrumentAsState.instrument.isChromatic) null else data.strings,
+                strings = if (instrumentAsState.isChromatic) null else data.strings,
                 musicalScale = musicalScaleAsState,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -237,8 +235,8 @@ fun InstrumentTunerLandscape(
 
         Column(modifier = Modifier.weight(0.5f)) {
             InstrumentButton(
-                iconResourceId = instrumentAsState.instrument.iconResource,
-                name = instrumentAsState.instrument.getNameString(LocalContext.current).toString(),
+                iconResourceId = instrumentAsState.iconResource,
+                name = instrumentAsState.getNameString(LocalContext.current).toString(),
 //                    iconResourceId = data.instrumentIconId,
 //                    name = data.instrumentResourceId?.let { stringResource(id = it) }
 //                        ?: data.instrumentName ?: "Unknown",
@@ -255,7 +253,7 @@ fun InstrumentTunerLandscape(
             )
 
             Strings(
-                strings = if (instrumentAsState.instrument.isChromatic) null else data.strings,
+                strings = if (instrumentAsState.isChromatic) null else data.strings,
                 musicalScale = musicalScaleAsState,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -352,8 +350,7 @@ class TestInstrumentTunerData : InstrumentTunerData {
     //    override val instrumentIconId by mutableStateOf(R.drawable.ic_piano)
     //    override val instrumentResourceId by mutableStateOf<Int?>(null)
     //    override val instrumentName by mutableStateOf<String?>("Test instrument")
-    override val instrument: StateFlow<InstrumentResources.InstrumentAndSection>
-            = MutableStateFlow(InstrumentResources.InstrumentAndSection(
+    override val instrument: StateFlow<Instrument> = MutableStateFlow(
         Instrument(
             name = "Test instrument",
             nameResource = null,
@@ -377,12 +374,11 @@ class TestInstrumentTunerData : InstrumentTunerData {
             iconResource = R.drawable.ic_piano,
             stableId = 1L,
             isChromatic = false
-        ),
-        InstrumentResources.Section.Custom
-    ))
+        )
+    )
 
     override var strings by mutableStateOf(
-        instrument.value.instrument.strings.mapIndexed { index, note ->
+        instrument.value.strings.mapIndexed { index, note ->
             StringWithInfo(note, index) //, musicalScale.value.getNoteIndex(note))
         }.toPersistentList()
     )

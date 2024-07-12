@@ -30,7 +30,10 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.temperaments.NoteModifier
+import de.moekadu.tuner.temperaments.TemperamentType
 import de.moekadu.tuner.ui.instruments.InstrumentItem2
 import de.moekadu.tuner.ui.instruments.InstrumentItemTask
 import de.moekadu.tuner.ui.instruments.InstrumentListSection
@@ -77,8 +80,10 @@ fun Instruments(
     state: InstrumentsData,
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
-    onInstrumentClicked: (Instrument) -> Unit = { },
+    musicalScale: MusicalScale = MusicalScaleFactory.create(TemperamentType.EDO12),
+    onInstrumentClicked: (instrument: Instrument) -> Unit = { },
     onEditInstrumentClicked: (instrument: Instrument, copy: Boolean) -> Unit = {_,_ -> },
+    onCreateNewInstrumentClicked: () -> Unit = {},
     onNavigateUpClicked: () -> Unit = {},
     onReferenceNoteClicked: () -> Unit = {},
     onTemperamentClicked: () -> Unit = {},
@@ -134,10 +139,13 @@ fun Instruments(
         onTemperamentClicked = onTemperamentClicked,
         onReferenceNoteClicked = onReferenceNoteClicked,
         onSharpFlatClicked = onSharpFlatClicked,
+        musicalScale = musicalScale,
+        notePrintOptions = notePrintOptions,
         onPreferenceButtonClicked = onPreferenceButtonClicked,
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* TODO callback to create new instrument */ }) {
+                onClick = onCreateNewInstrumentClicked
+            ) {
                 Icon(Icons.Default.Add, contentDescription = "create new instrument")
             }
         }

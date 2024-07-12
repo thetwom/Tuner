@@ -1,13 +1,16 @@
 package de.moekadu.tuner.ui.instruments
 
+import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -73,6 +76,16 @@ fun SingleString(
                     .height(stringLineWidth)
                     .background(colorResolved)
             )
+//            Text(
+//                note.base.toString(),
+//                modifier = Modifier
+//                    .background(colorResolved)
+//                    .clickable {
+//                    onClick()
+//                }.then(
+//                    if (labelSize == DpSize.Unspecified) Modifier else Modifier.size(labelSize)
+//                )
+//            )
             Label(
                 content = {
                     Note(note,
@@ -86,15 +99,15 @@ fun SingleString(
                 onClick = onClick
             )
         },
-         modifier = modifier
+         modifier = modifier // .background(Color.Gray.copy(alpha=0.5f))
     ) { measurables, constraints ->
         val placeables = measurables.map { it.measure(constraints)}
 
         val w = placeables.maxOf{ it.width }
         val h = placeables.maxOf{ it.height }
 
-
         layout(w, h) {
+//            Log.v("Tuner", "SingleString: w=$w, h=$h,$labelSize ")
             // line
             with(placeables[0]) {
                 place(0, (h - height) / 2)

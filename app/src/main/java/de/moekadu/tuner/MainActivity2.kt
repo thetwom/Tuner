@@ -34,6 +34,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import de.moekadu.tuner.instruments.InstrumentResources2
 import de.moekadu.tuner.navigation.PreferencesGraphRoute
 import de.moekadu.tuner.navigation.ReferenceFrequencyDialogRoute
 import de.moekadu.tuner.navigation.TemperamentDialogRoute
@@ -56,7 +57,9 @@ class MainActivity2 : ComponentActivity() {
     @Inject
     lateinit var pref: PreferenceResources2
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    @Inject
+    lateinit var instruments: InstrumentResources2
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -132,6 +135,7 @@ class MainActivity2 : ComponentActivity() {
                         canNavigateUp = true,
                         onNavigateUpClicked = {},
                         preferences = pref,
+                        instruments = instruments,
                         scope = scope
                     )
                 }
