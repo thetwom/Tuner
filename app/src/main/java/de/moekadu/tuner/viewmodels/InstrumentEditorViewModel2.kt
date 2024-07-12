@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.moekadu.tuner.R
+import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.instrumentChromatic
 import de.moekadu.tuner.notedetection.FrequencyDetectionCollectedResults
 import de.moekadu.tuner.notedetection.FrequencyEvaluationResult
@@ -14,8 +15,10 @@ import de.moekadu.tuner.ui.instruments.StringWithInfo
 import de.moekadu.tuner.ui.notes.NoteDetectorState
 import de.moekadu.tuner.ui.screens.InstrumentEditorData
 import de.moekadu.tuner.ui.instruments.StringsState
+import de.moekadu.tuner.ui.screens.Instruments
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import kotlin.math.min
@@ -40,11 +43,12 @@ class InstrumentEditorViewModel2 @Inject constructor(
     )
 
     val musicalScale get() = pref.musicalScale
+    private var stableId = Instrument.NO_STABLE_ID
 
     override val icon = MutableStateFlow(R.drawable.ic_guitar)
     override val name = MutableStateFlow("Test name")
 
-    override var strings = MutableStateFlow(
+    override val strings = MutableStateFlow(
         persistentListOf(
             StringWithInfo(musicalScale.value.getNote(0), 0)
         )
@@ -113,6 +117,27 @@ class InstrumentEditorViewModel2 @Inject constructor(
             if (stringsValue.size == 1)
                 initializerNote.value = stringsValue[0].note
         }
+    }
+
+    fun setInstrument(instrument: Instrument) {
+        setIcon(instrument.iconResource)
+        setName(instrument.getNameString2(null))
+        strings.value = instrument.strings.mapIndexed { index, string ->
+            StringWithInfo(string, index)
+        }.toPersistentList()
+        selectString(instrument.strings.size - 1) // key of last string
+        stableId = instrument.stableId
+    }
+
+    fun getInstrument(): Instrument {
+        return Instrument(
+            name = this.name.value,
+            nameResource = null,
+            strings = strings.value.map{ it.note }.toTypedArray(),
+            iconResource = icon.value,
+            stableId = stableId,
+            isChromatic = false
+        )
     }
 
     fun startTuner() {

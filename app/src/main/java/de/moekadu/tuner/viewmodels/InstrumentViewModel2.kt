@@ -2,6 +2,7 @@ package de.moekadu.tuner.viewmodels
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentResources2
 import de.moekadu.tuner.ui.screens.InstrumentsData
 import kotlinx.collections.immutable.mutate
@@ -13,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class InstrumentViewModel2 @Inject constructor(
-    private val instruments: InstrumentResources2
+    val instruments: InstrumentResources2
 ): ViewModel(), InstrumentsData {
     override val activeInstrument get() = instruments.currentInstrument
 
@@ -97,5 +98,9 @@ class InstrumentViewModel2 @Inject constructor(
     override suspend fun deleteAllInstruments() {
         instruments.writeCustomInstruments(persistentListOf())
         _selectedInstruments.value = selectedInstruments.value.clear()
+    }
+
+    suspend fun setCurrentInstrument(instrument: Instrument) {
+        instruments.writeCurrentInstrument(instrument)
     }
 }

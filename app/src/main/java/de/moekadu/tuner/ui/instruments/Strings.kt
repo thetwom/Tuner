@@ -1,5 +1,6 @@
 package de.moekadu.tuner.ui.instruments
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -217,8 +218,8 @@ data class StringWithInfo(
     companion object {
         fun generateKey(existingList: List<StringWithInfo>): Int {
             while (true) {
-                val key = Random.nextInt()
-                if ((existingList.firstOrNull {it.key == key} == null) && (key != Int.MAX_VALUE))
+                val key = Random.nextInt(0, Int.MAX_VALUE - 1)
+                if (existingList.firstOrNull {it.key == key} == null)
                     return key
             }
         }

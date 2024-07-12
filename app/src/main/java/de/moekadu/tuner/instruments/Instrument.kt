@@ -24,7 +24,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 @Parcelize
 @Immutable
-data class Instrument(private val name: CharSequence?, private val nameResource: Int?, val strings: Array<MusicalNote>,
+data class Instrument(private val name: String?, private val nameResource: Int?, val strings: Array<MusicalNote>,
                       val iconResource: Int, val stableId: Long, val isChromatic: Boolean = false) :
     Parcelable {
     //val stringsSorted = strings.map { it.toFloat() }.toFloatArray().sortedArray()

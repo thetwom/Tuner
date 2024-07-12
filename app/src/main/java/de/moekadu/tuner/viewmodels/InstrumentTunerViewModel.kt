@@ -6,7 +6,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentResources
+import de.moekadu.tuner.instruments.InstrumentResources2
 import de.moekadu.tuner.notedetection.FrequencyDetectionCollectedResults
 import de.moekadu.tuner.notedetection.FrequencyEvaluationResult
 import de.moekadu.tuner.notedetection.TuningState
@@ -30,11 +32,11 @@ import javax.inject.Inject
 @HiltViewModel
 class InstrumentTunerViewModel @Inject constructor (
     val pref: PreferenceResources2,
-    val instruments: InstrumentResources
+    val instruments: InstrumentResources2
 ) : ViewModel(), InstrumentTunerData {
     private val tuner = Tuner(
         pref,
-        instruments.instrument.value.instrument,
+        instruments.currentInstrument.value,
         viewModelScope,
         onResultAvailableListener = object : Tuner.OnResultAvailableListener {
             override fun onFrequencyDetected(result: FrequencyDetectionCollectedResults) { }
@@ -72,10 +74,10 @@ class InstrumentTunerViewModel @Inject constructor (
     override var targetNote by mutableStateOf(autodetectedTargetNote)
     override var selectedNoteKey by mutableStateOf<Int?>(null)
 
-    override val instrument: StateFlow<InstrumentResources.InstrumentAndSection> get() = instruments.instrument
+    override val instrument: StateFlow<Instrument> get() = instruments.currentInstrument
 
     override var strings by mutableStateOf<ImmutableList<StringWithInfo>?>(
-        instrument.value.instrument.strings.mapIndexed { index, note ->
+        instrument.value.strings.mapIndexed { index, note ->
             StringWithInfo(note, index) //, musicalScale.value.getNoteIndex(note))
         }.toImmutableList()
     )
@@ -111,11 +113,11 @@ class InstrumentTunerViewModel @Inject constructor (
         }
 
         viewModelScope.launch {
-            instruments.instrument.collect {
-                it.instrument.strings.mapIndexed { index, note ->
+            instruments.currentInstrument.collect {
+                strings = it.strings.mapIndexed { index, note ->
                     StringWithInfo(note, index) //, musicalScale.value.getNoteIndex(note))
-                }
-                tuner.changeInstrument(it.instrument)
+                }.toImmutableList()
+                tuner.changeInstrument(it)
             }
         }
     }
@@ -132,7 +134,7 @@ class InstrumentTunerViewModel @Inject constructor (
         this.selectedNoteKey = selectedNoteKey
         targetNote = if (selectedNoteKey == null) {
             autodetectedTargetNote
-        } else if (instrument.value.instrument.isChromatic) {
+        } else if (instrument.value.isChromatic) {
             musicalScale.value.getNote(
                 musicalScale.value.noteIndexBegin + selectedNoteKey
             )

@@ -5,12 +5,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import de.moekadu.tuner.R
+import de.moekadu.tuner.instruments.Instrument
+import de.moekadu.tuner.instruments.instrumentIcons
 import de.moekadu.tuner.preferences.PreferenceResources2
 import de.moekadu.tuner.ui.misc.TunerScaffold
 import de.moekadu.tuner.ui.screens.InstrumentTuner
@@ -88,18 +93,43 @@ fun NavGraphBuilder.tunerGraph(
 
     composable<InstrumentsRoute> {
         val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
+        val musicalScale by preferences.musicalScale.collectAsStateWithLifecycle()
         val viewModel: InstrumentViewModel2 = hiltViewModel()
+        val context = LocalContext.current
         Instruments(
             state = viewModel,
             modifier = Modifier.fillMaxSize(),
             notePrintOptions = notePrintOptions,
+            musicalScale = musicalScale,
             onNavigateUpClicked = { controller.navigateUp() },
             onInstrumentClicked = {
-                //viewModel.setCurrentInstrument(it)
+                scope.launch { viewModel.setCurrentInstrument(it) }
                 controller.navigateUp()
             },
-            onEditInstrumentClicked = { _,_ ->
-                controller.navigate(InstrumentEditorGraphRoute)
+            onEditInstrumentClicked = { instrument, copy ->
+                val newInstrument = if (copy) {
+                    instrument.copy(
+                        nameResource = null,
+                        name = context.getString(R.string.copy_extension, instrument.getNameString2(context)),
+                        stableId = Instrument.NO_STABLE_ID
+                    )
+                } else {
+                    instrument.copy(
+                        nameResource = null,
+                        name = instrument.getNameString2(context)
+                    )
+                }
+                controller.navigate(InstrumentEditorGraphRoute.create(newInstrument))
+            },
+            onCreateNewInstrumentClicked = {
+                val newInstrument = Instrument(
+                    nameResource = null,
+                    name = "",
+                    strings = arrayOf(musicalScale.referenceNote),
+                    iconResource = instrumentIcons[0].resourceId,
+                    stableId = Instrument.NO_STABLE_ID
+                )
+                controller.navigate(InstrumentEditorGraphRoute.create(newInstrument))
             },
             onSharpFlatClicked = { scope.launch { preferences.switchSharpFlatPreference() } },
             onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
