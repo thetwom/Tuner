@@ -114,6 +114,10 @@
     <string name="file_empty">File is empty: %s</string>
     <string name="file_invalid">File is invalid: %s</string>
     <string name="instrument_deleted">Instrument deleted</string>
+    <plurals name="instruments_deleted">
+        <item quantity="one">%d instrument deleted</item>
+        <item quantity="other">%d instruments deleted</item>
+    </plurals>
     <string name="undo">Undo</string>
     <string name="add_new_tuning">Add new tuning</string>
     <string name="pick_icon">Pick icon</string>

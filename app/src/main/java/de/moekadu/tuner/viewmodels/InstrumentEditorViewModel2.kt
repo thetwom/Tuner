@@ -2,6 +2,9 @@ package de.moekadu.tuner.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
@@ -23,10 +26,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import kotlin.math.min
 
-@HiltViewModel
-class InstrumentEditorViewModel2 @Inject constructor(
+@HiltViewModel(assistedFactory = InstrumentEditorViewModel2.Factory::class)
+class InstrumentEditorViewModel2 @AssistedInject constructor(
+    @Assisted instrument: Instrument,
     private val pref: PreferenceResources2
 ) : ViewModel(), InstrumentEditorData {
+     @AssistedFactory
+     interface Factory {
+         fun create(instrument: Instrument): InstrumentEditorViewModel2
+     }
+
     private val tuner = Tuner(
         pref,
         instrumentChromatic,
@@ -43,17 +52,17 @@ class InstrumentEditorViewModel2 @Inject constructor(
     )
 
     val musicalScale get() = pref.musicalScale
-    private var stableId = Instrument.NO_STABLE_ID
+    private var stableId = instrument.stableId
 
-    override val icon = MutableStateFlow(R.drawable.ic_guitar)
-    override val name = MutableStateFlow("Test name")
+    override val icon = MutableStateFlow(instrument.iconResource)
+    override val name = MutableStateFlow(instrument.getNameString2(null))
 
     override val strings = MutableStateFlow(
-        persistentListOf(
-            StringWithInfo(musicalScale.value.getNote(0), 0)
-        )
+        instrument.strings.mapIndexed { index, string ->
+            StringWithInfo(string, index)
+        }.toPersistentList()
     )
-    override val stringsState = StringsState(0)
+    override val stringsState = StringsState(strings.value.size - 1)
 
     override var selectedStringIndex = MutableStateFlow(strings.value.size - 1)
 
@@ -119,15 +128,15 @@ class InstrumentEditorViewModel2 @Inject constructor(
         }
     }
 
-    fun setInstrument(instrument: Instrument) {
-        setIcon(instrument.iconResource)
-        setName(instrument.getNameString2(null))
-        strings.value = instrument.strings.mapIndexed { index, string ->
-            StringWithInfo(string, index)
-        }.toPersistentList()
-        selectString(instrument.strings.size - 1) // key of last string
-        stableId = instrument.stableId
-    }
+//    private fun setInstrument(instrument: Instrument) {
+//        setIcon(instrument.iconResource)
+//        setName(instrument.getNameString2(null))
+//        strings.value = instrument.strings.mapIndexed { index, string ->
+//            StringWithInfo(string, index)
+//        }.toPersistentList()
+//        selectString(instrument.strings.size - 1) // key of last string
+//        stableId = instrument.stableId
+//    }
 
     fun getInstrument(): Instrument {
         return Instrument(

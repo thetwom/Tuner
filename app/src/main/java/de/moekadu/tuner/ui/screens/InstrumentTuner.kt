@@ -1,5 +1,6 @@
 package de.moekadu.tuner.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -19,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpRect
@@ -83,6 +85,34 @@ fun InstrumentTuner(
     onInstrumentButtonClicked: () -> Unit = {},
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create()
 ) {
+    val configuration = LocalConfiguration.current
+    when (configuration.orientation) {
+        Configuration.ORIENTATION_LANDSCAPE -> {
+            InstrumentTunerLandscape(
+                data = data,
+                modifier = modifier,
+                onInstrumentButtonClicked = onInstrumentButtonClicked,
+                tunerPlotStyle = tunerPlotStyle
+            )
+        }
+        else -> {
+            InstrumentTunerPortrait(
+                data = data,
+                modifier = modifier,
+                onInstrumentButtonClicked = onInstrumentButtonClicked,
+                tunerPlotStyle = tunerPlotStyle
+            )
+        }
+    }
+}
+
+@Composable
+fun InstrumentTunerPortrait(
+    data: InstrumentTunerData,
+    modifier: Modifier = Modifier,
+    onInstrumentButtonClicked: () -> Unit = {},
+    tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create()
+) {
     BoxWithConstraints(modifier = modifier) {
         val stringsHeight = 0.4f * maxHeight
         Column(
@@ -123,33 +153,35 @@ fun InstrumentTuner(
                 onClick = onInstrumentButtonClicked
             )
 
-            Strings(
-                strings = if (instrumentAsState.isChromatic) null else data.strings,
-                musicalScale = musicalScaleAsState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(0.dp, stringsHeight)
-                    .padding(start = tunerPlotStyle.margin, top = tunerPlotStyle.margin - 4.dp),
-                tuningState = data.tuningState,
-                highlightedNoteKey = data.selectedNoteKey,
-                highlightedNote = data.targetNote,
-                notePrintOptions = notePrintOptionsAsState,
-                defaultColor = tunerPlotStyle.stringColor,
-                onDefaultColor = tunerPlotStyle.onStringColor,
-                inTuneColor = tunerPlotStyle.positiveColor,
-                onInTuneColor = tunerPlotStyle.onPositiveColor,
-                outOfTuneColor = tunerPlotStyle.negativeColor,
-                onOutOfTuneColor = tunerPlotStyle.onNegativeColor,
-                fontSize = tunerPlotStyle.stringFontStyle.fontSize,
-                sidebarPosition = StringsSidebarPosition.End,
-                sidebarWidth = noteWidthDp,
-                outline = if (data.stringsState.scrollMode == StringsScrollMode.Manual)
-                    tunerPlotStyle.plotWindowOutlineDuringGesture
-                else
-                    tunerPlotStyle.plotWindowOutline,
-                state = data.stringsState,
-                onStringClicked = data.onStringClicked
-            )
+            if (instrumentAsState.strings.isNotEmpty() || instrumentAsState.isChromatic) {
+                Strings(
+                    strings = if (instrumentAsState.isChromatic) null else data.strings,
+                    musicalScale = musicalScaleAsState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(0.dp, stringsHeight)
+                        .padding(start = tunerPlotStyle.margin, top = tunerPlotStyle.margin - 4.dp),
+                    tuningState = data.tuningState,
+                    highlightedNoteKey = data.selectedNoteKey,
+                    highlightedNote = data.targetNote,
+                    notePrintOptions = notePrintOptionsAsState,
+                    defaultColor = tunerPlotStyle.stringColor,
+                    onDefaultColor = tunerPlotStyle.onStringColor,
+                    inTuneColor = tunerPlotStyle.positiveColor,
+                    onInTuneColor = tunerPlotStyle.onPositiveColor,
+                    outOfTuneColor = tunerPlotStyle.negativeColor,
+                    onOutOfTuneColor = tunerPlotStyle.onNegativeColor,
+                    fontSize = tunerPlotStyle.stringFontStyle.fontSize,
+                    sidebarPosition = StringsSidebarPosition.End,
+                    sidebarWidth = noteWidthDp,
+                    outline = if (data.stringsState.scrollMode == StringsScrollMode.Manual)
+                        tunerPlotStyle.plotWindowOutlineDuringGesture
+                    else
+                        tunerPlotStyle.plotWindowOutline,
+                    state = data.stringsState,
+                    onStringClicked = data.onStringClicked
+                )
+            }
             Spacer(modifier = Modifier.height(tunerPlotStyle.margin))
 
             PitchHistory(
@@ -257,6 +289,7 @@ fun InstrumentTunerLandscape(
                 musicalScale = musicalScaleAsState,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .weight(1f)
                     .padding(
                         top = tunerPlotStyle.margin - 4.dp,
                         bottom = tunerPlotStyle.margin
@@ -417,7 +450,7 @@ class TestInstrumentTunerData : InstrumentTunerData {
 private fun InstrumentTunerPreview() {
     TunerTheme {
         val data = remember { TestInstrumentTunerData() }
-        InstrumentTuner(data = data)
+        InstrumentTunerPortrait(data = data)
     }
 }
 

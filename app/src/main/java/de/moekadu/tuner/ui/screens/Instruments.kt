@@ -16,12 +16,17 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,6 +50,9 @@ import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -60,6 +68,14 @@ interface InstrumentsData {
 
     val selectedInstruments: StateFlow<ImmutableSet<Long>>
 
+    /** Backup info when instruments are deleted. */
+    data class InstrumentDeleteInfo(
+        val backup: ImmutableList<Instrument>,
+        val numDeleted: Int = 0
+    )
+    /** Instrument list before deletion of elements. */
+    val customInstrumentsBackup: ReceiveChannel<InstrumentDeleteInfo>
+
     suspend fun expandPredefinedInstruments(isExpanded: Boolean)
     suspend fun expandCustomInstruments(isExpanded: Boolean)
 
@@ -72,7 +88,7 @@ interface InstrumentsData {
     suspend fun moveInstrumentsDown(instrumentKeys: Set<Long>)
     suspend fun deleteInstruments(instrumentKeys: Set<Long>)
     suspend fun deleteAllInstruments()
-
+    suspend fun setInstruments(instruments: ImmutableList<Instrument>)
 }
 
 @Composable
@@ -96,7 +112,26 @@ fun Instruments(
     val predefinedInstrumentsExpanded by state.predefinedInstrumentsExpanded.collectAsStateWithLifecycle()
     val activeInstrument by state.activeInstrument.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val resources = LocalContext.current.resources
 
+    // handle recovering deleted instruments
+    LaunchedEffect(resources, state) {
+        for (delete in state.customInstrumentsBackup) {
+            launch {
+                val result = snackbarHostState.showSnackbar(
+                    resources.getQuantityString(
+                        R.plurals.instruments_deleted, delete.numDeleted, delete.numDeleted
+                    ),
+                    actionLabel = resources.getString(R.string.undo)
+                )
+                when (result) {
+                    SnackbarResult.Dismissed -> {}
+                    SnackbarResult.ActionPerformed -> state.setInstruments(delete.backup)
+                }
+            }
+        }
+    }
     BackHandler(enabled = selectedInstruments.isNotEmpty()) {
         scope.launch { state.clearSelectedInstruments() }
     }
@@ -148,6 +183,9 @@ fun Instruments(
             ) {
                 Icon(Icons.Default.Add, contentDescription = "create new instrument")
             }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         }
     ) { paddingValues ->
         LazyColumn(
@@ -300,6 +338,10 @@ private class TestInstrumentsData : InstrumentsData {
 
     override val selectedInstruments = MutableStateFlow(persistentSetOf<Long>())
 
+    override val customInstrumentsBackup = Channel<InstrumentsData.InstrumentDeleteInfo>(
+        Channel.CONFLATED
+    )
+
     override suspend fun expandPredefinedInstruments(isExpanded: Boolean) {
         predefinedInstrumentsExpanded.value = isExpanded
     }
@@ -362,6 +404,10 @@ private class TestInstrumentsData : InstrumentsData {
     override suspend fun deleteAllInstruments() {
         customInstruments.value = persistentListOf()
         selectedInstruments.value = selectedInstruments.value.clear()
+    }
+
+    override suspend fun setInstruments(instruments: ImmutableList<Instrument>) {
+        customInstruments.value = instruments.toPersistentList()
     }
 }
 

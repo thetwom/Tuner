@@ -78,6 +78,10 @@
         <string name="file_empty">Datei ist leer: %s</string>
     <string name="file_invalid">Datei ist ungültig: %s</string>
     <string name="instrument_deleted">Instrument gelöscht</string>
+    <plurals name="instruments_deleted">
+        <item quantity="one">%d Instrument gelöscht</item>
+        <item quantity="other">%d Instrumente gelöscht</item>
+    </plurals>
     <string name="undo">Rückgängig</string>
     <string name="add_new_tuning">Stimmung hinzufügen</string>
     <string name="pick_icon">Icon auswählen</string>

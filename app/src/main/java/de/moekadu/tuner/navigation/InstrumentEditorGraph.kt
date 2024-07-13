@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -13,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -32,6 +34,20 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+
+@Composable
+private fun createViewModel(controller: NavController, backStackEntry: NavBackStackEntry)
+: InstrumentEditorViewModel2 {
+    val parentEntry = remember(backStackEntry) {
+        controller.getBackStackEntry<InstrumentEditorGraphRoute>()
+    }
+    val instrument = parentEntry.toRoute<InstrumentEditorGraphRoute>().getInstrument()
+    return hiltViewModel<InstrumentEditorViewModel2, InstrumentEditorViewModel2.Factory>(
+        parentEntry
+    ) { factory ->
+        factory.create(instrument)
+    }
+}
 
 fun NavGraphBuilder.instrumentEditorGraph(
     controller: NavController,
@@ -56,16 +72,22 @@ fun NavGraphBuilder.instrumentEditorGraph(
 //            ) // TODO: do not pass 0L as stable id
 
         composable<InstrumentEditorRoute> {
-            val parentEntry = remember(it) { controller.getBackStackEntry<InstrumentEditorGraphRoute>()}
-            val instrument = parentEntry.toRoute<InstrumentEditorGraphRoute>().getInstrument()
-            val viewModel: InstrumentEditorViewModel2 = hiltViewModel(parentEntry)
+//            val parentEntry = remember(it) { controller.getBackStackEntry<InstrumentEditorGraphRoute>()}
+//            val instrument = parentEntry.toRoute<InstrumentEditorGraphRoute>().getInstrument()
+//            val viewModel = hiltViewModel<InstrumentEditorViewModel2, InstrumentEditorViewModel2.Factory>(
+//                parentEntry
+//            ) { factory ->
+//                factory.create(instrument)
+//            }
+            // val viewModel: InstrumentEditorViewModel2 = hiltViewModel(parentEntry)
+            val viewModel = createViewModel(controller = controller, backStackEntry = it)
 
             val musicalScale by preferences.musicalScale.collectAsStateWithLifecycle()
             val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
 
-            LaunchedEffect(key1 = instrument) {
-                viewModel.setInstrument(instrument)
-            }
+//            LaunchedEffect(key1 = instrument) {
+//                viewModel.setInstrument(instrument)
+//            }
 
             LifecycleResumeEffect(Unit) {
                 viewModel.startTuner()
@@ -113,8 +135,15 @@ fun NavGraphBuilder.instrumentEditorGraph(
             }
         }
         dialog<IconPickerRoute> {
-            val parentEntry = remember(it) { controller.getBackStackEntry<InstrumentEditorGraphRoute>()}
-            val viewModel: InstrumentEditorViewModel2 = hiltViewModel(parentEntry)
+            val viewModel = createViewModel(controller = controller, backStackEntry = it)
+//            val parentEntry = remember(it) { controller.getBackStackEntry<InstrumentEditorGraphRoute>()}
+//            val viewModel = hiltViewModel<InstrumentEditorViewModel2, InstrumentEditorViewModel2.Factory>(
+//                parentEntry
+//            ) { factory ->
+//                factory.create(instrument)
+//            }
+
+            //val viewModel: InstrumentEditorViewModel2 = hiltViewModel(parentEntry)
 
             InstrumentIconPicker(
                 onDismiss = { controller.navigateUp() },
