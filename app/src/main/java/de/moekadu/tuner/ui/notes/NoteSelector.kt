@@ -100,7 +100,7 @@ private fun NoteSelectorBase(
     }
 
     LaunchedEffect(key1 = selectedIndex, key2 = state) {
-        if (!state.isScrollInProgress)
+        if (!state.isScrollInProgress && selectedIndex >= 0)
             state.animateScrollToItem(selectedIndex)
     }
 

@@ -5,9 +5,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentResources2
 import de.moekadu.tuner.ui.screens.InstrumentsData
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
@@ -27,6 +29,10 @@ class InstrumentViewModel2 @Inject constructor(
 
     private val _selectedInstruments = MutableStateFlow(persistentSetOf<Long>())
     override val selectedInstruments get() = _selectedInstruments.asStateFlow()
+
+    override val customInstrumentsBackup = Channel<InstrumentsData.InstrumentDeleteInfo>(
+        Channel.CONFLATED
+    )
 
     override suspend fun expandPredefinedInstruments(isExpanded: Boolean) {
         instruments.writePredefinedInstrumentsExpanded(isExpanded)
@@ -90,17 +96,33 @@ class InstrumentViewModel2 @Inject constructor(
     }
 
     override suspend fun deleteInstruments(instrumentKeys: Set<Long>) {
+        val backup = customInstruments.value
         val modified = customInstruments.value.removeAll { instrumentKeys.contains(it.stableId) }
         instruments.writeCustomInstruments(modified)
         _selectedInstruments.value = selectedInstruments.value.removeAll(instrumentKeys)
+        if (backup.size != modified.size) {
+            customInstrumentsBackup.trySend(InstrumentsData.InstrumentDeleteInfo(
+                backup, backup.size - modified.size
+            ))
+        }
     }
 
     override suspend fun deleteAllInstruments() {
+        val backup = customInstruments.value
         instruments.writeCustomInstruments(persistentListOf())
         _selectedInstruments.value = selectedInstruments.value.clear()
+        if (backup.size > 0) {
+            customInstrumentsBackup.trySend(InstrumentsData.InstrumentDeleteInfo(
+                backup, backup.size
+            ))
+        }
     }
 
     suspend fun setCurrentInstrument(instrument: Instrument) {
         instruments.writeCurrentInstrument(instrument)
+    }
+
+    override suspend fun setInstruments(instruments: ImmutableList<Instrument>) {
+        this.instruments.writeCustomInstruments(instruments)
     }
 }

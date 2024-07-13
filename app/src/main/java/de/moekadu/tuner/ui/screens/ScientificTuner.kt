@@ -1,5 +1,6 @@
 package de.moekadu.tuner.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -82,6 +84,31 @@ interface ScientificTunerData {
 
 @Composable
 fun ScientificTuner(
+    data: ScientificTunerData,
+    modifier: Modifier = Modifier,
+    tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create()
+) {
+    val configuration = LocalConfiguration.current
+    when (configuration.orientation) {
+        Configuration.ORIENTATION_LANDSCAPE -> {
+            ScientificTunerLandscape(
+                data = data,
+                modifier = modifier,
+                tunerPlotStyle = tunerPlotStyle
+            )
+        }
+        else -> {
+            ScientificTunerPortrait(
+                data = data,
+                modifier = modifier,
+                tunerPlotStyle = tunerPlotStyle
+            )
+        }
+    }
+}
+
+@Composable
+fun ScientificTunerPortrait(
     data: ScientificTunerData,
     modifier: Modifier = Modifier,
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create()
@@ -490,7 +517,7 @@ class TestScientificTunerData : ScientificTunerData {
 private fun ScientificTunerPreview() {
     TunerTheme {
         val data = remember { TestScientificTunerData() }
-        ScientificTuner(data = data)
+        ScientificTunerPortrait(data = data)
     }
 }
 

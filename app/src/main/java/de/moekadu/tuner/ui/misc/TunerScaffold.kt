@@ -55,6 +55,7 @@ fun TunerScaffold(
     musicalScale: MusicalScale = MusicalScaleFactory.create(TemperamentType.EDO12),
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
     floatingActionButton: @Composable () -> Unit = {},
+    snackbarHost: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
@@ -109,7 +110,8 @@ fun TunerScaffold(
                 )
             }
         },
-        floatingActionButton = floatingActionButton
+        floatingActionButton = floatingActionButton,
+        snackbarHost = snackbarHost
     ) { paddingValues ->
         content(paddingValues)
     }
