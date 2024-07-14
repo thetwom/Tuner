@@ -50,11 +50,8 @@ import kotlin.math.absoluteValue
 
 /** Select between available notes.
  * @param selectedIndex List index of selected note in noteNameScale.notes
- * @param noteNameScale Scale of the available note names.
- * @param notePrintOptions How to print the notes.
  * @param modifier Modifier.
- * @param fontSize Font size of notes.
- * @param textStyle Text style of notes.
+ * @param singleNoteSize Maximum size of a single note.
  * @param onIndexChanged Callback when another note index was selected. This refers to the
  *   note of noteNameScale.notes
  * @param content Notes in lazy list.

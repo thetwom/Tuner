@@ -58,9 +58,6 @@ interface InstrumentTunerData {
     val toleranceInCents: StateFlow<Int>
 
     val instrument: StateFlow<Instrument>
-//    val instrumentIconId: Int
-//    val instrumentResourceId: Int?
-//    val instrumentName: String?
 
     // Data specific to instruments
     val strings: ImmutableList<StringWithInfo>?
@@ -85,24 +82,23 @@ fun InstrumentTuner(
     onInstrumentButtonClicked: () -> Unit = {},
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create()
 ) {
+    val instrumentAsState by data.instrument.collectAsStateWithLifecycle()
+    val isEmptyInstrument = !instrumentAsState.isChromatic && instrumentAsState.strings.isEmpty()
     val configuration = LocalConfiguration.current
-    when (configuration.orientation) {
-        Configuration.ORIENTATION_LANDSCAPE -> {
-            InstrumentTunerLandscape(
-                data = data,
-                modifier = modifier,
-                onInstrumentButtonClicked = onInstrumentButtonClicked,
-                tunerPlotStyle = tunerPlotStyle
-            )
-        }
-        else -> {
-            InstrumentTunerPortrait(
-                data = data,
-                modifier = modifier,
-                onInstrumentButtonClicked = onInstrumentButtonClicked,
-                tunerPlotStyle = tunerPlotStyle
-            )
-        }
+    if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE && !isEmptyInstrument) {
+        InstrumentTunerLandscape(
+            data = data,
+            modifier = modifier,
+            onInstrumentButtonClicked = onInstrumentButtonClicked,
+            tunerPlotStyle = tunerPlotStyle
+        )
+    } else {
+        InstrumentTunerPortrait(
+            data = data,
+            modifier = modifier,
+            onInstrumentButtonClicked = onInstrumentButtonClicked,
+            tunerPlotStyle = tunerPlotStyle
+        )
     }
 }
 
@@ -380,9 +376,6 @@ class TestInstrumentTunerData : InstrumentTunerData {
 
     private val noteNameScale = musicalScale.value.noteNameScale
 
-    //    override val instrumentIconId by mutableStateOf(R.drawable.ic_piano)
-    //    override val instrumentResourceId by mutableStateOf<Int?>(null)
-    //    override val instrumentName by mutableStateOf<String?>("Test instrument")
     override val instrument: StateFlow<Instrument> = MutableStateFlow(
         Instrument(
             name = "Test instrument",
