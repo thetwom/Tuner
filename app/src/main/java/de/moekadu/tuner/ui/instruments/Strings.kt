@@ -1,5 +1,6 @@
 package de.moekadu.tuner.ui.instruments
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -378,7 +379,8 @@ fun Strings(
                 available: Offset,
                 source: NestedScrollSource
             ): Offset {
-                state.scrollMode = StringsScrollMode.Manual
+                if (consumed.y != 0.0f)
+                    state.scrollMode = StringsScrollMode.Manual
                 return super.onPostScroll(consumed, available, source)
             }
         }
