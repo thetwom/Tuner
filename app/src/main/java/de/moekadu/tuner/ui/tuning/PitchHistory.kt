@@ -43,12 +43,14 @@ import de.moekadu.tuner.ui.plot.PlotWindowOutline
 import de.moekadu.tuner.ui.plot.PointMark
 import de.moekadu.tuner.ui.plot.PointShape
 import de.moekadu.tuner.ui.theme.TunerTheme
-import de.moekadu.tuner.ui.theme.Typography
 import de.moekadu.tuner.ui.theme.tunerColors
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.log2
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
@@ -69,36 +71,6 @@ private fun computeToleranceBounds(centerFrequency: Float, toleranceInCents: Int
     return lowerToleranceFreq .. upperToleranceFreq
 }
 
-//private class ResizeableArray(maxNumValues: Int) {
-//    var values = FloatArray(maxNumValues)
-//        private set
-//    var size: Int = 0
-//        private set
-//
-//    fun add(value: Float) {
-//        if (size == values.size) {
-//            values.copyInto(values, 0, 1)
-//            size--
-//        }
-//        values[size] = value
-//        size++
-//    }
-//
-//    fun resize(newMaxNumValues: Int) {
-//        val resized = FloatArray(newMaxNumValues)
-//        if (size > newMaxNumValues) {
-//            values.copyInto(resized, 0, size - newMaxNumValues, size)
-//            size = newMaxNumValues
-//        } else {
-//            values.copyInto(resized, 0, 0, size)
-//        }
-//        values = resized
-//    }
-//}
-//
-//private fun ResizeableArray.toLineCoordinates() =
-//    LineCoordinates(this.size, { it.toFloat() }, { this.values[it] })
-
 private class ResizeableArray(private var maxNumValues: Int) {
     var values = LineCoordinates.create(floatArrayOf())
         private set
@@ -115,7 +87,7 @@ private class ResizeableArray(private var maxNumValues: Int) {
     }
 
     fun resize(newMaxNumValues: Int) {
-        this.maxNumValues = maxNumValues
+        maxNumValues = newMaxNumValues
         val c = values.coordinates
         //val resized = FloatArray(newMaxNumValues)
         if (maxNumValues < c.size)
@@ -128,8 +100,7 @@ class PitchHistoryState(
     capacity: Int
 ) {
     private val history = ResizeableArray(capacity)
-
-    //var lineCoordinates by mutableStateOf(history.toLineCoordinates())
+    
     var lineCoordinates by mutableStateOf(history.values)
         private set
 
@@ -231,14 +202,36 @@ fun PitchHistory(
         musicalScale.getNoteFrequency(noteIndex)
     }
 
-    val viewPort = remember(targetNote, musicalScale, limits) {
-        val noteIndex = musicalScale.getNoteIndex(targetNote)
+    val visibleRange = remember(targetNote, musicalScale, state.pointCoordinates?.y) {
+        // note indices above/below target note
         val visibleRangeInIndices = 1.5f
+        // if current frequency is far away from target note (happens on manual selection)
+        // use extend range to next note index + the given value (should be smaller than
+        // ~0.4, since otherwise we will get intermediate jumps due to the hysteresis
+        // used to jump the the next target note)
+        val visibleRangeInIndices2 = 0.38f
+        val targetNoteIndex = musicalScale.getNoteIndex(targetNote)
+        val currentFrequency = state.pointCoordinates?.y ?: musicalScale.getNoteFrequency(targetNoteIndex)
+        val frequencyNoteIndex = musicalScale.getNoteIndex(currentFrequency)
+        val lowerIndex = min(
+            targetNoteIndex - visibleRangeInIndices,
+            floor(frequencyNoteIndex) - visibleRangeInIndices2
+        )
+        val upperIndex = max(
+            targetNoteIndex + visibleRangeInIndices,
+            ceil(frequencyNoteIndex) + visibleRangeInIndices2
+        )
+        val lower = musicalScale.getNoteFrequency(lowerIndex)
+        val upper = musicalScale.getNoteFrequency(upperIndex)
+        lower .. upper
+    }
+
+    val viewPort = remember(visibleRange, limits) {
         Rect(
             left = limits.left,
             right = limits.right,
-            top = musicalScale.getNoteFrequency(noteIndex + visibleRangeInIndices),
-            bottom = musicalScale.getNoteFrequency(noteIndex - visibleRangeInIndices)
+            top = visibleRange.endInclusive,
+            bottom = visibleRange.start
         )
     }
 

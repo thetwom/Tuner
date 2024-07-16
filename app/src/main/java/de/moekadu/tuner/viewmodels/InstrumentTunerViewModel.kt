@@ -66,13 +66,20 @@ class InstrumentTunerViewModel @Inject constructor (
     override var pitchHistoryState: PitchHistoryState = PitchHistoryState(
         computePitchHistorySize()
     )
+        private set
 
     override val pitchHistoryGestureBasedViewPort: GestureBasedViewPort
             = GestureBasedViewPort()
     override var tuningState by mutableStateOf(TuningState.Unknown)
+        private set
 
     override var targetNote by mutableStateOf(autodetectedTargetNote)
+        private set
+    override var targetNoteForLockButton: MusicalNote by mutableStateOf(autodetectedTargetNote)
+        private set
+
     override var selectedNoteKey by mutableStateOf<Int?>(null)
+        private set
 
     override val instrument: StateFlow<Instrument> get() = instruments.currentInstrument
 
@@ -81,17 +88,21 @@ class InstrumentTunerViewModel @Inject constructor (
             StringWithInfo(note, index) //, musicalScale.value.getNoteIndex(note))
         }.toImmutableList()
     )
+        private set
 
     override val stringsState = StringsState(-musicalScale.value.noteIndexBegin)
 
-    override val onStringClicked = { key: Int, note: MusicalNote ->
-        if (selectedNoteKey == key)
-            selectedNoteKey = null
-        else
-            selectedNoteKey = key
+    override fun onStringClicked(key: Int, note: MusicalNote) {
+        selectedNoteKey = if (selectedNoteKey == key) null else key
         handleTargetNoteOnSelectionChange(selectedNoteKey)
         // leave tuningState unknown in case, this should only be changed by the
         // frequencyEvaluator callback
+        resetTuningState(null)
+    }
+
+    override fun onClearFixedTargetClicked() {
+        selectedNoteKey = null
+        handleTargetNoteOnSelectionChange(selectedNoteKey)
         resetTuningState(null)
     }
 
@@ -140,6 +151,10 @@ class InstrumentTunerViewModel @Inject constructor (
             )
         } else {
             strings?.find { it.key == selectedNoteKey }?.note ?: autodetectedTargetNote
+        }
+
+        if (selectedNoteKey != null) {
+            targetNoteForLockButton = targetNote
         }
     }
 
