@@ -1,8 +1,16 @@
 package de.moekadu.tuner.ui.screens
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,16 +20,28 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
@@ -40,10 +60,13 @@ import de.moekadu.tuner.ui.instruments.Strings
 import de.moekadu.tuner.ui.instruments.StringsScrollMode
 import de.moekadu.tuner.ui.instruments.StringsSidebarPosition
 import de.moekadu.tuner.ui.instruments.StringsState
+import de.moekadu.tuner.ui.notes.NoteLockedButton
 import de.moekadu.tuner.ui.notes.NotePrintOptions
+import de.moekadu.tuner.ui.notes.asAnnotatedString
 import de.moekadu.tuner.ui.notes.rememberMaxNoteSize
 import de.moekadu.tuner.ui.plot.GestureBasedViewPort
 import de.moekadu.tuner.ui.theme.TunerTheme
+import de.moekadu.tuner.ui.theme.tunerTypography
 import de.moekadu.tuner.ui.tuning.PitchHistory
 import de.moekadu.tuner.ui.tuning.PitchHistoryState
 import kotlinx.collections.immutable.ImmutableList
@@ -63,7 +86,8 @@ interface InstrumentTunerData {
     val strings: ImmutableList<StringWithInfo>?
     val selectedNoteKey: Int?
     val stringsState: StringsState
-    val onStringClicked: (key: Int, note: MusicalNote) -> (Unit)
+    fun onStringClicked(key: Int, note: MusicalNote)
+    //val onStringClicked: (key: Int, note: MusicalNote) -> (Unit)
 
     // Data specific to history plot
     val pitchHistoryState: PitchHistoryState
@@ -73,6 +97,12 @@ interface InstrumentTunerData {
 
     // Data shared over different plots
     val targetNote: MusicalNote
+
+    /** Same as target note but does not change, when note is unselected. */
+    val targetNoteForLockButton: MusicalNote
+
+    // others
+    fun onClearFixedTargetClicked()
 }
 
 @Composable
@@ -175,10 +205,27 @@ fun InstrumentTunerPortrait(
                     else
                         tunerPlotStyle.plotWindowOutline,
                     state = data.stringsState,
-                    onStringClicked = data.onStringClicked
+                    onStringClicked = { key, note -> data.onStringClicked(key, note) }
                 )
             }
-            Spacer(modifier = Modifier.height(tunerPlotStyle.margin))
+            AnimatedVisibility(data.selectedNoteKey != null) {
+                NoteLockedButton(
+                    note = data.targetNoteForLockButton,
+                    modifier = Modifier
+                        .padding(
+                            start = tunerPlotStyle.margin,
+                            end = noteWidthDp,
+                            top = tunerPlotStyle.margin - 4.dp,
+                            bottom = tunerPlotStyle.margin - 4.dp
+                        )
+                        .fillMaxWidth(),
+                    notePrintOptions = notePrintOptionsAsState,
+                    onClick = { data.onClearFixedTargetClicked() }
+                )
+            }
+            AnimatedVisibility(data.selectedNoteKey == null) {
+                Spacer(Modifier.height(tunerPlotStyle.margin))
+            }
 
             PitchHistory(
                 state = data.pitchHistoryState,
@@ -287,8 +334,7 @@ fun InstrumentTunerLandscape(
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(
-                        top = tunerPlotStyle.margin - 4.dp,
-                        bottom = tunerPlotStyle.margin
+                        top = tunerPlotStyle.margin - 4.dp
                     ),
                 tuningState = data.tuningState,
                 highlightedNoteKey = data.selectedNoteKey,
@@ -308,8 +354,26 @@ fun InstrumentTunerLandscape(
                 else
                     tunerPlotStyle.plotWindowOutline,
                 state = data.stringsState,
-                onStringClicked = data.onStringClicked
+                onStringClicked = { key, note -> data.onStringClicked(key, note) }
             )
+
+            AnimatedVisibility(data.selectedNoteKey != null) {
+                NoteLockedButton(
+                    note = data.targetNoteForLockButton,
+                    modifier = Modifier
+                        .padding(
+                            start = noteWidthDp,
+                            top = tunerPlotStyle.margin - 4.dp,
+                            bottom = tunerPlotStyle.margin - 4.dp
+                        )
+                        .fillMaxWidth(),
+                    notePrintOptions = notePrintOptionsAsState,
+                    onClick = { data.onClearFixedTargetClicked() }
+                )
+            }
+            AnimatedVisibility(data.selectedNoteKey == null) {
+                Spacer(Modifier.height(tunerPlotStyle.margin))
+            }
         }
         Spacer(modifier = Modifier.width(tunerPlotStyle.margin))
 
@@ -412,7 +476,7 @@ class TestInstrumentTunerData : InstrumentTunerData {
 
     override val stringsState: StringsState = StringsState(0)
 
-    override val onStringClicked: (key: Int, note: MusicalNote) -> Unit = { key, note ->
+    override fun onStringClicked(key: Int, note: MusicalNote) {
         selectedNoteKey = key
     }
 
@@ -436,6 +500,11 @@ class TestInstrumentTunerData : InstrumentTunerData {
             by mutableStateOf(TuningState.TooLow)
     override var targetNote: MusicalNote
             by mutableStateOf(musicalScale.value.referenceNote)
+    override val targetNoteForLockButton get() = targetNote
+
+    override fun onClearFixedTargetClicked() {
+        selectedNoteKey = null
+    }
 }
 
 @Preview(widthDp = 300, heightDp = 600, showBackground = true)
