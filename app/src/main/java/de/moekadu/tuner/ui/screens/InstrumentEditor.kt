@@ -1,9 +1,7 @@
 package de.moekadu.tuner.ui.screens
 
 import android.content.res.Configuration
-import android.util.Log
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
@@ -23,13 +20,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
@@ -138,7 +133,11 @@ fun InstrumentEditorPortrait(
     val selectedNoteKey = selectedNoteWithInfo?.key ?: 0
     val selectedNote = selectedNoteWithInfo?.note ?: initializerNote
     val noteSelectorPosition = remember(musicalScale, selectedNote) {
-        musicalScale.getNoteIndex(selectedNote) - musicalScale.noteIndexBegin
+        val noteIndex = musicalScale.getNoteIndex(selectedNote)
+        if (noteIndex == Int.MAX_VALUE)
+            -musicalScale.noteIndexBegin
+        else
+            noteIndex - musicalScale.noteIndexBegin
     }
 
 //    Log.v("Tuner", "InstrumentEditor: strings: $strings")
@@ -277,7 +276,11 @@ fun InstrumentEditorLandscape(
     val selectedNoteKey = selectedNoteWithInfo?.key ?: 0
     val selectedNote = selectedNoteWithInfo?.note ?: initializerNote
     val noteSelectorPosition = remember(musicalScale, selectedNote) {
-        musicalScale.getNoteIndex(selectedNote) - musicalScale.noteIndexBegin
+        val noteIndex = musicalScale.getNoteIndex(selectedNote)
+        if (noteIndex == Int.MAX_VALUE)
+            -musicalScale.noteIndexBegin
+        else
+            noteIndex - musicalScale.noteIndexBegin
     }
 
     Row(modifier) {

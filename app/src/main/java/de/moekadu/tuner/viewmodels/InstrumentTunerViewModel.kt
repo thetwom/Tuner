@@ -11,6 +11,7 @@ import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.instruments.InstrumentResources2
 import de.moekadu.tuner.notedetection.FrequencyDetectionCollectedResults
 import de.moekadu.tuner.notedetection.FrequencyEvaluationResult
+import de.moekadu.tuner.notedetection.SortedAndDistinctInstrumentStrings
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.notedetection.checkTuning
 import de.moekadu.tuner.preferences.PreferenceResources2

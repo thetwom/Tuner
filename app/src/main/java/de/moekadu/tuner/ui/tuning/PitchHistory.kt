@@ -1,5 +1,6 @@
 package de.moekadu.tuner.ui.tuning
 
+import android.util.Log
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -100,7 +101,7 @@ class PitchHistoryState(
     capacity: Int
 ) {
     private val history = ResizeableArray(capacity)
-    
+
     var lineCoordinates by mutableStateOf(history.values)
         private set
 
@@ -210,20 +211,45 @@ fun PitchHistory(
         // ~0.4, since otherwise we will get intermediate jumps due to the hysteresis
         // used to jump the the next target note)
         val visibleRangeInIndices2 = 0.38f
+
         val targetNoteIndex = musicalScale.getNoteIndex(targetNote)
-        val currentFrequency = state.pointCoordinates?.y ?: musicalScale.getNoteFrequency(targetNoteIndex)
-        val frequencyNoteIndex = musicalScale.getNoteIndex(currentFrequency)
-        val lowerIndex = min(
-            targetNoteIndex - visibleRangeInIndices,
-            floor(frequencyNoteIndex) - visibleRangeInIndices2
-        )
-        val upperIndex = max(
-            targetNoteIndex + visibleRangeInIndices,
-            ceil(frequencyNoteIndex) + visibleRangeInIndices2
-        )
-        val lower = musicalScale.getNoteFrequency(lowerIndex)
-        val upper = musicalScale.getNoteFrequency(upperIndex)
-        lower .. upper
+        val currentFrequency = state.pointCoordinates?.y
+
+        val noteIndexRange = if (targetNoteIndex == Int.MAX_VALUE && currentFrequency == null) {
+            (-visibleRangeInIndices) .. visibleRangeInIndices
+        } else if (currentFrequency == null){
+            (targetNoteIndex - visibleRangeInIndices) .. (targetNoteIndex + visibleRangeInIndices)
+        } else if (targetNoteIndex == Int.MAX_VALUE) {
+            val frequencyNoteIndex = musicalScale.getClosestNoteIndex(currentFrequency)
+            (frequencyNoteIndex - visibleRangeInIndices) .. (frequencyNoteIndex + visibleRangeInIndices)
+        } else {
+            val frequencyNoteIndex = musicalScale.getNoteIndex(currentFrequency)
+            min(
+                targetNoteIndex - visibleRangeInIndices,
+                floor(frequencyNoteIndex) - visibleRangeInIndices2
+            ) .. max(
+                targetNoteIndex + visibleRangeInIndices,
+                ceil(frequencyNoteIndex) + visibleRangeInIndices2
+            )
+        }
+//
+//        Log.v("Tuner", "PitchHistory: targetNoteIndex = $targetNoteIndex")
+////        val currentFrequency = state.pointCoordinates?.y
+////            ?: musicalScale.getNoteFrequency(targetNoteIndex)
+//        val frequencyNoteIndex = musicalScale.getNoteIndex(currentFrequency)
+//        val lowerIndex = min(
+//            targetNoteIndex - visibleRangeInIndices,
+//            floor(frequencyNoteIndex) - visibleRangeInIndices2
+//        )
+//        val upperIndex = max(
+//            targetNoteIndex + visibleRangeInIndices,
+//            ceil(frequencyNoteIndex) + visibleRangeInIndices2
+//        )
+//        val lower = musicalScale.getNoteFrequency(lowerIndex)
+//        val upper = musicalScale.getNoteFrequency(upperIndex)
+//        lower .. upper
+        musicalScale.getNoteFrequency(noteIndexRange.start) .. musicalScale.getNoteFrequency(
+            noteIndexRange.endInclusive)
     }
 
     val viewPort = remember(visibleRange, limits) {

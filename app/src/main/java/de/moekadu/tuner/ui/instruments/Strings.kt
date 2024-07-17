@@ -72,6 +72,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.absoluteValue
+import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -80,14 +81,14 @@ import kotlin.random.Random
  * String with smaller indices (lower notes) are printed thicker.
  * @param index Index of string
  * @param minLineWidth Line width of string with highest index.
- * @param maxLineWidth Line width of string with smallerst index.
+ * @param maxLineWidth Line width of string with smallest index.
  * @param minIndex Smallest index.
  * @param maxIndex Largest index.
  * @return Line width of string.
  */
 private fun computeStringLineWidth(
     index: Int, minLineWidth: Dp, maxLineWidth: Dp, minIndex: Int, maxIndex: Int): Dp {
-    if (maxIndex == minIndex)
+    if (maxIndex == minIndex || index == Int.MAX_VALUE)
         return (minLineWidth + maxLineWidth) / 2
     val relativeWidth = (index - minIndex).toFloat() / (maxIndex - minIndex).toFloat()
     return (maxLineWidth - minLineWidth) * (1 - relativeWidth) + minLineWidth
@@ -328,12 +329,20 @@ fun Strings(
     }
     val minNoteIndex = remember(strings, musicalScale) {
         strings?.minOfOrNull {
-            musicalScale.getNoteIndex(it.note)
+            val index = musicalScale.getNoteIndex(it.note)
+            if (index == Int.MAX_VALUE)
+                musicalScale.noteIndexBegin
+            else
+                index
         } ?: musicalScale.noteIndexBegin
     }
     val maxNoteIndex = remember(strings, musicalScale) {
         strings?.maxOfOrNull {
-            musicalScale.getNoteIndex(it.note)
+            val index = musicalScale.getNoteIndex(it.note)
+            if (index == Int.MAX_VALUE)
+                musicalScale.noteIndexEnd - 1
+            else
+                index
         } ?: (musicalScale.noteIndexEnd - 1)
     }
     val numStrings = strings?.size ?: (maxNoteIndex - minNoteIndex)
