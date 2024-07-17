@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,6 +50,7 @@ import androidx.compose.ui.unit.times
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
+import de.moekadu.tuner.notedetection.SortedAndDistinctInstrumentStrings
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
@@ -103,6 +105,19 @@ interface InstrumentTunerData {
 
     // others
     fun onClearFixedTargetClicked()
+}
+
+private fun checkInstrumentCompatibility(
+    musicalScale: MusicalScale,
+    instrument: Instrument): Boolean {
+    if (instrument.isChromatic)
+        return true
+    val sortedStrings = SortedAndDistinctInstrumentStrings(instrument, musicalScale)
+    return when {
+        sortedStrings.sortedAndDistinctNoteIndices.isEmpty() -> true
+        sortedStrings.sortedAndDistinctNoteIndices.last() == Int.MAX_VALUE -> false
+        else -> true
+    }
 }
 
 @Composable
@@ -161,6 +176,9 @@ fun InstrumentTunerPortrait(
                 ).octave
             ).width + 8.dp
             val scope = rememberCoroutineScope()
+            val scaleInvalid= remember(musicalScaleAsState, instrumentAsState) {
+                !checkInstrumentCompatibility(musicalScaleAsState, instrumentAsState)
+            }
 
             InstrumentButton(
                 iconResourceId = instrumentAsState.iconResource,
@@ -171,11 +189,15 @@ fun InstrumentTunerPortrait(
                     .fillMaxWidth()
                     .padding(
                         start = tunerPlotStyle.margin,
-                        top = tunerPlotStyle.margin - 4.dp,
+                        top = tunerPlotStyle.margin,
                         end = noteWidthDp,
                         bottom = 0.dp
                     ),
                 outline = tunerPlotStyle.plotWindowOutline,
+                errorMessage = if (scaleInvalid)
+                    stringResource(id = R.string.incorrect_temperament)
+                else
+                    null,
                 onClick = onInstrumentButtonClicked
             )
 
@@ -186,7 +208,7 @@ fun InstrumentTunerPortrait(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(0.dp, stringsHeight)
-                        .padding(start = tunerPlotStyle.margin, top = tunerPlotStyle.margin - 4.dp),
+                        .padding(start = tunerPlotStyle.margin, top = tunerPlotStyle.margin),
                     tuningState = data.tuningState,
                     highlightedNoteKey = data.selectedNoteKey,
                     highlightedNote = data.targetNote,
@@ -307,6 +329,9 @@ fun InstrumentTunerLandscape(
             ).octave
         ).width + 8.dp
         val scope = rememberCoroutineScope()
+        val scaleInvalid= remember(musicalScaleAsState, instrumentAsState) {
+            !checkInstrumentCompatibility(musicalScaleAsState, instrumentAsState)
+        }
 
         Column(modifier = Modifier.weight(0.5f)) {
             InstrumentButton(
@@ -319,12 +344,17 @@ fun InstrumentTunerLandscape(
                     .fillMaxWidth()
                     .padding(
                         start = noteWidthDp,
-                        top = tunerPlotStyle.margin - 4.dp,
+                        top = tunerPlotStyle.margin,
                         end = 0.dp,
                         bottom = 0.dp
                     ),
                 outline = tunerPlotStyle.plotWindowOutline,
+                errorMessage = if (scaleInvalid)
+                    stringResource(id = R.string.incorrect_temperament)
+                else
+                    null,
                 onClick = onInstrumentButtonClicked
+
             )
 
             Strings(
@@ -333,9 +363,7 @@ fun InstrumentTunerLandscape(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(
-                        top = tunerPlotStyle.margin - 4.dp
-                    ),
+                    .padding(top = tunerPlotStyle.margin),
                 tuningState = data.tuningState,
                 highlightedNoteKey = data.selectedNoteKey,
                 highlightedNote = data.targetNote,

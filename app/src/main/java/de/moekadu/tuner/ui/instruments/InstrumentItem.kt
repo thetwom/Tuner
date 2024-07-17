@@ -144,12 +144,12 @@ fun InstrumentItem2(
                 modifier = Modifier.weight(1f)
             ) {
                 val supportingStyle = MaterialTheme.typography.bodyMedium
-                val stringsString = remember(context, supportingStyle, instrument) {
+                val stringsString = remember(context, supportingStyle, instrument, notePrintOptions) {
                     instrument.getStringsString2(
                         context = context,
                         notePrintOptions = notePrintOptions,
-                        supportingStyle.fontSize,
-                        supportingStyle.fontWeight
+                        fontSize = supportingStyle.fontSize,
+                        fontWeight = supportingStyle.fontWeight
                     )
                 }
                 Text(
