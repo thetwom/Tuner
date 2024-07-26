@@ -22,7 +22,8 @@ val instrumentIcons = arrayOf(
     InstrumentIcon(R.drawable.ic_piano, "piano")
 )
 
-fun instrumentIconId2Name(resourceId: Int): String {
+fun
+        instrumentIconId2Name(resourceId: Int): String {
     return (instrumentIcons.firstOrNull { it.resourceId == resourceId }?: instrumentIcons[0]).name
 }
 

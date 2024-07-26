@@ -157,7 +157,7 @@ class InstrumentArchiving(
         }
     }
 
-    private fun getFilenameFromUri(context: Context, uri: Uri): String? {
+    fun getFilenameFromUri(context: Context, uri: Uri): String? {
         var filename: String? = null
         context.contentResolver?.query(
                 uri, null, null, null, null)?.use { cursor ->

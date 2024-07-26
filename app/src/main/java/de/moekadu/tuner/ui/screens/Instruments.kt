@@ -1,38 +1,61 @@
 package de.moekadu.tuner.ui.screens
 
+import android.content.Context
+import android.net.Uri
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
+import de.moekadu.tuner.instruments.InstrumentIO
+import de.moekadu.tuner.instruments.ShareInstruments
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
@@ -51,11 +74,15 @@ import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlin.math.min
+import kotlin.math.roundToInt
+import kotlin.time.Duration
 
 interface InstrumentsData {
     val activeInstrument: StateFlow<Instrument?>
@@ -65,6 +92,9 @@ interface InstrumentsData {
 
     val customInstruments: StateFlow<ImmutableList<Instrument>>
     val customInstrumentsExpanded: StateFlow<Boolean>
+
+    /** When custom instruments is changed, store the state before changing here. */
+    val previousCustomInstruments: ImmutableList<Instrument>
 
     val selectedInstruments: StateFlow<ImmutableSet<Long>>
 
@@ -84,11 +114,104 @@ interface InstrumentsData {
     fun toggleSelection(id: Long)
     fun clearSelectedInstruments()
 
-    suspend fun moveInstrumentsUp(instrumentKeys: Set<Long>)
-    suspend fun moveInstrumentsDown(instrumentKeys: Set<Long>)
+    /** Return true, if we moving took place */
+    suspend fun moveInstrumentsUp(instrumentKeys: Set<Long>): Boolean
+    /** Return true, if we moving took place */
+    suspend fun moveInstrumentsDown(instrumentKeys: Set<Long>): Boolean
     suspend fun deleteInstruments(instrumentKeys: Set<Long>)
     suspend fun deleteAllInstruments()
     suspend fun setInstruments(instruments: ImmutableList<Instrument>)
+}
+
+fun InstrumentsData.extractSelectedInstruments(): List<Instrument> {
+    val allInstruments = this.customInstruments.value
+    val selectedKeys = this.selectedInstruments.value
+    return if (selectedKeys.isEmpty())
+        allInstruments
+    else
+        customInstruments.value.filter { selectedKeys.contains(it.stableId) }
+}
+
+private interface OverflowMenuCallbacks{
+    fun onDeleteClicked()
+    fun onShareClicked()
+    fun onExportClicked()
+    fun onImportClicked()
+    fun onSettingsClicked()
+}
+
+@Composable
+private fun OverflowMenu(
+    callbacks: OverflowMenuCallbacks
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    IconButton(onClick = {
+        expanded = !expanded
+    }) {
+        Icon(Icons.Default.MoreVert, contentDescription = "menu")
+    }
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = { expanded = false }
+    ) {
+        DropdownMenuItem(
+            text = { Text(stringResource(id = R.string.delete_instruments)) },
+            leadingIcon = { Icon(Icons.Default.Delete, contentDescription = "delete") },
+            onClick = {
+                callbacks.onDeleteClicked()
+                expanded = false
+            }
+        )
+        HorizontalDivider()
+        DropdownMenuItem(
+            text = { Text(stringResource(id = R.string.share)) },
+            leadingIcon = { Icon(Icons.Default.Share, contentDescription = "share") },
+            onClick = {
+                callbacks.onShareClicked()
+                expanded = false
+            }
+        )
+        DropdownMenuItem(
+            text = { Text(stringResource(id = R.string.save_to_disk)) },
+            leadingIcon = {
+                Icon(
+                    ImageVector.vectorResource(id = R.drawable.ic_archive),
+                    contentDescription = "archive"
+                )
+            },
+            onClick = {
+                callbacks.onExportClicked()
+                expanded = false
+            }
+        )
+        DropdownMenuItem(
+            text = { Text(stringResource(id = R.string.load_from_disk)) },
+            leadingIcon = {
+                Icon(
+                    ImageVector.vectorResource(id = R.drawable.ic_unarchive),
+                    contentDescription = "unarchive"
+                )
+            },
+            onClick = {
+                callbacks.onImportClicked()
+                expanded = false
+            }
+        )
+        HorizontalDivider()
+        DropdownMenuItem(
+            text = { Text(stringResource(id = R.string.settings)) },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = "settings"
+                )
+            },
+            onClick = {
+                callbacks.onSettingsClicked()
+                expanded = false
+            }
+        )
+    }
 }
 
 @Composable
@@ -104,6 +227,7 @@ fun Instruments(
     onReferenceNoteClicked: () -> Unit = {},
     onTemperamentClicked: () -> Unit = {},
     onSharpFlatClicked: () -> Unit = {},
+    onLoadInstruments: (instruments: List<Instrument>) -> Unit = {},
     onPreferenceButtonClicked: () -> Unit = {}
 ) {
     val selectedInstruments by state.selectedInstruments.collectAsStateWithLifecycle()
@@ -113,37 +237,149 @@ fun Instruments(
     val activeInstrument by state.activeInstrument.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    val resources = LocalContext.current.resources
+    val context = LocalContext.current
+    val resources = context.resources
+    val listState = rememberLazyListState()
+
+    val saveInstrumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/plain")
+    ) { uri ->
+        if (uri != null) {
+            val instruments = state.extractSelectedInstruments()
+            scope.launch(Dispatchers.IO) {
+                context.contentResolver?.openOutputStream(uri, "wt")?.use { stream ->
+                    stream.write(InstrumentIO.instrumentsListToString(context, instruments).toByteArray())
+                }
+            }
+            state.clearSelectedInstruments()
+            val filename = InstrumentIO.getFilenameFromUri(context, uri)
+            Toast.makeText(
+                context,
+                context.resources.getQuantityString(
+                    R.plurals.database_num_saved,
+                    instruments.size,
+                    instruments.size,
+                    filename
+                ),
+                Toast.LENGTH_LONG).show()
+        } else {
+            Toast.makeText(context,
+                R.string.failed_to_archive_instruments, Toast.LENGTH_LONG).show()
+        }
+    }
+    val shareInstrumentLauncher = rememberLauncherForActivityResult(
+        contract = ShareInstruments.Contract()
+    ) {
+        state.clearSelectedInstruments()
+    }
+
+    val importInstrumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            val (readState, instruments) = InstrumentIO.readInstrumentsFromFile(context, uri)
+            when (readState) {
+                InstrumentIO.FileCheck.Empty -> {
+                    val filename = InstrumentIO.getFilenameFromUri(context, uri)
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.file_empty, filename),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                InstrumentIO.FileCheck.Invalid -> {
+                    val filename = InstrumentIO.getFilenameFromUri(context, uri)
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.file_invalid, filename),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                else -> {
+                }
+            }
+            if (instruments.isNotEmpty()) {
+                onLoadInstruments(instruments)
+                state.clearSelectedInstruments()
+            }
+        }
+    }
+
+    val overflowCallbacks = object: OverflowMenuCallbacks {
+        override fun onDeleteClicked() {
+            if (selectedInstruments.isNotEmpty())
+                scope.launch { state.deleteInstruments(selectedInstruments) }
+            else
+                scope.launch { state.deleteAllInstruments() }
+        }
+        override fun onShareClicked() {
+            val instruments = state.extractSelectedInstruments()
+            if (instruments.isEmpty()) {
+                Toast.makeText(context, R.string.database_empty_share, Toast.LENGTH_LONG).show()
+            } else {
+                val intent = ShareInstruments.createShareInstrumentsIntent(context, instruments)
+                shareInstrumentLauncher.launch(intent)
+            }
+        }
+        override fun onExportClicked() {
+            if (customInstruments.isEmpty())
+                Toast.makeText(context, R.string.database_empty, Toast.LENGTH_LONG).show()
+            else
+                saveInstrumentLauncher.launch("tuner.txt")
+        }
+        override fun onImportClicked() {
+            importInstrumentLauncher.launch(arrayOf("text/plain"))
+        }
+        override fun onSettingsClicked() {
+            onPreferenceButtonClicked()
+        }
+    }
 
     // handle recovering deleted instruments
-    LaunchedEffect(resources, state) {
+    LaunchedEffect(resources, state, listState) {
         for (delete in state.customInstrumentsBackup) {
             launch {
                 val result = snackbarHostState.showSnackbar(
                     resources.getQuantityString(
                         R.plurals.instruments_deleted, delete.numDeleted, delete.numDeleted
                     ),
-                    actionLabel = resources.getString(R.string.undo)
+                    actionLabel = resources.getString(R.string.undo),
+                    duration = SnackbarDuration.Long
                 )
                 when (result) {
                     SnackbarResult.Dismissed -> {}
-                    SnackbarResult.ActionPerformed -> state.setInstruments(delete.backup)
+                    SnackbarResult.ActionPerformed -> {
+                        state.setInstruments(delete.backup)
+                        listState.animateScrollToItem(0) // otherwise it might look to the user as nothing happened
+                    }
                 }
             }
         }
     }
+
+//    LaunchedEffect(key1 = customInstruments, key2 = state) {
+//        scrollToSuitablePosition(listState, state.previousCustomInstruments, customInstruments)
+//    }
     BackHandler(enabled = selectedInstruments.isNotEmpty()) {
         scope.launch { state.clearSelectedInstruments() }
     }
-    // TODO: add tools for sharing, exporting, importing
 
     TunerScaffold(
         modifier = modifier,
+        defaultModeTools = { OverflowMenu(callbacks = overflowCallbacks) },
         actionModeActive = selectedInstruments.isNotEmpty(),
         actionModeTitle = "${selectedInstruments.size}",
         actionModeTools = {
             IconButton(onClick = {
-                scope.launch { state.moveInstrumentsUp(selectedInstruments) }
+                scope.launch {
+                    val changed = state.moveInstrumentsUp(selectedInstruments)
+                    if (changed) {
+                        listState.animateScrollToItem(
+                            (listState.firstVisibleItemIndex - 1).coerceAtLeast(0),
+                            -listState.firstVisibleItemScrollOffset
+                        )
+                    }
+                }
             }) {
                 Icon(
                     Icons.Default.KeyboardArrowUp,
@@ -151,21 +387,30 @@ fun Instruments(
                 )
             }
             IconButton(onClick = {
-                scope.launch { state.moveInstrumentsDown(selectedInstruments) }
+                scope.launch {
+                    val changed = state.moveInstrumentsDown(selectedInstruments)
+                    if (changed) {
+                        listState.animateScrollToItem(
+                            listState.firstVisibleItemIndex + 1,
+                            -listState.firstVisibleItemScrollOffset
+                        )
+                    }
+                }
             }) {
                 Icon(
                     Icons.Default.KeyboardArrowDown,
                     contentDescription = "move down"
                 )
             }
-            IconButton(onClick = {
-                scope.launch { state.deleteInstruments(selectedInstruments) }
-            }) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "delete"
-                )
-            }
+//            IconButton(onClick = {
+//                scope.launch { state.deleteInstruments(selectedInstruments) }
+//            }) {
+//                Icon(
+//                    Icons.Default.Delete,
+//                    contentDescription = "delete"
+//                )
+//            }
+            OverflowMenu(overflowCallbacks)
         },
         onActionModeFinishedClicked = {
             state.clearSelectedInstruments()
@@ -176,7 +421,8 @@ fun Instruments(
         onSharpFlatClicked = onSharpFlatClicked,
         musicalScale = musicalScale,
         notePrintOptions = notePrintOptions,
-        onPreferenceButtonClicked = onPreferenceButtonClicked,
+        showPreferenceButton = false,
+        // onPreferenceButtonClicked = onPreferenceButtonClicked,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onCreateNewInstrumentClicked
@@ -189,7 +435,8 @@ fun Instruments(
         }
     ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier.padding(paddingValues = paddingValues)
+            modifier = Modifier.padding(paddingValues = paddingValues),
+            state = listState
         ) {
             if ( customInstruments.size > 0) {
                 item(contentType = 1) {
@@ -249,7 +496,7 @@ fun Instruments(
                 }
             }
 
-            if (predefinedInstrumentsExpanded) {
+            if (predefinedInstrumentsExpanded || customInstruments.isEmpty()) {
                 items(state.predefinedInstruments, { it.stableId }, { 3 }) { item ->
                     InstrumentItem2(
                         instrument = item,
@@ -336,6 +583,8 @@ private class TestInstrumentsData : InstrumentsData {
     )
     override val customInstrumentsExpanded = MutableStateFlow(true)
 
+    override val previousCustomInstruments: ImmutableList<Instrument> = customInstruments.value
+
     override val selectedInstruments = MutableStateFlow(persistentSetOf<Long>())
 
     override val customInstrumentsBackup = Channel<InstrumentsData.InstrumentDeleteInfo>(
@@ -367,34 +616,39 @@ private class TestInstrumentsData : InstrumentsData {
         selectedInstruments.value = persistentSetOf()
     }
 
-    override suspend fun moveInstrumentsUp(instrumentKeys: Set<Long>) {
+    override suspend fun moveInstrumentsUp(instrumentKeys: Set<Long>): Boolean {
         if (customInstruments.value.isEmpty())
-            return
-
+            return false
+        var changed = false
         customInstruments.value = customInstruments.value.mutate { instruments ->
             for (i in 1 until customInstruments.value.size) {
                 val instrument = customInstruments.value[i]
                 val instrumentPrev = instruments[i-1]
                 if (instrumentKeys.contains(instrument.stableId)
-                    && !instrumentKeys.contains(instrumentPrev.stableId))
+                    && !instrumentKeys.contains(instrumentPrev.stableId)) {
                     instruments.add(i - 1, instruments.removeAt(i))
+                    changed =true
+                }
             }
         }
+        return changed
     }
-    override suspend fun moveInstrumentsDown(instrumentKeys: Set<Long>) {
+    override suspend fun moveInstrumentsDown(instrumentKeys: Set<Long>): Boolean {
         if (customInstruments.value.isEmpty())
-            return
-
+            return false
+        var changed =  false
         customInstruments.value = customInstruments.value.mutate { instruments ->
             for (i in customInstruments.value.size - 2 downTo 0) {
                 val instrument = customInstruments.value[i]
                 val instrumentNext = instruments[i+1]
                 if (instrumentKeys.contains(instrument.stableId)
-                    && !instrumentKeys.contains(instrumentNext.stableId))
+                    && !instrumentKeys.contains(instrumentNext.stableId)) {
                     instruments.add(i + 1, instruments.removeAt(i))
+                    changed = true
+                }
             }
         }
-
+        return changed
     }
     override suspend fun deleteInstruments(instrumentKeys: Set<Long>) {
         customInstruments.value = customInstruments.value.removeAll { instrumentKeys.contains(it.stableId) }
