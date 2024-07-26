@@ -6,16 +6,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,17 +26,13 @@ import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import de.moekadu.tuner.instruments.InstrumentResources2
 import de.moekadu.tuner.navigation.PreferencesGraphRoute
-import de.moekadu.tuner.navigation.ReferenceFrequencyDialogRoute
-import de.moekadu.tuner.navigation.TemperamentDialogRoute
 import de.moekadu.tuner.navigation.TunerRoute
 import de.moekadu.tuner.navigation.instrumentEditorGraph
 import de.moekadu.tuner.navigation.musicalScalePropertiesGraph
 import de.moekadu.tuner.navigation.preferenceGraph
-import de.moekadu.tuner.navigation.tunerGraph
+import de.moekadu.tuner.navigation.mainGraph
 import de.moekadu.tuner.preferences.NightMode
 import de.moekadu.tuner.preferences.PreferenceResources2
-import de.moekadu.tuner.ui.misc.QuickSettingsBar
-import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -109,12 +95,13 @@ class MainActivity2 : ComponentActivity() {
                     navController = controller,
                     startDestination = TunerRoute
                 ) {
-                    tunerGraph(
+                    mainGraph(
                         controller = controller,
                         scope = scope,
                         canNavigateUp = canNavigateUp,
                         onNavigateUpClicked = { controller.navigateUp() },
-                        preferences = pref
+                        preferences = pref,
+                        instrumentResources = instruments
                     )
                     preferenceGraph(
                         controller = controller,
@@ -139,75 +126,6 @@ class MainActivity2 : ComponentActivity() {
                         scope = scope
                     )
                 }
-
-
-//                Scaffold(
-//                    topBar = {
-//                        TopAppBar(
-//                            title = { Text(getString(R.string.app_name)) },
-//                            navigationIcon = {
-//                                if (canNavigateUp) {
-//                                    IconButton(onClick = { controller.navigateUp() }) {
-//                                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "back")
-//                                    }
-//                                }
-//                            },
-//                            actions = {
-//                                if (!inPreferencesGraph) {
-//                                    IconButton(onClick = {
-//                                        controller.navigate(PreferencesGraphRoute)
-//                                    }) {
-//                                        Icon(Icons.Filled.Settings, "settings")
-//                                    }
-//                                }
-//                            }
-//                        )
-//                    },
-//                    bottomBar = {
-//                        if (!inPreferencesGraph) {
-//                            val musicalScale by pref.musicalScale.collectAsStateWithLifecycle()
-//                            val notePrintOptions by pref.notePrintOptions.collectAsStateWithLifecycle()
-//                            QuickSettingsBar(
-//                                musicalScale = musicalScale,
-//                                notePrintOptions = notePrintOptions,
-//                                onSharpFlatClicked = {
-//                                    scope.launch {
-//                                        val currentFlatSharpChoice = pref.notePrintOptions.value.sharpFlatPreference
-//                                        val newFlatShapeChoice = if (currentFlatSharpChoice == NotePrintOptions.SharpFlatPreference.Flat)
-//                                            NotePrintOptions.SharpFlatPreference.Sharp
-//                                        else
-//                                            NotePrintOptions.SharpFlatPreference.Flat
-//                                        pref.writeNotePrintOptions(pref.notePrintOptions.value.copy(
-//                                            sharpFlatPreference = newFlatShapeChoice
-//                                        ))
-//                                    }
-//                                },
-//                                onReferenceNoteClicked = {
-//                                    // provided by musicalScalePropertiesGraph
-//                                    controller.navigate(ReferenceFrequencyDialogRoute.create(
-//                                        pref.musicalScale.value, null
-//                                    ))
-//                                },
-//                                onTemperamentClicked = {
-//                                    // provided by musicalScalePropertiesGraph
-//                                    controller.navigate(TemperamentDialogRoute)
-//                                }
-//                            )
-//                        }
-//                    }
-//                ) { padding ->
-//                    NavHost(
-//                        modifier = Modifier.padding(padding),
-//                        navController = controller,
-//                        startDestination = TunerRoute
-//                    ) {
-//                        tunerGraph(controller = controller, preferences = pref)
-//                        preferenceGraph(controller = controller, preferences = pref, scope = scope)
-//                        // provides TemperamentDialogRoute and ReferenceNoteDialog
-//                        musicalScalePropertiesGraph(controller = controller, preferences = pref, scope = scope)
-//                    }
-//                }
-//            }
             }
         }
     }

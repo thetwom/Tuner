@@ -126,6 +126,10 @@
     <string name="copy_extension">%s (copy)</string>
     <string name="failed_to_archive_instruments">Failed to write instruments to file</string>
     <string name="database_saved">Writing instruments to \"%s\".</string>
+    <plurals name="database_num_saved">
+        <item quantity="one">Writing %d instrument to \"%s\".</item>
+        <item quantity="other">Writing %d instruments to \"%s\".</item>
+    </plurals>
     <string name="database_empty">There are no instruments which can be saved.</string>
     <plurals name="load_instruments">
         <item quantity="one">Loading %d instruments</item>
@@ -294,4 +298,6 @@
     <string name="min_harmonic_energy_content_summary">Ignore input below %d&#x200A;%%.</string>
     <string name="sensitivity">Sensitivity</string>
     <string name="delete_instrument">Delete instrument</string>
+    <string name="delete_instruments">Delete instruments</string>
+    <string name="database_empty_share">There are no instruments to share.</string>
 </resources>

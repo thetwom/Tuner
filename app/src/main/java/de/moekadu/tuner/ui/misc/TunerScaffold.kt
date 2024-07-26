@@ -44,6 +44,7 @@ fun TunerScaffold(
     onNavigateUpClicked: () -> Unit = {},
     showPreferenceButton: Boolean = true,
     onPreferenceButtonClicked: () -> Unit = {},
+    defaultModeTools: @Composable (RowScope.() -> Unit) = {}, // tools extra to preference in non-action mode
     actionModeActive: Boolean = false,
     actionModeTitle: String = "",
     actionModeTools: @Composable (RowScope.() -> Unit) = {},
@@ -91,9 +92,12 @@ fun TunerScaffold(
                 actions = {
                     if (actionModeActive) {
                         actionModeTools()
-                    } else if (showPreferenceButton) {
-                        IconButton(onClick = onPreferenceButtonClicked) {
-                            Icon(Icons.Filled.Settings, "settings")
+                    } else {
+                        defaultModeTools()
+                        if (showPreferenceButton) {
+                            IconButton(onClick = onPreferenceButtonClicked) {
+                                Icon(Icons.Filled.Settings, "settings")
+                            }
                         }
                     }
                 }
