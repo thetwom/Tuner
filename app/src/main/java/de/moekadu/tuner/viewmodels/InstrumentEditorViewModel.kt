@@ -71,7 +71,7 @@ class InstrumentEditorViewModel(private val pref: PreferenceResources) : ViewMod
     val detectedNoteModel: LiveData<DetectedNoteViewModel> get() = _detectedNoteModel
 
     init {
-        noteDetectionJob = RestartableJob(viewModelScope) {
+        noteDetectionJob = RestartableJob(viewModelScope, "freqDetect/InstrumentEditorVM") {
             viewModelScope.launch(Dispatchers.Main) {
                 val frequencyEvaluator = FrequencyEvaluator(
                     pref.numMovingAverage.value,

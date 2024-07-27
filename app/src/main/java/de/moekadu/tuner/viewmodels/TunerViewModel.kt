@@ -19,6 +19,7 @@
 
 package de.moekadu.tuner.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.*
 import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.instruments.instrumentChromatic
@@ -121,8 +122,9 @@ class TunerViewModel(
     private val timeSinceThereIsNoFrequencyDetectionResult = _timeSinceThereIsNoFrequencyDetectionResult.asStateFlow()
 
     init {
-        frequencyDetectionJob = RestartableJob(viewModelScope) {
-            viewModelScope.launch(Dispatchers.Default) {
+        frequencyDetectionJob = RestartableJob(viewModelScope, "freqDetect/TunerViewModel") {
+            val j = viewModelScope.launch(Dispatchers.Default) {
+                Log.v("Tuner", "TunerViewModel: frequency detection job launched")
                 frequencyDetectionFlow(pref, waveWriter)
                     .collect {
                         ensureActive()
@@ -130,10 +132,15 @@ class TunerViewModel(
                         _frequencyDetectionResults.value = it
                     }
             }
+            j.invokeOnCompletion {
+                Log.v("Tuner", "TunerViewModel: frequency detection job finished")
+            }
+            j
         }
 
-        frequencyEvaluationJob = RestartableJob(viewModelScope) {
-            viewModelScope.launch(Dispatchers.Default) {
+        frequencyEvaluationJob = RestartableJob(viewModelScope, "freqEval/TunerViewModel") {
+            val j = viewModelScope.launch(Dispatchers.Default) {
+                Log.v("Tuner", "TunerViewModel: freqEvalJob started")
 //            Log.v("Tuner", "TunerViewModel.restartFrequencyEvaluationJob: restarting")
                 val freqEvaluator = FrequencyEvaluator(
                     pref.numMovingAverage.value,
@@ -163,6 +170,10 @@ class TunerViewModel(
                         _currentFrequency.value = FrequencyWithFramePosition(it.smoothedFrequency, it.framePosition)
                 }
             }
+            j.invokeOnCompletion {
+                Log.v("Tuner", "TunerViewModel: freqEvalJob finished")
+            }
+            j
         }
         frequencyEvaluationJob?.restart()
 
@@ -345,6 +356,7 @@ class TunerViewModel(
      * This will use the current preference (pref) to get the current settings.
      */
     fun startSampling() {
+         Log.v("Tuner", "TunerViewModel.startSampling")
         frequencyDetectionJob?.restart()
     }
 

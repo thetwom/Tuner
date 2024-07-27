@@ -20,6 +20,7 @@
 package de.moekadu.tuner.fragments
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Paint
 import android.os.Bundle
 import android.text.TextPaint
@@ -28,6 +29,7 @@ import android.view.*
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -72,13 +74,14 @@ class TunerFragmentSimple : Fragment() {
         ActivityResultContracts.RequestPermission()
     ) { result ->
         if (result) {
+            Log.v("Tuner", "TunerFragmentSimple: Permission for audio already available")
             viewModel.startSampling()
         } else {
             Toast.makeText(activity, getString(R.string.no_audio_recording_permission), Toast.LENGTH_LONG)
                 .show()
             Log.v(
                 "Tuner",
-                "TunerFragment.askForPermissionAnNotifyViewModel: No audio recording permission is granted."
+                "TunerSimpleFragment.askForPermissionAnNotifyViewModel: No audio recording permission is granted."
             )
         }
     }
@@ -341,7 +344,19 @@ class TunerFragmentSimple : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
+        when {
+            ContextCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.RECORD_AUDIO
+            ) ==
+                    PackageManager.PERMISSION_GRANTED -> {
+                Log.v("Tuner", "TunerFragmentSimple: Permission for audio already available")
+                viewModel.startSampling()
+            }
+            else -> {
+                Log.v("Tuner", "TunerFragmentSimple: Requesting permission")
+                askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
+            }
+        }
 //        viewModel.setInstrument(instrumentsViewModel.instrument.value?.instrument ?: instrumentDatabase[0])
     }
 

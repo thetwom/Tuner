@@ -20,6 +20,7 @@
 package de.moekadu.tuner.fragments
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Paint
 import android.os.Bundle
 import android.text.TextPaint
@@ -27,6 +28,7 @@ import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -68,6 +70,7 @@ class TunerFragment : Fragment() {
         ActivityResultContracts.RequestPermission()
     ) { result ->
         if (result) {
+            Log.v("Tuner", "TunerFragment: askForPermission...: granted")
             viewModel.startSampling()
         } else {
             Toast.makeText(activity, getString(R.string.no_audio_recording_permission), Toast.LENGTH_LONG)
@@ -323,7 +326,19 @@ class TunerFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
+        when {
+            ContextCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                Log.v("Tuner", "TunerFragment: Permission for audio already available")
+                viewModel.startSampling()
+            }
+            else -> {
+                Log.v("Tuner", "TunerFragment: Requesting permission")
+                askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
+            }
+        }
+
     }
 
     override fun onResume() {

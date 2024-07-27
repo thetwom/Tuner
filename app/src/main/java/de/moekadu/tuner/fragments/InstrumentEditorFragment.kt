@@ -2,6 +2,7 @@ package de.moekadu.tuner.fragments
 
 import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -12,6 +13,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.google.android.material.button.MaterialButton
@@ -57,6 +59,7 @@ class InstrumentEditorFragment : Fragment() {
         ActivityResultContracts.RequestPermission()
     ) { result ->
         if (result) {
+            Log.v("Tuner", "TunerEditorFragment: Permission for audio already available")
             //tunerViewModel.startSampling()
             viewModel.startSampling()
         } else {
@@ -286,8 +289,20 @@ class InstrumentEditorFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
+        when {
+            ContextCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.RECORD_AUDIO
+            ) ==
+                    PackageManager.PERMISSION_GRANTED -> {
+                Log.v("Tuner", "InstrumentEditorFragment: Permission for audio already available")
+                viewModel.startSampling()
+            }
+            else -> {
+                Log.v("Tuner", "InstrumentEditorFragment: Requesting permission")
+                askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
+            }
+        }
 //        Log.v("Tuner", "InstrumentEditorFragment.onStart()")
-        askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
     }
 
     override fun onStop() {
