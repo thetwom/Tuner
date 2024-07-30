@@ -5,6 +5,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,6 +29,7 @@ import de.moekadu.tuner.instruments.InstrumentResources2
 import de.moekadu.tuner.preferences.PreferenceResources2
 import de.moekadu.tuner.ui.instruments.InstrumentIconPicker
 import de.moekadu.tuner.ui.misc.TunerScaffold
+import de.moekadu.tuner.ui.misc.rememberTunerAudioPermission
 import de.moekadu.tuner.ui.screens.InstrumentEditor
 import de.moekadu.tuner.viewmodels.InstrumentEditorViewModel2
 import kotlinx.coroutines.CoroutineScope
@@ -85,12 +88,16 @@ fun NavGraphBuilder.instrumentEditorGraph(
             val musicalScale by preferences.musicalScale.collectAsStateWithLifecycle()
             val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
 
+            val snackbarHostState = remember { SnackbarHostState() }
+            val permissionGranted = rememberTunerAudioPermission(snackbarHostState)
+
 //            LaunchedEffect(key1 = instrument) {
 //                viewModel.setInstrument(instrument)
 //            }
 
-            LifecycleResumeEffect(Unit) {
-                viewModel.startTuner()
+            LifecycleResumeEffect(permissionGranted) {
+                if (permissionGranted)
+                    viewModel.startTuner()
                 onPauseOrDispose { viewModel.stopTuner() }
             }
             TunerScaffold(
@@ -123,7 +130,8 @@ fun NavGraphBuilder.instrumentEditorGraph(
                         Icon(Icons.Default.Done, contentDescription = stringResource(id = R.string.done))
                     }
                 },
-                onActionModeFinishedClicked = { controller.navigateUp() }
+                onActionModeFinishedClicked = { controller.navigateUp() },
+                snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
             ) { paddingValues ->
                 InstrumentEditor(
                     state = viewModel,

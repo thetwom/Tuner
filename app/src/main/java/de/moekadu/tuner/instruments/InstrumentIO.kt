@@ -3,9 +3,11 @@ package de.moekadu.tuner.instruments
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.core.database.getStringOrNull
 import de.moekadu.tuner.BuildConfig
+import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.legacyNoteIndexToNote
 import kotlinx.collections.immutable.ImmutableList
@@ -49,6 +51,29 @@ object InstrumentIO {
             InstrumentsAndFileCheckResult(FileCheck.Invalid, listOf())
         } else {
             stringToInstruments(instrumentsString)
+        }
+    }
+
+    fun toastFileLoadingResult(context: Context, readState: FileCheck, uri: Uri) {
+        when (readState) {
+            FileCheck.Empty -> {
+                val filename = getFilenameFromUri(context, uri)
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.file_empty, filename),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+
+            FileCheck.Invalid -> {
+                val filename = getFilenameFromUri(context, uri)
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.file_invalid, filename),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            else -> { }
         }
     }
 

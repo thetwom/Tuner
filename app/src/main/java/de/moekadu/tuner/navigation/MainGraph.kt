@@ -1,9 +1,10 @@
 package de.moekadu.tuner.navigation
 
-import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -15,7 +16,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
-import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
@@ -25,7 +25,7 @@ import de.moekadu.tuner.instruments.instrumentIcons
 import de.moekadu.tuner.preferences.PreferenceResources2
 import de.moekadu.tuner.ui.instruments.ImportInstrumentsDialog
 import de.moekadu.tuner.ui.misc.TunerScaffold
-import de.moekadu.tuner.ui.preferences.AboutDialog
+import de.moekadu.tuner.ui.misc.rememberTunerAudioPermission
 import de.moekadu.tuner.ui.screens.InstrumentTuner
 import de.moekadu.tuner.ui.screens.Instruments
 import de.moekadu.tuner.ui.screens.ScientificTuner
@@ -52,7 +52,61 @@ fun NavGraphBuilder.mainGraph(
         val isScientificTuner by preferences.scientificMode.collectAsStateWithLifecycle()
         val musicalScale by preferences.musicalScale.collectAsStateWithLifecycle()
         val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
+//        val context = LocalContext.current
         //Log.v("Tuner", "TunerGraph: isScientificMode = $isScientificTuner")
+        val snackbarHostState = remember { SnackbarHostState() }
+        val permissionGranted = rememberTunerAudioPermission(snackbarHostState)
+
+//        val reopenSnackbarChannel = Channel<Boolean>(Channel.CONFLATED)
+//        val permission = rememberPermissionState(permission = Manifest.permission.RECORD_AUDIO) {
+//            if (!it)
+//                reopenSnackbarChannel.trySend(false)
+//        }
+//        Log.v("Tuner", "MainGraph: 1: permissions_granted = ${permission.status.isGranted}, rational = ${permission.status.shouldShowRationale}")
+////            if (!permission.status.isGranted && permission.status.shouldShowRationale)
+////                Column {
+////                    Text(stringResource(id = R.string.audio_record_permission_rationale))
+////                    Button(onClick = { cameraPermissionState.launchPermissionRequest() }) {
+////                        Text("Request permission")
+////                    }
+////                }
+//
+//        LaunchedEffect(permission.status) {
+//            Log.v("Tuner", "MainGraph: permissions_granted = ${permission.status.isGranted}, rational = ${permission.status.shouldShowRationale}")
+//            if (!permission.status.isGranted && permission.status.shouldShowRationale) {// TODO: show rationale if requested
+//                launch {
+//                    val result = snackbarHostState.showSnackbar(
+//                        context.getString(R.string.audio_record_permission_rationale),
+//                        actionLabel = context.getString(R.string.settings), // TODO: string label
+//                        withDismissAction = false
+//                    )
+//                    when (result) {
+//                        SnackbarResult.Dismissed -> {}
+//                        SnackbarResult.ActionPerformed -> {
+//                            permission.launchPermissionRequest()
+//                        }
+//                    }
+//                }
+//            } else if (!permission.status.isGranted) {
+//                permission.launchPermissionRequest()
+//                for (reopen in reopenSnackbarChannel) {
+//                    launch {
+//                        val result = snackbarHostState.showSnackbar(
+//                            context.getString(R.string.audio_record_permission_rationale),
+//                            actionLabel = context.getString(R.string.settings), // TODO: string label
+//                            withDismissAction = false
+//                        )
+//                        when (result) {
+//                            SnackbarResult.Dismissed -> {}
+//                            SnackbarResult.ActionPerformed -> {
+//                                permission.launchPermissionRequest()
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+
 
         TunerScaffold(
             canNavigateUp = canNavigateUp,
@@ -70,12 +124,16 @@ fun NavGraphBuilder.mainGraph(
             },
             onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
             musicalScale = musicalScale,
-            notePrintOptions = notePrintOptions
+            notePrintOptions = notePrintOptions,
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState)
+            }
         ) {
             if (isScientificTuner) {
                 val viewModel: ScientificTunerViewModel = hiltViewModel()
-                LifecycleResumeEffect(Unit) {
-                    viewModel.startTuner()
+                LifecycleResumeEffect(permissionGranted) {
+                    if (permissionGranted)
+                        viewModel.startTuner()
                     onPauseOrDispose { viewModel.stopTuner() }
                 }
                 ScientificTuner(
@@ -86,8 +144,9 @@ fun NavGraphBuilder.mainGraph(
                 )
             } else {
                 val viewModel: InstrumentTunerViewModel = hiltViewModel()
-                LifecycleResumeEffect(Unit) {
-                    viewModel.startTuner()
+                LifecycleResumeEffect(permissionGranted) {
+                    if (permissionGranted)
+                        viewModel.startTuner()
                     onPauseOrDispose { viewModel.stopTuner() }
                 }
                 InstrumentTuner(
