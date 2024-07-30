@@ -1,12 +1,15 @@
 package de.moekadu.tuner
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -18,14 +21,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import de.moekadu.tuner.instruments.Instrument
+import de.moekadu.tuner.instruments.InstrumentIO
 import de.moekadu.tuner.instruments.InstrumentResources2
-import de.moekadu.tuner.navigation.PreferencesGraphRoute
+import de.moekadu.tuner.navigation.ImportInstrumentsDialogRoute
+import de.moekadu.tuner.navigation.InstrumentsRoute
 import de.moekadu.tuner.navigation.TunerRoute
 import de.moekadu.tuner.navigation.instrumentEditorGraph
 import de.moekadu.tuner.navigation.musicalScalePropertiesGraph
@@ -34,7 +37,10 @@ import de.moekadu.tuner.navigation.mainGraph
 import de.moekadu.tuner.preferences.NightMode
 import de.moekadu.tuner.preferences.PreferenceResources2
 import de.moekadu.tuner.ui.theme.TunerTheme
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -46,8 +52,14 @@ class MainActivity2 : ComponentActivity() {
     @Inject
     lateinit var instruments: InstrumentResources2
 
+    private val loadInstrumentIntentChannel = Channel<List<Instrument>>(Channel.CONFLATED)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+//        Log.v("Tuner", "MainActivity2.onCreate: savedInstanceState = $savedInstanceState")
+
+        if (savedInstanceState == null)
+            handleFileLoadingIntent(intent)
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -72,13 +84,25 @@ class MainActivity2 : ComponentActivity() {
                 blackNightMode = appearance.blackNightEnabled
             ) {
                 val controller = rememberNavController()
-                val backStack by controller.currentBackStackEntryAsState()
-                val inPreferencesGraph = backStack?.destination?.hierarchy?.any {
-                    it.hasRoute(PreferencesGraphRoute::class)
-                } == true
+                // TODO: preference screen does not show back button
+//                val backStack by controller.currentBackStackEntryAsState()
+//                val inPreferencesGraph = backStack?.destination?.hierarchy?.any {
+//                    it.hasRoute(PreferencesGraphRoute::class)
+//                } == true
                 val scope = rememberCoroutineScope()
 
                 var canNavigateUp by remember { mutableStateOf(false) }
+
+                LaunchedEffect(loadInstrumentIntentChannel, controller) {
+                    for (instruments in loadInstrumentIntentChannel) {
+                        Log.v("Tuner", "MainActivity2: Loading file ...")
+                        controller.popBackStack(TunerRoute, inclusive = false)
+                        controller.navigate(InstrumentsRoute)
+                        controller.navigate(ImportInstrumentsDialogRoute(
+                            Json.encodeToString(instruments.toTypedArray())
+                        ))
+                    }
+                }
 
                 DisposableEffect(controller) {
                     val listener = NavController.OnDestinationChangedListener { controller, _, _ ->
@@ -126,6 +150,24 @@ class MainActivity2 : ComponentActivity() {
                         scope = scope
                     )
                 }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        handleFileLoadingIntent(intent)
+        super.onNewIntent(intent)
+    }
+
+    private fun handleFileLoadingIntent(intent: Intent?) {
+//        Log.v("Tuner", "MainActivity2.onNewIntent: action=${intent?.action}")
+        val uri = intent?.data
+        if ((intent?.action == Intent.ACTION_SEND || intent?.action == Intent.ACTION_VIEW) && uri != null) {
+//            Log.v("Tuner", "MainActivity2.onNewIntent: intent=${intent.data}")
+            val (readState, instruments) = InstrumentIO.readInstrumentsFromFile(this, uri)
+            InstrumentIO.toastFileLoadingResult(this, readState, uri)
+            if (instruments.isNotEmpty()) {
+                loadInstrumentIntentChannel.trySend(instruments)
             }
         }
     }

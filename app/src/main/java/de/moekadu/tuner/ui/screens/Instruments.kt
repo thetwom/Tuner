@@ -278,26 +278,7 @@ fun Instruments(
     ) { uri ->
         if (uri != null) {
             val (readState, instruments) = InstrumentIO.readInstrumentsFromFile(context, uri)
-            when (readState) {
-                InstrumentIO.FileCheck.Empty -> {
-                    val filename = InstrumentIO.getFilenameFromUri(context, uri)
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.file_empty, filename),
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-                InstrumentIO.FileCheck.Invalid -> {
-                    val filename = InstrumentIO.getFilenameFromUri(context, uri)
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.file_invalid, filename),
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-                else -> {
-                }
-            }
+            InstrumentIO.toastFileLoadingResult(context, readState, uri)
             if (instruments.isNotEmpty()) {
                 onLoadInstruments(instruments)
                 state.clearSelectedInstruments()

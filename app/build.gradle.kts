@@ -71,6 +71,7 @@ dependencies {
     implementation (libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
 
+    implementation(libs.accompanist.permissions)
 
     ksp(libs.hilt.compiler)
 
