@@ -342,8 +342,20 @@ class TunerFragmentSimple : Fragment() {
         return view
     }
 
-    override fun onStart() {
-        super.onStart()
+//    override fun onStart() {
+//        super.onStart()
+//    }
+
+    override fun onResume() {
+        super.onResume()
+        activity?.let {
+            it.setTitle(R.string.app_name)
+            if (it is MainActivity) {
+                it.setStatusAndNavigationBarColors()
+                it.setPreferenceBarVisibilty(View.VISIBLE)
+            }
+        }
+
         when {
             ContextCompat.checkSelfPermission(
                 requireContext(), Manifest.permission.RECORD_AUDIO
@@ -360,19 +372,8 @@ class TunerFragmentSimple : Fragment() {
 //        viewModel.setInstrument(instrumentsViewModel.instrument.value?.instrument ?: instrumentDatabase[0])
     }
 
-    override fun onResume() {
-        super.onResume()
-        activity?.let {
-            it.setTitle(R.string.app_name)
-            if (it is MainActivity) {
-                it.setStatusAndNavigationBarColors()
-                it.setPreferenceBarVisibilty(View.VISIBLE)
-            }
-        }
-    }
-
-    override fun onStop() {
+    override fun onPause() {
         viewModel.stopSampling()
-        super.onStop()
+        super.onPause()
     }
 }

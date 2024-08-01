@@ -47,7 +47,7 @@ class SoundSource(
     /** Job which is generating sound. */
     private var sourceJob: Job? = null
 
-     /** Pool which allows to recyle the sample data. */
+     /** Pool which allows to recycle the sample data. */
     private var memoryPool: MemoryPoolSampleData
 
     /** Channel used to communicate the sound samples. */
@@ -63,6 +63,9 @@ class SoundSource(
             AudioFormat.CHANNEL_IN_MONO,
             AudioFormat.ENCODING_PCM_FLOAT
         )
+        if (minBufferSize == AudioRecord.ERROR_BAD_VALUE || minBufferSize == AudioRecord.ERROR) {
+            Log.v("Tuner", "SoundSource.init: Not able to obtain a suitable minimum buffer size")
+        }
         channelCapacity = computeRequiredChannelCapacity(minBufferSize / 4)
         memoryPool = MemoryPoolSampleData(2 * channelCapacity) // trial shows that single channel capacity does not very well recycle data in extreme cases, double channel capacity seems to work fine
         outputChannel = Channel(channelCapacity, BufferOverflow.SUSPEND)
@@ -80,6 +83,8 @@ class SoundSource(
                     )
                 else
                     null
+
+            Log.v("Tuner", "SoundSource: created audio record $record")
 
             if (record?.state == AudioRecord.STATE_UNINITIALIZED) {
                 Log.v(
@@ -143,6 +148,7 @@ class SoundSource(
                     }
                 }
                 record?.stop()
+                Log.v("Tuner", "SoundSource: releasing audio record $record")
                 record?.release()
             }
         }
