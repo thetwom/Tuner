@@ -46,7 +46,7 @@ private fun CoroutineScope.launchSnackbar(
 fun rememberTunerAudioPermission(snackbarHostState: SnackbarHostState): Boolean {
     val context = LocalContext.current
 
-    val reopenSnackbarChannel = Channel<Boolean>(Channel.CONFLATED)
+    val reopenSnackbarChannel = remember { Channel<Boolean>(Channel.CONFLATED) }
     val permission = rememberPermissionState(permission = Manifest.permission.RECORD_AUDIO) {
         if (!it)
             reopenSnackbarChannel.trySend(false)
@@ -55,7 +55,7 @@ fun rememberTunerAudioPermission(snackbarHostState: SnackbarHostState): Boolean 
 //    Log.v("Tuner", "MainGraph: 1: permissions_granted = ${permission.status.isGranted}, rational = ${permission.status.shouldShowRationale}")
 
     // TODO: relaunching ssems to fail ...
-    LaunchedEffect(permission.status) {
+    LaunchedEffect(permission.status, reopenSnackbarChannel) {
         if (!permission.status.isGranted) {
             if (permission.status.shouldShowRationale)
                 launchSnackbar(context, snackbarHostState, permission)

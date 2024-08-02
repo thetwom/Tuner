@@ -51,9 +51,16 @@ class InstrumentResources2 @Inject constructor(
 //        store.writeSerializablePreference(CUSTOM_INSTRUMENTS_KEY, ImmutableListWrapper(instruments))
 //    }
     suspend fun writeCustomInstruments(instruments: List<Instrument>) {
+        // if current instrument did change, update this also
+        val currentInstrumentId = currentInstrument.value.stableId
+        val modifiedCurrentInstrument = instruments.firstOrNull {
+            it.stableId == currentInstrumentId
+        }
+        if (modifiedCurrentInstrument != null)
+            writeCurrentInstrument(modifiedCurrentInstrument)
+
         store.writeSerializablePreference(CUSTOM_INSTRUMENTS_KEY, instruments.toTypedArray())
     }
-
 
     val customInstrumentsExpanded = store.getPreferenceFlow(
         CUSTOM_INSTRUMENTS_EXPANDED_KEY, CustomInstrumentExpandedDefault
