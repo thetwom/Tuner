@@ -47,7 +47,7 @@ class SoundSource(
     /** Job which is generating sound. */
     private var sourceJob: Job? = null
 
-     /** Pool which allows to recyle the sample data. */
+     /** Pool which allows to recycle the sample data. */
     private var memoryPool: MemoryPoolSampleData
 
     /** Channel used to communicate the sound samples. */
