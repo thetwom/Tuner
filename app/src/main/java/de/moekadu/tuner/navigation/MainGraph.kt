@@ -29,6 +29,7 @@ import de.moekadu.tuner.ui.misc.rememberTunerAudioPermission
 import de.moekadu.tuner.ui.screens.InstrumentTuner
 import de.moekadu.tuner.ui.screens.Instruments
 import de.moekadu.tuner.ui.screens.ScientificTuner
+import de.moekadu.tuner.ui.screens.Tuner
 import de.moekadu.tuner.viewmodels.InstrumentTunerViewModel
 import de.moekadu.tuner.viewmodels.InstrumentViewModel2
 import de.moekadu.tuner.viewmodels.ScientificTunerViewModel
@@ -52,114 +53,85 @@ fun NavGraphBuilder.mainGraph(
         val isScientificTuner by preferences.scientificMode.collectAsStateWithLifecycle()
         val musicalScale by preferences.musicalScale.collectAsStateWithLifecycle()
         val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
-//        val context = LocalContext.current
-        //Log.v("Tuner", "TunerGraph: isScientificMode = $isScientificTuner")
-        val snackbarHostState = remember { SnackbarHostState() }
-        val permissionGranted = rememberTunerAudioPermission(snackbarHostState)
+        val waveWriterDuration by preferences.waveWriterDurationInSeconds.collectAsStateWithLifecycle()
 
-//        val reopenSnackbarChannel = Channel<Boolean>(Channel.CONFLATED)
-//        val permission = rememberPermissionState(permission = Manifest.permission.RECORD_AUDIO) {
-//            if (!it)
-//                reopenSnackbarChannel.trySend(false)
-//        }
-//        Log.v("Tuner", "MainGraph: 1: permissions_granted = ${permission.status.isGranted}, rational = ${permission.status.shouldShowRationale}")
-////            if (!permission.status.isGranted && permission.status.shouldShowRationale)
-////                Column {
-////                    Text(stringResource(id = R.string.audio_record_permission_rationale))
-////                    Button(onClick = { cameraPermissionState.launchPermissionRequest() }) {
-////                        Text("Request permission")
-////                    }
-////                }
-//
-//        LaunchedEffect(permission.status) {
-//            Log.v("Tuner", "MainGraph: permissions_granted = ${permission.status.isGranted}, rational = ${permission.status.shouldShowRationale}")
-//            if (!permission.status.isGranted && permission.status.shouldShowRationale) {// TODO: show rationale if requested
-//                launch {
-//                    val result = snackbarHostState.showSnackbar(
-//                        context.getString(R.string.audio_record_permission_rationale),
-//                        actionLabel = context.getString(R.string.settings), // TODO: string label
-//                        withDismissAction = false
-//                    )
-//                    when (result) {
-//                        SnackbarResult.Dismissed -> {}
-//                        SnackbarResult.ActionPerformed -> {
-//                            permission.launchPermissionRequest()
-//                        }
-//                    }
-//                }
-//            } else if (!permission.status.isGranted) {
-//                permission.launchPermissionRequest()
-//                for (reopen in reopenSnackbarChannel) {
-//                    launch {
-//                        val result = snackbarHostState.showSnackbar(
-//                            context.getString(R.string.audio_record_permission_rationale),
-//                            actionLabel = context.getString(R.string.settings), // TODO: string label
-//                            withDismissAction = false
-//                        )
-//                        when (result) {
-//                            SnackbarResult.Dismissed -> {}
-//                            SnackbarResult.ActionPerformed -> {
-//                                permission.launchPermissionRequest()
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-
-
-        TunerScaffold(
+        Tuner(
+            isScientificTuner = isScientificTuner,
+            musicalScale = musicalScale,
+            notePrintOptions = notePrintOptions,
             canNavigateUp = canNavigateUp,
             onNavigateUpClicked = onNavigateUpClicked,
-            showPreferenceButton = true,
             onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
-            showBottomBar = true,
             onSharpFlatClicked = { scope.launch { preferences.switchSharpFlatPreference() } },
-            onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
+            onReferenceNoteClicked = {
                 controller.navigate(
+                    // provided by musicalScalePropertiesGraph
                     ReferenceFrequencyDialogRoute.create(
                         preferences.musicalScale.value, null
                     )
                 )
             },
             onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
-            musicalScale = musicalScale,
-            notePrintOptions = notePrintOptions,
-            snackbarHost = {
-                SnackbarHost(hostState = snackbarHostState)
-            }
-        ) {
-            if (isScientificTuner) {
-                val viewModel: ScientificTunerViewModel = hiltViewModel()
-                LifecycleResumeEffect(permissionGranted) {
-                    if (permissionGranted)
-                        viewModel.startTuner()
-                    onPauseOrDispose { viewModel.stopTuner() }
-                }
-                ScientificTuner(
-                    data = viewModel,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues = it)
-                )
-            } else {
-                val viewModel: InstrumentTunerViewModel = hiltViewModel()
-                LifecycleResumeEffect(permissionGranted) {
-                    if (permissionGranted)
-                        viewModel.startTuner()
-                    onPauseOrDispose { viewModel.stopTuner() }
-                }
-                InstrumentTuner(
-                    data = viewModel,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues = it),
-                    onInstrumentButtonClicked = {
-                        controller.navigate(InstrumentsRoute)
-                    }
-                )
-            }
-        }
+            onInstrumentButtonClicked = { controller.navigate(InstrumentsRoute) },
+            waveWriterDuration = waveWriterDuration
+        )
+////        val context = LocalContext.current
+//        //Log.v("Tuner", "TunerGraph: isScientificMode = $isScientificTuner")
+//        val snackbarHostState = remember { SnackbarHostState() }
+//        val permissionGranted = rememberTunerAudioPermission(snackbarHostState)
+//
+//        TunerScaffold(
+//            canNavigateUp = canNavigateUp,
+//            onNavigateUpClicked = onNavigateUpClicked,
+//            showPreferenceButton = true,
+//            onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
+//            showBottomBar = true,
+//            onSharpFlatClicked = { scope.launch { preferences.switchSharpFlatPreference() } },
+//            onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
+//                controller.navigate(
+//                    ReferenceFrequencyDialogRoute.create(
+//                        preferences.musicalScale.value, null
+//                    )
+//                )
+//            },
+//            onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
+//            musicalScale = musicalScale,
+//            notePrintOptions = notePrintOptions,
+//            snackbarHost = {
+//                SnackbarHost(hostState = snackbarHostState)
+//            }
+//        ) {
+//            if (isScientificTuner) {
+//                val viewModel: ScientificTunerViewModel = hiltViewModel()
+//                LifecycleResumeEffect(permissionGranted) {
+//                    if (permissionGranted)
+//                        viewModel.startTuner()
+//                    onPauseOrDispose { viewModel.stopTuner() }
+//                }
+//                ScientificTuner(
+//                    data = viewModel,
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .padding(paddingValues = it)
+//                )
+//            } else {
+//                val viewModel: InstrumentTunerViewModel = hiltViewModel()
+//                LifecycleResumeEffect(permissionGranted) {
+//                    if (permissionGranted)
+//                        viewModel.startTuner()
+//                    onPauseOrDispose { viewModel.stopTuner() }
+//                }
+//                InstrumentTuner(
+//                    data = viewModel,
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .padding(paddingValues = it),
+//                    onInstrumentButtonClicked = {
+//                        controller.navigate(InstrumentsRoute)
+//                    }
+//                )
+//            }
+//        }
     }
 
     composable<InstrumentsRoute> {

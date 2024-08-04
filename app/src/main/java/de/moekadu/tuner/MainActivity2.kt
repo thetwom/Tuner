@@ -92,6 +92,7 @@ class MainActivity2 : ComponentActivity() {
                 val scope = rememberCoroutineScope()
 
                 var canNavigateUp by remember { mutableStateOf(false) }
+                Log.v("Tuner", "MainActivity2: canNavigateUp: $canNavigateUp")
 
                 LaunchedEffect(loadInstrumentIntentChannel, controller) {
                     for (instruments in loadInstrumentIntentChannel) {
@@ -107,6 +108,7 @@ class MainActivity2 : ComponentActivity() {
                 DisposableEffect(controller) {
                     val listener = NavController.OnDestinationChangedListener { controller, _, _ ->
                         canNavigateUp = controller.previousBackStackEntry != null
+                        Log.v("Tuner", "MainActivity2: destination changed: backstack: ${controller.previousBackStackEntry}, canNavigateUp: $canNavigateUp")
                     }
                     controller.addOnDestinationChangedListener(listener)
                     onDispose {

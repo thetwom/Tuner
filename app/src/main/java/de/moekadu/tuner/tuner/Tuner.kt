@@ -1,5 +1,7 @@
 package de.moekadu.tuner.tuner
 
+import android.content.Context
+import android.net.Uri
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.misc.MemoryPool
@@ -15,17 +17,20 @@ import de.moekadu.tuner.preferences.PreferenceResources2
 import de.moekadu.tuner.temperaments.MusicalNote
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -40,20 +45,21 @@ class Tuner(
         fun onFrequencyEvaluated(result: FrequencyEvaluationResult)
     }
 
-    /** Writer class which allows dumping recorded data into wav-files. */
-    val waveWriter = WaveWriter() // TODO: instantiate this only if enabled?
-
     private val _userDefinedTargetNote = MutableStateFlow<MusicalNote?>(null)
     private val userDefinedTargetNote = _userDefinedTargetNote.asStateFlow()
 
     private sealed class Command {
-        data class Reconnect(val scope: CoroutineScope, val listener: OnResultAvailableListener) : Command()
+        data class Reconnect(
+            val scope: CoroutineScope, val listener: OnResultAvailableListener
+        ) : Command()
         data object Disconnect : Command()
         data object ChangePreferences : Command()
     }
 
     private val channel = Channel<Command>(Channel.CONFLATED)
     private val restartChannel = Channel<Command>(Channel.CONFLATED)
+
+    private val waveWriter = WaveWriter()
 
     init {
         scope.launch {
@@ -86,25 +92,37 @@ class Tuner(
         scope.launch {
             pref.musicalScale.collect { restartChannel.trySend(Command.ChangePreferences) }
         }
+        scope.launch {
+            pref.waveWriterDurationInSeconds.collect { restartChannel.trySend(Command.ChangePreferences) }
+        }
 
         scope.launch {
-            var job: Job? = null
+//            var job: Job? = null
             var reconnect: Command.Reconnect? = null
-            merge(channel.consumeAsFlow(), restartChannel.consumeAsFlow()).collect { v ->
-                job?.cancelAndJoin()
-                job = when (v) {
-                    is Command.Reconnect -> {
-                        reconnect = v
-                        v.scope.launch { run(v.listener) }
+            merge(channel.consumeAsFlow(), restartChannel.consumeAsFlow())
+                .map { v ->
+                    when (v) {
+                        is Command.Reconnect -> {
+                            reconnect = v
+                        }
+                        is Command.Disconnect -> {
+                            reconnect = null
+                        }
+                        else -> {}
                     }
-                    is Command.Disconnect -> {
-                        reconnect = null
-                        null
-                    }
-                    is Command.ChangePreferences -> {
-                        reconnect?.let { it.scope.launch { run(it.listener) } }
-                    }
+                    reconnect
                 }
+                .buffer(1, BufferOverflow.DROP_OLDEST)
+                .collectLatest { v ->
+                    // Log.v("Tuner", "Tuner: buffer before delay")
+                    // sometimes, several settings are changed at the same time,
+                    // which would lead to many tuner restarts in a very short time.
+                    // the small delay avoid these restarts.
+                    delay(50)
+                    // Log.v("Tuner", "Tuner: buffer after delay $v, $reconnect, $isActive")
+                    if (isActive && v != null)
+                        run(v.listener)
+                    // Log.v("Tuner", "Tuner: after 'if run'")
             }
         }
     }
@@ -121,8 +139,11 @@ class Tuner(
         restartChannel.trySend(Command.ChangePreferences)
     }
 
-    private suspend fun run(onResultAvailableListener: OnResultAvailableListener)
-            = coroutineScope {
+    private suspend fun run(
+        onResultAvailableListener: OnResultAvailableListener
+    ) = coroutineScope {
+//        Log.v("Tuner", "Tuner: start running again ...")
+        waveWriter.setBufferSize(pref.sampleRate * pref.waveWriterDurationInSeconds.value)
 
         val frequencyDetectionResultsChannel =
             Channel<MemoryPool<FrequencyDetectionCollectedResults>.RefCountedMemory>(
@@ -136,7 +157,7 @@ class Tuner(
             windowSize = pref.windowSize.value,
             sampleRate = pref.sampleRate,
             testFunction = testFunction,
-            waveWriter = waveWriter
+            waveWriter = if (pref.waveWriterDurationInSeconds.value > 0) waveWriter else null
         )
 
         launch(Dispatchers.Default) {
@@ -189,5 +210,13 @@ class Tuner(
                     onResultAvailableListener.onFrequencyEvaluated(it)
                 }
         }
+    }
+
+    suspend fun storeCurrentWaveWriterSnapshot() {
+        waveWriter.storeSnapshot()
+    }
+
+    suspend fun writeStoredWaveWriterSnapshot(context: Context, uri: Uri, sampleRate: Int) {
+        waveWriter.writeStoredSnapshot(context, uri, sampleRate)
     }
 }
