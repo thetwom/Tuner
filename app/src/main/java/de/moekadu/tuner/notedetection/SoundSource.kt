@@ -23,6 +23,7 @@ import android.annotation.SuppressLint
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.media.MediaRecorder.AudioSource
 import android.util.Log
 import de.moekadu.tuner.misc.MemoryPool
 import de.moekadu.tuner.misc.WaveWriter
@@ -71,6 +72,8 @@ class SoundSource(
         outputChannel = Channel(channelCapacity, BufferOverflow.SUSPEND)
 //        Log.v("Tuner", "SoundSource.init: output channel capacity = $channelCapacity")
         sourceJob = scope.launch {
+            checkAudioRecords()
+
 
             val record =
                 if (testFunction == null)
@@ -165,5 +168,53 @@ class SoundSource(
         // multiply by 2, to allow writing to the output channel within one iteration
         // without loosing data and additionally have enough capacity to store a second cycle
         return max(2, 2 * audioRecordBufferSizeInFrames / updateRateInFrames)
+    }
+}
+
+@SuppressLint("MissingPermission")
+private fun checkAudioRecords() {
+    listOf(48000, 44100, 22050, 16000, 11025, 8000).forEach { sampleRate ->
+        listOf("mic", "default").forEach { source ->
+            val sourceVal = when (source) {
+                "mic" -> AudioSource.MIC
+                else -> AudioSource.DEFAULT
+            }
+
+            listOf("8bit", "16bit", "float").forEach { encoding ->
+                val encodingVal = when(encoding) {
+                    "8bit" -> AudioFormat.ENCODING_PCM_8BIT
+                    "16bit" -> AudioFormat.ENCODING_PCM_16BIT
+                    "float" -> AudioFormat.ENCODING_PCM_FLOAT
+                    else -> AudioFormat.ENCODING_PCM_16BIT
+                }
+                Log.v("Tuner", "SoundSource.check: sampleRate=$sampleRate, encoding=$encoding, source=$source")
+                val minBufferSize = AudioRecord.getMinBufferSize(
+                    sampleRate,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    encodingVal
+                )
+                if (minBufferSize == AudioRecord.ERROR_BAD_VALUE || minBufferSize == AudioRecord.ERROR) {
+                    Log.v("Tuner", "SoundSource.check: Not able to obtain a suitable minimum buffer size")
+                }
+                Log.v("Tuner", "SoundSource.check: Min buffer size = $minBufferSize")
+
+                val record = AudioRecord(
+                    sourceVal,
+                    sampleRate,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    encodingVal,
+                    minBufferSize
+                )
+                if (record.state == AudioRecord.STATE_UNINITIALIZED) {
+                    Log.v(
+                        "Tuner",
+                        "SoundSource.check: Not able to acquire audio resource"
+                    )
+                } else {
+                    Log.v("Tuner", "SoundSource.check: succeeded in creating audio record")
+                }
+                record.release()
+            }
+        }
     }
 }
