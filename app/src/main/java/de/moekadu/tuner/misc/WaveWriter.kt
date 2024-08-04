@@ -119,7 +119,7 @@ class WaveWriter {
         }
     }
 
-    /** Store current buffer, such that it can be written to wqve later on. */
+    /** Store current buffer, such that it can be written to wave later on. */
     suspend fun storeSnapshot() {
         mutex.withLock {
             val bufferLocal = buffer

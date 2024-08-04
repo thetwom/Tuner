@@ -1,5 +1,7 @@
 package de.moekadu.tuner.viewmodels
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -127,6 +129,14 @@ class ScientificTunerViewModel @Inject constructor (
     }
     fun stopTuner() {
         tuner.disconnect()
+    }
+
+    suspend fun storeCurrentWaveWriterSnapshot() {
+        tuner.storeCurrentWaveWriterSnapshot()
+    }
+
+    suspend fun writeStoredWaveWriterSnapshot(context: Context, uri: Uri, sampleRate: Int) {
+        tuner.writeStoredWaveWriterSnapshot(context, uri, sampleRate)
     }
 
     /** Compute number of samples to be stored in pitch history. */
