@@ -14,7 +14,7 @@ private enum class TestFunctionType {
     Random
 }
 
-private val testFunctionType = TestFunctionType.Linear
+private val testFunctionType = TestFunctionType.Off //TestFunctionType.Linear
 
 val testFunction: ((frame: Int, dt: Float) -> Float)?
     get() {

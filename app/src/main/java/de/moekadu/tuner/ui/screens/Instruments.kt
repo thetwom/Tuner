@@ -56,6 +56,7 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIO
 import de.moekadu.tuner.instruments.ShareInstruments
+import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
@@ -252,7 +253,7 @@ fun Instruments(
                 }
             }
             state.clearSelectedInstruments()
-            val filename = InstrumentIO.getFilenameFromUri(context, uri)
+            val filename = getFilenameFromUri(context, uri)
             Toast.makeText(
                 context,
                 context.resources.getQuantityString(

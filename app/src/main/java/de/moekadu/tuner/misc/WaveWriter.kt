@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.Channels
@@ -145,32 +146,36 @@ class WaveWriter {
 
     /** Store current buffer, such that it can be written to wave later on. */
     suspend fun storeSnapshot() {
-        mutex.withLock {
-            val bufferLocal = buffer
-            if (bufferLocal != null) {
-                val maxSize = bufferLocal.size
-                val inlineArray = FloatArray(numValues)
-                val bufferIndexBegin = ((insertPosition - numValues) % maxSize).toInt()
-                val numCopyPart1 = min(numValues, maxSize - bufferIndexBegin)
-                bufferLocal.copyInto(
-                    inlineArray,
-                    0,
-                    bufferIndexBegin,
-                    bufferIndexBegin + numCopyPart1
-                )
-                val numCopyPart2 = numValues - numCopyPart1
-                bufferLocal.copyInto(inlineArray, numCopyPart1, 0, numCopyPart2)
-                snapShot = inlineArray
-            } else {
-                snapShot = FloatArray(0)
+        withContext(Dispatchers.IO) {
+            mutex.withLock {
+                val bufferLocal = buffer
+                if (bufferLocal != null) {
+                    val maxSize = bufferLocal.size
+                    val inlineArray = FloatArray(numValues)
+                    val bufferIndexBegin = ((insertPosition - numValues) % maxSize).toInt()
+                    val numCopyPart1 = min(numValues, maxSize - bufferIndexBegin)
+                    bufferLocal.copyInto(
+                        inlineArray,
+                        0,
+                        bufferIndexBegin,
+                        bufferIndexBegin + numCopyPart1
+                    )
+                    val numCopyPart2 = numValues - numCopyPart1
+                    bufferLocal.copyInto(inlineArray, numCopyPart1, 0, numCopyPart2)
+                    snapShot = inlineArray
+                } else {
+                    snapShot = FloatArray(0)
+                }
             }
         }
     }
 
     suspend fun writeStoredSnapshot(context: Context?, uri: Uri?, sampleRate: Int) {
-        mutex.withLock {
-            snapShot?.let {
-                writeWave(context, uri, sampleRate, it)
+        withContext(Dispatchers.IO) {
+            mutex.withLock {
+                snapShot?.let {
+                    writeWave(context, uri, sampleRate, it)
+                }
             }
         }
     }

@@ -29,6 +29,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,6 +49,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
@@ -62,6 +66,8 @@ import de.moekadu.tuner.ui.instruments.Strings
 import de.moekadu.tuner.ui.instruments.StringsScrollMode
 import de.moekadu.tuner.ui.instruments.StringsSidebarPosition
 import de.moekadu.tuner.ui.instruments.StringsState
+import de.moekadu.tuner.ui.misc.TunerScaffold
+import de.moekadu.tuner.ui.misc.rememberTunerAudioPermission
 import de.moekadu.tuner.ui.notes.NoteLockedButton
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.asAnnotatedString
@@ -105,6 +111,9 @@ interface InstrumentTunerData {
 
     // others
     fun onClearFixedTargetClicked()
+
+    fun startTuner()
+    fun stopTuner()
 }
 
 private fun checkInstrumentCompatibility(
@@ -123,27 +132,61 @@ private fun checkInstrumentCompatibility(
 @Composable
 fun InstrumentTuner(
     data: InstrumentTunerData,
+    canNavigateUp: Boolean,
+    onNavigateUpClicked: () -> Unit,
+    onPreferenceButtonClicked: () -> Unit,
+    onSharpFlatClicked: () -> Unit,
+    onReferenceNoteClicked: () -> Unit,
+    onTemperamentClicked: () -> Unit,
+    onInstrumentButtonClicked: () -> Unit,
     modifier: Modifier = Modifier,
-    onInstrumentButtonClicked: () -> Unit = {},
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create()
 ) {
     val instrumentAsState by data.instrument.collectAsStateWithLifecycle()
     val isEmptyInstrument = !instrumentAsState.isChromatic && instrumentAsState.strings.isEmpty()
-    val configuration = LocalConfiguration.current
-    if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE && !isEmptyInstrument) {
-        InstrumentTunerLandscape(
-            data = data,
-            modifier = modifier,
-            onInstrumentButtonClicked = onInstrumentButtonClicked,
-            tunerPlotStyle = tunerPlotStyle
-        )
-    } else {
-        InstrumentTunerPortrait(
-            data = data,
-            modifier = modifier,
-            onInstrumentButtonClicked = onInstrumentButtonClicked,
-            tunerPlotStyle = tunerPlotStyle
-        )
+
+    val musicalScale by data.musicalScale.collectAsStateWithLifecycle()
+    val notePrintOptions by data.notePrintOptions.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val permissionGranted = rememberTunerAudioPermission(snackbarHostState)
+
+    LifecycleResumeEffect(permissionGranted) {
+        if (permissionGranted)
+            data.startTuner()
+        onPauseOrDispose { data.stopTuner() }
+    }
+    TunerScaffold(
+        canNavigateUp = canNavigateUp,
+        onNavigateUpClicked = onNavigateUpClicked,
+        showPreferenceButton = true,
+        onPreferenceButtonClicked = onPreferenceButtonClicked,
+        showBottomBar = true,
+        onSharpFlatClicked = onSharpFlatClicked,
+        onReferenceNoteClicked = onReferenceNoteClicked,
+        onTemperamentClicked = onTemperamentClicked,
+        musicalScale = musicalScale,
+        notePrintOptions = notePrintOptions,
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
+        modifier = modifier
+    ) { paddingValues ->
+        val configuration = LocalConfiguration.current
+        if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE && !isEmptyInstrument) {
+            InstrumentTunerLandscape(
+                data = data,
+                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                onInstrumentButtonClicked = onInstrumentButtonClicked,
+                tunerPlotStyle = tunerPlotStyle
+            )
+        } else {
+            InstrumentTunerPortrait(
+                data = data,
+                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                onInstrumentButtonClicked = onInstrumentButtonClicked,
+                tunerPlotStyle = tunerPlotStyle
+            )
+        }
     }
 }
 
@@ -533,6 +576,9 @@ class TestInstrumentTunerData : InstrumentTunerData {
     override fun onClearFixedTargetClicked() {
         selectedNoteKey = null
     }
+
+    override fun startTuner() {}
+    override fun stopTuner() {}
 }
 
 @Preview(widthDp = 300, heightDp = 600, showBackground = true)

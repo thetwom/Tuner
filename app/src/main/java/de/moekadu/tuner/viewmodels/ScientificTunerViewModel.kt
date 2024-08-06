@@ -9,6 +9,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.instruments.instrumentChromatic
@@ -27,14 +29,15 @@ import de.moekadu.tuner.ui.plot.LineCoordinates
 import de.moekadu.tuner.ui.plot.VerticalLinesPositions
 import de.moekadu.tuner.ui.screens.ScientificTunerData
 import de.moekadu.tuner.ui.tuning.PitchHistoryState
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ScientificTunerViewModel @Inject constructor (
-    val pref: PreferenceResources2
-//    val instruments: InstrumentResources // TODO: use instrumentResources2 and put into tuner only the current instrument
+    val pref: PreferenceResources2,
+    @ApplicationScope val applicationScope: CoroutineScope
 ) : ViewModel(), ScientificTunerData {
     private val tuner = Tuner(
         pref,
@@ -83,6 +86,7 @@ class ScientificTunerViewModel @Inject constructor (
 
     override val musicalScale: StateFlow<MusicalScale> get() = pref.musicalScale
     override val notePrintOptions: StateFlow<NotePrintOptions> get() = pref.notePrintOptions
+    override val sampleRate: Int get() = pref.sampleRate
     override val toleranceInCents: StateFlow<Int> get() = pref.toleranceInCents
 
     override var frequencyPlotData by mutableStateOf(LineCoordinates())
@@ -124,19 +128,26 @@ class ScientificTunerViewModel @Inject constructor (
             }
         }
     }
-    fun startTuner() {
+
+    override val waveWriterDuration: StateFlow<Int> get() = pref.waveWriterDurationInSeconds
+
+    override fun startTuner() {
         tuner.connect()
     }
-    fun stopTuner() {
+    override fun stopTuner() {
         tuner.disconnect()
     }
 
-    suspend fun storeCurrentWaveWriterSnapshot() {
-        tuner.storeCurrentWaveWriterSnapshot()
+    override fun storeCurrentWaveWriterSnapshot() {
+        applicationScope.launch {
+            tuner.storeCurrentWaveWriterSnapshot()
+        }
     }
 
-    suspend fun writeStoredWaveWriterSnapshot(context: Context, uri: Uri, sampleRate: Int) {
-        tuner.writeStoredWaveWriterSnapshot(context, uri, sampleRate)
+    override fun writeStoredWaveWriterSnapshot(context: Context, uri: Uri, sampleRate: Int) {
+        applicationScope.launch {
+            tuner.writeStoredWaveWriterSnapshot(context, uri, sampleRate)
+        }
     }
 
     /** Compute number of samples to be stored in pitch history. */

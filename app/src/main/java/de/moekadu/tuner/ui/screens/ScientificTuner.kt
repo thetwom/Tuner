@@ -1,6 +1,11 @@
 package de.moekadu.tuner.ui.screens
 
+import android.content.Context
 import android.content.res.Configuration
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
@@ -10,8 +15,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,15 +33,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
+import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.preferences.TemperamentAndReferenceNoteValue
 import de.moekadu.tuner.temperaments.BaseNote
@@ -41,6 +57,8 @@ import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.temperaments.NoteModifier
 import de.moekadu.tuner.temperaments.TemperamentType
 import de.moekadu.tuner.ui.misc.QuickSettingsBar
+import de.moekadu.tuner.ui.misc.TunerScaffold
+import de.moekadu.tuner.ui.misc.rememberTunerAudioPermission
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.rememberMaxNoteSize
 import de.moekadu.tuner.ui.plot.GestureBasedViewPort
@@ -52,14 +70,17 @@ import de.moekadu.tuner.ui.tuning.CorrelationPlot
 import de.moekadu.tuner.ui.tuning.FrequencyPlot
 import de.moekadu.tuner.ui.tuning.PitchHistory
 import de.moekadu.tuner.ui.tuning.PitchHistoryState
+import de.moekadu.tuner.viewmodels.ScientificTunerViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration
 
 interface ScientificTunerData {
     val musicalScale: StateFlow<MusicalScale>
     val notePrintOptions: StateFlow<NotePrintOptions>
     val toleranceInCents: StateFlow<Int>
+    val sampleRate: Int
 
     // Data specific to frequency plot
     val frequencyPlotData: LineCoordinates
@@ -80,29 +101,113 @@ interface ScientificTunerData {
     // Data shared over different plots
     val currentFrequency: Float?
     val targetNote: MusicalNote
+
+    // Others
+    val waveWriterDuration: StateFlow<Int>
+
+    fun startTuner()
+    fun stopTuner()
+
+    fun storeCurrentWaveWriterSnapshot()
+    fun writeStoredWaveWriterSnapshot(context: Context, uri: Uri, sampleRate: Int)
 }
 
 @Composable
 fun ScientificTuner(
     data: ScientificTunerData,
+    canNavigateUp: Boolean,
+    onNavigateUpClicked: () -> Unit,
+    onPreferenceButtonClicked: () -> Unit,
+    onSharpFlatClicked: () -> Unit,
+    onReferenceNoteClicked: () -> Unit,
+    onTemperamentClicked: () -> Unit,
     modifier: Modifier = Modifier,
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create()
 ) {
-    val configuration = LocalConfiguration.current
-    when (configuration.orientation) {
-        Configuration.ORIENTATION_LANDSCAPE -> {
-            ScientificTunerLandscape(
-                data = data,
-                modifier = modifier,
-                tunerPlotStyle = tunerPlotStyle
-            )
+    val scope = rememberCoroutineScope()
+    val musicalScale by data.musicalScale.collectAsStateWithLifecycle()
+    val notePrintOptions by data.notePrintOptions.collectAsStateWithLifecycle()
+    val waveWriterDuration by data.waveWriterDuration.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val permissionGranted = rememberTunerAudioPermission(snackbarHostState)
+    val context = LocalContext.current
+
+    val writeWaveLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("audio/wav")
+    ) { uri ->
+        if (uri != null) {
+            data.writeStoredWaveWriterSnapshot(context, uri, data.sampleRate)
+            val filename = getFilenameFromUri(context, uri)
+            Toast.makeText(
+                context, context.getString(R.string.writing_wave_file, filename), Toast.LENGTH_LONG
+            ).show()
+        } else {
+            Toast.makeText(
+                context, context.getString(R.string.failed_writing_wave_file), Toast.LENGTH_LONG
+            ).show()
         }
-        else -> {
-            ScientificTunerPortrait(
-                data = data,
-                modifier = modifier,
-                tunerPlotStyle = tunerPlotStyle
-            )
+    }
+
+    LifecycleResumeEffect(permissionGranted) {
+        if (permissionGranted)
+            data.startTuner()
+        onPauseOrDispose { data.stopTuner() }
+    }
+    TunerScaffold(
+        canNavigateUp = canNavigateUp,
+        onNavigateUpClicked = onNavigateUpClicked,
+        showPreferenceButton = true,
+        onPreferenceButtonClicked = onPreferenceButtonClicked,
+        showBottomBar = true,
+        onSharpFlatClicked = onSharpFlatClicked,
+        onReferenceNoteClicked = onReferenceNoteClicked,
+        onTemperamentClicked = onTemperamentClicked,
+        musicalScale = musicalScale,
+        notePrintOptions = notePrintOptions,
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
+        floatingActionButton = {
+            if (waveWriterDuration > 0) {
+                FloatingActionButton(
+                    onClick = {
+                        scope.launch {
+                            data.storeCurrentWaveWriterSnapshot()
+                            writeWaveLauncher.launch("tuner-export.wav")
+                        }
+                    }
+                ) {
+                    Icon(
+                        ImageVector.vectorResource(id = R.drawable.ic_mic),
+                        contentDescription = "record"
+                    )
+                }
+            }
+        },
+        floatingActionBarPosition = FabPosition.Start,
+        modifier = modifier
+    ) { paddingValues ->
+        val configuration = LocalConfiguration.current
+        when (configuration.orientation) {
+            Configuration.ORIENTATION_LANDSCAPE -> {
+                ScientificTunerLandscape(
+                    data = data,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    tunerPlotStyle = tunerPlotStyle
+                )
+            }
+
+            else -> {
+                ScientificTunerPortrait(
+                    data = data,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    tunerPlotStyle = tunerPlotStyle
+                )
+            }
         }
     }
 }
@@ -467,6 +572,9 @@ class TestScientificTunerData : ScientificTunerData {
 
     override val notePrintOptions: StateFlow<NotePrintOptions>
         = MutableStateFlow(NotePrintOptions())
+
+    override val sampleRate = 44100
+
     override val toleranceInCents: StateFlow<Int>
         = MutableStateFlow(10)
     override val frequencyPlotData =LineCoordinates.create(
@@ -510,6 +618,14 @@ class TestScientificTunerData : ScientificTunerData {
             by mutableStateOf(412f)
     override var targetNote: MusicalNote
             by mutableStateOf(musicalScale.value.referenceNote)
+
+    override val waveWriterDuration = MutableStateFlow(1)
+
+    override fun startTuner() {}
+    override fun stopTuner() {}
+
+    override fun storeCurrentWaveWriterSnapshot() {}
+    override fun writeStoredWaveWriterSnapshot(context: Context, uri: Uri, sampleRate: Int) {}
 }
 
 @Preview(widthDp = 300, heightDp = 600, showBackground = true)
