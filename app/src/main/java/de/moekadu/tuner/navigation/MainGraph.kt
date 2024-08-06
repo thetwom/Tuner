@@ -1,16 +1,13 @@
 package de.moekadu.tuner.navigation
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -24,12 +21,9 @@ import de.moekadu.tuner.instruments.InstrumentResources2
 import de.moekadu.tuner.instruments.instrumentIcons
 import de.moekadu.tuner.preferences.PreferenceResources2
 import de.moekadu.tuner.ui.instruments.ImportInstrumentsDialog
-import de.moekadu.tuner.ui.misc.TunerScaffold
-import de.moekadu.tuner.ui.misc.rememberTunerAudioPermission
 import de.moekadu.tuner.ui.screens.InstrumentTuner
 import de.moekadu.tuner.ui.screens.Instruments
 import de.moekadu.tuner.ui.screens.ScientificTuner
-import de.moekadu.tuner.ui.screens.Tuner
 import de.moekadu.tuner.viewmodels.InstrumentTunerViewModel
 import de.moekadu.tuner.viewmodels.InstrumentViewModel2
 import de.moekadu.tuner.viewmodels.ScientificTunerViewModel
@@ -51,87 +45,45 @@ fun NavGraphBuilder.mainGraph(
 ) {
     composable<TunerRoute> {
         val isScientificTuner by preferences.scientificMode.collectAsStateWithLifecycle()
-        val musicalScale by preferences.musicalScale.collectAsStateWithLifecycle()
-        val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
-        val waveWriterDuration by preferences.waveWriterDurationInSeconds.collectAsStateWithLifecycle()
-
-        Tuner(
-            isScientificTuner = isScientificTuner,
-            musicalScale = musicalScale,
-            notePrintOptions = notePrintOptions,
-            canNavigateUp = canNavigateUp,
-            onNavigateUpClicked = onNavigateUpClicked,
-            onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
-            onSharpFlatClicked = { scope.launch { preferences.switchSharpFlatPreference() } },
-            onReferenceNoteClicked = {
-                controller.navigate(
-                    // provided by musicalScalePropertiesGraph
-                    ReferenceFrequencyDialogRoute.create(
-                        preferences.musicalScale.value, null
+        Log.v("Tuner", "MainGraph : isScientificTuner = $isScientificTuner")
+        if (isScientificTuner) {
+            val viewModel: ScientificTunerViewModel = hiltViewModel()
+            ScientificTuner(
+                data = viewModel,
+                canNavigateUp = canNavigateUp,
+                onNavigateUpClicked = onNavigateUpClicked,
+                onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
+                onSharpFlatClicked = { scope.launch { preferences.switchSharpFlatPreference() } },
+                onReferenceNoteClicked = {
+                    controller.navigate(
+                        // provided by musicalScalePropertiesGraph
+                        ReferenceFrequencyDialogRoute.create(
+                            preferences.musicalScale.value, null
+                        )
                     )
-                )
-            },
-            onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
-            onInstrumentButtonClicked = { controller.navigate(InstrumentsRoute) },
-            waveWriterDuration = waveWriterDuration
-        )
-////        val context = LocalContext.current
-//        //Log.v("Tuner", "TunerGraph: isScientificMode = $isScientificTuner")
-//        val snackbarHostState = remember { SnackbarHostState() }
-//        val permissionGranted = rememberTunerAudioPermission(snackbarHostState)
-//
-//        TunerScaffold(
-//            canNavigateUp = canNavigateUp,
-//            onNavigateUpClicked = onNavigateUpClicked,
-//            showPreferenceButton = true,
-//            onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
-//            showBottomBar = true,
-//            onSharpFlatClicked = { scope.launch { preferences.switchSharpFlatPreference() } },
-//            onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
-//                controller.navigate(
-//                    ReferenceFrequencyDialogRoute.create(
-//                        preferences.musicalScale.value, null
-//                    )
-//                )
-//            },
-//            onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
-//            musicalScale = musicalScale,
-//            notePrintOptions = notePrintOptions,
-//            snackbarHost = {
-//                SnackbarHost(hostState = snackbarHostState)
-//            }
-//        ) {
-//            if (isScientificTuner) {
-//                val viewModel: ScientificTunerViewModel = hiltViewModel()
-//                LifecycleResumeEffect(permissionGranted) {
-//                    if (permissionGranted)
-//                        viewModel.startTuner()
-//                    onPauseOrDispose { viewModel.stopTuner() }
-//                }
-//                ScientificTuner(
-//                    data = viewModel,
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .padding(paddingValues = it)
-//                )
-//            } else {
-//                val viewModel: InstrumentTunerViewModel = hiltViewModel()
-//                LifecycleResumeEffect(permissionGranted) {
-//                    if (permissionGranted)
-//                        viewModel.startTuner()
-//                    onPauseOrDispose { viewModel.stopTuner() }
-//                }
-//                InstrumentTuner(
-//                    data = viewModel,
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .padding(paddingValues = it),
-//                    onInstrumentButtonClicked = {
-//                        controller.navigate(InstrumentsRoute)
-//                    }
-//                )
-//            }
-//        }
+                },
+                onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) }
+            )
+        } else {
+            val viewModel: InstrumentTunerViewModel = hiltViewModel()
+            InstrumentTuner(
+                canNavigateUp = canNavigateUp,
+                onNavigateUpClicked = onNavigateUpClicked,
+                onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
+                onSharpFlatClicked = { scope.launch { preferences.switchSharpFlatPreference() } },
+                onReferenceNoteClicked = {
+                    controller.navigate(
+                        // provided by musicalScalePropertiesGraph
+                        ReferenceFrequencyDialogRoute.create(
+                            preferences.musicalScale.value, null
+                        )
+                    )
+                },
+                onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
+                onInstrumentButtonClicked = { controller.navigate(InstrumentsRoute) },
+                data = viewModel
+            )
+        }
     }
 
     composable<InstrumentsRoute> {

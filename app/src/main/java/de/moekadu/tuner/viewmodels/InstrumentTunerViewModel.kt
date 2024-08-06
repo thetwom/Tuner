@@ -133,10 +133,10 @@ class InstrumentTunerViewModel @Inject constructor (
             }
         }
     }
-    fun startTuner() {
+    override fun startTuner() {
         tuner.connect()
     }
-    fun stopTuner() {
+    override fun stopTuner() {
         tuner.disconnect()
     }
 

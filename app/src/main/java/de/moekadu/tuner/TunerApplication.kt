@@ -9,6 +9,7 @@ import dagger.hilt.android.HiltAndroidApp
 import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.preferences.PreferenceResources
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.SupervisorJob
 
 val Context.preferenceResources: PreferenceResources
     get() = (applicationContext as TunerApplication).preferenceResources

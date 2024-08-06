@@ -8,6 +8,7 @@ import androidx.core.content.FileProvider
 import androidx.core.database.getStringOrNull
 import de.moekadu.tuner.BuildConfig
 import de.moekadu.tuner.R
+import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.legacyNoteIndexToNote
 import kotlinx.collections.immutable.ImmutableList
@@ -163,18 +164,6 @@ object InstrumentIO {
         if (version == null && numInstrumentsRead == 0)
             return InstrumentsAndFileCheckResult(FileCheck.Invalid, instruments)
         return InstrumentsAndFileCheckResult(FileCheck.Ok, instruments)
-    }
-
-    fun getFilenameFromUri(context: Context, uri: Uri): String? {
-        var filename: String? = null
-        context.contentResolver?.query(
-            uri, null, null, null, null)?.use { cursor ->
-            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            cursor.moveToFirst()
-            filename = cursor.getStringOrNull(nameIndex)
-            cursor.close()
-        }
-        return filename
     }
 
     private val keywords = arrayOf("Version=", "Instrument", "Length of name=", "Name=", "Icon=", "String indices=", "Strings=")

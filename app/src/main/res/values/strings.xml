@@ -301,4 +301,6 @@
     <string name="delete_instruments">Delete instruments</string>
     <string name="database_empty_share">There are no instruments to share.</string>
     <string name="audio_record_permission_rationale">Grant microphone access to start tuning.</string>
+    <string name="writing_wave_file">Writing wave file: %s</string>
+    <string name="failed_writing_wave_file">Did not write wave file.</string>
 </resources>
