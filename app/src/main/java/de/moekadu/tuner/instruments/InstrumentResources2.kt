@@ -4,12 +4,15 @@ import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dagger.hilt.android.qualifiers.ApplicationContext
+import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.misc.ResourcesDataStoreBase
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
@@ -18,7 +21,8 @@ import kotlin.random.Random
 
 @Singleton
 class InstrumentResources2 @Inject constructor(
-    @ApplicationContext context: Context
+    @ApplicationContext context: Context,
+    @ApplicationScope val applicationScope: CoroutineScope
 ) {
     val store = ResourcesDataStoreBase(context, "instruments")
 
@@ -27,8 +31,10 @@ class InstrumentResources2 @Inject constructor(
     val currentInstrument = store.getSerializablePreferenceFlow(
         CURRENT_INSTRUMENT_KEY, predefinedInstruments[0]
     )
-    suspend fun writeCurrentInstrument(instrument: Instrument) {
-        store.writeSerializablePreference(CURRENT_INSTRUMENT_KEY, instrument)
+    fun writeCurrentInstrument(instrument: Instrument) {
+        applicationScope.launch {
+            store.writeSerializablePreference(CURRENT_INSTRUMENT_KEY, instrument)
+        }
     }
 
     // Reading custom instruments is currently a bit difficult, since serialization
@@ -50,7 +56,7 @@ class InstrumentResources2 @Inject constructor(
 //    suspend fun writeCustomInstruments(instruments: ImmutableList<Instrument>) {
 //        store.writeSerializablePreference(CUSTOM_INSTRUMENTS_KEY, ImmutableListWrapper(instruments))
 //    }
-    suspend fun writeCustomInstruments(instruments: List<Instrument>) {
+    fun writeCustomInstruments(instruments: List<Instrument>) {
         // if current instrument did change, update this also
         val currentInstrumentId = currentInstrument.value.stableId
         val modifiedCurrentInstrument = instruments.firstOrNull {
@@ -58,26 +64,31 @@ class InstrumentResources2 @Inject constructor(
         }
         if (modifiedCurrentInstrument != null)
             writeCurrentInstrument(modifiedCurrentInstrument)
-
-        store.writeSerializablePreference(CUSTOM_INSTRUMENTS_KEY, instruments.toTypedArray())
+        applicationScope.launch {
+            store.writeSerializablePreference(CUSTOM_INSTRUMENTS_KEY, instruments.toTypedArray())
+        }
     }
 
     val customInstrumentsExpanded = store.getPreferenceFlow(
         CUSTOM_INSTRUMENTS_EXPANDED_KEY, CustomInstrumentExpandedDefault
     )
-    suspend fun writeCustomInstrumentsExpanded(expanded: Boolean) {
-        store.writePreference(CUSTOM_INSTRUMENTS_EXPANDED_KEY, expanded)
+    fun writeCustomInstrumentsExpanded(expanded: Boolean) {
+        applicationScope.launch {
+            store.writePreference(CUSTOM_INSTRUMENTS_EXPANDED_KEY, expanded)
+        }
     }
 
     val predefinedInstrumentsExpanded = store.getPreferenceFlow(
         PREDEFINED_INSTRUMENTS_EXPANDED_KEY, PredefinedInstrumentExpandedDefault
     )
-    suspend fun writePredefinedInstrumentsExpanded(expanded: Boolean) {
-        store.writePreference(PREDEFINED_INSTRUMENTS_EXPANDED_KEY, expanded)
+    fun writePredefinedInstrumentsExpanded(expanded: Boolean) {
+        applicationScope.launch {
+            store.writePreference(PREDEFINED_INSTRUMENTS_EXPANDED_KEY, expanded)
+        }
     }
 
     /** Add instrument if stable id does not exist, else replace it.*/
-    suspend fun addNewOrReplaceInstrument(instrument: Instrument) {
+    fun addNewOrReplaceInstrument(instrument: Instrument) {
         val newInstrument = if (instrument.stableId == Instrument.NO_STABLE_ID)
             instrument.copy(stableId = getNewStableId())
         else
@@ -94,7 +105,7 @@ class InstrumentResources2 @Inject constructor(
         writeCustomInstruments(newInstruments)
     }
 
-    suspend fun appendInstruments(instruments: List<Instrument>) {
+    fun appendInstruments(instruments: List<Instrument>) {
         val current = this.customInstruments.value
         val newInstrumentList = current.mutate { modified ->
             instruments.forEach {
@@ -105,7 +116,7 @@ class InstrumentResources2 @Inject constructor(
         writeCustomInstruments(newInstrumentList)
     }
 
-    suspend fun prependInstruments(instruments: List<Instrument>) {
+    fun prependInstruments(instruments: List<Instrument>) {
         val current = this.customInstruments.value
         val newInstrumentList = current.mutate { modified ->
             instruments.forEachIndexed { index, instrument ->
@@ -116,7 +127,7 @@ class InstrumentResources2 @Inject constructor(
         writeCustomInstruments(newInstrumentList)
     }
 
-    suspend fun replaceInstruments(instruments: List<Instrument>) {
+    fun replaceInstruments(instruments: List<Instrument>) {
         var key = 0L
         val currentKey = currentInstrument.value.stableId
         val newInstrumentList = instruments.map {

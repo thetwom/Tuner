@@ -14,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
@@ -23,7 +22,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.preferences.NightMode
-import de.moekadu.tuner.preferences.PreferenceResources2
 import de.moekadu.tuner.temperaments.getTuningNameResourceId
 import de.moekadu.tuner.ui.misc.rememberNumberFormatter
 import de.moekadu.tuner.ui.notes.NotePrintOptions
@@ -60,7 +58,6 @@ fun Preferences(
 ) {
     val pref = viewModel.pref
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     val notePrintOptions by pref.notePrintOptions.collectAsStateWithLifecycle()
     val musicalScale by pref.musicalScale.collectAsStateWithLifecycle()
@@ -88,7 +85,7 @@ fun Preferences(
             SwitchPreference(
                 name = stringResource(id = R.string.keep_screen_on),
                 checked = screenAlwaysOn,
-                onCheckChange = { scope.launch { pref.writeScreenAlwaysOn(it)} },
+                onCheckChange = { pref.writeScreenAlwaysOn(it) },
                 iconId = R.drawable.ic_screen_on
             )
         }
@@ -128,7 +125,7 @@ fun Preferences(
                 value = toleranceInCents.toFloat(),
                 valueRange = 1f..20f,
                 steps = 18,
-                onValueChange = { scope.launch { pref.writeToleranceInCents(it.roundToInt()) }},
+                onValueChange = { pref.writeToleranceInCents(it.roundToInt()) },
                 iconId = R.drawable.ic_tolerance
             )
         }
@@ -143,7 +140,7 @@ fun Preferences(
                         else
                             NotePrintOptions.SharpFlatPreference.Sharp
                     )
-                    scope.launch { pref.writeNotePrintOptions(newNotePrintOptions) }
+                    pref.writeNotePrintOptions(newNotePrintOptions)
                 },
                 iconId = R.drawable.ic_prefer_flat
             )
@@ -164,9 +161,7 @@ fun Preferences(
                 value = sensitivity.toFloat(),
                 valueRange = 0f..100f,
                 steps = 99,
-                onValueChange = {
-                    scope.launch { pref.writeSensitivity(it.roundToInt()) }
-                },
+                onValueChange = { pref.writeSensitivity(it.roundToInt()) },
                 iconId = R.drawable.ic_harmonic_energy
             )
         }
@@ -181,7 +176,7 @@ fun Preferences(
             SwitchPreference(
                 name = stringResource(id = R.string.scientific_mode),
                 checked = scientificMode,
-                onCheckChange = { scope.launch { pref.writeScientificMode(it) }} ,
+                onCheckChange = { pref.writeScientificMode(it) },
                 iconId = R.drawable.ic_baseline_developer_board
             )
         }
@@ -222,9 +217,7 @@ fun Preferences(
                 value = numMovingAverage.toFloat(),
                 valueRange = 1f..15f,
                 steps = 13,
-                onValueChange = {
-                    scope.launch { pref.writeNumMovingAverage(it.roundToInt()) }
-                },
+                onValueChange = { pref.writeNumMovingAverage(it.roundToInt()) },
                 iconId = R.drawable.ic_moving_average
             )
         }
@@ -245,9 +238,7 @@ fun Preferences(
                 value = windowSizeExponent.toFloat(),
                 valueRange = 7f..15f,
                 steps = 7,
-                onValueChange = {
-                    scope.launch { pref.writeWindowSize(it.roundToInt()) }
-                },
+                onValueChange = { pref.writeWindowSize(it.roundToInt()) },
                 iconId = R.drawable.ic_window_size
             )
         }
@@ -268,9 +259,7 @@ fun Preferences(
                 supporting = stringResource(id = R.string.percent, (100 * overlap).roundToInt()),
                 valueRange = 0f..80f,
                 steps = 15,
-                onValueChange = {
-                    scope.launch { pref.writeOverlap(it.roundToInt()) }
-                },
+                onValueChange = { pref.writeOverlap(it.roundToInt()) },
                 iconId = R.drawable.ic_window_overlap
             )
         }
@@ -282,9 +271,7 @@ fun Preferences(
                 supporting = stringResource(id = R.string.seconds, pitchHistoryDuration),
                 valueRange = 0.25f..10f,
                 steps = 38, // maybe better have progressive stps?
-                onValueChange = {
-                    scope.launch { pref.writePitchHistoryDuration(it) }
-                },
+                onValueChange = { pref.writePitchHistoryDuration(it) },
                 iconId = R.drawable.ic_duration
             )
         }
@@ -304,9 +291,7 @@ fun Preferences(
                 supporting = summary,
                 valueRange = 1f..12f,
                 steps = 10,
-                onValueChange = {
-                    scope.launch { pref.writePitchHistoryNumFaultyValues(it.roundToInt()) }
-                },
+                onValueChange = { pref.writePitchHistoryNumFaultyValues(it.roundToInt()) },
                 iconId = R.drawable.ic_jump
             )
         }
@@ -321,9 +306,7 @@ fun Preferences(
                     stringResource(R.string.capture_duration, duration),
                 valueRange = 0f..5f,
                 steps = 4,
-                onValueChange = {
-                    scope.launch { pref.writeWaveWriterDurationInSeconds(it.roundToInt()) }
-                },
+                onValueChange = { pref.writeWaveWriterDurationInSeconds(it.roundToInt()) },
                 iconId = R.drawable.ic_mic
             )
         }

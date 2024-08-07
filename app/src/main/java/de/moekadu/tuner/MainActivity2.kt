@@ -13,7 +13,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
@@ -89,7 +88,6 @@ class MainActivity2 : ComponentActivity() {
 //                val inPreferencesGraph = backStack?.destination?.hierarchy?.any {
 //                    it.hasRoute(PreferencesGraphRoute::class)
 //                } == true
-                val scope = rememberCoroutineScope()
 
                 var canNavigateUp by remember { mutableStateOf(false) }
                 Log.v("Tuner", "MainActivity2: canNavigateUp: $canNavigateUp")
@@ -123,7 +121,6 @@ class MainActivity2 : ComponentActivity() {
                 ) {
                     mainGraph(
                         controller = controller,
-                        scope = scope,
                         canNavigateUp = canNavigateUp,
                         onNavigateUpClicked = { controller.navigateUp() },
                         preferences = pref,
@@ -133,14 +130,12 @@ class MainActivity2 : ComponentActivity() {
                         controller = controller,
                         canNavigateUp = canNavigateUp,
                         onNavigateUpClicked = { controller.navigateUp() },
-                        preferences = pref,
-                        scope = scope
+                        preferences = pref
                     )
                     // provides TemperamentDialogRoute and ReferenceNoteDialog
                     musicalScalePropertiesGraph(
                         controller = controller,
-                        preferences = pref,
-                        scope = scope
+                        preferences = pref
                     )
 
                     instrumentEditorGraph(
@@ -148,8 +143,7 @@ class MainActivity2 : ComponentActivity() {
                         canNavigateUp = true,
                         onNavigateUpClicked = {},
                         preferences = pref,
-                        instruments = instruments,
-                        scope = scope
+                        instruments = instruments
                     )
                 }
             }

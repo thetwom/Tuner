@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIO
 import de.moekadu.tuner.instruments.InstrumentResources2
@@ -14,6 +15,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +27,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class InstrumentViewModel2 @Inject constructor(
-    val instruments: InstrumentResources2
+    val instruments: InstrumentResources2,
+    @ApplicationScope val applicationScope: CoroutineScope
 ): ViewModel(), InstrumentsData {
     override val activeInstrument get() = instruments.currentInstrument
 
@@ -57,11 +60,11 @@ class InstrumentViewModel2 @Inject constructor(
         }
     }
 
-    override suspend fun expandPredefinedInstruments(isExpanded: Boolean) {
+    override fun expandPredefinedInstruments(isExpanded: Boolean) {
         instruments.writePredefinedInstrumentsExpanded(isExpanded)
     }
 
-    override suspend fun expandCustomInstruments(isExpanded: Boolean) {
+    override fun expandCustomInstruments(isExpanded: Boolean) {
         instruments.writeCustomInstrumentsExpanded(isExpanded)
     }
 
@@ -84,7 +87,7 @@ class InstrumentViewModel2 @Inject constructor(
         _selectedInstruments.value = persistentSetOf()
     }
 
-    override suspend fun moveInstrumentsUp(instrumentKeys: Set<Long>): Boolean {
+    override fun moveInstrumentsUp(instrumentKeys: Set<Long>): Boolean {
         val original = customInstruments.value
         if (original.size <= 1)
             return false
@@ -104,7 +107,7 @@ class InstrumentViewModel2 @Inject constructor(
         return changed
     }
 
-    override suspend fun moveInstrumentsDown(instrumentKeys: Set<Long>): Boolean {
+    override fun moveInstrumentsDown(instrumentKeys: Set<Long>): Boolean {
         val original = customInstruments.value
         if (original.size <= 1)
             return false
@@ -124,7 +127,7 @@ class InstrumentViewModel2 @Inject constructor(
         return changed
     }
 
-    override suspend fun deleteInstruments(instrumentKeys: Set<Long>) {
+    override fun deleteInstruments(instrumentKeys: Set<Long>) {
         val backup = customInstruments.value
         val modified = customInstruments.value.removeAll { instrumentKeys.contains(it.stableId) }
         instruments.writeCustomInstruments(modified)
@@ -138,7 +141,7 @@ class InstrumentViewModel2 @Inject constructor(
         }
     }
 
-    override suspend fun deleteAllInstruments() {
+    override fun deleteAllInstruments() {
         val backup = customInstruments.value
         instruments.writeCustomInstruments(persistentListOf())
         _selectedInstruments.value = selectedInstruments.value.clear()
@@ -151,11 +154,21 @@ class InstrumentViewModel2 @Inject constructor(
         }
     }
 
-    suspend fun setCurrentInstrument(instrument: Instrument) {
+    fun setCurrentInstrument(instrument: Instrument) {
         instruments.writeCurrentInstrument(instrument)
     }
 
-    override suspend fun setInstruments(instruments: ImmutableList<Instrument>) {
+    override fun setInstruments(instruments: ImmutableList<Instrument>) {
         this.instruments.writeCustomInstruments(instruments)
+    }
+
+    override fun saveInstruments(context: Context, uri: Uri, instruments: List<Instrument>) {
+        applicationScope.launch(Dispatchers.IO) {
+            context.contentResolver?.openOutputStream(uri, "wt")?.use { stream ->
+                stream.write(
+                    InstrumentIO.instrumentsListToString(context, instruments).toByteArray()
+                )
+            }
+        }
     }
 }
