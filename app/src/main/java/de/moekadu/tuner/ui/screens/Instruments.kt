@@ -2,7 +2,6 @@ package de.moekadu.tuner.ui.screens
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -75,15 +73,11 @@ import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlin.math.min
-import kotlin.math.roundToInt
-import kotlin.time.Duration
 
 interface InstrumentsData {
     val activeInstrument: StateFlow<Instrument?>
@@ -107,8 +101,8 @@ interface InstrumentsData {
     /** Instrument list before deletion of elements. */
     val customInstrumentsBackup: ReceiveChannel<InstrumentDeleteInfo>
 
-    suspend fun expandPredefinedInstruments(isExpanded: Boolean)
-    suspend fun expandCustomInstruments(isExpanded: Boolean)
+    fun expandPredefinedInstruments(isExpanded: Boolean)
+    fun expandCustomInstruments(isExpanded: Boolean)
 
     fun selectInstrument(id: Long)
     fun deselectInstrument(id: Long)
@@ -116,12 +110,14 @@ interface InstrumentsData {
     fun clearSelectedInstruments()
 
     /** Return true, if we moving took place */
-    suspend fun moveInstrumentsUp(instrumentKeys: Set<Long>): Boolean
+    fun moveInstrumentsUp(instrumentKeys: Set<Long>): Boolean
     /** Return true, if we moving took place */
-    suspend fun moveInstrumentsDown(instrumentKeys: Set<Long>): Boolean
-    suspend fun deleteInstruments(instrumentKeys: Set<Long>)
-    suspend fun deleteAllInstruments()
-    suspend fun setInstruments(instruments: ImmutableList<Instrument>)
+    fun moveInstrumentsDown(instrumentKeys: Set<Long>): Boolean
+    fun deleteInstruments(instrumentKeys: Set<Long>)
+    fun deleteAllInstruments()
+    fun setInstruments(instruments: ImmutableList<Instrument>)
+
+    fun saveInstruments(context: Context, uri: Uri, instruments: List<Instrument>)
 }
 
 fun InstrumentsData.extractSelectedInstruments(): List<Instrument> {
@@ -247,11 +243,7 @@ fun Instruments(
     ) { uri ->
         if (uri != null) {
             val instruments = state.extractSelectedInstruments()
-            scope.launch(Dispatchers.IO) {
-                context.contentResolver?.openOutputStream(uri, "wt")?.use { stream ->
-                    stream.write(InstrumentIO.instrumentsListToString(context, instruments).toByteArray())
-                }
-            }
+            state.saveInstruments(context, uri, instruments)
             state.clearSelectedInstruments()
             val filename = getFilenameFromUri(context, uri)
             Toast.makeText(
@@ -290,9 +282,9 @@ fun Instruments(
     val overflowCallbacks = object: OverflowMenuCallbacks {
         override fun onDeleteClicked() {
             if (selectedInstruments.isNotEmpty())
-                scope.launch { state.deleteInstruments(selectedInstruments) }
+                state.deleteInstruments(selectedInstruments)
             else
-                scope.launch { state.deleteAllInstruments() }
+                state.deleteAllInstruments()
         }
         override fun onShareClicked() {
             val instruments = state.extractSelectedInstruments()
@@ -343,7 +335,7 @@ fun Instruments(
 //        scrollToSuitablePosition(listState, state.previousCustomInstruments, customInstruments)
 //    }
     BackHandler(enabled = selectedInstruments.isNotEmpty()) {
-        scope.launch { state.clearSelectedInstruments() }
+        state.clearSelectedInstruments()
     }
 
     TunerScaffold(
@@ -426,7 +418,7 @@ fun Instruments(
                         title = stringResource(id = R.string.custom_instruments),
                         expanded = customInstrumentsExpanded
                     ) {
-                        scope.launch { state.expandCustomInstruments(it) }
+                        state.expandCustomInstruments(it)
                     }
                 }
             }
@@ -457,10 +449,9 @@ fun Instruments(
                                     instrument,
                                     false
                                 )
-
-                                InstrumentItemTask.Delete -> scope.launch {
-                                    state.deleteInstruments(setOf(instrument.stableId))
-                                }
+                                InstrumentItemTask.Delete -> state.deleteInstruments(
+                                    setOf(instrument.stableId)
+                                )
                             }
                         }
                     )
@@ -473,7 +464,7 @@ fun Instruments(
                         title = stringResource(id = R.string.predefined_instruments),
                         expanded = predefinedInstrumentsExpanded
                     ) {
-                        scope.launch { state.expandPredefinedInstruments(it) }
+                        state.expandPredefinedInstruments(it)
                     }
                 }
             }
@@ -573,11 +564,11 @@ private class TestInstrumentsData : InstrumentsData {
         Channel.CONFLATED
     )
 
-    override suspend fun expandPredefinedInstruments(isExpanded: Boolean) {
+    override fun expandPredefinedInstruments(isExpanded: Boolean) {
         predefinedInstrumentsExpanded.value = isExpanded
     }
 
-    override suspend fun expandCustomInstruments(isExpanded: Boolean) {
+    override fun expandCustomInstruments(isExpanded: Boolean) {
         customInstrumentsExpanded.value = isExpanded
     }
 
@@ -598,7 +589,7 @@ private class TestInstrumentsData : InstrumentsData {
         selectedInstruments.value = persistentSetOf()
     }
 
-    override suspend fun moveInstrumentsUp(instrumentKeys: Set<Long>): Boolean {
+    override fun moveInstrumentsUp(instrumentKeys: Set<Long>): Boolean {
         if (customInstruments.value.isEmpty())
             return false
         var changed = false
@@ -615,7 +606,7 @@ private class TestInstrumentsData : InstrumentsData {
         }
         return changed
     }
-    override suspend fun moveInstrumentsDown(instrumentKeys: Set<Long>): Boolean {
+    override fun moveInstrumentsDown(instrumentKeys: Set<Long>): Boolean {
         if (customInstruments.value.isEmpty())
             return false
         var changed =  false
@@ -632,19 +623,21 @@ private class TestInstrumentsData : InstrumentsData {
         }
         return changed
     }
-    override suspend fun deleteInstruments(instrumentKeys: Set<Long>) {
+    override fun deleteInstruments(instrumentKeys: Set<Long>) {
         customInstruments.value = customInstruments.value.removeAll { instrumentKeys.contains(it.stableId) }
         selectedInstruments.value = selectedInstruments.value.removeAll(instrumentKeys)
     }
 
-    override suspend fun deleteAllInstruments() {
+    override fun deleteAllInstruments() {
         customInstruments.value = persistentListOf()
         selectedInstruments.value = selectedInstruments.value.clear()
     }
 
-    override suspend fun setInstruments(instruments: ImmutableList<Instrument>) {
+    override fun setInstruments(instruments: ImmutableList<Instrument>) {
         customInstruments.value = instruments.toPersistentList()
     }
+
+    override fun saveInstruments(context: Context, uri: Uri, instruments: List<Instrument>) {}
 }
 
 

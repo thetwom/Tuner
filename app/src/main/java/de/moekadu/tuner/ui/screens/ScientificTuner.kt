@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -29,7 +27,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
@@ -43,20 +40,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.notedetection.TuningState
-import de.moekadu.tuner.preferences.TemperamentAndReferenceNoteValue
-import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
-import de.moekadu.tuner.temperaments.NoteModifier
 import de.moekadu.tuner.temperaments.TemperamentType
-import de.moekadu.tuner.ui.misc.QuickSettingsBar
 import de.moekadu.tuner.ui.misc.TunerScaffold
 import de.moekadu.tuner.ui.misc.rememberTunerAudioPermission
 import de.moekadu.tuner.ui.notes.NotePrintOptions
@@ -70,11 +62,9 @@ import de.moekadu.tuner.ui.tuning.CorrelationPlot
 import de.moekadu.tuner.ui.tuning.FrequencyPlot
 import de.moekadu.tuner.ui.tuning.PitchHistory
 import de.moekadu.tuner.ui.tuning.PitchHistoryState
-import de.moekadu.tuner.viewmodels.ScientificTunerViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlin.time.Duration
 
 interface ScientificTunerData {
     val musicalScale: StateFlow<MusicalScale>
@@ -171,10 +161,8 @@ fun ScientificTuner(
             if (waveWriterDuration > 0) {
                 FloatingActionButton(
                     onClick = {
-                        scope.launch {
-                            data.storeCurrentWaveWriterSnapshot()
-                            writeWaveLauncher.launch("tuner-export.wav")
-                        }
+                        data.storeCurrentWaveWriterSnapshot()
+                        writeWaveLauncher.launch("tuner-export.wav")
                     }
                 ) {
                     Icon(

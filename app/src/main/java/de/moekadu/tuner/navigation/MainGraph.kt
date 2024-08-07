@@ -29,7 +29,6 @@ import de.moekadu.tuner.viewmodels.InstrumentViewModel2
 import de.moekadu.tuner.viewmodels.ScientificTunerViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -37,7 +36,6 @@ import kotlinx.serialization.json.Json
 
 fun NavGraphBuilder.mainGraph(
     controller: NavController,
-    scope: CoroutineScope,
     canNavigateUp: Boolean,
     onNavigateUpClicked: () -> Unit,
     preferences: PreferenceResources2,
@@ -53,7 +51,7 @@ fun NavGraphBuilder.mainGraph(
                 canNavigateUp = canNavigateUp,
                 onNavigateUpClicked = onNavigateUpClicked,
                 onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
-                onSharpFlatClicked = { scope.launch { preferences.switchSharpFlatPreference() } },
+                onSharpFlatClicked = { preferences.switchSharpFlatPreference() },
                 onReferenceNoteClicked = {
                     controller.navigate(
                         // provided by musicalScalePropertiesGraph
@@ -70,7 +68,7 @@ fun NavGraphBuilder.mainGraph(
                 canNavigateUp = canNavigateUp,
                 onNavigateUpClicked = onNavigateUpClicked,
                 onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
-                onSharpFlatClicked = { scope.launch { preferences.switchSharpFlatPreference() } },
+                onSharpFlatClicked = { preferences.switchSharpFlatPreference() },
                 onReferenceNoteClicked = {
                     controller.navigate(
                         // provided by musicalScalePropertiesGraph
@@ -98,7 +96,7 @@ fun NavGraphBuilder.mainGraph(
             musicalScale = musicalScale,
             onNavigateUpClicked = { controller.navigateUp() },
             onInstrumentClicked = {
-                scope.launch { viewModel.setCurrentInstrument(it) }
+                viewModel.setCurrentInstrument(it)
                 controller.navigateUp()
             },
             onEditInstrumentClicked = { instrument, copy ->
@@ -126,7 +124,7 @@ fun NavGraphBuilder.mainGraph(
                 )
                 controller.navigate(InstrumentEditorGraphRoute.create(newInstrument))
             },
-            onSharpFlatClicked = { scope.launch { preferences.switchSharpFlatPreference() } },
+            onSharpFlatClicked = { preferences.switchSharpFlatPreference() },
             onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
                 controller.navigate(
                     ReferenceFrequencyDialogRoute.create(
@@ -155,17 +153,15 @@ fun NavGraphBuilder.mainGraph(
             instruments = instruments,
             onDismiss = { controller.navigateUp() },
             onImport = { mode, importedInstruments ->
-                scope.launch {
-                    when (mode) {
-                        InstrumentIO.InsertMode.Replace -> {
-                            instrumentResources.replaceInstruments(importedInstruments)
-                        }
-                        InstrumentIO.InsertMode.Prepend -> {
-                            instrumentResources.prependInstruments(importedInstruments)
-                        }
-                        InstrumentIO.InsertMode.Append -> {
-                            instrumentResources.appendInstruments(importedInstruments)
-                        }
+                when (mode) {
+                    InstrumentIO.InsertMode.Replace -> {
+                        instrumentResources.replaceInstruments(importedInstruments)
+                    }
+                    InstrumentIO.InsertMode.Prepend -> {
+                        instrumentResources.prependInstruments(importedInstruments)
+                    }
+                    InstrumentIO.InsertMode.Append -> {
+                        instrumentResources.appendInstruments(importedInstruments)
                     }
                 }
                 Toast.makeText(

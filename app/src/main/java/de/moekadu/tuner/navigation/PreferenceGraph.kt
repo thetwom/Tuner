@@ -34,7 +34,7 @@ fun NavGraphBuilder.preferenceGraph(
     controller: NavController,
     canNavigateUp: Boolean,
     onNavigateUpClicked: () -> Unit,
-    preferences: PreferenceResources2, scope: CoroutineScope
+    preferences: PreferenceResources2
 ) {
     navigation<PreferencesGraphRoute>(
         startDestination = PreferencesRoute,
@@ -74,11 +74,7 @@ fun NavGraphBuilder.preferenceGraph(
             val appearance by preferences.appearance.collectAsStateWithLifecycle()
             AppearanceDialog(
                 appearance = appearance,
-                onAppearanceChanged = {
-                    scope.launch {
-                        preferences.writeAppearance(it)
-                    }
-                },
+                onAppearanceChanged = { preferences.writeAppearance(it) },
                 onDismiss = { controller.navigateUp() }
             )
         }
@@ -89,9 +85,7 @@ fun NavGraphBuilder.preferenceGraph(
                     val newNotePrintOptions = preferences.notePrintOptions.value.copy(
                         notationType = notation, helmholtzNotation = helmholtz
                     )
-                    scope.launch {
-                        preferences.writeNotePrintOptions(newNotePrintOptions)
-                    }
+                    preferences.writeNotePrintOptions(newNotePrintOptions)
                     controller.navigateUp()
                 },
                 onDismiss = { controller.navigateUp() }
@@ -101,7 +95,7 @@ fun NavGraphBuilder.preferenceGraph(
             WindowingFunctionDialog(
                 initialWindowingFunction = preferences.windowing.value,
                 onWindowingFunctionChanged = {
-                    scope.launch { preferences.writeWindowing(it) }
+                    preferences.writeWindowing(it)
                     controller.navigateUp()
                 } ,
                 onDismiss = { controller.navigateUp() }
@@ -110,7 +104,7 @@ fun NavGraphBuilder.preferenceGraph(
         dialog<ResetDialogRoute> {
             ResetDialog(
                 onReset = {
-                    scope.launch { preferences.resetAllSettings() }
+                    preferences.resetAllSettings()
                     controller.navigateUp()
                 },
                 onDismiss = { controller.navigateUp() }
@@ -122,7 +116,7 @@ fun NavGraphBuilder.preferenceGraph(
             )
         }
         // dialogs for reference frequency and temperament
-        musicalScalePropertiesGraph(controller, preferences, scope)
+        musicalScalePropertiesGraph(controller, preferences)
     }
 }
 

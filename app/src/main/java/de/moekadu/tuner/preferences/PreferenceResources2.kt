@@ -15,6 +15,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import dagger.hilt.android.qualifiers.ApplicationContext
+import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.notedetection.WindowingFunction
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
@@ -42,7 +44,8 @@ import kotlin.math.roundToInt
 
 @Singleton
 class PreferenceResources2 @Inject constructor (
-    @ApplicationContext context: Context
+    @ApplicationContext context: Context,
+    @ApplicationScope val applicationScope: CoroutineScope
 ) {
     private val dataStore = PreferenceDataStoreFactory.create(
         corruptionHandler = ReplaceFileCorruptionHandler(produceNewData = { emptyPreferences() })
@@ -82,24 +85,24 @@ class PreferenceResources2 @Inject constructor (
 
     // appearance
     val appearance = getSerializablePreferenceFlow(APPEARANCE_KEY, AppearanceDefault)
-    suspend fun writeAppearance(appearance: Appearance) {
+    fun writeAppearance(appearance: Appearance) {
         writeSerializablePreference(APPEARANCE_KEY, appearance)
     }
 
     // keep screen on
     val screenAlwaysOn= getPreferenceFlow(SCREEN_ALWAYS_ON, ScreenAlwaysOnDefault)
-    suspend fun writeScreenAlwaysOn(screenAlwaysOn: Boolean) {
+    fun writeScreenAlwaysOn(screenAlwaysOn: Boolean) {
         writePreference(SCREEN_ALWAYS_ON, screenAlwaysOn)
     }
 
     // note print options
     val notePrintOptions = getSerializablePreferenceFlow(
         NOTE_PRINT_OPTIONS_KEY, NotePrintOptionsDefault)
-    suspend fun writeNotePrintOptions(notePrintOptions: NotePrintOptions) {
+    fun writeNotePrintOptions(notePrintOptions: NotePrintOptions) {
         writeSerializablePreference(NOTE_PRINT_OPTIONS_KEY, notePrintOptions)
     }
 
-    suspend fun switchSharpFlatPreference() {
+    fun switchSharpFlatPreference() {
         val currentFlatSharpChoice = notePrintOptions.value.sharpFlatPreference
         val newFlatShapeChoice =
             if (currentFlatSharpChoice == NotePrintOptions.SharpFlatPreference.Flat)
@@ -115,7 +118,7 @@ class PreferenceResources2 @Inject constructor (
 
     // scientific mode
     val scientificMode = getPreferenceFlow(SCIENTIFIC_MODE_KEY, ScientificModeDefault)
-    suspend fun writeScientificMode(scientificMode: Boolean) {
+    fun writeScientificMode(scientificMode: Boolean) {
         writePreference(SCIENTIFIC_MODE_KEY, scientificMode)
     }
 
@@ -127,7 +130,7 @@ class PreferenceResources2 @Inject constructor (
         }
     }
 
-    suspend fun writeMusicalScaleProperties(properties: MusicalScaleProperties) {
+    fun writeMusicalScaleProperties(properties: MusicalScaleProperties) {
         writeSerializablePreference(TEMPERAMENT_AND_REFERENCE_NOTE_KEY, properties)
     }
 
@@ -135,13 +138,13 @@ class PreferenceResources2 @Inject constructor (
     val windowing = getTransformablePreferenceFlow(WINDOWING_KEY, WindowingDefault) {
             WindowingFunction.valueOf(it)
         }
-    suspend fun writeWindowing(windowing: WindowingFunction) {
+    fun writeWindowing(windowing: WindowingFunction) {
         writePreference(WINDOWING_KEY, windowing.name)
     }
 
     // overlap
     val overlap = getTransformablePreferenceFlow(OVERLAP_KEY, OverlapDefault) { it / 100f }
-    suspend fun writeOverlap(overlapPercent: Int) {
+    fun writeOverlap(overlapPercent: Int) {
         writePreference(OVERLAP_KEY, overlapPercent)
     }
 
@@ -149,71 +152,72 @@ class PreferenceResources2 @Inject constructor (
     val windowSize = getTransformablePreferenceFlow(WINDOW_SIZE_KEY, WindowSizeDefault) { 2f.pow(it).roundToInt() }
     val windowSizeExponent = getPreferenceFlow(WINDOW_SIZE_KEY, WindowSizeExponentDefault)
 
-    suspend fun writeWindowSize(windowSizeExponent: Int) {
+    fun writeWindowSize(windowSizeExponent: Int) {
         writePreference(WINDOW_SIZE_KEY, windowSizeExponent)
     }
 
     val pitchHistoryDuration = getPreferenceFlow(PITCH_HISTORY_DURATION_KEY, PitchHistoryDurationDefault)
-    suspend fun writePitchHistoryDuration(pitchHistoryDuration: Float) {
+    fun writePitchHistoryDuration(pitchHistoryDuration: Float) {
         writePreference(PITCH_HISTORY_DURATION_KEY, pitchHistoryDuration)
     }
 
     val pitchHistoryNumFaultyValues = getPreferenceFlow(PITCH_HISTORY_NUM_FAULTY_VALUES_KEY, PitchHistoryNumFaultyValuesDefault)
-    suspend fun writePitchHistoryNumFaultyValues(pitchHistoryNumFaultyValues: Int) {
+    fun writePitchHistoryNumFaultyValues(pitchHistoryNumFaultyValues: Int) {
         writePreference(PITCH_HISTORY_NUM_FAULTY_VALUES_KEY, pitchHistoryNumFaultyValues)
     }
 
     val numMovingAverage = getPreferenceFlow(NUM_MOVING_AVERAGE_KEY, NumMovingAverageDefault)
-    suspend fun writeNumMovingAverage(numMovingAverage: Int) {
+    fun writeNumMovingAverage(numMovingAverage: Int) {
         writePreference(NUM_MOVING_AVERAGE_KEY, numMovingAverage)
     }
 
     val maxNoise = getTransformablePreferenceFlow(MAX_NOISE_KEY, MaxNoiseDefault){ it / 100f }
-    suspend fun writeMaxNoise(maxNoisePercent: Int) {
+    fun writeMaxNoise(maxNoisePercent: Int) {
         writePreference(MAX_NOISE_KEY, maxNoisePercent)
     }
 
     val minHarmonicEnergyContent = getTransformablePreferenceFlow(MIN_HARMONIC_ENERGY_CONTENT_KEY, MinHarmonicEnergyContentDefault) { it / 100f }
-    suspend fun writeMinHarmonicEnergyContent(minHarmonicEnergyContentPercent: Int) {
+    fun writeMinHarmonicEnergyContent(minHarmonicEnergyContentPercent: Int) {
         writePreference(MIN_HARMONIC_ENERGY_CONTENT_KEY, minHarmonicEnergyContentPercent)
     }
 
     val sensitivity = getPreferenceFlow(SENSITIVITY_KEY, SensitivityDefault)
-    suspend fun writeSensitivity(sensitivity: Int) {
+    fun writeSensitivity(sensitivity: Int) {
         writePreference(SENSITIVITY_KEY, sensitivity)
     }
 
     val toleranceInCents = getPreferenceFlow(TOLERANCE_IN_CENTS_KEY, ToleranceInCentsDefault)
-    suspend fun writeToleranceInCents(toleranceInCents: Int) {
+    fun writeToleranceInCents(toleranceInCents: Int) {
         writePreference(TOLERANCE_IN_CENTS_KEY, toleranceInCents)
     }
 
     val waveWriterDurationInSeconds= getPreferenceFlow(
         WAVE_WRITER_DURATION_IN_SECONDS_KEY, WaveWriterDurationInSecondsDefault
     )
-    suspend fun writeWaveWriterDurationInSeconds(waveWriterDurationInSeconds: Int) {
+    fun writeWaveWriterDurationInSeconds(waveWriterDurationInSeconds: Int) {
         writePreference(WAVE_WRITER_DURATION_IN_SECONDS_KEY, waveWriterDurationInSeconds)
     }
 
-    suspend fun resetAllSettings() {
-        dataStore.edit {
-            it[APPEARANCE_KEY] = Json.encodeToString(AppearanceDefault)
-            it[SCREEN_ALWAYS_ON] = ScreenAlwaysOnDefault
-            it[TEMPERAMENT_AND_REFERENCE_NOTE_KEY] = Json.encodeToString(
-                MusicalScaleProperties.create(MusicalScaleDefault)
-            )
-            it[TOLERANCE_IN_CENTS_KEY] = ToleranceInCentsDefault
-            it[NOTE_PRINT_OPTIONS_KEY] = Json.encodeToString(NotePrintOptionsDefault)
-            it[SENSITIVITY_KEY] = SensitivityDefault
-            it[SCIENTIFIC_MODE_KEY] = ScientificModeDefault
-            it[NUM_MOVING_AVERAGE_KEY] = NumMovingAverageDefault
-            it[WINDOW_SIZE_KEY] = WindowSizeExponentDefault
-            it[WINDOWING_KEY] = WindowingDefault.name
-            it[OVERLAP_KEY] = (OverlapDefault * 100).roundToInt()
-            it[PITCH_HISTORY_DURATION_KEY] = PitchHistoryDurationDefault
-            it[PITCH_HISTORY_NUM_FAULTY_VALUES_KEY] = PitchHistoryNumFaultyValuesDefault
-            it[WAVE_WRITER_DURATION_IN_SECONDS_KEY] = WaveWriterDurationInSecondsDefault
-
+    fun resetAllSettings() {
+        applicationScope.launch {
+            dataStore.edit {
+                it[APPEARANCE_KEY] = Json.encodeToString(AppearanceDefault)
+                it[SCREEN_ALWAYS_ON] = ScreenAlwaysOnDefault
+                it[TEMPERAMENT_AND_REFERENCE_NOTE_KEY] = Json.encodeToString(
+                    MusicalScaleProperties.create(MusicalScaleDefault)
+                )
+                it[TOLERANCE_IN_CENTS_KEY] = ToleranceInCentsDefault
+                it[NOTE_PRINT_OPTIONS_KEY] = Json.encodeToString(NotePrintOptionsDefault)
+                it[SENSITIVITY_KEY] = SensitivityDefault
+                it[SCIENTIFIC_MODE_KEY] = ScientificModeDefault
+                it[NUM_MOVING_AVERAGE_KEY] = NumMovingAverageDefault
+                it[WINDOW_SIZE_KEY] = WindowSizeExponentDefault
+                it[WINDOWING_KEY] = WindowingDefault.name
+                it[OVERLAP_KEY] = (OverlapDefault * 100).roundToInt()
+                it[PITCH_HISTORY_DURATION_KEY] = PitchHistoryDurationDefault
+                it[PITCH_HISTORY_NUM_FAULTY_VALUES_KEY] = PitchHistoryNumFaultyValuesDefault
+                it[WAVE_WRITER_DURATION_IN_SECONDS_KEY] = WaveWriterDurationInSecondsDefault
+            }
         }
     }
 
@@ -260,13 +264,17 @@ class PreferenceResources2 @Inject constructor (
             .stateIn(scope, SharingStarted.Eagerly, default)
     }
 
-    private suspend fun<T> writePreference(key: Preferences.Key<T>, value: T) {
-        dataStore.edit { it[key] = value }
+    private fun<T> writePreference(key: Preferences.Key<T>, value: T) {
+        applicationScope.launch {
+            dataStore.edit { it[key] = value }
+        }
     }
 
-    private suspend inline fun<reified T> writeSerializablePreference(key: Preferences.Key<String>, value: T) {
-        dataStore.edit {
-            it[key] = Json.encodeToString(value)
+    private inline fun<reified T> writeSerializablePreference(key: Preferences.Key<String>, value: T) {
+        applicationScope.launch {
+            dataStore.edit {
+                it[key] = Json.encodeToString(value)
+            }
         }
     }
 

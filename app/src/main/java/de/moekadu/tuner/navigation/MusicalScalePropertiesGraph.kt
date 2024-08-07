@@ -13,14 +13,13 @@ import de.moekadu.tuner.temperaments.MusicalScale
 import de.moekadu.tuner.temperaments.NoteNameScaleFactory
 import de.moekadu.tuner.ui.preferences.ReferenceNoteDialog
 import de.moekadu.tuner.ui.preferences.TemperamentDialog
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 fun NavGraphBuilder.musicalScalePropertiesGraph(
-    controller: NavController, preferences: PreferenceResources2, scope: CoroutineScope
+    controller: NavController,
+    preferences: PreferenceResources2
 ) {
     dialog<ReferenceFrequencyDialogRoute> {
         val state = it.toRoute<ReferenceFrequencyDialogRoute>()
@@ -28,7 +27,7 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
         ReferenceNoteDialog(
             initialState = state.getMusicalScaleProperties(),
             onReferenceNoteChange = { newState ->
-                scope.launch { preferences.writeMusicalScaleProperties(newState) }
+                preferences.writeMusicalScaleProperties(newState)
                 controller.navigateUp()
             },
             notePrintOptions = notePrintOptions,
@@ -47,7 +46,7 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
             onTemperamentChange = { newProperties ->
                 val newNoteNameScale = NoteNameScaleFactory.create(newProperties.temperamentType)
                 if (newNoteNameScale.hasNote(newProperties.referenceNote)) {
-                    scope.launch { preferences.writeMusicalScaleProperties(newProperties) }
+                    preferences.writeMusicalScaleProperties(newProperties)
                     controller.navigateUp()
                 } else {
                     val proposedCorrectedProperties = newProperties.copy(
