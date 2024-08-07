@@ -108,6 +108,27 @@ class WaveWriter {
         }
     }
 
+    suspend fun appendData(input: ShortArray, numInputValues: Int = input.size) {
+        mutex.withLock {
+            val factor = 1f / Short.MAX_VALUE
+            val bufferLocal = buffer
+            if (bufferLocal != null && bufferLocal.isNotEmpty()) {
+                val maxSize = bufferLocal.size
+                var inputIndexBegin = 0
+                while (inputIndexBegin < numInputValues) {
+                    val bufferIndexBegin = (insertPosition % maxSize).toInt()
+                    val numCopy = min(maxSize - bufferIndexBegin, numInputValues - inputIndexBegin)
+                    for (i in 0 until numCopy)
+                        bufferLocal[bufferIndexBegin + i] = factor * input[inputIndexBegin + i]
+                    inputIndexBegin += numCopy
+                    insertPosition += numCopy
+                    numValues += numCopy
+                }
+                numValues = min(numValues, maxSize)
+            }
+        }
+    }
+
     /** Set size of how many values are kept in buffer.
      * @param numValues Number of values to store.
      */

@@ -62,7 +62,7 @@ class SoundSource(
         val minBufferSize = AudioRecord.getMinBufferSize(
             sampleRate,
             AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_FLOAT
+            AudioFormat.ENCODING_PCM_16BIT
         )
         if (minBufferSize == AudioRecord.ERROR_BAD_VALUE || minBufferSize == AudioRecord.ERROR) {
             Log.v("Tuner", "SoundSource.init: Not able to obtain a suitable minimum buffer size")
@@ -81,7 +81,7 @@ class SoundSource(
                         MediaRecorder.AudioSource.MIC,
                         sampleRate,
                         AudioFormat.CHANNEL_IN_MONO,
-                        AudioFormat.ENCODING_PCM_FLOAT,
+                        AudioFormat.ENCODING_PCM_16BIT,
                         minBufferSize
                     )
                 else
@@ -99,9 +99,9 @@ class SoundSource(
 
                 val recordData =
                     if (record != null)
-                        FloatArray(record.bufferSizeInFrames / 2)
+                        ShortArray(record.bufferSizeInFrames / 2)
                     else
-                        FloatArray(minBufferSize / 8)
+                        ShortArray(minBufferSize / 8)
 
                 val sampleDataList = ArrayList<MemoryPool<SampleData>.RefCountedMemory>()
                 var nextStartingDataFrame = 0
@@ -112,7 +112,7 @@ class SoundSource(
 
                     val numRead = if (testFunction != null) {
                         for (i in recordData.indices)
-                            recordData[i] = testFunction!!(currentFrame + i, 1f / sampleRate)
+                            recordData[i] = (Short.MAX_VALUE * testFunction!!(currentFrame + i, 1f / sampleRate)).toInt().toShort()
                         delay((1000 * recordData.size.toFloat() / sampleRate).toLong())
                         recordData.size
                     } else if (record != null) {
