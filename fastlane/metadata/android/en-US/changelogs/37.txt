@@ -1,0 +1,5 @@
+v6.8.1:
+- Change internal audio settings to support more devices.
+
+v6.8.0:
+- Icons for Tar, Setar, and Kamancheh (thanks to ahangarha)

@@ -47,7 +47,7 @@ class SoundSource(
     /** Job which is generating sound. */
     private var sourceJob: Job? = null
 
-     /** Pool which allows to recyle the sample data. */
+     /** Pool which allows to recycle the sample data. */
     private var memoryPool: MemoryPoolSampleData
 
     /** Channel used to communicate the sound samples. */
@@ -61,7 +61,7 @@ class SoundSource(
         val minBufferSize = AudioRecord.getMinBufferSize(
             sampleRate,
             AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_FLOAT
+            AudioFormat.ENCODING_PCM_16BIT
         )
         channelCapacity = computeRequiredChannelCapacity(minBufferSize / 4)
         memoryPool = MemoryPoolSampleData(2 * channelCapacity) // trial shows that single channel capacity does not very well recycle data in extreme cases, double channel capacity seems to work fine
@@ -75,7 +75,7 @@ class SoundSource(
                         MediaRecorder.AudioSource.MIC,
                         sampleRate,
                         AudioFormat.CHANNEL_IN_MONO,
-                        AudioFormat.ENCODING_PCM_FLOAT,
+                        AudioFormat.ENCODING_PCM_16BIT,
                         minBufferSize
                     )
                 else
@@ -89,11 +89,10 @@ class SoundSource(
             } else {
                 record?.startRecording()
 
-                val recordData =
-                    if (record != null)
-                        FloatArray(record.bufferSizeInFrames / 2)
-                    else
-                        FloatArray(minBufferSize / 8)
+                val recordData = if (record != null)
+                    ShortArray(record.bufferSizeInFrames / 2)
+                else
+                    ShortArray(minBufferSize / 8)
 
                 val sampleDataList = ArrayList<MemoryPool<SampleData>.RefCountedMemory>()
                 var nextStartingDataFrame = 0
@@ -104,7 +103,7 @@ class SoundSource(
 
                     val numRead = if (testFunction != null) {
                         for (i in recordData.indices)
-                            recordData[i] = testFunction!!(currentFrame + i, 1f / sampleRate)
+                            recordData[i] = (Short.MAX_VALUE * testFunction!!(currentFrame + i, 1f / sampleRate)).toInt().toShort()
                         delay((1000 * recordData.size.toFloat() / sampleRate).toLong())
                         recordData.size
                     } else if (record != null) {

@@ -68,6 +68,26 @@ class SampleData(val size: Int, val sampleRate: Int, var framePosition: Int) {
         //Log.v("TestRecordFlow", "SampleData.addData: inputFramePosition = $inputFramePosition, input.size=${input.size}, numCopy=$numCopy, startIndexData=$startIndexData, startIndexInput=$startIndexInput")
         require(maxLevel <= size)
     }
+
+    /** Add some data to our data object.
+     * @param inputFramePosition Frame position of first entry in input-array
+     * @param input Input data, which should be copied to our local data object.
+     */
+    fun addData(inputFramePosition: Int, input: ShortArray) {
+        val startIndexData = max(0, inputFramePosition - framePosition)
+        val startIndexInput = max(0, framePosition - inputFramePosition)
+        val factor = 1f / Short.MAX_VALUE
+
+        val numCopy = min(size - startIndexData, input.size - startIndexInput)
+        if (numCopy > 0) {
+            for (i in 0 until numCopy)
+                data[startIndexData + i] = factor * input[startIndexInput + i]
+            maxLevel = max(maxLevel, startIndexData + numCopy)
+            minLevel = min(minLevel, startIndexData)
+        }
+        //Log.v("TestRecordFlow", "SampleData.addData: inputFramePosition = $inputFramePosition, input.size=${input.size}, numCopy=$numCopy, startIndexData=$startIndexData, startIndexInput=$startIndexInput")
+        require(maxLevel <= size)
+    }
 }
 
 class MemoryPoolSampleData(capacity: Int) {
