@@ -63,7 +63,7 @@ class SoundSource(
             AudioFormat.CHANNEL_IN_MONO,
             AudioFormat.ENCODING_PCM_16BIT
         )
-        channelCapacity = computeRequiredChannelCapacity(minBufferSize / 4)
+        channelCapacity = computeRequiredChannelCapacity(minBufferSize / Short.SIZE_BYTES)
         memoryPool = MemoryPoolSampleData(2 * channelCapacity) // trial shows that single channel capacity does not very well recycle data in extreme cases, double channel capacity seems to work fine
         outputChannel = Channel(channelCapacity, BufferOverflow.SUSPEND)
 //        Log.v("Tuner", "SoundSource.init: output channel capacity = $channelCapacity")
@@ -92,7 +92,7 @@ class SoundSource(
                 val recordData = if (record != null)
                     ShortArray(record.bufferSizeInFrames / 2)
                 else
-                    ShortArray(minBufferSize / 8)
+                    ShortArray(minBufferSize / Short.SIZE_BYTES / 2)
 
                 val sampleDataList = ArrayList<MemoryPool<SampleData>.RefCountedMemory>()
                 var nextStartingDataFrame = 0
