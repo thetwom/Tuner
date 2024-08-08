@@ -114,10 +114,10 @@ class WaveWriter {
      */
     suspend fun appendData(input: ShortArray, numInputValues: Int = input.size) {
         mutex.withLock {
-            val factor = 1f / Short.MAX_VALUE
             val bufferLocal = buffer
             if (bufferLocal != null && bufferLocal.isNotEmpty()) {
                 val maxSize = bufferLocal.size
+                val factor = 1f / Short.MAX_VALUE
                 var inputIndexBegin = 0
                 while (inputIndexBegin < numInputValues) {
                     val bufferIndexBegin = (insertPosition % maxSize).toInt()

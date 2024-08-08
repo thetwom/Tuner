@@ -77,7 +77,6 @@ class SampleData(val size: Int, val sampleRate: Int, var framePosition: Int) {
         val startIndexData = max(0, inputFramePosition - framePosition)
         val startIndexInput = max(0, framePosition - inputFramePosition)
         val factor = 1f / Short.MAX_VALUE
-
         val numCopy = min(size - startIndexData, input.size - startIndexInput)
         if (numCopy > 0) {
             for (i in 0 until numCopy)
