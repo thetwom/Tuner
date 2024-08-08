@@ -52,10 +52,10 @@ fun CoroutineScope.launchSoundSourceJob(
     val minBufferSize = AudioRecord.getMinBufferSize(
         sampleRate,
         AudioFormat.CHANNEL_IN_MONO,
-        AudioFormat.ENCODING_PCM_FLOAT
+        AudioFormat.ENCODING_PCM_16BIT
     )
     val channelCapacity = computeRequiredChannelCapacity(
-        audioRecordBufferSizeInFrames = minBufferSize / 4,
+        audioRecordBufferSizeInFrames = minBufferSize / Short.SIZE_BYTES,
         windowSize = windowSize,
         overlap = overlap
     )
@@ -74,7 +74,7 @@ fun CoroutineScope.launchSoundSourceJob(
                     MediaRecorder.AudioSource.MIC,
                     sampleRate,
                     AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_FLOAT,
+                    AudioFormat.ENCODING_PCM_16BIT,
                     minBufferSize
                 )
             else
@@ -87,12 +87,11 @@ fun CoroutineScope.launchSoundSourceJob(
             )
         } else {
             record?.startRecording()
-
             val recordData =
                 if (record != null)
-                    FloatArray(record.bufferSizeInFrames / 2)
+                    ShortArray(record.bufferSizeInFrames / 2)
                 else
-                    FloatArray(minBufferSize / 8)
+                    ShortArray(minBufferSize / Short.SIZE_BYTES / 2)
 
             val sampleDataList = ArrayList<MemoryPool<SampleData>.RefCountedMemory>()
             var nextStartingDataFrame = 0
@@ -102,8 +101,11 @@ fun CoroutineScope.launchSoundSourceJob(
                     break
 
                 val numRead = if (testFunction != null) {
-                    for (i in recordData.indices)
-                        recordData[i] = testFunction!!(currentFrame + i, 1f / sampleRate)
+                    for (i in recordData.indices) {
+                        recordData[i] = (Short.MAX_VALUE * testFunction!!(
+                            currentFrame + i, 1f / sampleRate
+                        )).toInt().toShort()
+                    }
                     delay((1000 * recordData.size.toFloat() / sampleRate).toLong())
                     recordData.size
                 } else if (record != null) {
