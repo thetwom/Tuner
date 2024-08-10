@@ -1,6 +1,6 @@
 [versions]
 accompanistPermissions = "0.35.1-alpha"
-agp = "8.5.1"
+agp = "8.5.2"
 hiltNavigationCompose = "1.2.0"
 kotlin = "2.0.0"
 

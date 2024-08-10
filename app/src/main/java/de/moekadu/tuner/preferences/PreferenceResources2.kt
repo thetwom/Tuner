@@ -2,7 +2,7 @@ package de.moekadu.tuner.preferences
 
 import android.content.Context
 import android.os.Parcelable
-import androidx.datastore.core.DataStore
+import android.util.Log
 import androidx.datastore.core.IOException
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
@@ -24,7 +24,6 @@ import de.moekadu.tuner.temperaments.TemperamentType
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -51,7 +50,8 @@ class PreferenceResources2 @Inject constructor (
         corruptionHandler = ReplaceFileCorruptionHandler(produceNewData = { emptyPreferences() })
     ) { context.preferencesDataStoreFile("settings") }
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val scope = CoroutineScope(applicationScope.coroutineContext + Dispatchers.IO)
+    //private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @Serializable
     data class Appearance(
@@ -83,6 +83,19 @@ class PreferenceResources2 @Inject constructor (
 
     val sampleRate = 44100
 
+    // migrations
+    val migrationsFromV6Complete = getPreferenceFlow(MIGRATIONS_FROM_V6_KEY, false)
+    fun writeMigrationsFromV6Complete() {
+        writePreference(MIGRATIONS_FROM_V6_KEY, true)
+        Log.v("Tuner", "PreferenceMigrations: writing complete = ${migrationsFromV6Complete.value}")
+    }
+    /** True, if during load, we are migrating from v6.
+     * This is normally false, just on the first start when coming from v6, this is true.
+     * */
+    @Volatile
+    var isMigratingFromV6: Boolean = false
+        private set
+
     // appearance
     val appearance = getSerializablePreferenceFlow(APPEARANCE_KEY, AppearanceDefault)
     fun writeAppearance(appearance: Appearance) {
@@ -90,7 +103,7 @@ class PreferenceResources2 @Inject constructor (
     }
 
     // keep screen on
-    val screenAlwaysOn= getPreferenceFlow(SCREEN_ALWAYS_ON, ScreenAlwaysOnDefault)
+    val screenAlwaysOn = getPreferenceFlow(SCREEN_ALWAYS_ON, ScreenAlwaysOnDefault)
     fun writeScreenAlwaysOn(screenAlwaysOn: Boolean) {
         writePreference(SCREEN_ALWAYS_ON, screenAlwaysOn)
     }
@@ -199,7 +212,7 @@ class PreferenceResources2 @Inject constructor (
     }
 
     fun resetAllSettings() {
-        applicationScope.launch {
+        scope.launch {
             dataStore.edit {
                 it[APPEARANCE_KEY] = Json.encodeToString(AppearanceDefault)
                 it[SCREEN_ALWAYS_ON] = ScreenAlwaysOnDefault
@@ -224,15 +237,15 @@ class PreferenceResources2 @Inject constructor (
     private fun<T> getPreferenceFlow(key: Preferences.Key<T>, default: T): StateFlow<T> {
         return dataStore.data
             .catch {
-//                Log.v("Tuner", "PreferenceRessources2: except: $it, $key")
+//                Log.v("Tuner", "PreferenceResources2: except: $it, $key")
                 if (it is IOException) {
                     emit(emptyPreferences())
-                }else {
+                } else {
                     throw it
                 }
             }
             .map {
-//                Log.v("Tuner", "PreferenceRessources2: $key ${it[key]}")
+//                Log.v("Tuner", "PreferenceResources2: $key ${it[key]}")
                 it[key] ?: default
             }
             .stateIn(scope, SharingStarted.Eagerly, default)
@@ -265,13 +278,13 @@ class PreferenceResources2 @Inject constructor (
     }
 
     private fun<T> writePreference(key: Preferences.Key<T>, value: T) {
-        applicationScope.launch {
+        scope.launch {
             dataStore.edit { it[key] = value }
         }
     }
 
     private inline fun<reified T> writeSerializablePreference(key: Preferences.Key<String>, value: T) {
-        applicationScope.launch {
+        scope.launch {
             dataStore.edit {
                 it[key] = Json.encodeToString(value)
             }
@@ -279,9 +292,10 @@ class PreferenceResources2 @Inject constructor (
     }
 
     init {
-        // block everything until, all data is read to avoid incorrect startup behaviour
+        // block everything until all data is read to avoid incorrect startup behaviour
         runBlocking {
             dataStore.data.first()
+            isMigratingFromV6 = this@PreferenceResources2.migrateFromV6(context)
         }
     }
 
@@ -326,6 +340,8 @@ class PreferenceResources2 @Inject constructor (
         private val SENSITIVITY_KEY = intPreferencesKey("sensitivity")
         private val TOLERANCE_IN_CENTS_KEY = intPreferencesKey("tolerance_in_cents")
         private val WAVE_WRITER_DURATION_IN_SECONDS_KEY = intPreferencesKey("wave_writer_duration_in_seconds")
+
+        private val MIGRATIONS_FROM_V6_KEY = booleanPreferencesKey("migrations_complete")
 //        const val INSTRUMENT_ID_KEY = "instrument_id"
     }
 }

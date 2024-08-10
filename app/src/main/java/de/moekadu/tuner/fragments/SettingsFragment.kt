@@ -108,13 +108,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 (activity as MainActivity?)?.recreate()
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                requireContext().preferenceResources.appearance.collect {
-                    setAppearanceSummary(it.mode)
-                }
-            }
-        }
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                requireContext().preferenceResources.appearance.collect {
+//                    setAppearanceSummary(it.mode)
+//                }
+//            }
+//        }
 
         val screenOnPreference = findPreference<SwitchPreferenceCompat?>("screenon")
             ?: throw RuntimeException("No screenon preference")
@@ -132,59 +132,59 @@ class SettingsFragment : PreferenceFragmentCompat() {
             true
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                requireContext().preferenceResources.noteNamePrinter.collect {
-                    setTemperamentAndReferenceNoteSummary(noteNamePrinter = it)
-                }
-            }
-        }
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                requireContext().preferenceResources.noteNamePrinter.collect {
+//                    setTemperamentAndReferenceNoteSummary(noteNamePrinter = it)
+//                }
+//            }
+//        }
 
         notationPreference = findPreference<NotationPreference?>("notation")
         //notation?.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
 //        Log.v("Tuner", "SettingsFragment: notation = ${notation?.value}")
-        viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                requireContext().preferenceResources.noteNamePrinter.collect {
-                    setNotationSummary(it.notationType, it.helmholtzNotation)
-                }
-            }
-        }
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                requireContext().preferenceResources.noteNamePrinter.collect {
+//                    setNotationSummary(it.notationType, it.helmholtzNotation)
+//                }
+//            }
+//        }
 
         referenceNotePreference = findPreference("reference_note")
             ?: throw RuntimeException("no reference_note preference")
-        referenceNotePreference?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val currentPrefs = requireContext().preferenceResources.temperamentAndReferenceNote.value
-            val dialog = ReferenceNotePreferenceDialog.newInstance(
-                currentPrefs,
-                warningMessage = null
-            )
-
-            dialog.show(parentFragmentManager, "tag")
-            false
-        }
+//        referenceNotePreference?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+//            val currentPrefs = requireContext().preferenceResources.temperamentAndReferenceNote.value
+//            val dialog = ReferenceNotePreferenceDialog.newInstance(
+//                currentPrefs,
+//                warningMessage = null
+//            )
+//
+//            dialog.show(parentFragmentManager, "tag")
+//            false
+//        }
         //setTemperamentAndReferenceNoteSummary() // This is called after temperamentPreference already
 
         temperamentPreference =
             findPreference("temperament") ?: throw RuntimeException("no temperament preference")
-        temperamentPreference?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val currentPrefs = requireContext().preferenceResources.temperamentAndReferenceNote.value
-            //val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
-            val dialog = TemperamentPreferenceDialog.newInstance(
-                currentPrefs
-            )
-
-            dialog.show(parentFragmentManager, "tag")
-            false
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                requireContext().preferenceResources.temperamentAndReferenceNote.collect {
-                    setTemperamentAndReferenceNoteSummary()
-                }
-            }
-        }
+//        temperamentPreference?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+//            val currentPrefs = requireContext().preferenceResources.temperamentAndReferenceNote.value
+//            //val currentPrefs = TemperamentAndReferenceNoteValue.fromSharedPreferences(pref)
+//            val dialog = TemperamentPreferenceDialog.newInstance(
+//                currentPrefs
+//            )
+//
+//            dialog.show(parentFragmentManager, "tag")
+//            false
+//        }
+//
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                requireContext().preferenceResources.temperamentAndReferenceNote.collect {
+//                    setTemperamentAndReferenceNoteSummary()
+//                }
+//            }
+//        }
 
         val tolerance = findPreference<SeekBarPreference>("tolerance_in_cents")
             ?: throw RuntimeException("No tolerance preference")
@@ -395,21 +395,22 @@ class SettingsFragment : PreferenceFragmentCompat() {
         preferenceValue: TemperamentAndReferenceNoteValue? = null,
         noteNamePrinter: NoteNamePrinter? = null
     ) {
-//    Log.v("Tuner", "SettingsFragment.setReferenceNoteSummary: frequency=$frequency, toneIndex=$toneIndex, preferFlat=$preferFlat, f2=${referenceNotePreference?.value?.frequency}, t2=${referenceNotePreference?.value?.toneIndex}")
-        context?.let { ctx ->
-            val currentPrefs = preferenceValue ?: ctx.preferenceResources.temperamentAndReferenceNote.value
-            val printer = noteNamePrinter ?: ctx.preferenceResources.noteNamePrinter.value
-
-            val referenceNoteSummary = SpannableStringBuilder()
-                .append(
-                    printer.noteToCharSequence(currentPrefs.referenceNote, true)
-                )
-                .append(" = ${getString(R.string.hertz_str, currentPrefs.referenceFrequency)}")
-            referenceNotePreference?.summary = referenceNoteSummary
-            temperamentPreference?.summary = SpannableStringBuilder()
-                .append(ctx.getString(getTuningNameResourceId(currentPrefs.temperamentType)))
-                .append(ctx.getString(R.string.comma_separator))
-                .append(printer.noteToCharSequence(currentPrefs.rootNote, withOctave = false))
-        }
+//    Log.v("Tuner", "SettingsFragment.setReferen
+    //    ceNoteSummary: frequency=$frequency, toneIndex=$toneIndex, preferFlat=$preferFlat, f2=${referenceNotePreference?.value?.frequency}, t2=${referenceNotePreference?.value?.toneIndex}")
+//        context?.let { ctx ->
+//            val currentPrefs = preferenceValue ?: ctx.preferenceResources.temperamentAndReferenceNote.value
+//            val printer = noteNamePrinter ?: ctx.preferenceResources.noteNamePrinter.value
+//
+//            val referenceNoteSummary = SpannableStringBuilder()
+//                .append(
+//                    printer.noteToCharSequence(currentPrefs.referenceNote, true)
+//                )
+//                .append(" = ${getString(R.string.hertz_str, currentPrefs.referenceFrequency)}")
+//            referenceNotePreference?.summary = referenceNoteSummary
+//            temperamentPreference?.summary = SpannableStringBuilder()
+//                .append(ctx.getString(getTuningNameResourceId(currentPrefs.temperamentType)))
+//                .append(ctx.getString(R.string.comma_separator))
+//                .append(printer.noteToCharSequence(currentPrefs.rootNote, withOctave = false))
+//        }
     }
 }

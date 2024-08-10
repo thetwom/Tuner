@@ -55,29 +55,29 @@ class MainActivity : AppCompatActivity() {
 
     enum class TunerMode {Simple, Scientific, Unknown}
 
-    private val instrumentArchiving = InstrumentArchiving(
-        { instrumentResources.customInstrumentDatabase },
-        this, { supportFragmentManager }, { this }
-    )
+//    private val instrumentArchiving = InstrumentArchiving(
+//        { instrumentResources.customInstrumentDatabase },
+//        this, { supportFragmentManager }, { this }
+//    )
 
     private lateinit var preferenceBarContainer: PreferenceBarContainer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
 
-        if (preferenceResources.appearance.value.useSystemColorAccents)
-            DynamicColors.applyToActivityIfAvailable(this)
-        if (preferenceResources.appearance.value.blackNightEnabled)
-            overlayThemeForBlackNight()
-
-        migrateInstrumentResources()
-
+//        if (preferenceResources.appearance.value.useSystemColorAccents)
+//            DynamicColors.applyToActivityIfAvailable(this)
+//        if (preferenceResources.appearance.value.blackNightEnabled)
+//            overlayThemeForBlackNight()
+//
+//        migrateInstrumentResources()
+//
         super.onCreate(savedInstanceState)
-
-        if (preferenceResources.screenAlwaysOn.value)
-            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        else
-            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+//
+//        if (preferenceResources.screenAlwaysOn.value)
+//            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+//        else
+//            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar))
@@ -102,45 +102,45 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                preferenceResources.noteNamePrinter.collect {
-                    preferenceBarContainer.preferFlat = (it.sharpFlatPreference == NoteNamePrinter.SharpFlatPreference.Flat)
-                    val currentPrefs = preferenceResources.temperamentAndReferenceNote.value
-                    // update the reference note printing
-                    preferenceBarContainer.setReferenceNote(
-                        currentPrefs.referenceNote,
-                        currentPrefs.referenceFrequency,
-                        preferenceResources.noteNamePrinter.value
-                    )
-                    preferenceBarContainer.setSharpFlatPreferenceVisibility(
-                        it.hasSharpFlatCounterpart
-                    )
-                }
-            }
-        }
+//        lifecycleScope.launch {
+//            repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                preferenceResources.noteNamePrinter.collect {
+//                    preferenceBarContainer.preferFlat = (it.sharpFlatPreference == NoteNamePrinter.SharpFlatPreference.Flat)
+//                    val currentPrefs = preferenceResources.temperamentAndReferenceNote.value
+//                    // update the reference note printing
+//                    preferenceBarContainer.setReferenceNote(
+//                        currentPrefs.referenceNote,
+//                        currentPrefs.referenceFrequency,
+//                        preferenceResources.noteNamePrinter.value
+//                    )
+//                    preferenceBarContainer.setSharpFlatPreferenceVisibility(
+//                        it.hasSharpFlatCounterpart
+//                    )
+//                }
+//            }
+//        }
 
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                preferenceResources.temperamentAndReferenceNote.collect {
-                    preferenceBarContainer.setTemperament(it.temperamentType)
-                    preferenceBarContainer.setReferenceNote(
-                        it.referenceNote, it.referenceFrequency,
-                        preferenceResources.noteNamePrinter.value
-                    )
-                }
-            }
-        }
-
-        ReferenceNotePreferenceDialog.setupFragmentResultListener(
-            supportFragmentManager, this
-        ) { preferenceResources.setTemperamentAndReferenceNote(it) }
-        TemperamentPreferenceDialog.setupFragmentResultListener(
-            supportFragmentManager, this, this,
-            {preferenceResources.temperamentAndReferenceNote.value}
-        ) {
-            preferenceResources.setTemperamentAndReferenceNote(it)
-        }
+//        lifecycleScope.launch {
+//            repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                preferenceResources.temperamentAndReferenceNote.collect {
+//                    preferenceBarContainer.setTemperament(it.temperamentType)
+//                    preferenceBarContainer.setReferenceNote(
+//                        it.referenceNote, it.referenceFrequency,
+//                        preferenceResources.noteNamePrinter.value
+//                    )
+//                }
+//            }
+//        }
+//
+//        ReferenceNotePreferenceDialog.setupFragmentResultListener(
+//            supportFragmentManager, this
+//        ) { preferenceResources.setTemperamentAndReferenceNote(it) }
+//        TemperamentPreferenceDialog.setupFragmentResultListener(
+//            supportFragmentManager, this, this,
+//            {preferenceResources.temperamentAndReferenceNote.value}
+//        ) {
+//            preferenceResources.setTemperamentAndReferenceNote(it)
+//        }
 
         setStatusAndNavigationBarColors()
 
@@ -212,18 +212,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun showReferenceNoteDialog() {
-        val dialog = ReferenceNotePreferenceDialog.newInstance(
-            preferenceResources.temperamentAndReferenceNote.value,
-            warningMessage = null
-        )
-        dialog.show(supportFragmentManager, "tag")
+//        val dialog = ReferenceNotePreferenceDialog.newInstance(
+//            preferenceResources.temperamentAndReferenceNote.value,
+//            warningMessage = null
+//        )
+//        dialog.show(supportFragmentManager, "tag")
     }
 
     fun showTemperamentDialog() {
-        val dialog = TemperamentPreferenceDialog.newInstance(
-            preferenceResources.temperamentAndReferenceNote.value
-        )
-        dialog.show(supportFragmentManager, "tag")
+//        val dialog = TemperamentPreferenceDialog.newInstance(
+//            preferenceResources.temperamentAndReferenceNote.value
+//        )
+//        dialog.show(supportFragmentManager, "tag")
     }
 
     private fun setDisplayHomeButton() {
@@ -282,12 +282,12 @@ class MainActivity : AppCompatActivity() {
         if (intent?.action == Intent.ACTION_SEND || intent?.action == Intent.ACTION_VIEW) {
 //            Log.v("Tuner", "MainActivity.handleFileLoadingIntent: intent=${intent.data}")
 
-            intent.data?.let { uri ->
-//                Log.v("Tuner", "MainActivity.handleFileLoadingIntent: uri=$uri")
-                supportFragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
-                instrumentArchiving.loadInstruments(uri)
-                loadInstrumentsFragment()
-            }
+//            intent.data?.let { uri ->
+////                Log.v("Tuner", "MainActivity.handleFileLoadingIntent: uri=$uri")
+//                supportFragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+//                instrumentArchiving.loadInstruments(uri)
+//                loadInstrumentsFragment()
+//            }
         }
     }
 
@@ -350,7 +350,7 @@ class MainActivity : AppCompatActivity() {
         val preferences = getPreferences(MODE_PRIVATE)
         if (!preferences.contains("migration completed")) {
             Log.v("Tuner", "MainActivity.migrateInstrumentResources : migrating")
-            instrumentResources.migrateFromOtherSharedPreferences(preferences)
+//            instrumentResources.migrateFromOtherSharedPreferences(preferences)
             preferences.edit { putBoolean("migration completed", true) }
         } else {
             Log.v("Tuner", "MainActivity.migrateInstrumentResources : not migrating since already done")

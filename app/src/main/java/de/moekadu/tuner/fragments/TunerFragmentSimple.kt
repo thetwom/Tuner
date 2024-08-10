@@ -65,299 +65,299 @@ class TunerFragmentSimple : Fragment() {
     private var pitchPlotChangeId = -1
     private var stringViewChangeId = -1
 
-    /** Instance for requesting audio recording permission.
-     * This will create the sourceJob as soon as the permissions are granted.
-     */
-    private val askForPermissionAndNotifyViewModel = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { result ->
-        if (result) {
-            viewModel.startSampling()
-        } else {
-            Toast.makeText(activity, getString(R.string.no_audio_recording_permission), Toast.LENGTH_LONG)
-                .show()
-            Log.v(
-                "Tuner",
-                "TunerFragment.askForPermissionAnNotifyViewModel: No audio recording permission is granted."
-            )
-        }
-    }
-
-    private val menuProvider = object : MenuProvider {
-        override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-            menuInflater.inflate(R.menu.toolbar, menu)
-        }
-
-        override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-            when (menuItem.itemId) {
-                R.id.action_settings -> {
-                    // User chose the "Settings" item, show the app settings UI...
-                    (activity as MainActivity?)?.loadSettingsFragment()
-                    return true
-                }
-            }
-            return false
-        }
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Log.v("Tuner", "TunerFragmentSimple.onCreateView")
-        val view = inflater.inflate(R.layout.diagrams_simple, container, false)
-
-        activity?.addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.RESUMED)
-        pitchPlot = view.findViewById(R.id.pitch_plot)
-        volumeMeter = view.findViewById(R.id.volume_meter)
-        stringView = view.findViewById(R.id.string_view)
-        instrumentTitle = view.findViewById(R.id.instrument_title)
-        invalidInstrumentWarning = view.findViewById(R.id.incorrect_instrument_text)
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.instrument.collect {
-                    instrumentTitle?.setIconResource(it.instrument.iconResource)
-                    instrumentTitle?.text = it.instrument.getNameString(requireContext())
-                }
-            }
-        }
-
-        instrumentTitle?.setOnClickListener {
-            (requireActivity() as MainActivity).loadInstrumentsFragment()
-        }
-
-        viewModel.stringsModel.observe(viewLifecycleOwner) { model ->
-            if (model.changeId < stringViewChangeId)
-                stringViewChangeId = -1
-
-            if (model.settingsChangeId > stringViewChangeId) {
-                stringView?.visibility = if (model.isVisible) View.VISIBLE else View.GONE
-                stringView?.enableExtraPadding = model.useExtraPadding
-                val printer = model.noteNamePrinter
-                if (model.instrument.isChromatic && printer != null) {
-                    stringView?.setStrings(
-                        null,
-                        true,
-                        model.musicalScale.noteNameScale,
-                        model.musicalScale.noteIndexBegin,
-                        model.musicalScale.noteIndexEnd,
-                        printer
-                    )
-                } else if (printer != null) {
-                    stringView?.setStrings(
-                        model.instrument.strings,
-                        false,
-                        model.musicalScale.noteNameScale,
-                        model.musicalScale.noteIndexBegin,
-                        model.musicalScale.noteIndexEnd,
-                        printer
-                    )
-                }
-
-                if (model.isIncompatibleInstrument) {
-                    invalidInstrumentWarning?.visibility = View.VISIBLE
-                    instrumentTitle?.setStrokeColorResource(R.color.instrument_button_color_error)
-                    instrumentTitle?.setTextColor(context?.getColorStateList(R.color.instrument_button_color_error))
-                    instrumentTitle?.setIconTintResource(R.color.instrument_button_color_error)
-                    instrumentTitle?.backgroundTintList = context?.getColorStateList(R.color.instrument_button_background_color_error)
-                } else {
-                    invalidInstrumentWarning?.visibility = View.GONE
-                    instrumentTitle?.setStrokeColorResource(R.color.instrument_button_color_normal)
-                    instrumentTitle?.setTextColor(context?.getColorStateList(R.color.instrument_button_color_normal))
-                    instrumentTitle?.setIconTintResource(R.color.instrument_button_color_normal)
-                    instrumentTitle?.backgroundTintList = context?.getColorStateList(R.color.instrument_button_background_color_normal)
-                }
-            }
-
-            if (model.highlightChangeId > stringViewChangeId) {
-                stringView?.showAnchor = model.showStringAnchor
-                stringView?.activeStyleIndex = model.highlightedStyleIndex
-//                Log.v(
-//                    "Tuner",
-//                    "TunerFragmentSimple: observeStringsModel: highlighedStringIndex = ${model.highlightedStringIndex}"
+//    /** Instance for requesting audio recording permission.
+//     * This will create the sourceJob as soon as the permissions are granted.
+//     */
+//    private val askForPermissionAndNotifyViewModel = registerForActivityResult(
+//        ActivityResultContracts.RequestPermission()
+//    ) { result ->
+//        if (result) {
+//            viewModel.startSampling()
+//        } else {
+//            Toast.makeText(activity, getString(R.string.no_audio_recording_permission), Toast.LENGTH_LONG)
+//                .show()
+//            Log.v(
+//                "Tuner",
+//                "TunerFragment.askForPermissionAnNotifyViewModel: No audio recording permission is granted."
+//            )
+//        }
+//    }
+//
+//    private val menuProvider = object : MenuProvider {
+//        override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+//            menuInflater.inflate(R.menu.toolbar, menu)
+//        }
+//
+//        override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+//            when (menuItem.itemId) {
+//                R.id.action_settings -> {
+//                    // User chose the "Settings" item, show the app settings UI...
+//                    (activity as MainActivity?)?.loadSettingsFragment()
+//                    return true
+//                }
+//            }
+//            return false
+//        }
+//    }
+//
+//    override fun onCreateView(
+//        inflater: LayoutInflater,
+//        container: ViewGroup?,
+//        savedInstanceState: Bundle?
+//    ): View? {
+//        // Log.v("Tuner", "TunerFragmentSimple.onCreateView")
+//        val view = inflater.inflate(R.layout.diagrams_simple, container, false)
+//
+//        activity?.addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.RESUMED)
+//        pitchPlot = view.findViewById(R.id.pitch_plot)
+//        volumeMeter = view.findViewById(R.id.volume_meter)
+//        stringView = view.findViewById(R.id.string_view)
+//        instrumentTitle = view.findViewById(R.id.instrument_title)
+//        invalidInstrumentWarning = view.findViewById(R.id.incorrect_instrument_text)
+//
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                viewModel.instrument.collect {
+//                    instrumentTitle?.setIconResource(it.instrument.iconResource)
+//                    instrumentTitle?.text = it.instrument.getNameString(requireContext())
+//                }
+//            }
+//        }
+//
+//        instrumentTitle?.setOnClickListener {
+//            (requireActivity() as MainActivity).loadInstrumentsFragment()
+//        }
+//
+//        viewModel.stringsModel.observe(viewLifecycleOwner) { model ->
+//            if (model.changeId < stringViewChangeId)
+//                stringViewChangeId = -1
+//
+//            if (model.settingsChangeId > stringViewChangeId) {
+//                stringView?.visibility = if (model.isVisible) View.VISIBLE else View.GONE
+//                stringView?.enableExtraPadding = model.useExtraPadding
+//                val printer = model.noteNamePrinter
+//                if (model.instrument.isChromatic && printer != null) {
+//                    stringView?.setStrings(
+//                        null,
+//                        true,
+//                        model.musicalScale.noteNameScale,
+//                        model.musicalScale.noteIndexBegin,
+//                        model.musicalScale.noteIndexEnd,
+//                        printer
+//                    )
+//                } else if (printer != null) {
+//                    stringView?.setStrings(
+//                        model.instrument.strings,
+//                        false,
+//                        model.musicalScale.noteNameScale,
+//                        model.musicalScale.noteIndexBegin,
+//                        model.musicalScale.noteIndexEnd,
+//                        printer
+//                    )
+//                }
+//
+//                if (model.isIncompatibleInstrument) {
+//                    invalidInstrumentWarning?.visibility = View.VISIBLE
+//                    instrumentTitle?.setStrokeColorResource(R.color.instrument_button_color_error)
+//                    instrumentTitle?.setTextColor(context?.getColorStateList(R.color.instrument_button_color_error))
+//                    instrumentTitle?.setIconTintResource(R.color.instrument_button_color_error)
+//                    instrumentTitle?.backgroundTintList = context?.getColorStateList(R.color.instrument_button_background_color_error)
+//                } else {
+//                    invalidInstrumentWarning?.visibility = View.GONE
+//                    instrumentTitle?.setStrokeColorResource(R.color.instrument_button_color_normal)
+//                    instrumentTitle?.setTextColor(context?.getColorStateList(R.color.instrument_button_color_normal))
+//                    instrumentTitle?.setIconTintResource(R.color.instrument_button_color_normal)
+//                    instrumentTitle?.backgroundTintList = context?.getColorStateList(R.color.instrument_button_background_color_normal)
+//                }
+//            }
+//
+//            if (model.highlightChangeId > stringViewChangeId) {
+//                stringView?.showAnchor = model.showStringAnchor
+//                stringView?.activeStyleIndex = model.highlightedStyleIndex
+////                Log.v(
+////                    "Tuner",
+////                    "TunerFragmentSimple: observeStringsModel: highlighedStringIndex = ${model.highlightedStringIndex}"
+////                )
+//                if (model.highlightedStringIndex >= 0)
+//                    stringView?.highlightSingleString(model.highlightedStringIndex)
+//                else
+//                    stringView?.highlightByNote(model.highlightedNote)
+//            }
+//            stringViewChangeId = model.changeId
+//        }
+//
+//        stringView?.stringClickedListener = object : StringView.StringClickedListener {
+//            override fun onStringClicked(stringIndex: Int, note: MusicalNote) {
+//                viewModel.clickString(stringIndex, note)
+//            }
+//
+//            override fun onAnchorClicked() {
+//                viewModel.setTargetNote(-1, null)
+//                stringView?.setAutomaticControl()
+//            }
+//
+//            override fun onBackgroundClicked() {
+//                // stringView?.setAutomaticControl()
+//            }
+//        }
+//
+//
+////        pitchPlot?.yRange(400f, 500f, PlotView.NO_REDRAW)
+//        viewModel.pitchHistoryModel.observe(viewLifecycleOwner) { model ->
+//            if (model.changeId < pitchPlotChangeId)
+//                pitchPlotChangeId = -1
+//
+//            if (model.musicalScaleChangeId > pitchPlotChangeId || model.notePrintOptionsChangeId > pitchPlotChangeId) {
+//                model.noteNamePrinter?.let { printer ->
+//                    pitchPlot?.clearYTicks()
+//                    pitchPlot?.addYTicksLevel(
+//                        model.musicalScaleFrequencies,
+//                        noteNameScale = model.musicalScale.noteNameScale,
+//                        noteIndexBegin = model.musicalScale.noteIndexBegin,
+//                        noteNamePrinter = printer
+//                    )
+//                }
+//                pitchPlot?.setYTouchLimits(model.musicalScaleFrequencies[0], model.musicalScaleFrequencies.last(), 0L)
+//                pitchPlot?.enableExtraPadding = model.useExtraPadding
+//            }
+//            if (model.historyValuesChangeId > pitchPlotChangeId) {
+//                if (model.numHistoryValues == 0 || model.currentFrequency <= 0f) {
+//                    pitchPlot?.removePlotPoints(PitchHistoryModel.CURRENT_FREQUENCY_POINT_TAG)
+//                    pitchPlot?.removePlotPoints(PitchHistoryModel.TUNING_DIRECTION_POINT_TAG)
+//                    pitchPlot?.removePlotMarks(PitchHistoryModel.CENT_DEVIATION_MARK_TAG)
+//                } else {
+//                    val point = floatArrayOf(model.numHistoryValues - 1f, model.currentFrequency)
+//                    pitchPlot?.setPoints(point, tag = PitchHistoryModel.CURRENT_FREQUENCY_POINT_TAG)
+//                    pitchPlot?.setPoints(point, tag = PitchHistoryModel.TUNING_DIRECTION_POINT_TAG)
+//
+//                    // In theory this must be also reset, when the tolerance changes, but
+//                    // in practice, we this should never be an issue, since after tolerance is
+//                    // changed in the settings and when switching back to the tuner, we reevaluate
+//                    // the current frequency anyway.
+//                    if (model.centDeviationFromTarget.absoluteValue > model.toleranceInCents
+//                        && model.centDeviationFromTarget != Float.MAX_VALUE
+//                        && model.centDeviationFromTarget.absoluteValue <= PitchHistoryModel.MAX_SHOWN_CENT_DEVIATION) {
+//                        val pointSize = pitchPlot?.pointSizes?.get(model.currentFrequencyPointStyle) ?: 1f
+//                        pitchPlot?.setMark(
+//                            point[0], point[1],
+//                            label = getString(
+//                                R.string.cent,
+//                                model.centDeviationFromTarget.roundToInt()
+//                            ),
+//                            tag = PitchHistoryModel.CENT_DEVIATION_MARK_TAG,
+//                            anchor = if (model.centDeviationFromTarget < 0)
+//                                LabelAnchor.NorthEast else LabelAnchor.SouthEast,
+//                            style = PitchHistoryModel.CENT_DEVIATION_MARK_STYLE,
+//                            offsetX = pointSize,
+//                            offsetY = -pointSize * model.tuningDirectionPointRelativeOffset
+//                        )
+//                    } else {
+//                        pitchPlot?.removePlotMarks(PitchHistoryModel.CENT_DEVIATION_MARK_TAG)
+//                    }
+//                }
+//                pitchPlot?.plot(
+//                    model.historyValues, PitchHistoryModel.HISTORY_LINE_TAG,
+//                    indexBegin = 0, indexEnd = model.numHistoryValues
 //                )
-                if (model.highlightedStringIndex >= 0)
-                    stringView?.highlightSingleString(model.highlightedStringIndex)
-                else
-                    stringView?.highlightByNote(model.highlightedNote)
-            }
-            stringViewChangeId = model.changeId
-        }
-
-        stringView?.stringClickedListener = object : StringView.StringClickedListener {
-            override fun onStringClicked(stringIndex: Int, note: MusicalNote) {
-                viewModel.clickString(stringIndex, note)
-            }
-
-            override fun onAnchorClicked() {
-                viewModel.setTargetNote(-1, null)
-                stringView?.setAutomaticControl()
-            }
-
-            override fun onBackgroundClicked() {
-                // stringView?.setAutomaticControl()
-            }
-        }
-
-
-//        pitchPlot?.yRange(400f, 500f, PlotView.NO_REDRAW)
-        viewModel.pitchHistoryModel.observe(viewLifecycleOwner) { model ->
-            if (model.changeId < pitchPlotChangeId)
-                pitchPlotChangeId = -1
-
-            if (model.musicalScaleChangeId > pitchPlotChangeId || model.notePrintOptionsChangeId > pitchPlotChangeId) {
-                model.noteNamePrinter?.let { printer ->
-                    pitchPlot?.clearYTicks()
-                    pitchPlot?.addYTicksLevel(
-                        model.musicalScaleFrequencies,
-                        noteNameScale = model.musicalScale.noteNameScale,
-                        noteIndexBegin = model.musicalScale.noteIndexBegin,
-                        noteNamePrinter = printer
-                    )
-                }
-                pitchPlot?.setYTouchLimits(model.musicalScaleFrequencies[0], model.musicalScaleFrequencies.last(), 0L)
-                pitchPlot?.enableExtraPadding = model.useExtraPadding
-            }
-            if (model.historyValuesChangeId > pitchPlotChangeId) {
-                if (model.numHistoryValues == 0 || model.currentFrequency <= 0f) {
-                    pitchPlot?.removePlotPoints(PitchHistoryModel.CURRENT_FREQUENCY_POINT_TAG)
-                    pitchPlot?.removePlotPoints(PitchHistoryModel.TUNING_DIRECTION_POINT_TAG)
-                    pitchPlot?.removePlotMarks(PitchHistoryModel.CENT_DEVIATION_MARK_TAG)
-                } else {
-                    val point = floatArrayOf(model.numHistoryValues - 1f, model.currentFrequency)
-                    pitchPlot?.setPoints(point, tag = PitchHistoryModel.CURRENT_FREQUENCY_POINT_TAG)
-                    pitchPlot?.setPoints(point, tag = PitchHistoryModel.TUNING_DIRECTION_POINT_TAG)
-
-                    // In theory this must be also reset, when the tolerance changes, but
-                    // in practice, we this should never be an issue, since after tolerance is
-                    // changed in the settings and when switching back to the tuner, we reevaluate
-                    // the current frequency anyway.
-                    if (model.centDeviationFromTarget.absoluteValue > model.toleranceInCents
-                        && model.centDeviationFromTarget != Float.MAX_VALUE
-                        && model.centDeviationFromTarget.absoluteValue <= PitchHistoryModel.MAX_SHOWN_CENT_DEVIATION) {
-                        val pointSize = pitchPlot?.pointSizes?.get(model.currentFrequencyPointStyle) ?: 1f
-                        pitchPlot?.setMark(
-                            point[0], point[1],
-                            label = getString(
-                                R.string.cent,
-                                model.centDeviationFromTarget.roundToInt()
-                            ),
-                            tag = PitchHistoryModel.CENT_DEVIATION_MARK_TAG,
-                            anchor = if (model.centDeviationFromTarget < 0)
-                                LabelAnchor.NorthEast else LabelAnchor.SouthEast,
-                            style = PitchHistoryModel.CENT_DEVIATION_MARK_STYLE,
-                            offsetX = pointSize,
-                            offsetY = -pointSize * model.tuningDirectionPointRelativeOffset
-                        )
-                    } else {
-                        pitchPlot?.removePlotMarks(PitchHistoryModel.CENT_DEVIATION_MARK_TAG)
-                    }
-                }
-                pitchPlot?.plot(
-                    model.historyValues, PitchHistoryModel.HISTORY_LINE_TAG,
-                    indexBegin = 0, indexEnd = model.numHistoryValues
-                )
-                pitchPlot?.xRange(0f, 1.08f * model.historyValues.size)
-            }
-
-            if (model.yRangeChangeId > pitchPlotChangeId) {
-                pitchPlot?.yRange(model.yRangeAuto[0], model.yRangeAuto[1], 600L)
-            }
-
-            if (model.targetNoteChangeId > pitchPlotChangeId || model.notePrintOptionsChangeId > pitchPlotChangeId) {
-                val targetNote = model.targetNote
-                val printer = model.noteNamePrinter
-                if (model.targetNoteFrequency > 0f && targetNote != null && printer != null) {
-                    pitchPlot?.setYMark(
-                        model.targetNoteFrequency,
-                        targetNote,
-                        printer,
-                        PitchHistoryModel.TARGET_NOTE_MARK_TAG,
-                        LabelAnchor.East,
-                        model.targetNoteMarkStyle,
-                        placeLabelsOutsideBoundsIfPossible = true
-                    )
-                } else {
-                    pitchPlot?.removePlotMarks(PitchHistoryModel.TARGET_NOTE_MARK_TAG)
-                }
-            }
-
-            if (model.toleranceChangeId > pitchPlotChangeId) {
-                if (model.lowerToleranceFrequency > 0f && model.upperToleranceFrequency > 0f) {
-//                    Log.v("Tuner","TunerFragment: setting tolerance in pitchhistory: ${model.lowerToleranceFrequency} -- ${model.upperToleranceFrequency}, plotrange=${model.yRangeAuto[0]} -- ${model.yRangeAuto[1]}, currentFreq=${model.currentFrequency}")
-                    pitchPlot?.setMarks(
-                        null,
-                        floatArrayOf(
-                            model.lowerToleranceFrequency,
-                            model.upperToleranceFrequency
-                        ),
-                        PitchHistoryModel.TOLERANCE_MARK_TAG,
-                        styleIndex = PitchHistoryModel.TOLERANCE_STYLE,
-                        anchors = arrayOf(LabelAnchor.NorthWest, LabelAnchor.SouthWest),
-                        backgroundSizeType = MarkLabelBackgroundSize.FitLargest,
-                        placeLabelsOutsideBoundsIfPossible = false,
-                        maxLabelBounds = null
-                    ) { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float ->
-                        val s = when (index) {
-                            0 -> getString(R.string.cent, -model.toleranceInCents)
-                            1 -> getString(R.string.cent, model.toleranceInCents)
-                            else -> ""
-                        }
-                        StringLabel(
-                            s,
-                            textPaint,
-                            backgroundPaint,
-                            cornerRadius,
-                            gravity,
-                            paddingHorizontal,
-                            paddingHorizontal,
-                            paddingVertical,
-                            paddingVertical
-                        )
-                    }
-                } else {
-                    pitchPlot?.removePlotMarks(PitchHistoryModel.TOLERANCE_MARK_TAG)
-                }
-            }
-
-            pitchPlot?.setLineStyle(model.historyLineStyle, PitchHistoryModel.HISTORY_LINE_TAG)
-            pitchPlot?.setPointStyle(model.currentFrequencyPointStyle, PitchHistoryModel.CURRENT_FREQUENCY_POINT_TAG)
-            pitchPlot?.setPointStyle(model.tuningDirectionPointStyle, PitchHistoryModel.TUNING_DIRECTION_POINT_TAG)
-            val pointSize = pitchPlot?.pointSizes?.get(model.currentFrequencyPointStyle) ?: 1f
-            pitchPlot?.setPointOffset(
-                0f, pointSize * model.tuningDirectionPointRelativeOffset,
-                PitchHistoryModel.TUNING_DIRECTION_POINT_TAG
-            )
-//            Log.v("Tuner", "TunerFragment: tuningDirectionPointVisible = ${model.tuningDirectionPointVisible}, offset=${pointSize * model.tuningDirectionPointRelativeOffset}")
-            pitchPlot?.setPointVisible(model.tuningDirectionPointVisible, PitchHistoryModel.TUNING_DIRECTION_POINT_TAG)
-            pitchPlot?.setMarkStyle(model.targetNoteMarkStyle, PitchHistoryModel.TARGET_NOTE_MARK_TAG)
-            pitchPlotChangeId = model.changeId
-        }
-
-        return view
-    }
-
-    override fun onStart() {
-        super.onStart()
-        askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
-//        viewModel.setInstrument(instrumentsViewModel.instrument.value?.instrument ?: instrumentDatabase[0])
-    }
-
-    override fun onResume() {
-        super.onResume()
-        activity?.let {
-            it.setTitle(R.string.app_name)
-            if (it is MainActivity) {
-                it.setStatusAndNavigationBarColors()
-                it.setPreferenceBarVisibilty(View.VISIBLE)
-            }
-        }
-    }
-
-    override fun onStop() {
-        viewModel.stopSampling()
-        super.onStop()
-    }
+//                pitchPlot?.xRange(0f, 1.08f * model.historyValues.size)
+//            }
+//
+//            if (model.yRangeChangeId > pitchPlotChangeId) {
+//                pitchPlot?.yRange(model.yRangeAuto[0], model.yRangeAuto[1], 600L)
+//            }
+//
+//            if (model.targetNoteChangeId > pitchPlotChangeId || model.notePrintOptionsChangeId > pitchPlotChangeId) {
+//                val targetNote = model.targetNote
+//                val printer = model.noteNamePrinter
+//                if (model.targetNoteFrequency > 0f && targetNote != null && printer != null) {
+//                    pitchPlot?.setYMark(
+//                        model.targetNoteFrequency,
+//                        targetNote,
+//                        printer,
+//                        PitchHistoryModel.TARGET_NOTE_MARK_TAG,
+//                        LabelAnchor.East,
+//                        model.targetNoteMarkStyle,
+//                        placeLabelsOutsideBoundsIfPossible = true
+//                    )
+//                } else {
+//                    pitchPlot?.removePlotMarks(PitchHistoryModel.TARGET_NOTE_MARK_TAG)
+//                }
+//            }
+//
+//            if (model.toleranceChangeId > pitchPlotChangeId) {
+//                if (model.lowerToleranceFrequency > 0f && model.upperToleranceFrequency > 0f) {
+////                    Log.v("Tuner","TunerFragment: setting tolerance in pitchhistory: ${model.lowerToleranceFrequency} -- ${model.upperToleranceFrequency}, plotrange=${model.yRangeAuto[0]} -- ${model.yRangeAuto[1]}, currentFreq=${model.currentFrequency}")
+//                    pitchPlot?.setMarks(
+//                        null,
+//                        floatArrayOf(
+//                            model.lowerToleranceFrequency,
+//                            model.upperToleranceFrequency
+//                        ),
+//                        PitchHistoryModel.TOLERANCE_MARK_TAG,
+//                        styleIndex = PitchHistoryModel.TOLERANCE_STYLE,
+//                        anchors = arrayOf(LabelAnchor.NorthWest, LabelAnchor.SouthWest),
+//                        backgroundSizeType = MarkLabelBackgroundSize.FitLargest,
+//                        placeLabelsOutsideBoundsIfPossible = false,
+//                        maxLabelBounds = null
+//                    ) { index: Int, _: Float?, _: Float?, textPaint: TextPaint, backgroundPaint: Paint?, gravity: LabelGravity, paddingHorizontal: Float, paddingVertical: Float, cornerRadius: Float ->
+//                        val s = when (index) {
+//                            0 -> getString(R.string.cent, -model.toleranceInCents)
+//                            1 -> getString(R.string.cent, model.toleranceInCents)
+//                            else -> ""
+//                        }
+//                        StringLabel(
+//                            s,
+//                            textPaint,
+//                            backgroundPaint,
+//                            cornerRadius,
+//                            gravity,
+//                            paddingHorizontal,
+//                            paddingHorizontal,
+//                            paddingVertical,
+//                            paddingVertical
+//                        )
+//                    }
+//                } else {
+//                    pitchPlot?.removePlotMarks(PitchHistoryModel.TOLERANCE_MARK_TAG)
+//                }
+//            }
+//
+//            pitchPlot?.setLineStyle(model.historyLineStyle, PitchHistoryModel.HISTORY_LINE_TAG)
+//            pitchPlot?.setPointStyle(model.currentFrequencyPointStyle, PitchHistoryModel.CURRENT_FREQUENCY_POINT_TAG)
+//            pitchPlot?.setPointStyle(model.tuningDirectionPointStyle, PitchHistoryModel.TUNING_DIRECTION_POINT_TAG)
+//            val pointSize = pitchPlot?.pointSizes?.get(model.currentFrequencyPointStyle) ?: 1f
+//            pitchPlot?.setPointOffset(
+//                0f, pointSize * model.tuningDirectionPointRelativeOffset,
+//                PitchHistoryModel.TUNING_DIRECTION_POINT_TAG
+//            )
+////            Log.v("Tuner", "TunerFragment: tuningDirectionPointVisible = ${model.tuningDirectionPointVisible}, offset=${pointSize * model.tuningDirectionPointRelativeOffset}")
+//            pitchPlot?.setPointVisible(model.tuningDirectionPointVisible, PitchHistoryModel.TUNING_DIRECTION_POINT_TAG)
+//            pitchPlot?.setMarkStyle(model.targetNoteMarkStyle, PitchHistoryModel.TARGET_NOTE_MARK_TAG)
+//            pitchPlotChangeId = model.changeId
+//        }
+//
+//        return view
+//    }
+//
+//    override fun onStart() {
+//        super.onStart()
+//        askForPermissionAndNotifyViewModel.launch(Manifest.permission.RECORD_AUDIO)
+////        viewModel.setInstrument(instrumentsViewModel.instrument.value?.instrument ?: instrumentDatabase[0])
+//    }
+//
+//    override fun onResume() {
+//        super.onResume()
+//        activity?.let {
+//            it.setTitle(R.string.app_name)
+//            if (it is MainActivity) {
+//                it.setStatusAndNavigationBarColors()
+//                it.setPreferenceBarVisibilty(View.VISIBLE)
+//            }
+//        }
+//    }
+//
+//    override fun onStop() {
+//        viewModel.stopSampling()
+//        super.onStop()
+//    }
 }
