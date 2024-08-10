@@ -26,6 +26,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIO
 import de.moekadu.tuner.instruments.InstrumentResources2
+import de.moekadu.tuner.instruments.migratingFromV6
 import de.moekadu.tuner.navigation.ImportInstrumentsDialogRoute
 import de.moekadu.tuner.navigation.InstrumentsRoute
 import de.moekadu.tuner.navigation.TunerRoute
@@ -148,6 +149,9 @@ class MainActivity2 : ComponentActivity() {
                 }
             }
         }
+        Log.v("Tuner", "Migrating instruments? ${pref.isMigratingFromV6}")
+        if (pref.isMigratingFromV6)
+            instruments.migratingFromV6(this)
     }
 
     override fun onNewIntent(intent: Intent) {

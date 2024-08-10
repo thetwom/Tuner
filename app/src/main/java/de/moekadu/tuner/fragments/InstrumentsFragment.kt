@@ -48,10 +48,10 @@ class InstrumentsFragment : Fragment() {
     private var lastRemovedInstrumentIndex = -1
     private var lastRemovedInstrument: Instrument? = null
 
-    private val instrumentArchiving = InstrumentArchiving(
-        { instrumentsViewModel.customInstrumentDatabase} ,
-        this, { parentFragmentManager }, { requireContext() }
-    )
+//    private val instrumentArchiving = InstrumentArchiving(
+//        { instrumentsViewModel.customInstrumentDatabase} ,
+//        this, { parentFragmentManager }, { requireContext() }
+//    )
 
     private val deleteIconSpacing = (12f * Resources.getSystem().displayMetrics.density).toInt()
 
@@ -61,36 +61,36 @@ class InstrumentsFragment : Fragment() {
         }
 
         override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-            when (menuItem.itemId) {
-                R.id.action_archive -> {
-                    if (instrumentsViewModel.customInstrumentDatabase.size == 0) {
-                        Toast.makeText(requireContext(), R.string.database_empty, Toast.LENGTH_LONG)
-                            .show()
-                    } else {
-                        instrumentArchiving.archiveInstruments(instrumentsViewModel.customInstrumentDatabase)
-                    }
-                    return true
-                }
-                R.id.action_unarchive -> {
-                    instrumentArchiving.unarchiveInstruments()
-                    return true
-                }
-                R.id.action_share -> {
-                    if (instrumentsViewModel.customInstrumentDatabase.size == 0) {
-                        Toast.makeText(
-                            requireContext(),
-                            R.string.no_instruments_for_sharing,
-                            Toast.LENGTH_LONG
-                        ).show()
-                    } else {
-                        val dialogFragment = InstrumentsSharingDialog(
-                            requireContext(),
-                            instrumentsViewModel.customInstrumentDatabase.instruments
-                        )
-                        dialogFragment.show(parentFragmentManager, "tag")
-                    }
-                }
-            }
+//            when (menuItem.itemId) {
+//                R.id.action_archive -> {
+//                    if (instrumentsViewModel.customInstrumentDatabase.size == 0) {
+//                        Toast.makeText(requireContext(), R.string.database_empty, Toast.LENGTH_LONG)
+//                            .show()
+//                    } else {
+//                        instrumentArchiving.archiveInstruments(instrumentsViewModel.customInstrumentDatabase)
+//                    }
+//                    return true
+//                }
+//                R.id.action_unarchive -> {
+//                    instrumentArchiving.unarchiveInstruments()
+//                    return true
+//                }
+//                R.id.action_share -> {
+//                    if (instrumentsViewModel.customInstrumentDatabase.size == 0) {
+//                        Toast.makeText(
+//                            requireContext(),
+//                            R.string.no_instruments_for_sharing,
+//                            Toast.LENGTH_LONG
+//                        ).show()
+//                    } else {
+//                        val dialogFragment = InstrumentsSharingDialog(
+//                            requireContext(),
+//                            instrumentsViewModel.customInstrumentDatabase.instruments
+//                        )
+//                        dialogFragment.show(parentFragmentManager, "tag")
+//                    }
+//                }
+//            }
             return false
         }
     }
@@ -113,7 +113,7 @@ class InstrumentsFragment : Fragment() {
             val instruments = InstrumentDatabase.stringToInstruments(instrumentsString).instruments
             val taskString = bundle.getString(ImportInstrumentsDialog.INSERT_MODE_KEY, InstrumentDatabase.InsertMode.Append.toString())
             val task = InstrumentDatabase.InsertMode.valueOf(taskString)
-            instrumentsViewModel.customInstrumentDatabase.loadInstruments(instruments, task)
+//            instrumentsViewModel.customInstrumentDatabase.loadInstruments(instruments, task)
         }
 
         recyclerView = view.findViewById(R.id.instrument_list)
@@ -122,15 +122,15 @@ class InstrumentsFragment : Fragment() {
 
         instrumentSectionPredefinedAdapter.sectionClickedListener =
             InstrumentsSectionAdapter.SectionClickedListener {
-                instrumentsViewModel.expandPredefinedDatabase(
-                    !(instrumentsViewModel.instrumentListModel.value.predefinedInstrumentsExpanded)
-                )
+//                instrumentsViewModel.expandPredefinedDatabase(
+//                    !(instrumentsViewModel.instrumentListModel.value.predefinedInstrumentsExpanded)
+//                )
             }
         instrumentSectionCustomAdapter.sectionClickedListener =
             InstrumentsSectionAdapter.SectionClickedListener {
-                instrumentsViewModel.expandCustomDatabase(
-                    !(instrumentsViewModel.instrumentListModel.value.customInstrumentsExpanded)
-                )
+//                instrumentsViewModel.expandCustomDatabase(
+//                    !(instrumentsViewModel.instrumentListModel.value.customInstrumentsExpanded)
+//                )
             }
 
         recyclerView?.adapter = ConcatAdapter(
@@ -144,7 +144,7 @@ class InstrumentsFragment : Fragment() {
             object : InstrumentsAdapter.OnInstrumentClickedListener {
                 override fun onInstrumentClicked(instrument: Instrument, stableId: Long) {
 //                    Log.v("Tuner", "InstrumentsFragment.onCreateView: new instrument: $instrument")
-                    instrumentsViewModel.setInstrument(instrument)
+//                    instrumentsViewModel.setInstrument(instrument)
                     (activity as MainActivity?)?.handleGoBackCommand()}
 
                 override fun onEditIconClicked(instrument: Instrument, stableId: Long) {}
@@ -163,7 +163,7 @@ class InstrumentsFragment : Fragment() {
             object : InstrumentsAdapter.OnInstrumentClickedListener {
                 override fun onInstrumentClicked(instrument: Instrument, stableId: Long) {
 //            Log.v("Tuner", "InstrumentsFragment.onCreateView: new instrument: $instrument")
-                    instrumentsViewModel.setInstrument(instrument)
+//                    instrumentsViewModel.setInstrument(instrument)
                     (activity as MainActivity?)?.handleGoBackCommand()
                 }
 
@@ -229,7 +229,7 @@ class InstrumentsFragment : Fragment() {
                     val fromPos = viewHolder.bindingAdapterPosition
                     val toPos = target.bindingAdapterPosition
                     if (fromPos != toPos) {
-                        instrumentsViewModel.moveCustomInstrument(fromPos, toPos)
+//                        instrumentsViewModel.moveCustomInstrument(fromPos, toPos)
                     }
                     return true
                 }
@@ -240,31 +240,31 @@ class InstrumentsFragment : Fragment() {
                 if (viewHolder is InstrumentsAdapter.ViewHolder && (viewHolder.instrument?.stableId ?: -1) >= 0) {
                     lastRemovedInstrumentIndex = viewHolder.bindingAdapterPosition
 //                    Log.v("Tuner", "InstrumentsFragment:onSwiped removing index $lastRemovedInstrumentIndex")
-                    lastRemovedInstrument =
-                        instrumentsViewModel.removeCustomInstrument(
-                            lastRemovedInstrumentIndex
-                        )
+//                    lastRemovedInstrument =
+//                        instrumentsViewModel.removeCustomInstrument(
+//                            lastRemovedInstrumentIndex
+//                        )
 
-                    (getView() as CoordinatorLayout?)?.let { coLayout ->
-                        lastRemovedInstrument?.let { removedItem ->
-                            Snackbar.make(
-                                coLayout,
-                                getString(R.string.instrument_deleted),
-                                Snackbar.LENGTH_LONG
-                            )
-                                .setAction(R.string.undo) {
-                                    if (lastRemovedInstrument != null) {
-                                        instrumentsViewModel.addCustomInstrument(
-                                            lastRemovedInstrumentIndex,
-                                            removedItem
-                                        )
-                                        lastRemovedInstrument = null
-                                        lastRemovedInstrumentIndex = -1
-                                    }
-                                }.show()
-                        }
-
-                    }
+//                    (getView() as CoordinatorLayout?)?.let { coLayout ->
+//                        lastRemovedInstrument?.let { removedItem ->
+//                            Snackbar.make(
+//                                coLayout,
+//                                getString(R.string.instrument_deleted),
+//                                Snackbar.LENGTH_LONG
+//                            )
+//                                .setAction(R.string.undo) {
+//                                    if (lastRemovedInstrument != null) {
+//                                        instrumentsViewModel.addCustomInstrument(
+//                                            lastRemovedInstrumentIndex,
+//                                            removedItem
+//                                        )
+//                                        lastRemovedInstrument = null
+//                                        lastRemovedInstrumentIndex = -1
+//                                    }
+//                                }.show()
+//                        }
+//
+//                    }
                 }
             }
 
@@ -325,61 +325,61 @@ class InstrumentsFragment : Fragment() {
         val touchHelper = ItemTouchHelper(simpleTouchHelper)
         touchHelper.attachToRecyclerView(recyclerView)
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                requireContext().preferenceResources.noteNamePrinter.collect {
-                    instrumentsPredefinedAdapter.setNoteNamePrinter(noteNamePrinter = it, recyclerView)
-                    instrumentsCustomAdapter.setNoteNamePrinter(noteNamePrinter = it, recyclerView)
-                }
-            }
-        }
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                requireContext().preferenceResources.noteNamePrinter.collect {
+//                    instrumentsPredefinedAdapter.setNoteNamePrinter(noteNamePrinter = it, recyclerView)
+//                    instrumentsCustomAdapter.setNoteNamePrinter(noteNamePrinter = it, recyclerView)
+//                }
+//            }
+//        }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                instrumentsViewModel.instrumentListModel.collect {
-                    instrumentSectionPredefinedAdapter.expanded = it.predefinedInstrumentsExpanded
-                    instrumentSectionCustomAdapter.expanded = it.customInstrumentsExpanded
-                    instrumentSectionCustomAdapter.visible = it.areSectionTitlesVisible
-                    instrumentSectionPredefinedAdapter.visible = it.areSectionTitlesVisible
-
-                    instrumentsCustomAdapter.submitList(it.customInstruments)
-                    instrumentsPredefinedAdapter.submitList(it.predefinedInstruments)
-
-                    when (it.instrumentAndSection.section) {
-                        InstrumentResources.Section.Predefined -> {
-                            instrumentsPredefinedAdapter.setActiveStableId(
-                                it.instrumentAndSection.instrument.stableId,
-                                recyclerView
-                            )
-                            instrumentsCustomAdapter.setActiveStableId(
-                                Instrument.NO_STABLE_ID,
-                                recyclerView
-                            )
-                        }
-                        InstrumentResources.Section.Custom -> {
-                            instrumentsPredefinedAdapter.setActiveStableId(
-                                Instrument.NO_STABLE_ID,
-                                recyclerView
-                            )
-                            instrumentsCustomAdapter.setActiveStableId(
-                                it.instrumentAndSection.instrument.stableId,
-                                recyclerView
-                            )
-                        }
-                        InstrumentResources.Section.Undefined -> {
-                            instrumentsPredefinedAdapter.setActiveStableId(
-                                Instrument.NO_STABLE_ID,
-                                recyclerView
-                            )
-                            instrumentsCustomAdapter.setActiveStableId(
-                                Instrument.NO_STABLE_ID,
-                                recyclerView
-                            )
-                        }
-                    }
-                }
-            }
-        }
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                instrumentsViewModel.instrumentListModel.collect {
+//                    instrumentSectionPredefinedAdapter.expanded = it.predefinedInstrumentsExpanded
+//                    instrumentSectionCustomAdapter.expanded = it.customInstrumentsExpanded
+//                    instrumentSectionCustomAdapter.visible = it.areSectionTitlesVisible
+//                    instrumentSectionPredefinedAdapter.visible = it.areSectionTitlesVisible
+//
+//                    instrumentsCustomAdapter.submitList(it.customInstruments)
+//                    instrumentsPredefinedAdapter.submitList(it.predefinedInstruments)
+//
+//                    when (it.instrumentAndSection.section) {
+//                        InstrumentResources.Section.Predefined -> {
+//                            instrumentsPredefinedAdapter.setActiveStableId(
+//                                it.instrumentAndSection.instrument.stableId,
+//                                recyclerView
+//                            )
+//                            instrumentsCustomAdapter.setActiveStableId(
+//                                Instrument.NO_STABLE_ID,
+//                                recyclerView
+//                            )
+//                        }
+//                        InstrumentResources.Section.Custom -> {
+//                            instrumentsPredefinedAdapter.setActiveStableId(
+//                                Instrument.NO_STABLE_ID,
+//                                recyclerView
+//                            )
+//                            instrumentsCustomAdapter.setActiveStableId(
+//                                it.instrumentAndSection.instrument.stableId,
+//                                recyclerView
+//                            )
+//                        }
+//                        InstrumentResources.Section.Undefined -> {
+//                            instrumentsPredefinedAdapter.setActiveStableId(
+//                                Instrument.NO_STABLE_ID,
+//                                recyclerView
+//                            )
+//                            instrumentsCustomAdapter.setActiveStableId(
+//                                Instrument.NO_STABLE_ID,
+//                                recyclerView
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        }
 
         tuningEditorFab = view.findViewById(R.id.tuning_editor_fab)
         tuningEditorFab?.setOnClickListener {

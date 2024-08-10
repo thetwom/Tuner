@@ -251,12 +251,12 @@ class ReferenceNotePreferenceDialog: DialogFragment() {
         // present notes from C0 to C10 (or something similar for non-standard 12-tone scales)
         val noteIndexBegin = noteNameScale.getIndexOfNote(noteNameScale.notes[0].copy(octave = 0))
         val noteIndexEnd = noteNameScale.getIndexOfNote(noteNameScale.notes[0].copy(octave = 10)) + 1
-        referenceNoteView?.setNotes(
-            noteIndexBegin,
-            noteIndexEnd,
-            noteNameScale,
-            savedReferenceNote ?: initialPrefs!!.referenceNote,
-            requireContext().preferenceResources.noteNamePrinter.value)
+//        referenceNoteView?.setNotes(
+//            noteIndexBegin,
+//            noteIndexEnd,
+//            noteNameScale,
+//            savedReferenceNote ?: initialPrefs!!.referenceNote,
+//            requireContext().preferenceResources.noteNamePrinter.value)
 
         editTextView?.setText(savedFrequencyString ?: initialPrefs!!.referenceFrequency)
         editTextView?.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
@@ -484,8 +484,8 @@ class TemperamentPreferenceDialog : DialogFragment() {
             null
 
         // set the new note scale in the root note selector and select the required note
-        rootNoteSelector?.setNotes(noteIndexBegin, noteIndexEnd, musicalScaleLocal.noteNameScale,
-            rootNote, requireContext().preferenceResources.noteNamePrinter.value)
+//        rootNoteSelector?.setNotes(noteIndexBegin, noteIndexEnd, musicalScaleLocal.noteNameScale,
+//            rootNote, requireContext().preferenceResources.noteNamePrinter.value)
 
         val selectedRootNote = rootNoteSelector?.activeNote ?: musicalScaleLocal.noteNameScale.notes[0].copy(octave = 4)
         updateCentAndRatioTable(selectedRootNote, musicalScaleLocal.noteNameScale, centArray, ratioArray)
@@ -511,24 +511,24 @@ class TemperamentPreferenceDialog : DialogFragment() {
     private fun updateCentAndRatioTable(rootNote: MusicalNote, noteNameScale: NoteNameScale,
                                         centArray: FloatArray, ratioArray: Array<RationalNumber>?) {
         val ctx = context ?: return
-        val noteNamePrinter = ctx.preferenceResources.noteNamePrinter.value
+//        val noteNamePrinter = ctx.preferenceResources.noteNamePrinter.value
         val rootNoteIndex = noteNameScale.getIndexOfNote(rootNote)
         //require(rootNoteIndex >= 0)
 
-        tableAdapter.setEntries(
-            Array(centArray.size) {
-                // delete octave index, so that it is not printed
-                val note = noteNameScale.getNoteOfIndex(rootNoteIndex + it)
-                noteNamePrinter.noteToCharSequence(note, withOctave = false) ?: ""
-            },
-            centArray,
-            ratioArray
-        )
+//        tableAdapter.setEntries(
+//            Array(centArray.size) {
+//                // delete octave index, so that it is not printed
+//                val note = noteNameScale.getNoteOfIndex(rootNoteIndex + it)
+////                noteNamePrinter.noteToCharSequence(note, withOctave = false) ?: ""
+//            },
+//            centArray,
+//            ratioArray
+//        )
     }
 
     private fun updateCircleOfFifthNoteNames(rootNote:MusicalNote, noteNameScale: NoteNameScale) {
-        circleOfFifthsAdapter.setEntries(rootNote, noteNameScale, null,
-            requireContext().preferenceResources.noteNamePrinter.value)
+//        circleOfFifthsAdapter.setEntries(rootNote, noteNameScale, null,
+//            requireContext().preferenceResources.noteNamePrinter.value)
     }
 
     private fun updateCircleOfFifthCorrections(fifths: TemperamentCircleOfFifths?) {
@@ -541,7 +541,7 @@ class TemperamentPreferenceDialog : DialogFragment() {
         circleOfFifths?.visibility = View.VISIBLE
         circleOfFifthsDesc?.visibility = View.VISIBLE
         circleOfFifthsTitle?.visibility = View.VISIBLE
-        circleOfFifthsAdapter.setEntries(null, null, fifths,
-            requireContext().preferenceResources.noteNamePrinter.value)
+//        circleOfFifthsAdapter.setEntries(null, null, fifths,
+//            requireContext().preferenceResources.noteNamePrinter.value)
     }
 }

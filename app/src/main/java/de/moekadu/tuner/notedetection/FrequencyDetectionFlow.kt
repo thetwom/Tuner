@@ -10,23 +10,23 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlin.coroutines.coroutineContext
 
-fun frequencyDetectionFlow(pref: PreferenceResources, waveWriter: WaveWriter?) = frequencyDetectionFlow(
-    overlap = pref.overlap.value,
-    windowSize = pref.windowSize.value,
-    sampleRate = DefaultValues.SAMPLE_RATE,
-    testFunction = testFunction,
-    waveWriter = waveWriter,
-    frequencyMin = DefaultValues.FREQUENCY_MIN,
-    frequencyMax = DefaultValues.FREQUENCY_MAX,
-    subharmonicsTolerance = 0.05f,
-    subharmonicsPeakRatio = 0.8f,
-    harmonicTolerance = 0.1f,
-    minimumFactorOverLocalMean = 2f,
-    maxGapBetweenHarmonics = 10,
-    maxNumHarmonicsForInharmonicity = 8,
-    windowType = pref.windowing.value,
-    acousticWeighting = AcousticZeroWeighting() //AcousticCWeighting() // TODO: set weighting from preferences, also in TunerViewModel
-)
+//fun frequencyDetectionFlow(pref: PreferenceResources, waveWriter: WaveWriter?) = frequencyDetectionFlow(
+//    overlap = pref.overlap.value,
+//    windowSize = pref.windowSize.value,
+//    sampleRate = DefaultValues.SAMPLE_RATE,
+//    testFunction = testFunction,
+//    waveWriter = waveWriter,
+//    frequencyMin = DefaultValues.FREQUENCY_MIN,
+//    frequencyMax = DefaultValues.FREQUENCY_MAX,
+//    subharmonicsTolerance = 0.05f,
+//    subharmonicsPeakRatio = 0.8f,
+//    harmonicTolerance = 0.1f,
+//    minimumFactorOverLocalMean = 2f,
+//    maxGapBetweenHarmonics = 10,
+//    maxNumHarmonicsForInharmonicity = 8,
+//    windowType = pref.windowing.value,
+//    acousticWeighting = AcousticZeroWeighting() //AcousticCWeighting() // TODO: set weighting from preferences, also in TunerViewModel
+//)
 
 
 fun frequencyDetectionFlow(

@@ -1,8 +1,6 @@
 package de.moekadu.tuner.ui.screens
 
 import android.content.Context
-import android.os.Build
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,7 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -32,9 +29,6 @@ import de.moekadu.tuner.ui.preferences.SliderPreference
 import de.moekadu.tuner.ui.preferences.SwitchPreference
 import de.moekadu.tuner.ui.theme.TunerTheme
 import de.moekadu.tuner.viewmodels.PreferencesViewModel
-import kotlinx.coroutines.launch
-import java.text.DecimalFormat
-import java.text.DecimalFormatSymbols
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
