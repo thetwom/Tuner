@@ -26,10 +26,12 @@ data class TunerPlotStyle(
     val negativeColor: Color,
     val positiveColor: Color,
     val inactiveColor: Color,
+    val inactiveStringColor: Color,
     val stringColor: Color,
     val onNegativeColor: Color,
     val onPositiveColor: Color,
     val onInactiveColor: Color,
+    val onInactiveStringColor: Color,
     val onStringColor: Color,
     val targetNoteLineWith: Dp,
     val extraMarkLineWidth: Dp,
@@ -58,10 +60,12 @@ data class TunerPlotStyle(
             negativeColor: Color = MaterialTheme.tunerColors.negative,
             positiveColor: Color = MaterialTheme.tunerColors.positive,
             inactiveColor: Color = MaterialTheme.colorScheme.outline,
+            inactiveStringColor: Color = MaterialTheme.colorScheme.primary,
             stringColor: Color = MaterialTheme.colorScheme.inverseSurface,
             onNegativeColor: Color = MaterialTheme.tunerColors.onNegative,
             onPositiveColor: Color = MaterialTheme.tunerColors.onPositive,
             onInactiveColor: Color = MaterialTheme.colorScheme.onSurface,
+            onInactiveStringColor: Color = MaterialTheme.colorScheme.onPrimary,
             onStringColor: Color = MaterialTheme.colorScheme.inverseOnSurface,
             targetNoteLineWith: Dp = 2.dp,
             extraMarkLineWidth: Dp = 1.dp,
@@ -80,7 +84,7 @@ data class TunerPlotStyle(
                 color = MaterialTheme.colorScheme.primary
             ),
             noteSelectorStyle: TextStyle = MaterialTheme.tunerTypography.plotLarge,
-            margin: Dp = 8.dp
+            margin: Dp = 12.dp
         ): TunerPlotStyle {
             return TunerPlotStyle(
                 tickFontStyle,
@@ -96,10 +100,12 @@ data class TunerPlotStyle(
                 negativeColor,
                 positiveColor,
                 inactiveColor,
+                inactiveStringColor,
                 stringColor,
                 onNegativeColor,
                 onPositiveColor,
                 onInactiveColor,
+                onInactiveStringColor,
                 onStringColor,
                 targetNoteLineWith,
                 extraMarkLineWidth,

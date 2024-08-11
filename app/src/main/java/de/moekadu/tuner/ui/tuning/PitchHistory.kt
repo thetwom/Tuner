@@ -232,22 +232,7 @@ fun PitchHistory(
                 ceil(frequencyNoteIndex) + visibleRangeInIndices2
             )
         }
-//
-//        Log.v("Tuner", "PitchHistory: targetNoteIndex = $targetNoteIndex")
-////        val currentFrequency = state.pointCoordinates?.y
-////            ?: musicalScale.getNoteFrequency(targetNoteIndex)
-//        val frequencyNoteIndex = musicalScale.getNoteIndex(currentFrequency)
-//        val lowerIndex = min(
-//            targetNoteIndex - visibleRangeInIndices,
-//            floor(frequencyNoteIndex) - visibleRangeInIndices2
-//        )
-//        val upperIndex = max(
-//            targetNoteIndex + visibleRangeInIndices,
-//            ceil(frequencyNoteIndex) + visibleRangeInIndices2
-//        )
-//        val lower = musicalScale.getNoteFrequency(lowerIndex)
-//        val upper = musicalScale.getNoteFrequency(upperIndex)
-//        lower .. upper
+
         musicalScale.getNoteFrequency(noteIndexRange.start) .. musicalScale.getNoteFrequency(
             noteIndexRange.endInclusive)
     }
@@ -316,7 +301,7 @@ fun PitchHistory(
             )
         }
 
-        val targetMark = remember(targetNote, targetFrequency, tuningState) {
+        val targetMark = remember(targetNote, targetFrequency, tuningState, notePrintOptions) {
             persistentListOf(
                 HorizontalMark(
                     targetFrequency,

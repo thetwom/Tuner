@@ -306,6 +306,8 @@ fun Strings(
     onInTuneColor: Color = MaterialTheme.tunerColors.onPositive,
     outOfTuneColor: Color = MaterialTheme.tunerColors.negative,
     onOutOfTuneColor: Color = MaterialTheme.tunerColors.onNegative,
+    unknownTuningColor: Color = MaterialTheme.colorScheme.primary,
+    onUnknownTuningColor: Color = MaterialTheme.colorScheme.onPrimary,
     fontSize: TextUnit = TextUnit.Unspecified,
     sidebarPosition: StringsSidebarPosition = StringsSidebarPosition.End,
     sidebarWidth: Dp = 30.dp,
@@ -361,19 +363,19 @@ fun Strings(
         octaveRange = minOctave..maxOctave
     ) + DpSize(16.dp, 4.dp)
 
-    val tuningColor = remember(tuningState, inTuneColor, outOfTuneColor, defaultColor) {
+    val tuningColor = remember(tuningState, inTuneColor, outOfTuneColor, unknownTuningColor) {
         when (tuningState) {
             TuningState.InTune -> inTuneColor
             TuningState.TooLow, TuningState.TooHigh -> outOfTuneColor
-            else -> defaultColor
+            else -> unknownTuningColor
         }
     }
 
-    val onTuningColor = remember(tuningState, onInTuneColor, onOutOfTuneColor, onDefaultColor) {
+    val onTuningColor = remember(tuningState, onInTuneColor, onOutOfTuneColor, onUnknownTuningColor) {
         when (tuningState) {
             TuningState.InTune -> onInTuneColor
             TuningState.TooLow, TuningState.TooHigh -> onOutOfTuneColor
-            else -> onDefaultColor
+            else -> onUnknownTuningColor
         }
     }
 
@@ -410,6 +412,7 @@ fun Strings(
         modifier = modifier
             .fillMaxWidth()
             .drawWithContent {
+                drawContent()
                 drawRoundRect(
                     outlineColor,
                     cornerRadius = CornerRadius(outline.cornerRadius.toPx()),
@@ -425,7 +428,6 @@ fun Strings(
                         size.width - sidebarWidth.toPx() - outline.lineWidth.toPx(),
                         size.height - outline.lineWidth.toPx())
                 )
-                drawContent()
             }
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -606,6 +608,7 @@ private fun StringsPreview() {
                 onStringClicked = { key, note ->
                     highlightedNote = note
                 },
+                outline = PlotWindowOutline(lineWidth = 2.dp),
                 modifier = Modifier.weight(0.5f)
             )
             Spacer(modifier = Modifier.height(8.dp))
