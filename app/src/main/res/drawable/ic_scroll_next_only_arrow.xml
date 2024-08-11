@@ -4,33 +4,16 @@
     android:viewportWidth="29"
     android:viewportHeight="65">
 
-<!--  <path-->
-<!--      android:pathData="M8.1044,5.5749h13.4268v11.7066h-13.4268z"-->
-<!--      android:fillColor="?attr/colorPrimary"/>-->
-<!--  <path-->
-<!--      android:pathData="m1.241,11.2902h26.9904"-->
-<!--      android:strokeWidth="3.19442"-->
-<!--      android:strokeColor="?attr/colorPrimary"-->
-<!--      android:strokeLineCap="butt"/>-->
-
-<!--  <path-->
-<!--      android:pathData="M8.1044,47.5749h13.4268v11.7066h-13.4268z"-->
-<!--      android:fillColor="?attr/colorPrimary"/>-->
-<!--  <path-->
-<!--      android:pathData="m1.241,53.2902h26.9904"-->
-<!--      android:strokeWidth="3.19442"-->
-<!--      android:strokeColor="?attr/colorPrimary"-->
-<!--      android:strokeLineCap="butt"/>-->
 
   <path
       android:pathData="m25.9126,29.6322 l-11.1682,11.3647 -11.1682,-11.3647"
       android:strokeWidth="3.1944182"
-      android:strokeColor="?attr/colorOnSurface"
+      android:strokeColor="#FFFFFF"
       android:strokeLineCap="butt"/>
   <path
       android:pathData="m14.7444,20.9921v20.0048"
       android:strokeLineJoin="miter"
       android:strokeWidth="2.55053"
-      android:strokeColor="?attr/colorOnSurface"
+      android:strokeColor="#FFFFFF"
       android:strokeLineCap="butt"/>
 </vector>

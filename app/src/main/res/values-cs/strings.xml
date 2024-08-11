@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Tuner</string>
-    <string name="a4_frequency">Frekvence noty A<sup><small>4</small></sup></string>
     <string name="windowing_function">Funkce okna</string>
     <string name="window_hamming">Okno Hamming</string>
     <string name="window_hann">Okno Hann</string>
@@ -17,10 +16,8 @@
     <string name="overlap">Překryv okna</string>
     <string name="window_size">Velikost okna</string>
     <string name="minimum_frequency">Minimální frekvence:</string>
-    <string name="no_audio_recording_permission">Povolení k nahrávání zvuku nebylo poskytnuto.</string>
     <string name="pitch_history_duration">Doba historie výšky tónu</string>
     <string name="pitch_history_num_faulty_values">Přejít na novou výšku tónu</string>
-    <string name="use_hint">Použít předchozí hodnoty k vylepšení odhadu výšky tónu</string>
     <string name="num_moving_average">Klouzavý průměr</string>
     <string name="about">O aplikaci</string>
     <string name="about_message">Tuner app Verze: %s License: GPLv3\nhttps://github.com/thetwom/Tuner</string>
@@ -33,14 +30,11 @@
     <string name="spectrum">spektrum</string>
     <string name="keep_screen_on">Nevypínat displej</string>
     <string name="samples">vzor</string>
-    <string name="max_noise">Maximální povolený šum</string>
-    <string name="max_noise_summary">Ignorovat vstup když je šum nad %d&#x200A;%%.</string>
     <string name="scientific_mode">Vědecký režim</string>
     <string name="tolerance_in_cents">Tolerance</string>
     <string name="expert">Expert</string>
     <string name="basic">Základ</string>
     <string name="others">Další</string>
-    <string name="instrument_icon">Icona nástroje</string>
     <string name="chromatic">Chromatická</string>
     <string name="guitar_eadgbe">6strunná kytara</string>
     <string name="bass_eadg">4strunná baskytara</string>
@@ -61,7 +55,6 @@
     <string name="violin_gdae">Housle</string>
     <string name="abort">Zrušit</string>
     <string name="instrument_name">Název nástroje</string>
-    <string name="clear_instrument_name">Smazat název nástroje</string>
     <string name="add_note">Přidat notu</string>
     <string name="delete_note">Smazat notu</string>
     <string name="lately_detected_notes">Nedávno smazané noty</string>
@@ -71,21 +64,16 @@
     <string name="custom_instruments">Vlastní</string>
     <string name="file_empty">Soubor je prázdný: %s</string>
     <string name="file_invalid">Soubor je neplatný: %s</string>
-    <string name="instrument_deleted">Nástroj smazán</string>
     <string name="undo">Zpět</string>
-    <string name="add_new_tuning">Přidat nové ladění</string>
     <string name="pick_icon">Vybrat ikonu</string>
     <string name="copy_instrument">Kopírovat nástroj</string>
-    <string name="close_expansion">Zavřít zvětšené ikony</string>
     <string name="copy_extension">%s (kopie)</string>
     <string name="failed_to_archive_instruments">Nepodařilo se uložit nástroj do souboru</string>
-    <string name="database_saved">Ukládání nástrojů do \"%s\".</string>
     <string name="database_empty">Neexistují žádné nástroje, které by bylo možné uložit.</string>
     <string name="replace_current_list">Nahradit aktuální seznam</string>
     <string name="prepend_current_list">Přidat na začátek stávajícího seznamu</string>
     <string name="append_current_list">Přidat na konec stávajícího seznamu</string>
     <string name="share">Sdílet nástroje</string>
-    <string name="no_instruments_for_sharing">Neexistují žádné nástroje, které by bylo možné sdílet.</string>
     <string name="load_from_disk">Načíst nástroje ze souboru</string>
     <string name="save_to_disk">Uložit nástroje do souboru</string>
     <string name="prefer_flat">Dávat přednost \u266D před \u266F</string>
@@ -131,11 +119,8 @@
     <string name="young2">Young 2</string>
     <string name="reference_frequency">Referenční frekvence</string>
     <string name="frequency">Frekvence</string>
-    <string name="standard_pitch">Nastavit komorní tón</string>
     <string name="temperament">Temperament</string>
     <string name="root_note">Keynote</string>
-    <string name="tuning_summary">%s, %s, %s</string>
-    <string name="tuning_summary_no_desc">%s, %s</string>
     <string name="test_tuning">Testovací ladění</string>
     <string name="details">Detaily</string>
     <string name="pythagorean_comma">%d\u2044%d&#x200A;pC</string>
@@ -143,11 +128,6 @@
     <string name="schisma">%d\u2044%d&#x200A;sch</string>
     <string name="set_default">Obnovit výchozí hodnotu</string>
     <string name="acknowledged">Potrvzeno</string>
-    <string name="no_instruments_selected">Žádný nástroj vybrán</string>
-    <string name="select_instruments">Vyberte nástroje</string>
-    <string name="select_instrument">Nástroje</string>
-    <string name="share2">Sdílet</string>
-    <string name="select_all">Vybrat vše</string>
     <string name="black_night_mode">Černé pozadí v tmavém režimu</string>
     <string name="system_color_accents">Akcentní barva podle systému</string>
     <string name="incorrect_temperament">Nekompatibilní temperament</string>
@@ -204,11 +184,9 @@
     <string name="g_solfege">Sol</string>
     <string name="a_solfege">La</string>
     <string name="b_solfege">Si</string>
-    <string name="solfege_notation">Zápis v solfège</string>
     <string name="capture">Nahrát</string>
     <string name="capture_duration">Doba nahrávání: %d&#x200A;s</string>
     <string name="no_capture_duration">Žádné nahrávání</string>
-    <string name="capture_in_scientific_mode">Nahrávat ve vědeckém režimu</string>
     <plurals name="pitch_history_num_faulty_values_summary" tools:ignore="MissingQuantity">
         <item quantity="one">Okamžitě pokračovat na novou hodnotu</item>
         <item quantity="few">Za %d podobné hodnoty</item>

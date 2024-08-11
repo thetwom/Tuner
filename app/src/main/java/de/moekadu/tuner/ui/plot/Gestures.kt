@@ -226,7 +226,7 @@ fun Modifier.dragZoom(
     return this then if (lockX && lockY) {
         Modifier
     } else if (lockX) {
-        pointerInput(state) {
+        Modifier.pointerInput(state) {
             detectPanZoomFlingGesture(
                 onGestureStart = {
                     state.setViewPort(transformation().viewPortRaw, null)
@@ -240,20 +240,7 @@ fun Modifier.dragZoom(
                         .fitInto(limits())
                         .translateWithinLimits(0f, translateY = -panRaw.y, limits())
                     state.setViewPort(transformed, null)
-//
-//                    val modifiedTopLeft = Offset(
-//                        0f,
-//                        (t.viewPortScreen.top - centroid.y) / zoom.height + centroid.y - pan.y,
-//                    )
-//                    //Log.v("Tuner", "Plot: original topLeft=$originalTopLeft, modified topLeft=$modifiedTopLeft, zoom=$zoom")
-//                    val zoomedHeight = state.viewPort.size.height / zoom.height
-//
-//                    val movedTopLeftRaw = t.toRaw(modifiedTopLeft)
-//                    val newViewPortRaw = t.viewPortRaw.copy(
-//                        top = movedTopLeftRaw.y,
-//                        bottom = movedTopLeftRaw.y + zoomedHeight,
-//                    )
-//                    state.setViewPort(newViewPortRaw, limits())
+
                 },
                 onFling = { velocity ->
                     val velocityRaw = transformation().toRaw(velocity)
@@ -262,7 +249,7 @@ fun Modifier.dragZoom(
             )
         }
     } else if (lockY) {
-        pointerInput(state) {
+        Modifier.pointerInput(state) {
             detectPanZoomFlingGesture(
                 onGestureStart = {
                     state.setViewPort(transformation().viewPortRaw, null)
@@ -276,20 +263,6 @@ fun Modifier.dragZoom(
                         .fitInto(limits())
                         .translateWithinLimits(-panRaw.x, 0f, limits())
                     state.setViewPort(transformed, null)
-
-//                    val modifiedTopLeft = Offset(
-//                        (transformation().viewPortScreen.left - centroid.x) / zoom.width + centroid.x - pan.x,
-//                        0f
-//                    )
-//                    //Log.v("Tuner", "Plot: original topLeft=$originalTopLeft, modified topLeft=$modifiedTopLeft, zoom=$zoom")
-//                    val zoomedWidth = state.viewPort.size.width / zoom.width
-//
-//                    val movedTopLeftRaw = t.toRaw(modifiedTopLeft)
-//                    val newViewPortRaw = t.viewPortRaw.copy(
-//                        left = movedTopLeftRaw.x,
-//                        right = movedTopLeftRaw.x + zoomedWidth,
-//                    )
-//                    state.setViewPort(newViewPortRaw, limits())
                 },
                 onFling = { velocity ->
                     val velocityRaw = transformation().toRaw(velocity)
@@ -298,7 +271,7 @@ fun Modifier.dragZoom(
             )
         }
     } else {
-        pointerInput(state) {
+        Modifier.pointerInput(state) {
             detectPanZoomFlingGesture(
                 onGestureStart = {
                     state.setViewPort(transformation().viewPortRaw, null)
@@ -315,18 +288,6 @@ fun Modifier.dragZoom(
                         .fitInto(limits())
                         .translateWithinLimits(-panRaw.x, -panRaw.y, limits())
                     state.setViewPort(transformed, null)
-//                    val modifiedTopLeft = Offset(
-//                        (t.viewPortScreen.left - centroid.x) / zoom.width + centroid.x - pan.x,
-//                        (t.viewPortScreen.top - centroid.y) / zoom.height + centroid.y - pan.y,
-//                    )
-//                    //Log.v("Tuner", "Plot: original topLeft=$originalTopLeft, modified topLeft=$modifiedTopLeft, zoom=$zoom")
-//                    val zoomedSize = Size(
-//                        state.viewPort.size.width / zoom.width,
-//                        state.viewPort.size.height / zoom.height
-//                    )
-//
-//                    val movedTopLeftRaw = t.toRaw(modifiedTopLeft)
-//                    state.setViewPort(Rect(movedTopLeftRaw, zoomedSize), limits())
                 },
                 onFling = { velocity ->
                     val velocityRaw = transformation().toRaw(velocity)

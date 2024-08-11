@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Tuner</string>
-    <string name="a4_frequency">Frequenz der Note A<sup><small>4</small></sup></string>
+    <string name="delete_instrument">Instrument löschen</string>
+    <string name="delete_instruments">Instrumente löschen</string>
+    <string name="database_empty_share">Keine Instrumente zum teilen.</string>
+    <string name="audio_record_permission_rationale">Erlaube Verwendung des Mikrofons um zu stimmen.</string>
+    <string name="writing_wave_file">Schreibe wav-Datei: %s</string>
+    <string name="failed_writing_wave_file">Keine wav-Datei geschrieben.</string>
     <string name="windowing_function">Fensterfunktion</string>
     <string name="window_hamming">Hamming Fenster</string>
     <string name="window_hann">Hann Fenster</string>
@@ -17,7 +22,6 @@
     <string name="overlap">Fensterüberlappung</string>
     <string name="window_size">Fensterweite</string>
     <string name="minimum_frequency">"Minimale Frequenz: "</string>
-    <string name="no_audio_recording_permission">Berechtigung zur Audioaufnahme wurde nicht gewährt.</string>
     <string name="pitch_history_duration">Dauer des Tonverlaufs</string>
     <string name="pitch_history_num_faulty_values">Zu neuem Ton springen</string>
     <plurals name="pitch_history_num_faulty_values_summary">
@@ -25,7 +29,6 @@
         <item quantity="other">Nach %d ähnlichen Ton-Ergebnissen</item>
     </plurals>
 
-    <string name="use_hint">Bessere Tonschätzung durch vorherige Werte</string>
     <string name="num_moving_average">Gleitender Mittelwert</string>
     <string name="about">Über</string>
     <string name="about_message">Tuner app\nVersion: %s\nLizenz: GPLv3\nhttps://github.com/thetwom/Tuner</string>
@@ -42,14 +45,11 @@
         <item quantity="one">Keine Mittelung</item>
         <item quantity="other">Mittelung über %d Ton-Ergebnisse</item>
     </plurals>
-    <string name="max_noise">Maximal zulässiges Hintergrundrauschen</string>
-     <string name="max_noise_summary">Keine Töne finden, wenn Rauschen über %d&#x200A;%%.</string>
     <string name="scientific_mode">Wissenschaftlicher Modus</string>
     <string name="tolerance_in_cents">Toleranz</string>
     <string name="expert">Experten</string>
     <string name="basic">Allgemein</string>
     <string name="others">Andere</string>
-    <string name="instrument_icon">Instrument Icon</string>
     <string name="chromatic">Chromatisch</string>
     <string name="guitar_eadgbe">6-saitige Gitarre</string>
     <string name="bass_eadg">4-saitiger Bass</string>
@@ -67,7 +67,6 @@
     <string name="violin_gdae">Geige</string>
     <string name="abort">Abbrechen</string>
     <string name="instrument_name">Instrumentname</string>
-    <string name="clear_instrument_name">Instrumentname löschen</string>
     <string name="add_note">Note hinzufügen</string>
     <string name="delete_note">Note löschen</string>
     <string name="lately_detected_notes">Kürzlich erkannte Noten</string>
@@ -77,25 +76,20 @@
     <string name="custom_instruments">Benutzerdefiniert</string>
         <string name="file_empty">Datei ist leer: %s</string>
     <string name="file_invalid">Datei ist ungültig: %s</string>
-    <string name="instrument_deleted">Instrument gelöscht</string>
     <plurals name="instruments_deleted">
         <item quantity="one">%d Instrument gelöscht</item>
         <item quantity="other">%d Instrumente gelöscht</item>
     </plurals>
     <string name="undo">Rückgängig</string>
-    <string name="add_new_tuning">Stimmung hinzufügen</string>
     <string name="pick_icon">Icon auswählen</string>
     <string name="copy_instrument">Instrument kopieren</string>
-    <string name="close_expansion">Ausgeklappte Icons schließen</string>
     <string name="copy_extension">%s (Kopie)</string>
     <string name="failed_to_archive_instruments">Speichern der Instrumente fehlgeschlagen</string>
-    <string name="database_saved">Speichere Instrumente nach \"%s\".</string>
     <string name="database_empty">Keine zu speichernden Instrumente.</string>
     <string name="replace_current_list">Aktuelle Liste ersetzen</string>
     <string name="prepend_current_list">Vor aktueller Liste einfügen</string>
     <string name="append_current_list">An aktuelle Liste anhängen</string>
     <string name="share">Instrumente teilen</string>
-    <string name="no_instruments_for_sharing">Keine zu teilenden Instrumente verfügbar.</string>
     <string name="load_from_disk">Lade Instrumente aus Datei</string>
     <string name="save_to_disk">Instrumente in Datei speichern</string>
     <plurals name="load_instruments">
@@ -149,11 +143,8 @@
     <string name="young2">Young 2</string>
     <string name="reference_frequency">Referenzfrequenz</string>
     <string name="frequency">Frequenz</string>
-    <string name="standard_pitch">Setze Kammerton</string>
     <string name="temperament">Stimmung</string>
     <string name="root_note">Grundton</string>
-    <string name="tuning_summary">%s, %s, %s</string>
-    <string name="tuning_summary_no_desc">%s, %s</string>
     <string name="test_tuning">Teststimmung</string>
     <string name="details">Details</string>
     <string name="pythagorean_comma_desc">pK: Pythagoreisches Komma, 531441\u2044524288\nsK: Syntonisches Komma, 81\u204480\nsch: Schisma, 32805\u204432768</string>
@@ -163,11 +154,6 @@
     <string name="schisma">%d\u2044%d&#x200A;sch</string>
     <string name="set_default">Zurücksetzen</string>
     <string name="acknowledged">Verstanden</string>
-    <string name="share2">Teilen</string>
-    <string name="select_all">Alle auswählen</string>
-    <string name="select_instruments">Instrumente auswählen</string>
-    <string name="select_instrument">Instrumente</string>
-    <string name="no_instruments_selected">Keine Instrumente ausgewählt.</string>
     <string name="black_night_mode">Schwarzer Hintergrund im dunklen Modus</string>
     <string name="system_color_accents">System-Akzentfarben verwenden</string>
     <string name="equal_temperament_19">Gleichstufige Stimmung 19</string>
@@ -193,7 +179,6 @@
     <string name="equal_temperament_53">Gleichstufige Stimmung 53</string>
     <string name="equal_temperament_53_desc">53 Noten pro Oktave</string>
     <string name="capture">Aufnehmen</string>
-    <string name="capture_in_scientific_mode">Aufnehmen im wissenschaftlichen Modus</string>
     <string name="capture_duration">Aufnahmedauer: %d&#x200A;s</string>
     <string name="no_capture_duration">Keine Aufnahme</string>
     <string name="young2_abbr">Young 2</string>
@@ -224,7 +209,6 @@
     <string name="equal_temperament_53_abbr">EDO 53</string>
     <string name="pythagorean_tuning_abbr">Pythagoreisch</string>
     <string name="werckmeister_iv_abbr">Werckmeister IV</string>
-    <string name="solfege_notation">Solfège Schreibweise</string>
     <string name="c_solfege">Do</string>
     <string name="d_solfege">Re</string>
     <string name="e_solfege">Mi</string>
@@ -239,8 +223,6 @@
     <string name="notation_carnatic">Karnatisch</string>
     <string name="notation_hindustani">Hindustanisch</string>
     <string name="helmholtz_notation">Helmholtz-Schreibweise (C, … c\')</string>
-    <string name="min_harmonic_energy_content">Signalstärke</string>
-    <string name="min_harmonic_energy_content_summary">Keine Töne finden, wenn unter %d&#x200A;%%.</string>
     <string name="sensitivity">Empfindlichkeit</string>
 
 </resources>

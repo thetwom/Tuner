@@ -125,7 +125,7 @@ fun FifthJumpOverArrow(
             color = colorResolved,
             style = style
         )
-        Row() {
+        Row {
             Image(
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_fifths_stroke),
                 contentDescription = null,

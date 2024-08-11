@@ -102,7 +102,7 @@ fun CoroutineScope.launchSoundSourceJob(
 
                 val numRead = if (testFunction != null) {
                     for (i in recordData.indices) {
-                        recordData[i] = (Short.MAX_VALUE * testFunction!!(
+                        recordData[i] = (Short.MAX_VALUE * testFunction(
                             currentFrame + i, 1f / sampleRate
                         )).toInt().toShort()
                     }

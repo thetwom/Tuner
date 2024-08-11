@@ -1,11 +1,8 @@
 package de.moekadu.tuner.instruments
 
 import android.content.Context
-import android.content.res.Resources
 import android.os.Parcelable
-import android.text.SpannableStringBuilder
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -14,7 +11,6 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.NoteNamePrinter
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.asAnnotatedString
 import kotlinx.parcelize.Parcelize
@@ -55,30 +51,7 @@ data class Instrument(private val name: String?, private val nameResource: Int?,
 
     /** Get readable representation of all strings (e.g. "A#4 - C5 - G5")
      * @param context Context for obtaining string resources.
-     * @param noteNamePrinter Transfer notes to char sequences.
-     */
-    fun getStringsString(context: Context, noteNamePrinter: NoteNamePrinter): CharSequence {
-        return if (isChromatic) {
-            context.getString(R.string.chromatic)
-        } else {
-            val builder = SpannableStringBuilder()
-//            Log.v("Tuner", "Instrument.getStringsString: printOption=$printOption, preferFlat=$preferFlat")
-            if (strings.isNotEmpty())
-                builder.append(noteNamePrinter.noteToCharSequence(strings[0], withOctave = true))
-            for (i in 1 until strings.size) {
-                builder.append(" - ")
-                builder.append(noteNamePrinter.noteToCharSequence(strings[i], withOctave = true))
-            }
-            builder
-//            strings.joinToString(" - ", "", "") {
-//                tuningFrequencies.getNoteName(context, it, preferFlat)
-//            }
-        }
-    }
-
-    /** Get readable representation of all strings (e.g. "A#4 - C5 - G5")
-     * @param context Context for obtaining string resources.
-     * @param noteNamePrinter Transfer notes to char sequences.
+     * @param noteNameOptions How to print notes.
      */
     fun getStringsString2(
         context: Context,

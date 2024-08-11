@@ -1,8 +1,6 @@
 <resources>
     <string name="app_name">Tuner</string>
 
-    <string name="a4_frequency">Fréquence de la note A<sup><small>4</small></sup></string>
-
     <string name="windowing_function">Fenêtrage</string>
     <string name="window_hamming">Fenêtre de Hamming</string>
     <string name="window_hann">Fenêtre de Hann</string>
@@ -20,14 +18,12 @@
     <string name="overlap">Chevauchement de la fenêtre</string>
     <string name="window_size">Taille de la fenêtre</string>
     <string name="minimum_frequency">Fréquence minimale\u00A0:</string>
-    <string name="no_audio_recording_permission">Aucune permission d’enregistrement audio accordée.</string>
     <string name="pitch_history_duration">Durée de l’historique de la hauteur</string>
     <string name="pitch_history_num_faulty_values">Allez à la nouvelle hauteur</string>
     <plurals name="pitch_history_num_faulty_values_summary">
         <item quantity="one">Aller directement à la nouvelle valeur de la hauteur</item>
         <item quantity="other">Après %d valeurs similaires de hauteur</item>
     </plurals>
-    <string name="use_hint">Utiliser les valeurs précédentes pour améliorer l’estimation de la hauteur</string>
     <string name="num_moving_average">Moyenne glissante</string>
     <plurals name="num_moving_average_summary">
         <item quantity="one">Pas de moyenne</item>
@@ -44,14 +40,11 @@
     <string name="spectrum">spectre</string>
     <string name="keep_screen_on">Maintenir l’écran allumé</string>
     <string name="samples">échantillons</string>
-    <string name="max_noise">Bruit ambiant maximum autorisé</string>
-    <string name="max_noise_summary">Ignorer l’entrée quand le bruit dépasse %d&#x200A;%%.</string>
     <string name="scientific_mode">Mode scientifique</string>
     <string name="tolerance_in_cents">Tolérance</string>
     <string name="expert">Expert</string>
     <string name="basic">Basique</string>
     <string name="others">Autres</string>
-    <string name="instrument_icon">Icône d’instrument</string>
 
     <string name="chromatic">Chromatique</string>
     <string name="guitar_eadgbe">Guitare à 6 cordes</string>
@@ -78,7 +71,6 @@
     <string name="violin_gdae">Violon</string>
     <string name="abort">Annuler</string>
     <string name="instrument_name">Nom d’instrument</string>
-    <string name="clear_instrument_name">Effacer le nom d’instrument</string>
     <string name="add_note">Ajouter une note</string>
     <string name="delete_note">Supprimer une note</string>
     <string name="lately_detected_notes">Dernière notes détectées</string>
@@ -88,15 +80,11 @@
     <string name="custom_instruments">Personnalisé</string>
     <string name="file_empty">Le fichier est vide\u00A0: %s</string>
     <string name="file_invalid">Le fichier est invalide\u00A0: %s</string>
-    <string name="instrument_deleted">Instrument supprimé</string>
     <string name="undo">Annuler</string>
-    <string name="add_new_tuning">Ajouter un nouvel accordage</string>
     <string name="pick_icon">Choisir une icône</string>
     <string name="copy_instrument">Copier l’instrument</string>
-    <string name="close_expansion">Fermer les icônes dépliées</string>
     <string name="copy_extension">%s (copie)</string>
     <string name="failed_to_archive_instruments">Impossible d’enregistrer les instruments dans le fichier</string>
-    <string name="database_saved">Enregistrement des instruments dans \"%s\".</string>
     <string name="database_empty">Il n’y a pas d’instrument à enregistrer.</string>
     <plurals name="load_instruments">
         <item quantity="one">Chargement d’%d instrument</item>
@@ -110,7 +98,6 @@
         <item quantity="one">Partager %d instrument</item>
         <item quantity="other">Partager %d instruments</item>
     </plurals>
-    <string name="no_instruments_for_sharing">Il n’y a pas d’instrument à partager.</string>
     <string name="load_from_disk">Charger les instruments depuis un fichier</string>
     <string name="save_to_disk">Enregistrer les instruments dans un fichier</string>
 
@@ -171,11 +158,8 @@
     <string name="young2">Young 2</string>
     <string name="reference_frequency">Fréquence de référence</string>
     <string name="frequency">Fréquence</string>
-    <string name="standard_pitch">Définir la hauteur standard</string>
     <string name="temperament">Tempérament</string>
     <string name="root_note">Note de base</string>
-    <string name="tuning_summary">%s, %s, %s</string>
-    <string name="tuning_summary_no_desc">%s, %s</string>
     <string name="test_tuning">Accordage de test</string>
     <string name="details">Détails</string>
     <string name="pythagorean_comma">%d\u2044%d&#x200A;pC</string>
@@ -185,11 +169,6 @@
     <string name="circle_of_fifths">Cycle des quintes</string>
     <string name="set_default">Réinitialiser à la valeur par défaut</string>
     <string name="acknowledged">Vu</string>
-    <string name="no_instruments_selected">Aucun instrument sélectionné.</string>
-    <string name="select_instruments">Sélectionner des instruments</string>
-    <string name="select_instrument">Instruments</string>
-    <string name="share2">Partager</string>
-    <string name="select_all">Tout sélectionner</string>
     <string name="black_night_mode">Arrière-plan noir en mode sombre</string>
     <string name="system_color_accents">Couleur d’accentuation du système</string>
     <string name="incorrect_temperament">Tempérament incompatible\u00A0!</string>
@@ -200,7 +179,6 @@
     <string name="capture">Enregistrer</string>
     <string name="capture_duration">Durée d’enregistrement\u00A0: %d&#x200A;s</string>
     <string name="no_capture_duration">Pas d’enregistrement</string>
-    <string name="capture_in_scientific_mode">Enregistrer en mode scientifique</string>
     <string name="young2_abbr">Young 2</string>
     <string name="valotti_abbr">Valotti</string>
     <string name="test_tuning_abbr">Test</string>
@@ -228,7 +206,6 @@
     <string name="equal_temperament_53_abbr">EDO 53</string>
     <string name="pythagorean_tuning_abbr">pythagoricien</string>
     <string name="werckmeister_iv_abbr">Werckmeister IV</string>
-    <string name="solfege_notation">Notation solfège</string>
     <string name="notation">Notation</string>
     <string name="notation_standard">Défaut (A-B-C-…)</string>
     <string name="notation_solfege">Solfège</string>
