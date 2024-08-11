@@ -195,7 +195,7 @@ fun InstrumentTunerPortrait(
                 ).octave..musicalScaleAsState.getNote(
                     musicalScaleAsState.noteIndexEnd - 1
                 ).octave
-            ).width + 8.dp
+            ).width + 8.dp + 4.dp
             val scope = rememberCoroutineScope()
             val scaleInvalid= remember(musicalScaleAsState, instrumentAsState) {
                 !checkInstrumentCompatibility(musicalScaleAsState, instrumentAsState)
@@ -240,6 +240,8 @@ fun InstrumentTunerPortrait(
                     onInTuneColor = tunerPlotStyle.onPositiveColor,
                     outOfTuneColor = tunerPlotStyle.negativeColor,
                     onOutOfTuneColor = tunerPlotStyle.onNegativeColor,
+                    unknownTuningColor = tunerPlotStyle.inactiveStringColor,
+                    onUnknownTuningColor = tunerPlotStyle.onInactiveStringColor,
                     fontSize = tunerPlotStyle.stringFontStyle.fontSize,
                     sidebarPosition = StringsSidebarPosition.End,
                     sidebarWidth = noteWidthDp,
@@ -348,7 +350,7 @@ fun InstrumentTunerLandscape(
             ).octave..musicalScaleAsState.getNote(
                 musicalScaleAsState.noteIndexEnd - 1
             ).octave
-        ).width + 8.dp
+        ).width + 8.dp + 4.dp
         val scope = rememberCoroutineScope()
         val scaleInvalid= remember(musicalScaleAsState, instrumentAsState) {
             !checkInstrumentCompatibility(musicalScaleAsState, instrumentAsState)
@@ -395,6 +397,8 @@ fun InstrumentTunerLandscape(
                 onInTuneColor = tunerPlotStyle.onPositiveColor,
                 outOfTuneColor = tunerPlotStyle.negativeColor,
                 onOutOfTuneColor = tunerPlotStyle.onNegativeColor,
+                unknownTuningColor = tunerPlotStyle.inactiveStringColor,
+                onUnknownTuningColor = tunerPlotStyle.onInactiveStringColor,
                 fontSize = tunerPlotStyle.stringFontStyle.fontSize,
                 sidebarPosition = StringsSidebarPosition.Start,
                 sidebarWidth = noteWidthDp,

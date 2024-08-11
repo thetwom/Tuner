@@ -142,7 +142,6 @@ fun InstrumentEditorPortrait(
 
 //    Log.v("Tuner", "InstrumentEditor: strings: $strings")
     Column(modifier) {
-
         OutlinedTextField(
             value = name,
             onValueChange = { state.setName(it) },

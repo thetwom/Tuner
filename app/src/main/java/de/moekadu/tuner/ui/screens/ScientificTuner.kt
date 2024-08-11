@@ -114,7 +114,6 @@ fun ScientificTuner(
     modifier: Modifier = Modifier,
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create()
 ) {
-    val scope = rememberCoroutineScope()
     val musicalScale by data.musicalScale.collectAsStateWithLifecycle()
     val notePrintOptions by data.notePrintOptions.collectAsStateWithLifecycle()
     val waveWriterDuration by data.waveWriterDuration.collectAsStateWithLifecycle()
@@ -223,10 +222,10 @@ fun ScientificTunerPortrait(
             ).octave .. musicalScaleAsState.getNote(
                         musicalScaleAsState.noteIndexEnd - 1
                     ).octave
-        ).width + 8.dp
+        ).width + 8.dp + 4.dp
         val scope = rememberCoroutineScope()
 
-        Column(modifier = Modifier.weight(0.23f)) {
+        Column(modifier = Modifier.weight(0.225f)) {
             Spacer(modifier = Modifier.height(tunerPlotStyle.margin))
             Text(
                 stringResource(id = R.string.spectrum),
@@ -271,7 +270,7 @@ fun ScientificTunerPortrait(
             )
         }
 
-        Column(modifier = Modifier.weight(0.23f)) {
+        Column(modifier = Modifier.weight(0.225f)) {
             Text(
                 stringResource(id = R.string.autocorrelation),
                 Modifier
@@ -313,7 +312,7 @@ fun ScientificTunerPortrait(
             )
         }
 
-        Column(modifier = Modifier.weight(0.54f)) {
+        Column(modifier = Modifier.weight(0.55f)) {
             Text(
                 stringResource(id = R.string.pitch_history),
                 Modifier
@@ -394,7 +393,7 @@ fun ScientificTunerLandscape(
             ).octave..musicalScaleAsState.getNote(
                 musicalScaleAsState.noteIndexEnd - 1
             ).octave
-        ).width + 8.dp
+        ).width + 8.dp + 4.dp
         val scope = rememberCoroutineScope()
 
         Column(
