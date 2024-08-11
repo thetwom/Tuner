@@ -1,6 +1,5 @@
 package de.moekadu.tuner.notedetection
 
-import android.util.Log
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.temperaments.MusicalNote

@@ -8,6 +8,4 @@ import javax.inject.Inject
 @HiltViewModel
 class PreferencesViewModel @Inject constructor(
     val pref: PreferenceResources2
-) : ViewModel() {
-
-}
+) : ViewModel()

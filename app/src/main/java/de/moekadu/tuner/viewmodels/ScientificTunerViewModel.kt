@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -95,7 +96,7 @@ class ScientificTunerViewModel @Inject constructor (
             = GestureBasedViewPort()
 
     override var correlationPlotData by mutableStateOf(LineCoordinates())
-    override var correlationPlotDataYZeroPosition by mutableStateOf(0f)
+    override var correlationPlotDataYZeroPosition by mutableFloatStateOf(0f)
     override val correlationPlotGestureBasedViewPort: GestureBasedViewPort
             = GestureBasedViewPort()
 

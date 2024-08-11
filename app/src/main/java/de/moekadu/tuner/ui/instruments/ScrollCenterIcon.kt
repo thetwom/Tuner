@@ -43,6 +43,9 @@ fun ScrollCenterIcon(
 @Composable
 private fun ScrollCenterIconPreview() {
     TunerTheme {
-        ScrollCenterIcon(stringColor = MaterialTheme.colorScheme.error)
+        ScrollCenterIcon(
+            arrowColor = MaterialTheme.colorScheme.onSurface,
+            stringColor = MaterialTheme.colorScheme.error
+        )
     }
 }

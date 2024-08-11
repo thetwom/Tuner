@@ -1,6 +1,5 @@
 package de.moekadu.tuner.ui.misc
 
-import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,26 +21,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
-import de.moekadu.tuner.preferences.TemperamentAndReferenceNoteValue
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
-import de.moekadu.tuner.temperaments.NoteModifier
 import de.moekadu.tuner.temperaments.TemperamentType
 import de.moekadu.tuner.temperaments.getTuningNameAbbrResourceId
 import de.moekadu.tuner.ui.notes.Note
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.theme.TunerTheme
-import java.text.DecimalFormat
-import java.text.DecimalFormatSymbols
 
 @Composable
 fun QuickSettingsBar(
@@ -141,7 +133,7 @@ private fun QuickSettingsBarPreview() {
             mutableStateOf(NotePrintOptions())
         }
 
-        var musicalScale by remember { mutableStateOf(
+        val musicalScale by remember { mutableStateOf(
             MusicalScaleFactory.create(
                 TemperamentType.EDO12,
                 referenceFrequency = 432.1554f

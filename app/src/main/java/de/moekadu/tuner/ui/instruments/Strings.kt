@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -612,7 +613,7 @@ private fun StringsPreview() {
                 modifier = Modifier.weight(0.5f)
             )
             Spacer(modifier = Modifier.height(8.dp))
-            var highlightedNoteKey by remember { mutableStateOf(10) }
+            var highlightedNoteKey by remember { mutableIntStateOf(10) }
             Strings(
                 strings = null,
                 musicalScale = musicalScale,
@@ -621,7 +622,6 @@ private fun StringsPreview() {
                 notePrintOptions = notePrintOptions,
                 sidebarPosition = StringsSidebarPosition.End,
                 onStringClicked = { key, note ->
-                    highlightedNoteKey = highlightedNoteKey
                 },
                 modifier = Modifier.weight(0.5f)
             )

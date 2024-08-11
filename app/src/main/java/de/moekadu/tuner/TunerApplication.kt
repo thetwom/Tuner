@@ -26,22 +26,4 @@ class TunerApplication : Application() {
     //lateinit var instrumentPreferences: SharedPreferences
     //lateinit var instrumentResources: InstrumentResources
 
-    override fun onCreate() {
-        super.onCreate()
-        //sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        //preferenceResources = PreferenceResources(this, sharedPreferences, MainScope())
-        //preferenceResources = PreferenceResources(this)
-        //instrumentPreferences = getSharedPreferences("instrument resources", MODE_PRIVATE)
-        //instrumentResources = InstrumentResources(instrumentPreferences)
-        //instrumentResources = InstrumentResources(this)
-
-//        val appearance = preferenceResources.appearance.value
-//        if (appearance.mode != AppCompatDelegate.getDefaultNightMode())
-//            AppCompatDelegate.setDefaultNightMode(appearance.mode)
-
-//        val useSystemColors = AppearancePreference.getUseSystemColorAccents(appearanceString)
-//        if (useSystemColors)
-//            DynamicColors.applyToActivitiesIfAvailable(this)
-
-    }
 }

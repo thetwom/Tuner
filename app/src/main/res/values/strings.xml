@@ -5,11 +5,8 @@
     <string name="percent" translatable="false">%d&#x200A;%%</string>
     <string name="hertz" translatable="false">%.0f&#x200A;Hz</string>
     <string name="hertz_1f" translatable="false">%.1f&#x200A;Hz</string>
-    <string name="hertz_2f" translatable="false">%.2f&#x200A;Hz</string>
     <string name="hertz_str" translatable="false">%s&#x200A;Hz</string>
     <string name="seconds" translatable="false">%.2f&#x200A;s</string>
-
-    <string name="a4_frequency">Frequency of note A<sup><small>4</small></sup></string>
 
     <string name="windowing_function">Windowing function</string>
     <string name="window_hamming">Hamming window</string>
@@ -28,14 +25,12 @@
     <string name="overlap">Window overlap</string>
     <string name="window_size">Window size</string>
     <string name="minimum_frequency">"Minimum frequency: "</string>
-    <string name="no_audio_recording_permission">No audio recording permission is granted.</string>
     <string name="pitch_history_duration">Duration of pitch history</string>
     <string name="pitch_history_num_faulty_values">Jump to new pitch</string>
     <plurals name="pitch_history_num_faulty_values_summary">
         <item quantity="one">Directly jump to new pitch result</item>
         <item quantity="other">After %d similar pitch results</item>
     </plurals>
-    <string name="use_hint">Use previous values to improve pitch estimation</string>
     <string name="num_moving_average">Moving average</string>
     <plurals name="num_moving_average_summary">
         <item quantity="one">No averaging</item>
@@ -54,15 +49,12 @@
     <string name="cent_nosign" translatable="false">%d&#x200A;&#162;</string>
     <string name="keep_screen_on">Keep screen on</string>
     <string name="samples">samples</string>
-    <string name="max_noise">Maximum allowed background noise</string>
-    <string name="max_noise_summary">Ignore input when noise is above %d&#x200A;%%.</string>
     <string name="scientific_mode">Scientific mode</string>
     <string name="tolerance_in_cents">Tolerance</string>
     <string name="tolerance_summary" translatable="false">&#177;%d&#x200A;&#162;</string>
     <string name="expert">Expert</string>
     <string name="basic">Basic</string>
     <string name="others">Others</string>
-    <string name="instrument_icon">Instrument icon</string>
 
     <string name="chromatic">Chromatic</string>
     <string name="guitar_eadgbe">6-string guitar</string>
@@ -103,7 +95,6 @@
     <string name="violin_gdae">Violin</string>
     <string name="abort">Abort</string>
     <string name="instrument_name">Instrument name</string>
-    <string name="clear_instrument_name">Clear instrument name</string>
     <string name="add_note">Add note</string>
     <string name="delete_note">Delete note</string>
     <string name="lately_detected_notes">Lately detected tones</string>
@@ -113,19 +104,15 @@
     <string name="custom_instruments">Custom</string>
     <string name="file_empty">File is empty: %s</string>
     <string name="file_invalid">File is invalid: %s</string>
-    <string name="instrument_deleted">Instrument deleted</string>
     <plurals name="instruments_deleted">
         <item quantity="one">%d instrument deleted</item>
         <item quantity="other">%d instruments deleted</item>
     </plurals>
     <string name="undo">Undo</string>
-    <string name="add_new_tuning">Add new tuning</string>
     <string name="pick_icon">Pick icon</string>
     <string name="copy_instrument">Copy instrument</string>
-    <string name="close_expansion">Close expanded icons</string>
     <string name="copy_extension">%s (copy)</string>
     <string name="failed_to_archive_instruments">Failed to write instruments to file</string>
-    <string name="database_saved">Writing instruments to \"%s\".</string>
     <plurals name="database_num_saved">
         <item quantity="one">Writing %d instrument to \"%s\".</item>
         <item quantity="other">Writing %d instruments to \"%s\".</item>
@@ -143,7 +130,6 @@
         <item quantity="one">Sharing %d instrument</item>
         <item quantity="other">Sharing %d instruments</item>
     </plurals>
-    <string name="no_instruments_for_sharing">There are no instruments, which can be shared.</string>
     <string name="load_from_disk">Load instruments from file</string>
     <string name="save_to_disk">Save instruments to file</string>
     <string name="prefer_flat">Prefer \u266D over \u266F</string>
@@ -230,15 +216,11 @@
     <string name="young2_abbr">Young 2</string>
     <string name="reference_frequency">Reference frequency</string>
     <string name="frequency">Frequency</string>
-    <string name="standard_pitch">Set standard pitch</string>
     <string name="temperament">Temperament</string>
     <string name="root_note">Key note</string>
-    <string name="tuning_summary">%s, %s, %s</string>
-    <string name="tuning_summary_no_desc">%s, %s</string>
     <string name="test_tuning">Test tuning</string>
     <string name="test_tuning_abbr">Test</string>
     <string name="details">Details</string>
-    <string name="fraction" translatable="false">%d\u2044%d</string>
     <string name="pythagorean_comma">%d\u2044%d&#x200A;pC</string>
     <string name="syntonic_comma">%d\u2044%d&#x200A;sC</string>
     <string name="schisma">%d\u2044%d&#x200A;sch</string>
@@ -248,11 +230,6 @@
     <string name="circle_of_fifths">Circle of fifths</string>
     <string name="set_default">Reset to default</string>
     <string name="acknowledged">Acknowledged</string>
-    <string name="no_instruments_selected">No instruments selected.</string>
-    <string name="select_instruments">Select instruments</string>
-    <string name="select_instrument">Instruments</string>
-    <string name="share2">Share</string>
-    <string name="select_all">Select all</string>
     <string name="black_night_mode">Black background in dark mode</string>
     <string name="system_color_accents">Color accents from system</string>
     <string name="incorrect_temperament">Incompatible temperament!</string>
@@ -262,8 +239,6 @@
     <string name="capture">Capture</string>
     <string name="capture_duration">Capture duration: %d&#x200A;s</string>
     <string name="no_capture_duration">Disable capturing</string>
-    <string name="capture_in_scientific_mode">Capture in scientific mode</string>
-    <string name="solfege_notation">Solfège notation</string>
     <string name="sa_carnatic">Sa</string>
     <string name="ri1_carnatic" translatable="false">Ri₁</string>
     <string name="ri2_carnatic" translatable="false">Ri₂</string>
@@ -294,8 +269,6 @@
     <string name="extended_quarter_comma_mean_tone">Extended ¼ comma meantone</string>
     <string name="extended_quarter_comma_mean_tone_desc">Pure major 3rds, 15 notes</string>
     <string name="extended_quarter_comma_mean_tone_abbr">Extended ¼ comma meantone</string>
-    <string name="min_harmonic_energy_content">Required signal strength</string>
-    <string name="min_harmonic_energy_content_summary">Ignore input below %d&#x200A;%%.</string>
     <string name="sensitivity">Sensitivity</string>
     <string name="delete_instrument">Delete instrument</string>
     <string name="delete_instruments">Delete instruments</string>

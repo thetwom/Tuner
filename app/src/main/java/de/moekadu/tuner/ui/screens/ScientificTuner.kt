@@ -23,6 +23,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -602,7 +603,7 @@ class TestScientificTunerData : ScientificTunerData {
     override var tuningState: TuningState
             by mutableStateOf(TuningState.TooLow)
     override val currentFrequency: Float?
-            by mutableStateOf(412f)
+            by mutableFloatStateOf(412f)
     override var targetNote: MusicalNote
             by mutableStateOf(musicalScale.value.referenceNote)
 
