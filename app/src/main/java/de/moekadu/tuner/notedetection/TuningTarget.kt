@@ -19,6 +19,7 @@
 package de.moekadu.tuner.notedetection
 
 import de.moekadu.tuner.instruments.Instrument
+import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
 
@@ -34,7 +35,7 @@ class TuningTargetComputer(
     instrument: Instrument?,
     toleranceInCents: Float
 ) {
-    private val instrument = instrument ?: Instrument(name = null, nameResource = null, strings = arrayOf(), iconResource = 0, stableId = 0, isChromatic = true)
+    private val instrument = instrument ?: Instrument(name = null, nameResource = null, strings = arrayOf(), icon = InstrumentIcon.entries[0], stableId = 0, isChromatic = true)
     private val sortedAndDistinctInstrumentStrings = SortedAndDistinctInstrumentStrings(this.instrument, musicalScale)
     private val targetNoteAutoDetection = TargetNoteAutoDetection(musicalScale, instrument, toleranceInCents)
     private val targetNoteAutoDetectionChromatic = TargetNoteAutoDetection(musicalScale, null, toleranceInCents)

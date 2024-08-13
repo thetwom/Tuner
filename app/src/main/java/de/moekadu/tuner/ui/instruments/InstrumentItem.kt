@@ -58,6 +58,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
+import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
@@ -74,12 +75,12 @@ fun InstrumentItem(
    ListItem(
        headlineContent = {
            Text(
-               instrument.getNameString2(context)
+               instrument.getNameString(context)
            )
        },
        leadingContent = {
            Icon(
-               ImageVector.vectorResource(id = instrument.iconResource),
+               ImageVector.vectorResource(id = instrument.icon.resourceId),
                modifier = Modifier.size(40.dp),
                contentDescription = null
            )
@@ -87,7 +88,7 @@ fun InstrumentItem(
        supportingContent = {
            val style = LocalTextStyle.current
            val stringsString = remember(context, style, instrument) {
-               instrument.getStringsString2(
+               instrument.getStringsString(
                    context = context,
                    notePrintOptions = notePrintOptions,
                    style.fontSize,
@@ -150,7 +151,7 @@ fun InstrumentItem2(
                 )
             } else {
                 Icon(
-                    ImageVector.vectorResource(id = instrument.iconResource),
+                    ImageVector.vectorResource(id = instrument.icon.resourceId),
                     modifier = Modifier.size(40.dp),
                     contentDescription = null,
 
@@ -163,7 +164,7 @@ fun InstrumentItem2(
             ) {
                 val supportingStyle = MaterialTheme.typography.bodyMedium
                 val stringsString = remember(context, supportingStyle, instrument, notePrintOptions) {
-                    instrument.getStringsString2(
+                    instrument.getStringsString(
                         context = context,
                         notePrintOptions = notePrintOptions,
                         fontSize = supportingStyle.fontSize,
@@ -171,7 +172,7 @@ fun InstrumentItem2(
                     )
                 }
                 Text(
-                    instrument.getNameString2(context),
+                    instrument.getNameString(context),
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 Spacer(Modifier.height(4.dp))
@@ -268,7 +269,7 @@ private fun InstrumentItemPreview() {
                     MusicalNote(BaseNote.D, NoteModifier.Sharp, octave = 3),
                     MusicalNote(BaseNote.E, NoteModifier.None, octave = 2),
                 ),
-                iconResource = R.drawable.ic_guitar,
+                icon = InstrumentIcon.guitar,
                 1L,
                 isChromatic = false
             )
@@ -278,7 +279,7 @@ private fun InstrumentItemPreview() {
                 name = null,
                 nameResource = R.string.chromatic,
                 strings = arrayOf(),
-                iconResource = R.drawable.ic_piano,
+                icon = InstrumentIcon.piano,
                 stableId = 2L,
                 isChromatic = true
             )

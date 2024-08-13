@@ -20,18 +20,12 @@ package de.moekadu.tuner.instruments
 
 import android.content.Context
 import android.net.Uri
-import android.provider.OpenableColumns
 import android.widget.Toast
-import androidx.core.content.FileProvider
-import androidx.core.database.getStringOrNull
 import de.moekadu.tuner.BuildConfig
 import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.legacyNoteIndexToNote
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
-import java.io.File
 import kotlin.math.min
 
 object InstrumentIO {
@@ -110,7 +104,7 @@ object InstrumentIO {
         var instrumentName = ""
         var stringIndices: IntArray? = null
         var strings: Array<MusicalNote>? = null
-        var iconId = instrumentIcons[0].resourceId
+        var icon = InstrumentIcon.entries[0]
         var stableId = Instrument.NO_STABLE_ID
 
         while (!stream.isEos()) {
@@ -133,7 +127,10 @@ object InstrumentIO {
                 }
 
                 Keyword.Icon -> {
-                    iconId = instrumentIconName2Id(stream.readString())
+                    val iconString = stream.readString()
+//                    Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading icon: $iconString, ${iconString.replace(" ", "_")}")
+                    icon = iconString.toInstrumentIcon()
+                    //iconId = instrumentIconName2Id(stream.readString())
 //                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading icon id: $iconId")
                 }
 
@@ -152,7 +149,7 @@ object InstrumentIO {
                     val stringsResolved =
                         strings ?: stringIndices?.map { legacyNoteIndexToNote(it) }?.toTypedArray()
                     stringsResolved?.let {
-                        val instrument = Instrument(instrumentName, null, it, iconId, stableId)
+                        val instrument = Instrument(instrumentName, null, it, icon, stableId)
                         instruments.add(instrument)
                         numInstrumentsRead += 1
                     }
@@ -160,7 +157,7 @@ object InstrumentIO {
                     instrumentName = ""
                     strings = null
                     stringIndices = null
-                    iconId = instrumentIcons[0].resourceId
+                    icon = InstrumentIcon.entries[0]
                     stableId = stream.readLong() ?: Instrument.NO_STABLE_ID
 //                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading next instrument")
                 }
@@ -174,7 +171,7 @@ object InstrumentIO {
         val stringsResolved =
             strings ?: stringIndices?.map { legacyNoteIndexToNote(it) }?.toTypedArray()
         stringsResolved?.let {
-            val instrument = Instrument(instrumentName, null, it, iconId, stableId)
+            val instrument = Instrument(instrumentName, null, it, icon, stableId)
             instruments.add(instrument)
             numInstrumentsRead += 1
         }
@@ -194,11 +191,10 @@ object InstrumentIO {
      */
     private fun getSingleInstrumentString(context: Context?, instrument: Instrument): String {
         val name = instrument.getNameString(context)
-        val iconName = instrumentIconId2Name(instrument.iconResource)
         return "Instrument ${instrument.stableId}\n" +
                 "Length of name=${name.length}\n" +
                 "Name=$name\n" +
-                "Icon=$iconName\n" +
+                "Icon=${instrument.icon.name}\n" +
                 "Strings=${
                     instrument.strings.joinToString(
                         separator = ";",
