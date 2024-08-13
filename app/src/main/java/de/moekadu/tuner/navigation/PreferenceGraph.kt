@@ -1,7 +1,24 @@
+/*
+* Copyright 2024 Michael Moessner
+*
+* This file is part of Tuner.
+*
+* Tuner is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Tuner is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package de.moekadu.tuner.navigation
 
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -9,32 +26,22 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.navigation
-import androidx.navigation.toRoute
-import de.moekadu.tuner.R
-import de.moekadu.tuner.preferences.PreferenceResources2
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.NoteNameScaleFactory
+import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.ui.misc.TunerScaffold
 import de.moekadu.tuner.ui.preferences.AboutDialog
 import de.moekadu.tuner.ui.preferences.AppearanceDialog
 import de.moekadu.tuner.ui.preferences.NotationDialog
-import de.moekadu.tuner.ui.preferences.ReferenceNoteDialog
 import de.moekadu.tuner.ui.preferences.ResetDialog
-import de.moekadu.tuner.ui.preferences.TemperamentDialog
 import de.moekadu.tuner.ui.preferences.WindowingFunctionDialog
 import de.moekadu.tuner.ui.screens.Preferences
 import de.moekadu.tuner.viewmodels.PreferencesViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 fun NavGraphBuilder.preferenceGraph(
     controller: NavController,
     canNavigateUp: Boolean,
     onNavigateUpClicked: () -> Unit,
-    preferences: PreferenceResources2
+    preferences: PreferenceResources
 ) {
     navigation<PreferencesGraphRoute>(
         startDestination = PreferencesRoute,

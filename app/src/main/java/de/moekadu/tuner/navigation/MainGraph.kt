@@ -1,3 +1,21 @@
+/*
+* Copyright 2024 Michael Moessner
+*
+* This file is part of Tuner.
+*
+* Tuner is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Tuner is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package de.moekadu.tuner.navigation
 
 import android.util.Log
@@ -17,18 +35,17 @@ import androidx.navigation.toRoute
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIO
-import de.moekadu.tuner.instruments.InstrumentResources2
+import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.instruments.instrumentIcons
-import de.moekadu.tuner.preferences.PreferenceResources2
+import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.ui.instruments.ImportInstrumentsDialog
 import de.moekadu.tuner.ui.screens.InstrumentTuner
 import de.moekadu.tuner.ui.screens.Instruments
 import de.moekadu.tuner.ui.screens.ScientificTuner
 import de.moekadu.tuner.viewmodels.InstrumentTunerViewModel
-import de.moekadu.tuner.viewmodels.InstrumentViewModel2
+import de.moekadu.tuner.viewmodels.InstrumentViewModel
 import de.moekadu.tuner.viewmodels.ScientificTunerViewModel
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -38,8 +55,8 @@ fun NavGraphBuilder.mainGraph(
     controller: NavController,
     canNavigateUp: Boolean,
     onNavigateUpClicked: () -> Unit,
-    preferences: PreferenceResources2,
-    instrumentResources: InstrumentResources2
+    preferences: PreferenceResources,
+    instrumentResources: InstrumentResources
 ) {
     composable<TunerRoute> {
         val isScientificTuner by preferences.scientificMode.collectAsStateWithLifecycle()
@@ -87,7 +104,7 @@ fun NavGraphBuilder.mainGraph(
     composable<InstrumentsRoute> {
         val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
         val musicalScale by preferences.musicalScale.collectAsStateWithLifecycle()
-        val viewModel: InstrumentViewModel2 = hiltViewModel()
+        val viewModel: InstrumentViewModel = hiltViewModel()
         val context = LocalContext.current
         Instruments(
             state = viewModel,

@@ -1,3 +1,21 @@
+/*
+* Copyright 2024 Michael Moessner
+*
+* This file is part of Tuner.
+*
+* Tuner is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Tuner is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package de.moekadu.tuner.ui.preferences
 
 import androidx.compose.foundation.layout.Column
@@ -8,7 +26,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -35,9 +52,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
-import de.moekadu.tuner.preferences.PreferenceResources2
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.temperaments.NoteNameScaleFactory
 import de.moekadu.tuner.temperaments.TemperamentType
@@ -52,8 +67,8 @@ import kotlin.math.roundToInt
 
 @Composable
 fun TemperamentDialog(
-    initialState: PreferenceResources2.MusicalScaleProperties,
-    onTemperamentChange: (newState: PreferenceResources2.MusicalScaleProperties) -> Unit,
+    initialState: PreferenceResources.MusicalScaleProperties,
+    onTemperamentChange: (newState: PreferenceResources.MusicalScaleProperties) -> Unit,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit = {}
@@ -264,7 +279,7 @@ private fun TemperamentDialogPreview() {
     TunerTheme {
         val state = remember {
             val scale = MusicalScaleFactory.create(TemperamentType.EDO12)
-            PreferenceResources2.MusicalScaleProperties.create(scale)
+            PreferenceResources.MusicalScaleProperties.create(scale)
         }
         val notePrintOptions = remember { NotePrintOptions() }
         TemperamentDialog(

@@ -1,3 +1,21 @@
+/*
+* Copyright 2024 Michael Moessner
+*
+* This file is part of Tuner.
+*
+* Tuner is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Tuner is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package de.moekadu.tuner.viewmodels
 
 import androidx.lifecycle.ViewModel
@@ -6,34 +24,31 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.instrumentChromatic
 import de.moekadu.tuner.notedetection.FrequencyDetectionCollectedResults
 import de.moekadu.tuner.notedetection.FrequencyEvaluationResult
-import de.moekadu.tuner.preferences.PreferenceResources2
+import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.tuner.Tuner
 import de.moekadu.tuner.ui.instruments.StringWithInfo
 import de.moekadu.tuner.ui.notes.NoteDetectorState
 import de.moekadu.tuner.ui.screens.InstrumentEditorData
 import de.moekadu.tuner.ui.instruments.StringsState
-import de.moekadu.tuner.ui.screens.Instruments
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
-import javax.inject.Inject
 import kotlin.math.min
 
-@HiltViewModel(assistedFactory = InstrumentEditorViewModel2.Factory::class)
-class InstrumentEditorViewModel2 @AssistedInject constructor(
+@HiltViewModel(assistedFactory = InstrumentEditorViewModel.Factory::class)
+class InstrumentEditorViewModel @AssistedInject constructor(
     @Assisted instrument: Instrument,
-    private val pref: PreferenceResources2
+    private val pref: PreferenceResources
 ) : ViewModel(), InstrumentEditorData {
      @AssistedFactory
      interface Factory {
-         fun create(instrument: Instrument): InstrumentEditorViewModel2
+         fun create(instrument: Instrument): InstrumentEditorViewModel
      }
 
     private val tuner = Tuner(

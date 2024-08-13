@@ -1,18 +1,59 @@
+/*
+* Copyright 2024 Michael Moessner
+*
+* This file is part of Tuner.
+*
+* Tuner is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Tuner is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package de.moekadu.tuner.preferences
 
 import android.content.Context
-import android.content.SharedPreferences
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.preference.PreferenceManager
+import android.os.Parcelable
+import android.util.Log
+import androidx.datastore.core.IOException
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStoreFile
 import dagger.hilt.android.qualifiers.ApplicationContext
-import de.moekadu.tuner.misc.DefaultValues
+import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.notedetection.WindowingFunction
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.temperaments.TemperamentType
-import de.moekadu.tuner.ui.notes.NotationType
 import de.moekadu.tuner.ui.notes.NotePrintOptions
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.pow
@@ -20,367 +61,305 @@ import kotlin.math.roundToInt
 
 @Singleton
 class PreferenceResources @Inject constructor (
-    @ApplicationContext private val context: Context,
-    // private val sharedPreferences: SharedPreferences,
-    //scope: CoroutineScope
+    @ApplicationContext context: Context,
+    @ApplicationScope val applicationScope: CoroutineScope
 ) {
-    private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+    private val dataStore = PreferenceDataStoreFactory.create(
+        corruptionHandler = ReplaceFileCorruptionHandler(produceNewData = { emptyPreferences() })
+    ) { context.preferencesDataStoreFile("settings") }
 
+    private val scope = CoroutineScope(applicationScope.coroutineContext + Dispatchers.IO)
+    //private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    @Serializable
     data class Appearance(
-        var mode: NightMode = NightMode.Auto,  // Int = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
-        var blackNightEnabled: Boolean = true,
-        var useSystemColorAccents: Boolean = true
-    ) {
-        private fun nightModeStringToID2(string: String) = when(string) {
-            "dark" -> NightMode.On // ppCompatDelegate.MODE_NIGHT_YES
-            "light" -> NightMode.Off // AppCompatDelegate.MODE_NIGHT_NO
-            else -> NightMode.Auto // AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-        }
+        val mode: NightMode = NightMode.Auto,
+        val blackNightEnabled: Boolean = false,
+        val useSystemColorAccents: Boolean = true
+    )
 
-        fun fromString(string: String?) {
-            if (string == null)
-                return
-            val values = string.split(" ")
-            blackNightEnabled = values.contains("blackNightEnabled")
-            useSystemColorAccents = !(values.contains("noSystemColorAccents"))
-            val modeString = if (values.contains("dark"))
-                "dark"
-            else if (values.contains("light"))
-                "light"
-            else
-                "auto"
-            mode = nightModeStringToID2(modeString)
-        }
-    }
-
-    data class NotationPreferenceValue(var notation: String, var helmholtzEnabled: Boolean) {
-        override fun toString(): String {
-            var result = notation
-            if (helmholtzEnabled)
-                result += " helmholtzEnabled"
-            return result
-        }
-
-        fun fromString(string: String?) {
-            if (string == null)
-                return
-            val values = string.split(" ")
-            helmholtzEnabled = values.contains("helmholtzEnabled")
-            notation = when {
-                values.contains("solfege") -> "solfege"
-                values.contains("international") -> "international"
-                values.contains("carnatic") -> "carnatic"
-                values.contains("hindustani") -> "hindustani"
-                else -> "standard"
-            }
-        }
-    }
-//    val sampleRate = 44100
-//    private val _appearance = MutableStateFlow(obtainAppearance())
-//    val appearance = _appearance.asStateFlow()
-//    private val _screenAlwaysOn = MutableStateFlow(obtainScreenAlwaysOn())
-//    val screenAlwaysOn = _screenAlwaysOn.asStateFlow()
-//    private val _windowing = MutableStateFlow(obtainWindowing())
-//    val windowing = _windowing.asStateFlow()
-//    private val _overlap = MutableStateFlow(obtainOverlap())
-//    val overlap = _overlap.asStateFlow()
-//    private val _windowSize = MutableStateFlow(obtainWindowSize())
-//    val windowSize = _windowSize.asStateFlow()
-//    private val _pitchHistoryDuration = MutableStateFlow(obtainPitchHistoryDuration())
-//    val pitchHistoryDuration = _pitchHistoryDuration.asStateFlow()
-//    private val _numMovingAverage = MutableStateFlow(obtainNumMovingAverage())
-//    val numMovingAverage = _numMovingAverage.asStateFlow()
-//    private val _maxNoise = MutableStateFlow(obtainMaxNoise())
-//    val maxNoise = _maxNoise.asStateFlow()
-//    private val _minHarmonicEnergyContent = MutableStateFlow(obtainMinHarmonicEnergyContent())
-//    val minHarmonicEnergyContent = _minHarmonicEnergyContent.asStateFlow()
-//    private val _sensitivity = MutableStateFlow(obtainSensitivity())
-//    val sensitivity = _sensitivity.asStateFlow()
-//    private val _pitchHistoryMaxNumFaultyValues = MutableStateFlow(obtainPitchHistoryNumFaultyValues())
-//    val pitchHistoryMaxNumFaultyValues = _pitchHistoryMaxNumFaultyValues.asStateFlow()
-//    private val _toleranceInCents = MutableStateFlow(obtainToleranceInCents())
-//    val toleranceInCents = _toleranceInCents.asStateFlow()
-//    private val _waveWriterDurationInSeconds = MutableStateFlow(obtainWaveWriterDurationInSeconds())
-//    val waveWriterDurationInSeconds = _waveWriterDurationInSeconds.asStateFlow()
-//    // TODO: delete noteNamePrinter
-//    private val _noteNamePrinter = MutableStateFlow(obtainNoteNamePrinter())
-//    val noteNamePrinter = _noteNamePrinter.asStateFlow()
-//    private val _notePrintOptions = MutableStateFlow(obtainNotePrintOptions())
-//    val notePrintOptions = _notePrintOptions.asStateFlow()
-//
-//    private val _musicalScale = MutableStateFlow(musicalScaleFromPreference(obtainTemperamentAndReferenceNote()))
-//    val musicalScale = _musicalScale.asStateFlow()
-//    private val _temperamentAndReferenceNote = MutableStateFlow(obtainTemperamentAndReferenceNote())
-//    val temperamentAndReferenceNote = _temperamentAndReferenceNote.asStateFlow()
-//
-//    private val _instrumentId = MutableStateFlow(obtainInstrumentId())
-//    val instrumentId: StateFlow<Long> get() = _instrumentId
-
-    // we must store this explicitly outside the callback flow since otherwise this will be
-    // garbage collected, see docs:
-    // https://developer.android.com/reference/android/content/SharedPreferences.html#registerOnSharedPreferenceChangeListener(android.content.SharedPreferences.OnSharedPreferenceChangeListener)
-
-//    private lateinit var onSharedPreferenceChangedListener: SharedPreferences.OnSharedPreferenceChangeListener
-
-    init {
-//        runMigrations()
-
-//        val sharedPrefFlow = callbackFlow {
-//            onSharedPreferenceChangedListener =
-//                SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-////                    Log.v("Tuner", "PreferenceResources : callbackFlow: key changed: $key")
-//                    if (key != null)
-//                        trySend(key)
-//                }
-//            sharedPreferences.registerOnSharedPreferenceChangeListener(
-//                onSharedPreferenceChangedListener
-//            )
-//            awaitClose {
-////                Log.v("Tuner", "PreferenceResources sharedPrefFlow closed")
-//                sharedPreferences.unregisterOnSharedPreferenceChangeListener(
-//                    onSharedPreferenceChangedListener
-//                )
-//            }
-//        }
-//
-//        MainScope().launch {
-//            sharedPrefFlow.buffer(Channel.CONFLATED).collect { key ->
-//                when (key) {
-//                    APPEARANCE_KEY -> _appearance.value = obtainAppearance()
-//                    SCREEN_ALWAYS_ON -> _screenAlwaysOn.value = obtainScreenAlwaysOn()
-//                    WINDOWING_KEY -> _windowing.value = obtainWindowing()
-//                    OVERLAP_KEY -> _overlap.value = obtainOverlap()
-//                    WINDOW_SIZE_KEY -> _windowSize.value = obtainWindowSize()
-//                    PITCH_HISTORY_DURATION_KEY -> _pitchHistoryDuration.value =
-//                        obtainPitchHistoryDuration()
-//                    PITCH_HISTORY_NUM_FAULTY_VALUES_KEY -> _pitchHistoryMaxNumFaultyValues.value =
-//                        obtainPitchHistoryNumFaultyValues()
-////                    USE_HINT_KEY -> _useHint.value = obtainUseHint()
-//                    NUM_MOVING_AVERAGE_KEY -> _numMovingAverage.value = obtainNumMovingAverage()
-//                    MAX_NOISE_KEY -> _maxNoise.value = obtainMaxNoise()
-//                    MIN_HARMONIC_ENERGY_CONTENT -> _minHarmonicEnergyContent.value = obtainMinHarmonicEnergyContent()
-//                    SENSITIVITY -> _sensitivity.value = obtainSensitivity()
-//                    TOLERANCE_IN_CENTS_KEY -> _toleranceInCents.value = obtainToleranceInCents()
-//                    WAVE_WRITER_DURATION_IN_SECONDS_KEY -> _waveWriterDurationInSeconds.value =
-//                        obtainWaveWriterDurationInSeconds()
-//                    PREFER_FLAT_KEY -> {
-//                        _noteNamePrinter.value = obtainNoteNamePrinter()
-//                        _notePrintOptions.value = obtainNotePrintOptions()
-//                    }
-//                    NOTATION_KEY -> {
-//                        _noteNamePrinter.value = obtainNoteNamePrinter()
-//                        _notePrintOptions.value = obtainNotePrintOptions()
-//                    }
-//                    TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY -> {
-//                        val value = obtainTemperamentAndReferenceNote()
-//                        _temperamentAndReferenceNote.value = value
-//                        _musicalScale.value = musicalScaleFromPreference(value)
-//                    }
-////                    INSTRUMENT_ID_KEY -> _instrumentId = obtainInstrumentId()
-//                }
-//            }
-//        }
-    }
-
-//    fun setTemperamentAndReferenceNote(value: TemperamentAndReferenceNoteValue) {
-//        val editor = sharedPreferences.edit()
-//        val newPrefsString = value.toString()
-//        editor.putString(
-//            TemperamentAndReferenceNoteValue.TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY,
-//            newPrefsString
-//        )
-//        editor.apply()
-//    }
-
-    val appearance get() = getString(APPEARANCE_KEY)?.let{
-        val value = Appearance()
-        value.fromString(sharedPreferences.getString(APPEARANCE_KEY, ""))
-        value
-    }
-
-    val scientificMode get() = getBoolean(SCIENTIFIC_KEY)
-
-    val screenAlwaysOn get() = getBoolean(SCREEN_ALWAYS_ON)
-    private val preferFlat get() = getBoolean(PREFER_FLAT_KEY)
-    private val notationPreference get() =  getString(NOTATION_KEY)?.let {
-        val notationValue = NotationPreferenceValue("standard", false)
-        notationValue.fromString(sharedPreferences.getString(NOTATION_KEY, ""))
-        notationValue
-    }
-    val notePrintOptions: NotePrintOptions? get() {
-        if (preferFlat == null && notationPreference == null)
-            return null
-        val pF = preferFlat
-        val nP = notationPreference
-        val def = NotePrintOptions()
-        val nT = when(nP?.notation) {
-            "international" -> NotationType.International
-            "solfege" -> NotationType.Solfege
-            "carnatic" -> NotationType.Carnatic
-            "hindustani" -> NotationType.Hindustani
-            else -> NotationType.Standard
-        }
-        val hH = nP?.helmholtzEnabled ?: def.helmholtzNotation
-        val sharpFlatPreference = if (pF == null)
-            def.sharpFlatPreference
-        else if (pF == true)
-            NotePrintOptions.SharpFlatPreference.Flat
-        else
-            NotePrintOptions.SharpFlatPreference.Sharp
-        return NotePrintOptions(sharpFlatPreference, hH, nT)
-    }
-
-    val windowing get() = getString(WINDOWING_KEY)?.let {
-        when (sharedPreferences.getString(WINDOWING_KEY, null)) {
-            "no_window" -> WindowingFunction.Tophat
-            "window_hamming" -> WindowingFunction.Hamming
-            "window_hann" -> WindowingFunction.Hann
-            else -> null
-        }
-    }
-    val overlap get() = getInt(OVERLAP_KEY)
-
-    val windowSizeExponent get() = getInt(WINDOW_SIZE_KEY)?.let {
-        it + 7
-        //indexToWindowSize2(it)
-    }
-    val pitchHistoryDuration get() = getInt(PITCH_HISTORY_DURATION_KEY)?.let{
-        percentToPitchHistoryDuration2(it)
-    }
-    val pitchHistoryNumFaultyValues get() = getInt(PITCH_HISTORY_NUM_FAULTY_VALUES_KEY)
-    val numMovingAverage get() = getInt(NUM_MOVING_AVERAGE_KEY)
-
-    // disable this setting for now by hardcoding a good value
-    // fun obtainMaxNoise() = 0.1f// sharedPreferences.getInt(MAX_NOISE_KEY, 10) / 100f
-
-    // disable this setting for now by hardcoding a good value
-    // fun obtainMinHarmonicEnergyContent() = 0.1f // sharedPreferences.getInt(MIN_HARMONIC_ENERGY_CONTENT, 20) / 100f
-    val sensitivity get() = getInt(SENSITIVITY)
-
-    val toleranceInCents get() = getInt(TOLERANCE_IN_CENTS_KEY)?.let {
-        indexToTolerance2(it)
-    }
-
-    val waveWriterDurationInSeconds get() = getInt(WAVE_WRITER_DURATION_IN_SECONDS_KEY)
-
-    private val temperamentAndReferenceNote get() = TemperamentAndReferenceNoteFromPreference.fromSharedPreferences(sharedPreferences)
-    val musicalScale: MusicalScale? get() = temperamentAndReferenceNote?.let {
-            MusicalScaleFactory.create(
-                it.temperamentType,
-                it.referenceNote,
-                it.rootNote,
-                it.referenceFrequency.toFloatOrNull() ?: DefaultValues.REFERENCE_FREQUENCY
+    @Serializable
+    @Parcelize
+    data class MusicalScaleProperties(
+        val temperamentType: TemperamentType,
+        val rootNote: MusicalNote,
+        val referenceNote: MusicalNote,
+        val referenceFrequency: Float
+    ) : Parcelable {
+        fun toMusicalScale() = MusicalScaleFactory.create(
+            temperamentType, referenceNote, rootNote, referenceFrequency
+        )
+        companion object {
+            fun create(musicalScale: MusicalScale) = MusicalScaleProperties(
+                musicalScale.temperamentType,
+                musicalScale.rootNote,
+                musicalScale.referenceNote,
+                musicalScale.referenceFrequency
             )
         }
+    }
 
-    private fun getBoolean(key: String) = if(sharedPreferences.contains(key))
-        sharedPreferences.getBoolean(key, false)
-    else
-        null
-    private fun getString(key: String) = if(sharedPreferences.contains(key))
-        sharedPreferences.getString(key, null)
-    else
-        null
-    private fun getInt(key: String) = if(sharedPreferences.contains(key))
-        sharedPreferences.getInt(key, 0)
-    else
-        null
+    val sampleRate = 44100
+
+    // migrations
+    val migrationsFromV6Complete = getPreferenceFlow(MIGRATIONS_FROM_V6_KEY, false)
+    fun writeMigrationsFromV6Complete() {
+        writePreference(MIGRATIONS_FROM_V6_KEY, true)
+        Log.v("Tuner", "PreferenceMigrations: writing complete = ${migrationsFromV6Complete.value}")
+    }
+    /** True, if during load, we are migrating from v6.
+     * This is normally false, just on the first start when coming from v6, this is true.
+     * */
+    @Volatile
+    var isMigratingFromV6: Boolean = false
+        private set
+
+    // appearance
+    val appearance = getSerializablePreferenceFlow(APPEARANCE_KEY, AppearanceDefault)
+    fun writeAppearance(appearance: Appearance) {
+        writeSerializablePreference(APPEARANCE_KEY, appearance)
+    }
+
+    // keep screen on
+    val screenAlwaysOn = getPreferenceFlow(SCREEN_ALWAYS_ON, ScreenAlwaysOnDefault)
+    fun writeScreenAlwaysOn(screenAlwaysOn: Boolean) {
+        writePreference(SCREEN_ALWAYS_ON, screenAlwaysOn)
+    }
+
+    // note print options
+    val notePrintOptions = getSerializablePreferenceFlow(
+        NOTE_PRINT_OPTIONS_KEY, NotePrintOptionsDefault)
+    fun writeNotePrintOptions(notePrintOptions: NotePrintOptions) {
+        writeSerializablePreference(NOTE_PRINT_OPTIONS_KEY, notePrintOptions)
+    }
+
+    fun switchSharpFlatPreference() {
+        val currentFlatSharpChoice = notePrintOptions.value.sharpFlatPreference
+        val newFlatShapeChoice =
+            if (currentFlatSharpChoice == NotePrintOptions.SharpFlatPreference.Flat)
+                NotePrintOptions.SharpFlatPreference.Sharp
+            else
+                NotePrintOptions.SharpFlatPreference.Flat
+        writeNotePrintOptions(
+            notePrintOptions.value.copy(
+                sharpFlatPreference = newFlatShapeChoice
+            )
+        )
+    }
+
+    // scientific mode
+    val scientificMode = getPreferenceFlow(SCIENTIFIC_MODE_KEY, ScientificModeDefault)
+    fun writeScientificMode(scientificMode: Boolean) {
+        writePreference(SCIENTIFIC_MODE_KEY, scientificMode)
+    }
+
+    val musicalScale = getTransformablePreferenceFlow(TEMPERAMENT_AND_REFERENCE_NOTE_KEY, MusicalScaleDefault) {
+        try {
+            Json.decodeFromString<MusicalScaleProperties>(it).toMusicalScale()
+        } catch (ex: Exception) {
+            MusicalScaleDefault
+        }
+    }
+
+    fun writeMusicalScaleProperties(properties: MusicalScaleProperties) {
+        writeSerializablePreference(TEMPERAMENT_AND_REFERENCE_NOTE_KEY, properties)
+    }
+
+    // windowing
+    val windowing = getTransformablePreferenceFlow(WINDOWING_KEY, WindowingDefault) {
+            WindowingFunction.valueOf(it)
+        }
+    fun writeWindowing(windowing: WindowingFunction) {
+        writePreference(WINDOWING_KEY, windowing.name)
+    }
+
+    // overlap
+    val overlap = getTransformablePreferenceFlow(OVERLAP_KEY, OverlapDefault) { it / 100f }
+    fun writeOverlap(overlapPercent: Int) {
+        writePreference(OVERLAP_KEY, overlapPercent)
+    }
+
+    // window size
+    val windowSize = getTransformablePreferenceFlow(WINDOW_SIZE_KEY, WindowSizeDefault) { 2f.pow(it).roundToInt() }
+    val windowSizeExponent = getPreferenceFlow(WINDOW_SIZE_KEY, WindowSizeExponentDefault)
+
+    fun writeWindowSize(windowSizeExponent: Int) {
+        writePreference(WINDOW_SIZE_KEY, windowSizeExponent)
+    }
+
+    val pitchHistoryDuration = getPreferenceFlow(PITCH_HISTORY_DURATION_KEY, PitchHistoryDurationDefault)
+    fun writePitchHistoryDuration(pitchHistoryDuration: Float) {
+        writePreference(PITCH_HISTORY_DURATION_KEY, pitchHistoryDuration)
+    }
+
+    val pitchHistoryNumFaultyValues = getPreferenceFlow(PITCH_HISTORY_NUM_FAULTY_VALUES_KEY, PitchHistoryNumFaultyValuesDefault)
+    fun writePitchHistoryNumFaultyValues(pitchHistoryNumFaultyValues: Int) {
+        writePreference(PITCH_HISTORY_NUM_FAULTY_VALUES_KEY, pitchHistoryNumFaultyValues)
+    }
+
+    val numMovingAverage = getPreferenceFlow(NUM_MOVING_AVERAGE_KEY, NumMovingAverageDefault)
+    fun writeNumMovingAverage(numMovingAverage: Int) {
+        writePreference(NUM_MOVING_AVERAGE_KEY, numMovingAverage)
+    }
+
+    val maxNoise = getTransformablePreferenceFlow(MAX_NOISE_KEY, MaxNoiseDefault){ it / 100f }
+    fun writeMaxNoise(maxNoisePercent: Int) {
+        writePreference(MAX_NOISE_KEY, maxNoisePercent)
+    }
+
+    val minHarmonicEnergyContent = getTransformablePreferenceFlow(MIN_HARMONIC_ENERGY_CONTENT_KEY, MinHarmonicEnergyContentDefault) { it / 100f }
+    fun writeMinHarmonicEnergyContent(minHarmonicEnergyContentPercent: Int) {
+        writePreference(MIN_HARMONIC_ENERGY_CONTENT_KEY, minHarmonicEnergyContentPercent)
+    }
+
+    val sensitivity = getPreferenceFlow(SENSITIVITY_KEY, SensitivityDefault)
+    fun writeSensitivity(sensitivity: Int) {
+        writePreference(SENSITIVITY_KEY, sensitivity)
+    }
+
+    val toleranceInCents = getPreferenceFlow(TOLERANCE_IN_CENTS_KEY, ToleranceInCentsDefault)
+    fun writeToleranceInCents(toleranceInCents: Int) {
+        writePreference(TOLERANCE_IN_CENTS_KEY, toleranceInCents)
+    }
+
+    val waveWriterDurationInSeconds= getPreferenceFlow(
+        WAVE_WRITER_DURATION_IN_SECONDS_KEY, WaveWriterDurationInSecondsDefault
+    )
+    fun writeWaveWriterDurationInSeconds(waveWriterDurationInSeconds: Int) {
+        writePreference(WAVE_WRITER_DURATION_IN_SECONDS_KEY, waveWriterDurationInSeconds)
+    }
+
+    fun resetAllSettings() {
+        scope.launch {
+            dataStore.edit {
+                it[APPEARANCE_KEY] = Json.encodeToString(AppearanceDefault)
+                it[SCREEN_ALWAYS_ON] = ScreenAlwaysOnDefault
+                it[TEMPERAMENT_AND_REFERENCE_NOTE_KEY] = Json.encodeToString(
+                    MusicalScaleProperties.create(MusicalScaleDefault)
+                )
+                it[TOLERANCE_IN_CENTS_KEY] = ToleranceInCentsDefault
+                it[NOTE_PRINT_OPTIONS_KEY] = Json.encodeToString(NotePrintOptionsDefault)
+                it[SENSITIVITY_KEY] = SensitivityDefault
+                it[SCIENTIFIC_MODE_KEY] = ScientificModeDefault
+                it[NUM_MOVING_AVERAGE_KEY] = NumMovingAverageDefault
+                it[WINDOW_SIZE_KEY] = WindowSizeExponentDefault
+                it[WINDOWING_KEY] = WindowingDefault.name
+                it[OVERLAP_KEY] = (OverlapDefault * 100).roundToInt()
+                it[PITCH_HISTORY_DURATION_KEY] = PitchHistoryDurationDefault
+                it[PITCH_HISTORY_NUM_FAULTY_VALUES_KEY] = PitchHistoryNumFaultyValuesDefault
+                it[WAVE_WRITER_DURATION_IN_SECONDS_KEY] = WaveWriterDurationInSecondsDefault
+            }
+        }
+    }
+
+    private fun<T> getPreferenceFlow(key: Preferences.Key<T>, default: T): StateFlow<T> {
+        return dataStore.data
+            .catch {
+//                Log.v("Tuner", "PreferenceResources2: except: $it, $key")
+                if (it is IOException) {
+                    emit(emptyPreferences())
+                } else {
+                    throw it
+                }
+            }
+            .map {
+//                Log.v("Tuner", "PreferenceResources2: $key ${it[key]}")
+                it[key] ?: default
+            }
+            .stateIn(scope, SharingStarted.Eagerly, default)
+    }
+    private fun<K, T> getTransformablePreferenceFlow(key: Preferences.Key<K>, default: T, transform: (K) -> T): StateFlow<T> {
+        return dataStore.data
+            .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+            .map {
+                val s = it[key]
+                if (s == null) default else transform(s)
+            }
+            .stateIn(scope, SharingStarted.Eagerly, default)
+    }
+    private inline fun<reified T> getSerializablePreferenceFlow(key: Preferences.Key<String>, default: T): StateFlow<T> {
+        return dataStore.data
+            .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+            .map {
+                val s = it[key]
+                if (s == null) {
+                    default
+                } else {
+                    try {
+                        Json.decodeFromString<T>(s)
+                    } catch(ex: Exception) {
+                        default
+                    }
+                }
+            }
+            .stateIn(scope, SharingStarted.Eagerly, default)
+    }
+
+    private fun<T> writePreference(key: Preferences.Key<T>, value: T) {
+        scope.launch {
+            dataStore.edit { it[key] = value }
+        }
+    }
+
+    private inline fun<reified T> writeSerializablePreference(key: Preferences.Key<String>, value: T) {
+        scope.launch {
+            dataStore.edit {
+                it[key] = Json.encodeToString(value)
+            }
+        }
+    }
+
+    init {
+        // block everything until all data is read to avoid incorrect startup behaviour
+        runBlocking {
+            dataStore.data.first()
+            isMigratingFromV6 = this@PreferenceResources.migrateFromV6(context)
+        }
+    }
 
     companion object {
-        const val APPEARANCE_KEY = "appearance"
-        const val SCREEN_ALWAYS_ON = "screenon"
-        const val PREFER_FLAT_KEY = "prefer_flat"
-        const val SOLFEGE_KEY = "solfege"
-        const val NOTATION_KEY = "notation"
-        const val WINDOWING_KEY = "windowing"
-        const val OVERLAP_KEY = "overlap"
-        const val WINDOW_SIZE_KEY = "window_size"
-        const val SCIENTIFIC_KEY = "scientific"
-        const val PITCH_HISTORY_DURATION_KEY = "pitch_history_duration"
-        const val PITCH_HISTORY_NUM_FAULTY_VALUES_KEY = "pitch_history_num_faulty_values"
+        const val ReferenceFrequencyDefault = 440f
+
+        private val AppearanceDefault = Appearance()
+        private const val ScreenAlwaysOnDefault = false
+        private val NotePrintOptionsDefault = NotePrintOptions()
+        private const val ScientificModeDefault = false
+        private val MusicalScaleDefault = MusicalScaleFactory.create(TemperamentType.EDO12)
+        private val WindowingDefault = WindowingFunction.Tophat
+        private val OverlapDefault = 25f / 100f
+        private val WindowSizeExponentDefault = 12
+        private val WindowSizeDefault = 2f.pow(WindowSizeExponentDefault).roundToInt()  // = 4096
+        private val PitchHistoryDurationDefault = 1.5f
+        private val PitchHistoryNumFaultyValuesDefault = 3
+        private val NumMovingAverageDefault = 5
+        private val MaxNoiseDefault = 0.1f
+        private val MinHarmonicEnergyContentDefault = 0.1f
+        private val SensitivityDefault = 90
+        private val ToleranceInCentsDefault = 5
+        private val WaveWriterDurationInSecondsDefault = 0
+
+        private val APPEARANCE_KEY = stringPreferencesKey("appearance")
+        private val SCREEN_ALWAYS_ON = booleanPreferencesKey("screenon")
+        private val NOTE_PRINT_OPTIONS_KEY = stringPreferencesKey("note_print_options")
+//        const val PREFER_FLAT_KEY = "prefer_flat"
+//        const val SOLFEGE_KEY = "solfege"
+        private val SCIENTIFIC_MODE_KEY = booleanPreferencesKey("scientific_mode")
+//        private val NOTATION_KEY = stringPreferencesKey("notation")
+        private val TEMPERAMENT_AND_REFERENCE_NOTE_KEY = stringPreferencesKey("temperament_and_reference_note")
+        private val WINDOWING_KEY = stringPreferencesKey("windowing")
+        private val OVERLAP_KEY = intPreferencesKey("overlap")
+        private val WINDOW_SIZE_KEY = intPreferencesKey("window_size_exponent")
+        private val PITCH_HISTORY_DURATION_KEY = floatPreferencesKey("pitch_history_duration")
+        private val PITCH_HISTORY_NUM_FAULTY_VALUES_KEY = intPreferencesKey("pitch_history_num_faulty_values")
 //        const val USE_HINT_KEY = "use_hint"
-        const val NUM_MOVING_AVERAGE_KEY = "num_moving_average"
-        const val MAX_NOISE_KEY = "max_noise"
-        const val MIN_HARMONIC_ENERGY_CONTENT = "min_harmonic_energy_content"
-        const val SENSITIVITY = "sensitivity"
-        const val TOLERANCE_IN_CENTS_KEY = "tolerance_in_cents"
-        const val WAVE_WRITER_DURATION_IN_SECONDS_KEY = "wave_writer_duration_in_seconds"
+        private val NUM_MOVING_AVERAGE_KEY = intPreferencesKey("num_moving_average")
+        private val MAX_NOISE_KEY = intPreferencesKey("max_noise")
+        private val MIN_HARMONIC_ENERGY_CONTENT_KEY = intPreferencesKey("min_harmonic_energy_content")
+        private val SENSITIVITY_KEY = intPreferencesKey("sensitivity")
+        private val TOLERANCE_IN_CENTS_KEY = intPreferencesKey("tolerance_in_cents")
+        private val WAVE_WRITER_DURATION_IN_SECONDS_KEY = intPreferencesKey("wave_writer_duration_in_seconds")
+
+        private val MIGRATIONS_FROM_V6_KEY = booleanPreferencesKey("migrations_complete")
 //        const val INSTRUMENT_ID_KEY = "instrument_id"
     }
-}
-
-private data class TemperamentAndReferenceNoteFromPreference (
-    val temperamentType: TemperamentType,
-    val rootNote: MusicalNote,
-    val referenceNote: MusicalNote,
-    val referenceFrequency: String) {
-    override fun toString(): String {
-        return "$temperamentType ${rootNote.asString()} ${referenceNote.asString()} $referenceFrequency"
-    }
-
-    companion object {
-        const val TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY = "temperament_and_reference_note.key"
-
-        fun fromSharedPreferences(pref: SharedPreferences): TemperamentAndReferenceNoteFromPreference? {
-            if (!pref.contains(TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY))
-                return null
-            return fromString(pref.getString(TEMPERAMENT_AND_REFERENCE_NOTE_PREFERENCE_KEY, null))
-        }
-
-        fun fromString(string: String?): TemperamentAndReferenceNoteFromPreference? {
-            if (string == null)
-                return null
-            val values = string.split(" ")
-            if (values.size != 4)
-                return null
-            val temperamentType = try {
-                TemperamentType.valueOf(values[0])
-            } catch (ex: IllegalArgumentException) {
-                TemperamentType.EDO12
-            }
-            val rootNote = try {
-                MusicalNote.fromString(values[1])
-            } catch (ex: RuntimeException) {
-                return null
-            }
-            val referenceNote = try {
-                MusicalNote.fromString(values[2])
-            } catch (ex: RuntimeException) {
-                return null
-            }
-            val referenceFrequency = if (values[3].toFloatOrNull() == null)
-                return null
-            else
-                values[3]
-            return TemperamentAndReferenceNoteFromPreference(temperamentType, rootNote, referenceNote, referenceFrequency)
-        }
-    }
-}
-
-private fun indexToWindowSize2(index: Int): Int {
-    return 2f.pow(7 + index).roundToInt()
-}
-
-private fun indexToTolerance2(index: Int): Int {
-    return when (index) {
-        0 -> 1
-        1 -> 2
-        2 -> 3
-        3 -> 5
-        4 -> 7
-        5 -> 10
-        6 -> 15
-        7 -> 20
-        else -> throw RuntimeException("Invalid index for tolerance")
-    }
-}
-
-/** Compute pitch history duration in seconds based on a percent value.
- * This uses a exponential scale for setting the duration.
- * @param percent Percentage value where 0 stands for the minimum duration and 100 for the maximum.
- * @param durationAtFiftyPercent Duration in seconds at fifty percent.
- * @return Pitch history duration in seconds.
- */
-private fun percentToPitchHistoryDuration2(percent: Int, durationAtFiftyPercent: Float = 3.0f) : Float {
-    return durationAtFiftyPercent * 2.0f.pow(0.05f * (percent - 50))
 }

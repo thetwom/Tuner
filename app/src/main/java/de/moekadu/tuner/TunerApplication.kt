@@ -1,29 +1,25 @@
+/*
+* Copyright 2024 Michael Moessner
+*
+* This file is part of Tuner.
+*
+* Tuner is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Tuner is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package de.moekadu.tuner
 
 import android.app.Application
-import android.content.Context
-import android.content.SharedPreferences
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.preference.PreferenceManager
 import dagger.hilt.android.HiltAndroidApp
-import de.moekadu.tuner.instruments.InstrumentResources
-import de.moekadu.tuner.preferences.PreferenceResources
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.SupervisorJob
-
-val Context.preferenceResources: PreferenceResources
-    get() = (applicationContext as TunerApplication).preferenceResources
-
-val Context.instrumentResources: InstrumentResources
-    get() = (applicationContext as TunerApplication).instrumentResources
 
 @HiltAndroidApp
-class TunerApplication : Application() {
-    // TODO: use hilt to generate the preferences
-    //lateinit var sharedPreferences: SharedPreferences
-    //lateinit var preferenceResources: PreferenceResources
-
-    //lateinit var instrumentPreferences: SharedPreferences
-    //lateinit var instrumentResources: InstrumentResources
-
-}
+class TunerApplication : Application()
