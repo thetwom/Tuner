@@ -1,205 +1,183 @@
+/*
+* Copyright 2024 Michael Moessner
+*
+* This file is part of Tuner.
+*
+* Tuner is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Tuner is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package de.moekadu.tuner.instruments
 
 import android.content.Context
-import android.content.Context.MODE_PRIVATE
-import android.content.SharedPreferences
-import androidx.core.content.edit
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import de.moekadu.tuner.hilt.ApplicationScope
+import de.moekadu.tuner.misc.ResourcesDataStoreBase
+import kotlinx.collections.immutable.mutate
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.random.Random
 
+@Singleton
 class InstrumentResources @Inject constructor(
-    @ApplicationContext context: Context
-    //private val sharedPreferences: SharedPreferences
+    @ApplicationContext context: Context,
+    @ApplicationScope val applicationScope: CoroutineScope
 ) {
-    private val sharedPreferences = context.getSharedPreferences("instrument resources", MODE_PRIVATE)
-    enum class Section {Predefined, Custom, Undefined }
-    data class InstrumentAndSection(val instrument: Instrument, val section: Section)
+    val store = ResourcesDataStoreBase(context, "instruments")
 
-//    val customInstrumentDatabase = readCustomInstrumentsDatabaseFromPreferences(sharedPreferences)
+    val predefinedInstruments = instrumentDatabase.toImmutableList()
 
-//    /** Predefined instruments, this is simply and no database, since it never changes. */
-    private val predefinedInstruments: List<Instrument> = instrumentDatabase
-
-
-    val predefinedInstrumentsExpanded get() = getBoolean(PREDEFINED_SECTION_EXPANDED_KEY)
-    val customInstrumentsExpanded get() = getBoolean(CUSTOM_SECTION_EXPANDED_KEY)
-
-    val customInstruments get() = getString(CUSTOM_INSTRUMENTS_KEY)?.let {
-        InstrumentIO.stringToInstruments(it).instruments
+    val currentInstrument = store.getSerializablePreferenceFlow(
+        CURRENT_INSTRUMENT_KEY, predefinedInstruments[0]
+    )
+    fun writeCurrentInstrument(instrument: Instrument) {
+        applicationScope.launch {
+            store.writeSerializablePreference(CURRENT_INSTRUMENT_KEY, instrument)
+        }
     }
-    val currentInstrument get() = getLong(CURRENT_INSTRUMENT_ID_KEY)?.let { key ->
-        customInstruments?.let { instruments ->
-            instruments.firstOrNull{ it.stableId == key }
-        } ?: predefinedInstruments.firstOrNull { it.stableId == key }
+
+    // Reading custom instruments is currently a bit difficult, since serialization
+    // of persistentLists is not directly possible
+    //    val customInstruments = store.getSerializablePreferenceFlow(
+    //        CUSTOM_INSTRUMENTS_KEY, CustomInstrumentsDefault
+    //    )
+    val customInstruments = store.getTransformablePreferenceFlow(
+        CUSTOM_INSTRUMENTS_KEY, CustomInstrumentsDefault
+    ) {
+        try {
+            Json.decodeFromString<Array<Instrument>>(it).toList().toPersistentList()
+
+        } catch(ex: Exception) {
+            CustomInstrumentsDefault
+        }
     }
-//    private val _predefinedDatabaseExpanded
-//            = MutableStateFlow(readPredefinedInstrumentsExpandedFromPreferences(sharedPreferences))
-//    val predefinedInstrumentsExpanded: StateFlow<Boolean> get() = _predefinedDatabaseExpanded
-
-    /** Custom instruments list, derived from database. */
-//    private val _customInstruments
-//            = MutableStateFlow(customInstrumentDatabase.getCopyOfInstrumentsList())
-//    val customInstruments: StateFlow<List<Instrument> > get() = _customInstruments
-
-//    private val _customInstrumentsExpanded
-//            = MutableStateFlow(readCustomInstrumentsExpandedFromPreferences(sharedPreferences))
-//    val customInstrumentsExpanded: StateFlow<Boolean> get() = _customInstrumentsExpanded
-
-    /** Instrument which is currently active together with the section where it is stored.
-     * This depends on the instrument lists, so this must come after them!
-     */
-//    private val _instrument = MutableStateFlow(readInstrumentAndSectionFromPreferences(
-//        sharedPreferences, predefinedInstruments, customInstruments.value
-//    ))
-//    val instrument: StateFlow<InstrumentAndSection> get() = _instrument
 //
-//    private fun readInstrumentAndSectionFromPreferences(
-//        prefs: SharedPreferences,
-//        predefinedInstruments: List<Instrument>,
-//        customInstruments: List<Instrument>
-//    ): InstrumentAndSection {
-//        val instrumentId = prefs.getLong(CURRENT_INSTRUMENT_ID_KEY, 0)
-//        val sectionString = prefs.getString(SECTION_OF_CURRENT_INSTRUMENT_KEY, null)
-//        val section = if (sectionString == null)
-//            Section.Predefined
-//        else
-//            Section.valueOf(sectionString)
-//
-//        return when (section) {
-//            Section.Predefined -> {
-//                val i = predefinedInstruments.find { it.stableId == instrumentId } ?: predefinedInstruments[0]
-//                InstrumentAndSection(i, Section.Predefined)
-//            }
-//            Section.Custom -> {
-//                val i = customInstruments.find { it.stableId == instrumentId }
-//                if (i == null)
-//                    InstrumentAndSection(predefinedInstruments[0], Section.Predefined)
-//                else
-//                    InstrumentAndSection(i, Section.Custom)
-//            }
-//            Section.Undefined -> {
-//                throw RuntimeException("Instruments in undefined sections must not be stored in preferences")
-//            }
-//        }
+//    suspend fun writeCustomInstruments(instruments: ImmutableList<Instrument>) {
+//        store.writeSerializablePreference(CUSTOM_INSTRUMENTS_KEY, ImmutableListWrapper(instruments))
 //    }
-//
-//    private fun readPredefinedInstrumentsExpandedFromPreferences(prefs: SharedPreferences)
-//            = prefs.getBoolean(PREDEFINED_SECTION_EXPANDED_KEY, true)
+    fun writeCustomInstruments(instruments: List<Instrument>) {
+        // if current instrument did change, update this also
+        val currentInstrumentId = currentInstrument.value.stableId
+        val modifiedCurrentInstrument = instruments.firstOrNull {
+            it.stableId == currentInstrumentId
+        }
+        if (modifiedCurrentInstrument != null)
+            writeCurrentInstrument(modifiedCurrentInstrument)
+        applicationScope.launch {
+            store.writeSerializablePreference(CUSTOM_INSTRUMENTS_KEY, instruments.toTypedArray())
+        }
+    }
 
-//    private fun readCustomInstrumentsDatabaseFromPreferences(prefs: SharedPreferences): InstrumentDatabase {
-//        val instrumentsString = prefs.getString(CUSTOM_INSTRUMENTS_KEY, "") ?: ""
-//        val instruments = InstrumentDatabase.stringToInstruments(instrumentsString)
-//        val database = InstrumentDatabase()
-//
-//        database.loadInstruments(instruments.instruments, InstrumentDatabase.InsertMode.Replace)
-//        database.databaseChangedListener = InstrumentDatabase.DatabaseChangedListener { db ->
-//            _customInstruments.value = db.getCopyOfInstrumentsList()
-//
-//            // update instrument
-//            db.getInstrument(instrument.value.instrument.stableId)?.let {
-//                _instrument.value = InstrumentAndSection(it, Section.Custom)
-//            }
-//        }
-//        return database
-//    }
-//
-//    private fun readCustomInstrumentsExpandedFromPreferences(prefs: SharedPreferences)
-//            = prefs.getBoolean(CUSTOM_SECTION_EXPANDED_KEY, true)
-//
-//    fun moveCustomInstrument(fromIndex: Int, toIndex: Int) {
-//        customInstrumentDatabase.move(fromIndex, toIndex)
-//        writeToSharedPreferences()
-//    }
-//
-//    fun removeCustomInstrument(position: Int): Instrument {
-//        val instrument = customInstrumentDatabase.remove(position)
-//        writeToSharedPreferences()
-//        return instrument
-//    }
-//
-//    fun addCustomInstrument(position: Int, instrument: Instrument) {
-////        Log.v("Tuner", "InstrumentResources.addCustomInstrument")
-//        customInstrumentDatabase.add(position, instrument)
-//        writeToSharedPreferences()
-//    }
-//
-//    fun replaceOrAddCustomInstrument(instrument: Instrument) {
-//        customInstrumentDatabase.replaceOrAdd(instrument)
-//        writeToSharedPreferences()
-//    }
+    val customInstrumentsExpanded = store.getPreferenceFlow(
+        CUSTOM_INSTRUMENTS_EXPANDED_KEY, CustomInstrumentExpandedDefault
+    )
+    fun writeCustomInstrumentsExpanded(expanded: Boolean) {
+        applicationScope.launch {
+            store.writePreference(CUSTOM_INSTRUMENTS_EXPANDED_KEY, expanded)
+        }
+    }
 
-//    fun setCustomInstrumentsExpanded(isExpanded: Boolean) {
-//        _customInstrumentsExpanded.value = isExpanded
-//        writeToSharedPreferences()
-//    }
+    val predefinedInstrumentsExpanded = store.getPreferenceFlow(
+        PREDEFINED_INSTRUMENTS_EXPANDED_KEY, PredefinedInstrumentExpandedDefault
+    )
+    fun writePredefinedInstrumentsExpanded(expanded: Boolean) {
+        applicationScope.launch {
+            store.writePreference(PREDEFINED_INSTRUMENTS_EXPANDED_KEY, expanded)
+        }
+    }
 
-//    fun setPredefinedInstrumentsExpanded(isExpanded: Boolean) {
-//        _predefinedDatabaseExpanded.value = isExpanded
-//        writeToSharedPreferences()
-//    }
+    /** Add instrument if stable id does not exist, else replace it.*/
+    fun addNewOrReplaceInstrument(instrument: Instrument) {
+        val newInstrument = if (instrument.stableId == Instrument.NO_STABLE_ID)
+            instrument.copy(stableId = getNewStableId())
+        else
+            instrument
 
-//    fun selectInstrument(instrument: Instrument) {
-//        val section = if (predefinedInstruments.firstOrNull { it.stableId == instrument.stableId } != null)
-//            Section.Predefined
-//        else if (customInstruments.value.firstOrNull { it.stableId == instrument.stableId } != null)
-//            Section.Custom
-//        else
-//            Section.Undefined
-//
-//        _instrument.value = InstrumentAndSection(instrument, section)
-//        writeToSharedPreferences()
-//    }
+        val oldInstruments = customInstruments.value
+        val newInstruments = oldInstruments.mutate { mutated ->
+            val index = oldInstruments.indexOfFirst { it.stableId == instrument.stableId }
+            if (index >= 0)
+                mutated[index] = newInstrument
+            else
+                mutated.add(newInstrument)
+        }
+        writeCustomInstruments(newInstruments)
+    }
 
-//    private fun writeToSharedPreferences() {
-////        Log.v("Tuner", "InstrumentResources.writeToSharedPreferences")
-//        sharedPreferences.edit {
-////            putBoolean(CUSTOM_SECTION_EXPANDED_KEY, customInstrumentsExpanded.value)
-////            putBoolean(PREDEFINED_SECTION_EXPANDED_KEY, predefinedInstrumentsExpanded.value)
-//
-////            putLong(CURRENT_INSTRUMENT_ID_KEY, instrument.value.instrument.stableId)
-////            putString(SECTION_OF_CURRENT_INSTRUMENT_KEY, instrument.value.section.name)
-//
-//            // we don't need a context here, since custom instruments do not use string resources
-//            // and the context is only needed for instruments, which have a string resource as name.
-//            putString(CUSTOM_INSTRUMENTS_KEY, customInstrumentDatabase.getInstrumentsString(null))
-//        }
-//    }
-//
-//    // TODO: call this in activity with getPreferences(MODE_PRIVATE) and afterwards delete the activity preferences and don't call this again
-//    fun migrateFromOtherSharedPreferences(otherSharedPreferences: SharedPreferences) {
-//        val instrumentsString = otherSharedPreferences.getString(CUSTOM_INSTRUMENTS_KEY, "") ?: ""
-//        val instruments = InstrumentDatabase.stringToInstruments(instrumentsString)
-//        customInstrumentDatabase.loadInstruments(instruments.instruments)
-////        _predefinedDatabaseExpanded.value = readPredefinedInstrumentsExpandedFromPreferences(otherSharedPreferences)
-////        _customInstrumentsExpanded.value = readCustomInstrumentsExpandedFromPreferences(otherSharedPreferences)
-////        _instrument.value = readInstrumentAndSectionFromPreferences(otherSharedPreferences, predefinedInstruments, customInstruments.value)
-//        writeToSharedPreferences()
-//    }
+    fun appendInstruments(instruments: List<Instrument>) {
+        val current = this.customInstruments.value
+        val newInstrumentList = current.mutate { modified ->
+            instruments.forEach {
+                val newKey = getNewStableId(modified)
+                modified.add(it.copy(stableId = newKey))
+            }
+        }
+        writeCustomInstruments(newInstrumentList)
+    }
 
-    private fun getBoolean(key: String) = if(sharedPreferences.contains(key))
-        sharedPreferences.getBoolean(key, false)
-    else
-        null
+    fun prependInstruments(instruments: List<Instrument>) {
+        val current = this.customInstruments.value
+        val newInstrumentList = current.mutate { modified ->
+            instruments.forEachIndexed { index, instrument ->
+                val newKey = getNewStableId(modified)
+                modified.add(index, instrument.copy(stableId = newKey))
+            }
+        }
+        writeCustomInstruments(newInstrumentList)
+    }
 
-    private fun getLong(key: String) = if(sharedPreferences.contains(key))
-        sharedPreferences.getLong(key, 0L)
-    else
-        null
+    fun replaceInstruments(instruments: List<Instrument>) {
+        var key = 0L
+        val currentKey = currentInstrument.value.stableId
+        val newInstrumentList = instruments.map {
+            ++key
+            if (key == currentKey)
+                ++key
+            it.copy(stableId = key)
+        }
 
-    private fun getString(key: String) = if(sharedPreferences.contains(key))
-        sharedPreferences.getString(key, null)
-    else
-        null
+        writeCustomInstruments(newInstrumentList)
+    }
+
+    private fun getNewStableId(existingInstruments: List<Instrument> = customInstruments.value): Long {
+        val currentKey = currentInstrument.value.stableId
+        while (true) {
+            val stableId = Random.nextLong(0, Long.MAX_VALUE - 1)
+            if ((currentKey != stableId) && (existingInstruments.firstOrNull {it.stableId == stableId} == null))
+                return stableId
+        }
+    }
 
     companion object {
-        const val CUSTOM_SECTION_EXPANDED_KEY = "custom_section_expanded"
-        const val PREDEFINED_SECTION_EXPANDED_KEY = "predefined_section_expanded"
+        private val CustomInstrumentsDefault = persistentListOf<Instrument>()
+        private const val CustomInstrumentExpandedDefault = true
+        private const val PredefinedInstrumentExpandedDefault = true
 
-        const val CURRENT_INSTRUMENT_ID_KEY = "instrument_id"
-        const val SECTION_OF_CURRENT_INSTRUMENT_KEY = "instrument_section"
+        private val CURRENT_INSTRUMENT_KEY = stringPreferencesKey("current instrument")
+        private val CUSTOM_INSTRUMENTS_KEY = stringPreferencesKey("custom instruments")
+        private val CUSTOM_INSTRUMENTS_EXPANDED_KEY = booleanPreferencesKey(
+            "custom instruments expanded"
+        )
 
-        const val CUSTOM_INSTRUMENTS_KEY = "custom_instruments"
+        private val PREDEFINED_INSTRUMENTS_EXPANDED_KEY = booleanPreferencesKey(
+            "predefined instruments expanded"
+        )
     }
 }

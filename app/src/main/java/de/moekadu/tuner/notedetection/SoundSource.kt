@@ -34,12 +34,11 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 class SoundSourceJob(
-    val job: Job,
     val channel: ReceiveChannel<MemoryPool<SampleData>.RefCountedMemory>
 )
 
 /** Generator of sound samples.
- * @param scope Coroutine scope used for the sample data generator.
+
  */
 @SuppressLint("MissingPermission")
 fun CoroutineScope.launchSoundSourceJob(
@@ -67,7 +66,7 @@ fun CoroutineScope.launchSoundSourceJob(
     val memoryPool =
         MemoryPoolSampleData(2 * channelCapacity) // trial shows that single channel capacity does not very well recycle data in extreme cases, double channel capacity seems to work fine
 
-    val job =  launch(Dispatchers.IO) {
+    launch(Dispatchers.IO) {
         val record =
             if (testFunction == null)
                 AudioRecord(
@@ -156,7 +155,7 @@ fun CoroutineScope.launchSoundSourceJob(
             record?.release()
         }
     }
-    return SoundSourceJob(job, outputChannel)
+    return SoundSourceJob(outputChannel)
 }
 
 private fun computeRequiredChannelCapacity(

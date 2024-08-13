@@ -1,3 +1,21 @@
+/*
+* Copyright 2024 Michael Moessner
+*
+* This file is part of Tuner.
+*
+* Tuner is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Tuner is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package de.moekadu.tuner
 
 import android.content.Intent
@@ -25,7 +43,7 @@ import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIO
-import de.moekadu.tuner.instruments.InstrumentResources2
+import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.instruments.migratingFromV6
 import de.moekadu.tuner.navigation.ImportInstrumentsDialogRoute
 import de.moekadu.tuner.navigation.InstrumentsRoute
@@ -35,7 +53,7 @@ import de.moekadu.tuner.navigation.musicalScalePropertiesGraph
 import de.moekadu.tuner.navigation.preferenceGraph
 import de.moekadu.tuner.navigation.mainGraph
 import de.moekadu.tuner.preferences.NightMode
-import de.moekadu.tuner.preferences.PreferenceResources2
+import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -44,13 +62,13 @@ import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity2 : ComponentActivity() {
+class MainActivity : ComponentActivity() {
 
     @Inject
-    lateinit var pref: PreferenceResources2
+    lateinit var pref: PreferenceResources
 
     @Inject
-    lateinit var instruments: InstrumentResources2
+    lateinit var instruments: InstrumentResources
 
     private val loadInstrumentIntentChannel = Channel<List<Instrument>>(Channel.CONFLATED)
 

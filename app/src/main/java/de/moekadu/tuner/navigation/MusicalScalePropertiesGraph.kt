@@ -1,3 +1,21 @@
+/*
+* Copyright 2024 Michael Moessner
+*
+* This file is part of Tuner.
+*
+* Tuner is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Tuner is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package de.moekadu.tuner.navigation
 
 import androidx.compose.runtime.getValue
@@ -8,7 +26,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.dialog
 import androidx.navigation.toRoute
 import de.moekadu.tuner.R
-import de.moekadu.tuner.preferences.PreferenceResources2
+import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.MusicalScale
 import de.moekadu.tuner.temperaments.NoteNameScaleFactory
 import de.moekadu.tuner.ui.preferences.ReferenceNoteDialog
@@ -19,7 +37,7 @@ import kotlinx.serialization.json.Json
 
 fun NavGraphBuilder.musicalScalePropertiesGraph(
     controller: NavController,
-    preferences: PreferenceResources2
+    preferences: PreferenceResources
 ) {
     dialog<ReferenceFrequencyDialogRoute> {
         val state = it.toRoute<ReferenceFrequencyDialogRoute>()
@@ -40,7 +58,7 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
         val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
         val resources = LocalContext.current.resources
         TemperamentDialog(
-            initialState = PreferenceResources2.MusicalScaleProperties.create(
+            initialState = PreferenceResources.MusicalScaleProperties.create(
                 preferences.musicalScale.value
             ),
             onTemperamentChange = { newProperties ->
@@ -76,13 +94,13 @@ data class ReferenceFrequencyDialogRoute(
     val warning: String?
 ) {
     fun getMusicalScaleProperties() =
-        Json.decodeFromString<PreferenceResources2.MusicalScaleProperties>(serializedString)
+        Json.decodeFromString<PreferenceResources.MusicalScaleProperties>(serializedString)
     companion object {
         fun create(musicalScale: MusicalScale, warning: String?) = ReferenceFrequencyDialogRoute(
-            Json.encodeToString(PreferenceResources2.MusicalScaleProperties.create(musicalScale)),
+            Json.encodeToString(PreferenceResources.MusicalScaleProperties.create(musicalScale)),
             warning
         )
-        fun create(properties: PreferenceResources2.MusicalScaleProperties, warning: String?)
+        fun create(properties: PreferenceResources.MusicalScaleProperties, warning: String?)
                 = ReferenceFrequencyDialogRoute(Json.encodeToString(properties), warning)
     }
 }

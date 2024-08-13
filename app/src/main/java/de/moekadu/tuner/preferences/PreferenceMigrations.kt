@@ -1,20 +1,38 @@
+/*
+* Copyright 2024 Michael Moessner
+*
+* This file is part of Tuner.
+*
+* Tuner is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Tuner is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package de.moekadu.tuner.preferences
 
 import android.content.Context
 import android.util.Log
 import kotlin.math.roundToInt
 
-fun PreferenceResources2.migrateFromV6(context: Context): Boolean {
+fun PreferenceResources.migrateFromV6(context: Context): Boolean {
     Log.v("Tuner", "PreferenceMigrations: complete = ${migrationsFromV6Complete.value}")
     if (migrationsFromV6Complete.value) {
         Log.v("Tuner", "PreferenceMigrations: Do not migrate, since already done")
         return false
     }
     Log.v("Tuner", "PreferenceMigrations: Migrating preferences from v6")
-    val from = PreferenceResources(context)
+    val from = PreferenceResourcesOld(context)
     from.appearance?.let {
         writeAppearance(
-            PreferenceResources2.Appearance(
+            PreferenceResources.Appearance(
                 it.mode,
                 it.blackNightEnabled,
                 it.useSystemColorAccents
@@ -36,7 +54,7 @@ fun PreferenceResources2.migrateFromV6(context: Context): Boolean {
     from.toleranceInCents?.let { writeToleranceInCents(it) }
     from.waveWriterDurationInSeconds?.let { writeWaveWriterDurationInSeconds(it) }
     from.musicalScale?.let { writeMusicalScaleProperties(
-        PreferenceResources2.MusicalScaleProperties.create(it)
+        PreferenceResources.MusicalScaleProperties.create(it)
     ) }
     writeMigrationsFromV6Complete()
     return true

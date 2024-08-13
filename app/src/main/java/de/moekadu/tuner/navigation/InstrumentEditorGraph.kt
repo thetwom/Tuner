@@ -1,3 +1,21 @@
+/*
+* Copyright 2024 Michael Moessner
+*
+* This file is part of Tuner.
+*
+* Tuner is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Tuner is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package de.moekadu.tuner.navigation
 
 import androidx.compose.foundation.layout.padding
@@ -24,25 +42,25 @@ import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
-import de.moekadu.tuner.instruments.InstrumentResources2
-import de.moekadu.tuner.preferences.PreferenceResources2
+import de.moekadu.tuner.instruments.InstrumentResources
+import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.ui.instruments.InstrumentIconPicker
 import de.moekadu.tuner.ui.misc.TunerScaffold
 import de.moekadu.tuner.ui.misc.rememberTunerAudioPermission
 import de.moekadu.tuner.ui.screens.InstrumentEditor
-import de.moekadu.tuner.viewmodels.InstrumentEditorViewModel2
+import de.moekadu.tuner.viewmodels.InstrumentEditorViewModel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Composable
 private fun createViewModel(controller: NavController, backStackEntry: NavBackStackEntry)
-: InstrumentEditorViewModel2 {
+: InstrumentEditorViewModel {
     val parentEntry = remember(backStackEntry) {
         controller.getBackStackEntry<InstrumentEditorGraphRoute>()
     }
     val instrument = parentEntry.toRoute<InstrumentEditorGraphRoute>().getInstrument()
-    return hiltViewModel<InstrumentEditorViewModel2, InstrumentEditorViewModel2.Factory>(
+    return hiltViewModel<InstrumentEditorViewModel, InstrumentEditorViewModel.Factory>(
         parentEntry
     ) { factory ->
         factory.create(instrument)
@@ -53,8 +71,8 @@ fun NavGraphBuilder.instrumentEditorGraph(
     controller: NavController,
     canNavigateUp: Boolean,
     onNavigateUpClicked: () -> Unit,
-    preferences: PreferenceResources2,
-    instruments: InstrumentResources2
+    preferences: PreferenceResources,
+    instruments: InstrumentResources
 ) {
     navigation<InstrumentEditorGraphRoute>(
         startDestination = InstrumentEditorRoute
