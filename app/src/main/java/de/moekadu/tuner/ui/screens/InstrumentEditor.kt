@@ -19,7 +19,6 @@
 package de.moekadu.tuner.ui.screens
 
 import android.content.res.Configuration
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,6 +50,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
+import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
@@ -75,7 +75,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlin.math.min
 
 interface InstrumentEditorData {
-    val icon: StateFlow<Int>
+    val icon: StateFlow<InstrumentIcon>
     val name: StateFlow<String>
 
     val strings: StateFlow<ImmutableList<StringWithInfo> >
@@ -89,7 +89,7 @@ interface InstrumentEditorData {
     /** Note which is used in NoteSelector, when no note is available */
     val initializerNote: StateFlow<MusicalNote>
 
-    fun setIcon(@DrawableRes icon: Int)
+    fun setIcon(icon: InstrumentIcon)
     fun setName(name: String)
 
     fun selectString(key: Int)
@@ -172,7 +172,7 @@ fun InstrumentEditorPortrait(
                     modifier = Modifier.width(60.dp)
                 ) {
                     Icon(
-                        ImageVector.vectorResource(id = icon),
+                        ImageVector.vectorResource(id = icon.resourceId),
                         contentDescription = null,
                         modifier = Modifier.size(36.dp)// .background(Color.Green)
                     )
@@ -320,7 +320,7 @@ fun InstrumentEditorLandscape(
                         modifier = Modifier.width(60.dp)
                     ) {
                         Icon(
-                            ImageVector.vectorResource(id = icon),
+                            ImageVector.vectorResource(id = icon.resourceId),
                             contentDescription = null,
                             modifier = Modifier.size(36.dp)// .background(Color.Green)
                         )
@@ -450,7 +450,7 @@ fun InstrumentEditorLandscape(
 private class InstrumentEditorDataTest : InstrumentEditorData {
     val musicalScale = MusicalScaleFactory.create(TemperamentType.EDO12)
 
-    override val icon = MutableStateFlow(R.drawable.ic_piano)
+    override val icon = MutableStateFlow(InstrumentIcon.piano)
     override val name = MutableStateFlow("Test name")
 
     override var strings = MutableStateFlow(
@@ -466,7 +466,7 @@ private class InstrumentEditorDataTest : InstrumentEditorData {
 
     override val initializerNote = MutableStateFlow(musicalScale.referenceNote)
 
-    override fun setIcon(icon: Int) {
+    override fun setIcon(icon: InstrumentIcon) {
         this.icon.value = icon
     }
 

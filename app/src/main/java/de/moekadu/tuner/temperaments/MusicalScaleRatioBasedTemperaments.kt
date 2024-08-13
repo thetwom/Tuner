@@ -1,6 +1,5 @@
 package de.moekadu.tuner.temperaments
 
-import de.moekadu.tuner.misc.DefaultValues
 import kotlin.math.*
 
 /** Base class for temperaments which are based on given frequency ratios in respect to a root note.

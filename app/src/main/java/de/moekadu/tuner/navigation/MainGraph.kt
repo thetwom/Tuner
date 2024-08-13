@@ -35,8 +35,8 @@ import androidx.navigation.toRoute
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIO
+import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.instruments.InstrumentResources
-import de.moekadu.tuner.instruments.instrumentIcons
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.ui.instruments.ImportInstrumentsDialog
 import de.moekadu.tuner.ui.screens.InstrumentTuner
@@ -120,13 +120,13 @@ fun NavGraphBuilder.mainGraph(
                 val newInstrument = if (copy) {
                     instrument.copy(
                         nameResource = null,
-                        name = context.getString(R.string.copy_extension, instrument.getNameString2(context)),
+                        name = context.getString(R.string.copy_extension, instrument.getNameString(context)),
                         stableId = Instrument.NO_STABLE_ID
                     )
                 } else {
                     instrument.copy(
                         nameResource = null,
-                        name = instrument.getNameString2(context)
+                        name = instrument.getNameString(context)
                     )
                 }
                 controller.navigate(InstrumentEditorGraphRoute.create(newInstrument))
@@ -136,7 +136,7 @@ fun NavGraphBuilder.mainGraph(
                     nameResource = null,
                     name = "",
                     strings = arrayOf(musicalScale.referenceNote),
-                    iconResource = instrumentIcons[0].resourceId,
+                    icon = InstrumentIcon.entries[0],
                     stableId = Instrument.NO_STABLE_ID
                 )
                 controller.navigate(InstrumentEditorGraphRoute.create(newInstrument))

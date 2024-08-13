@@ -25,6 +25,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.moekadu.tuner.instruments.Instrument
+import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.instruments.instrumentChromatic
 import de.moekadu.tuner.notedetection.FrequencyDetectionCollectedResults
 import de.moekadu.tuner.notedetection.FrequencyEvaluationResult
@@ -69,8 +70,8 @@ class InstrumentEditorViewModel @AssistedInject constructor(
     val musicalScale get() = pref.musicalScale
     private var stableId = instrument.stableId
 
-    override val icon = MutableStateFlow(instrument.iconResource)
-    override val name = MutableStateFlow(instrument.getNameString2(null))
+    override val icon = MutableStateFlow(instrument.icon)
+    override val name = MutableStateFlow(instrument.getNameString(null))
 
     override val strings = MutableStateFlow(
         instrument.strings.mapIndexed { index, string ->
@@ -85,7 +86,7 @@ class InstrumentEditorViewModel @AssistedInject constructor(
 
     override val initializerNote = MutableStateFlow(musicalScale.value.referenceNote)
 
-    override fun setIcon(icon: Int) {
+    override fun setIcon(icon: InstrumentIcon) {
         this.icon.value = icon
     }
 
@@ -158,7 +159,7 @@ class InstrumentEditorViewModel @AssistedInject constructor(
             name = this.name.value,
             nameResource = null,
             strings = strings.value.map{ it.note }.toTypedArray(),
-            iconResource = icon.value,
+            icon = icon.value,
             stableId = stableId,
             isChromatic = false
         )

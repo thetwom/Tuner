@@ -71,6 +71,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIO
+import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.instruments.ShareInstruments
 import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.temperaments.BaseNote
@@ -528,7 +529,7 @@ private val testInstrument1 = Instrument(
         MusicalNote(BaseNote.D, NoteModifier.Sharp, octave = 3),
         MusicalNote(BaseNote.E, NoteModifier.None, octave = 2),
     ),
-    iconResource = R.drawable.ic_guitar,
+    icon = InstrumentIcon.guitar,
     1L,
     isChromatic = false
 )
@@ -537,7 +538,7 @@ private val testInstrument2 = Instrument(
     name = null,
     nameResource = R.string.chromatic,
     strings = arrayOf(),
-    iconResource = R.drawable.ic_piano,
+    icon = InstrumentIcon.piano,
     stableId = 2L,
     isChromatic = true
 )

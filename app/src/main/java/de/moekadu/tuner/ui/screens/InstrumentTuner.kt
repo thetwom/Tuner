@@ -19,7 +19,6 @@
 package de.moekadu.tuner.ui.screens
 
 import android.content.res.Configuration
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -53,6 +52,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
+import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.notedetection.SortedAndDistinctInstrumentStrings
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.temperaments.MusicalNote
@@ -221,8 +221,8 @@ fun InstrumentTunerPortrait(
             }
             //Log.v("Tuner", "InstrumentTuner: instrument as state: $instrumentAsState")
             InstrumentButton(
-                iconResourceId = instrumentAsState.iconResource,
-                name = instrumentAsState.getNameString(LocalContext.current).toString(),
+                iconResourceId = instrumentAsState.icon.resourceId,
+                name = instrumentAsState.getNameString(LocalContext.current),
 //                name = data.instrumentResourceId?.let { stringResource(id = it) }
 //                    ?: data.instrumentName ?: "Unknown",
                 modifier = Modifier
@@ -377,11 +377,8 @@ fun InstrumentTunerLandscape(
 
         Column(modifier = Modifier.weight(0.5f)) {
             InstrumentButton(
-                iconResourceId = instrumentAsState.iconResource,
-                name = instrumentAsState.getNameString(LocalContext.current).toString(),
-//                    iconResourceId = data.instrumentIconId,
-//                    name = data.instrumentResourceId?.let { stringResource(id = it) }
-//                        ?: data.instrumentName ?: "Unknown",
+                iconResourceId = instrumentAsState.icon.resourceId,
+                name = instrumentAsState.getNameString(LocalContext.current),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -533,7 +530,7 @@ class TestInstrumentTunerData : InstrumentTunerData {
                 noteNameScale.notes[5].copy(octave = 7),
                 noteNameScale.notes[3].copy(octave = 8),
             ),
-            iconResource = R.drawable.ic_piano,
+            icon = InstrumentIcon.piano,
             stableId = 1L,
             isChromatic = false
         )

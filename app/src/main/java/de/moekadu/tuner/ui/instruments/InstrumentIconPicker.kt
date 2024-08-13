@@ -36,18 +36,18 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
-import de.moekadu.tuner.instruments.instrumentIcons
+import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 fun InstrumentIconPicker(
     modifier: Modifier = Modifier,
-    onIconSelected: (icon: Int) -> Unit = { },
+    onIconSelected: (icon: InstrumentIcon) -> Unit = { },
     onDismiss: () -> Unit = { }
 ) {
     val icons = remember {
-        instrumentIcons.toList().toImmutableList()
+        InstrumentIcon.entries.toImmutableList()
     }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -64,7 +64,7 @@ fun InstrumentIconPicker(
                 columns = GridCells.Adaptive(50.dp)
             ) {
                 items(icons) {
-                    IconButton(onClick = { onIconSelected(it.resourceId) }) {
+                    IconButton(onClick = { onIconSelected(it) }) {
                         Icon(
                             ImageVector.vectorResource(id = it.resourceId),
                             contentDescription = it.name,
