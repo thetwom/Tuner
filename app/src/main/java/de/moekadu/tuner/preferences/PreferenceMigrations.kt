@@ -23,12 +23,12 @@ import android.util.Log
 import kotlin.math.roundToInt
 
 fun PreferenceResources.migrateFromV6(context: Context): Boolean {
-    Log.v("Tuner", "PreferenceMigrations: complete = ${migrationsFromV6Complete.value}")
+//    Log.v("Tuner", "PreferenceMigrations: complete = ${migrationsFromV6Complete.value}")
     if (migrationsFromV6Complete.value) {
-        Log.v("Tuner", "PreferenceMigrations: Do not migrate, since already done")
+//        Log.v("Tuner", "PreferenceMigrations: Do not migrate, since already done")
         return false
     }
-    Log.v("Tuner", "PreferenceMigrations: Migrating preferences from v6")
+//    Log.v("Tuner", "PreferenceMigrations: Migrating preferences from v6")
     val from = PreferenceResourcesOld(context)
     from.appearance?.let {
         writeAppearance(

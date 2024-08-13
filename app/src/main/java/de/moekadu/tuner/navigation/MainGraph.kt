@@ -60,7 +60,7 @@ fun NavGraphBuilder.mainGraph(
 ) {
     composable<TunerRoute> {
         val isScientificTuner by preferences.scientificMode.collectAsStateWithLifecycle()
-        Log.v("Tuner", "MainGraph : isScientificTuner = $isScientificTuner")
+//        Log.v("Tuner", "MainGraph : isScientificTuner = $isScientificTuner")
         if (isScientificTuner) {
             val viewModel: ScientificTunerViewModel = hiltViewModel()
             ScientificTuner(

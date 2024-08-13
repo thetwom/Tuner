@@ -109,11 +109,11 @@ class MainActivity : ComponentActivity() {
 //                } == true
 
                 var canNavigateUp by remember { mutableStateOf(false) }
-                Log.v("Tuner", "MainActivity2: canNavigateUp: $canNavigateUp")
+//                Log.v("Tuner", "MainActivity2: canNavigateUp: $canNavigateUp")
 
                 LaunchedEffect(loadInstrumentIntentChannel, controller) {
                     for (instruments in loadInstrumentIntentChannel) {
-                        Log.v("Tuner", "MainActivity2: Loading file ...")
+//                        Log.v("Tuner", "MainActivity2: Loading file ...")
                         controller.popBackStack(TunerRoute, inclusive = false)
                         controller.navigate(InstrumentsRoute)
                         controller.navigate(ImportInstrumentsDialogRoute(
@@ -125,7 +125,7 @@ class MainActivity : ComponentActivity() {
                 DisposableEffect(controller) {
                     val listener = NavController.OnDestinationChangedListener { controller, _, _ ->
                         canNavigateUp = controller.previousBackStackEntry != null
-                        Log.v("Tuner", "MainActivity2: destination changed: backstack: ${controller.previousBackStackEntry}, canNavigateUp: $canNavigateUp")
+//                        Log.v("Tuner", "MainActivity2: destination changed: backstack: ${controller.previousBackStackEntry}, canNavigateUp: $canNavigateUp")
                     }
                     controller.addOnDestinationChangedListener(listener)
                     onDispose {
@@ -167,7 +167,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        Log.v("Tuner", "Migrating instruments? ${pref.isMigratingFromV6}")
+//        Log.v("Tuner", "Migrating instruments? ${pref.isMigratingFromV6}")
         if (pref.isMigratingFromV6)
             instruments.migratingFromV6(this)
     }
