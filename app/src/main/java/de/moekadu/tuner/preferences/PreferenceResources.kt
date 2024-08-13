@@ -105,7 +105,7 @@ class PreferenceResources @Inject constructor (
     val migrationsFromV6Complete = getPreferenceFlow(MIGRATIONS_FROM_V6_KEY, false)
     fun writeMigrationsFromV6Complete() {
         writePreference(MIGRATIONS_FROM_V6_KEY, true)
-        Log.v("Tuner", "PreferenceMigrations: writing complete = ${migrationsFromV6Complete.value}")
+//        Log.v("Tuner", "PreferenceMigrations: writing complete = ${migrationsFromV6Complete.value}")
     }
     /** True, if during load, we are migrating from v6.
      * This is normally false, just on the first start when coming from v6, this is true.

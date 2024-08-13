@@ -2,7 +2,7 @@
 accompanistPermissions = "0.35.1-alpha"
 agp = "8.5.2"
 hiltNavigationCompose = "1.2.0"
-kotlin = "2.0.0"
+kotlin = "2.0.10"
 
 activityKtx = "1.9.1"
 appcompat = "1.7.0"
@@ -17,7 +17,7 @@ junitVersion = "1.2.1"
 kotlinxCollectionsImmutable = "0.3.7"
 kotlinxCoroutinesCore = "1.7.3"
 kotlinxSerializationJson = "1.6.3"
-ksp = "2.0.0-1.0.23"  # https://github.com/google/ksp/releases
+ksp = "2.0.10-1.0.24"  # https://github.com/google/ksp/releases
 lifecycle = "2.8.4"
 material = "1.12.0"
 navigationCompose = "2.8.0-beta06"
