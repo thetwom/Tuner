@@ -22,6 +22,11 @@ package de.moekadu.tuner.notedetection
 import de.moekadu.tuner.misc.MemoryPool
 import kotlin.math.pow
 
+/** Class to compute auto correlation.
+ * @param size Number of input values, which is a time series.
+ * @param windowType Type of windowing to apply for FFT (first step of computing auto correlation).
+ *   WindowingFunction.Tophat disables the windowing.
+ */
 class Correlation (val size : Int, val windowType : WindowingFunction = WindowingFunction.Tophat) {
 
   private val fft = RealFFT(2 * size)
@@ -32,8 +37,7 @@ class Correlation (val size : Int, val windowType : WindowingFunction = Windowin
     getWindow(windowType, size).copyInto(window)
   }
 
-  /// Autocorrelation of input.
-  /**
+  /** Auto correlation of input.
    * @param input Input data which should be correlated (required size: size)
    * @param output Output array where we store the autocorrelation, (required size: size+1)
    * @param disableWindow if true, we disable windowing, even when it is defined in the constructor.

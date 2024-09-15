@@ -182,11 +182,11 @@ class Tuner(
             val frequencyDetectionResultCollector = FrequencyDetectionResultCollector(
                 frequencyMin = DefaultValues.FREQUENCY_MIN,
                 frequencyMax = DefaultValues.FREQUENCY_MAX,
-                subharmonicsTolerance = 0.05f,
-                subharmonicsPeakRatio = 0.8f,
-                harmonicTolerance = 0.1f,
-                minimumFactorOverLocalMean = 2f,
-                maxGapBetweenHarmonics = 10,
+                subharmonicsTolerance = 0.1f,
+                subharmonicsPeakRatio = 0.75f,
+                harmonicTolerance = 0.11f,
+                minimumFactorOverLocalMean = 3f,
+                maxGapBetweenHarmonics = 5,
                 maxNumHarmonicsForInharmonicity = 8,
                 windowType = pref.windowing.value,
                 acousticWeighting = AcousticZeroWeighting()
@@ -198,7 +198,7 @@ class Tuner(
                 frequencyDetectionResultsChannel.trySend(result)
                 sampleData.decRef() // sampleData is not needed anymore, so we can decrement ref to allow recycling
                 withContext(Dispatchers.Main) {
-                    onResultAvailableListener.onFrequencyDetected(result.memory) // better send this to freqEval flow and directlya afterwards run the listener
+                    onResultAvailableListener.onFrequencyDetected(result.memory) // better send this to freqEval flow and directly afterwards run the listener
                 }
                 result.decRef()
             }
