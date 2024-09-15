@@ -18,12 +18,17 @@
 */
 package de.moekadu.tuner.notedetection
 
+/** Store auto correlation result.
+ * @param size Number of values in auto correlation.
+ * @param dt Time shift between two values in auto correlation
+ */
 class AutoCorrelation(
     val size: Int,
-    val dt: Float,
-
+    val dt: Float
 ) {
+    /** Array with time shift for each auto correlation entry. */
     val times = FloatArray(size) { it * dt }
+    /** Correlation values. */
     val values = FloatArray(size)
 
     /** Values, normalized to range 0 to 1. */
@@ -31,8 +36,9 @@ class AutoCorrelation(
     /** The zero position in plotValuesNormalized. */
     var plotValuesNormalizedZero = 0f
 
+    /** Obtain correlation value at given index.
+     * @param index Index where correlation value is needed.
+     * @return Correlation value
+     */
     operator fun get(index: Int) = values[index]
-//    operator fun set(index: Int, value: Float) {
-//        values[index] = value
-//    }
 }

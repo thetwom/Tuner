@@ -18,8 +18,19 @@
 */
 package de.moekadu.tuner.notedetection
 
+/** Store a time series of data with constant time spacing.
+ * @param size Number of values in time series.
+ * @param dt Time difference between two successive samples.
+ */
 class TimeSeries(val size: Int, val dt: Float) {
+    /** Frame position. */
     var framePosition = 0
+    /** Values of time series. */
     val values = FloatArray(size)
+
+    /** Access data of given index.
+     * @param index Index where to access the time series.
+     * @return Value of time series at given index.
+     */
     operator fun get(index: Int) = values[index]
 }

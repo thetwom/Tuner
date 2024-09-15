@@ -98,14 +98,14 @@ class MemoryPoolFrequencyDetectionCollectedResults {
 class FrequencyDetectionResultCollector(
     private val frequencyMin: Float,
     private val frequencyMax: Float,
-    private val subharmonicsTolerance: Float = 0.05f,
-    private val subharmonicsPeakRatio: Float = 0.8f,
-    private val harmonicTolerance: Float = 0.1f,
-    private val minimumFactorOverLocalMean: Float = 5f,
-    private val maxGapBetweenHarmonics: Int = 10,
-    private val maxNumHarmonicsForInharmonicity: Int = 8,
-    private val windowType: WindowingFunction = WindowingFunction.Tophat,
-    private val acousticWeighting: AcousticWeighting = AcousticCWeighting()
+    private val subharmonicsTolerance: Float, // = 0.05f,
+    private val subharmonicsPeakRatio: Float, // = 0.8f,
+    private val harmonicTolerance: Float, // = 0.1f,
+    private val minimumFactorOverLocalMean: Float, // = 5f,
+    private val maxGapBetweenHarmonics: Int, // = 10,
+    private val maxNumHarmonicsForInharmonicity: Int, // = 8,
+    private val windowType: WindowingFunction, //  = WindowingFunction.Tophat,
+    private val acousticWeighting: AcousticWeighting, // = AcousticCWeighting()
 ) {
     private val collectedResultsMemory = MemoryPoolFrequencyDetectionCollectedResults()
     private val spectrumAndCorrelationMemory = MemoryPoolCorrelation()
@@ -148,9 +148,9 @@ class FrequencyDetectionResultCollector(
         )
 //        Log.v("Tuner", "CollectedResults.collectResults: correlationBased frequency = ${collectedResults.memory.correlationBasedFrequency}")
         if (collectedResults.memory.correlationBasedFrequency.frequency != 0f) {
-            findHarmonicsFromSpectrum(
-                collectedResults.memory.harmonics,
-                collectedResults.memory.correlationBasedFrequency.frequency,
+            collectedResults.memory.harmonics.findBestMatchingHarmonics(
+                collectedResults.memory.correlationBasedFrequency,
+                collectedResults.memory.autoCorrelation,
                 frequencyMin,
                 frequencyMax,
                 collectedResults.memory.frequencySpectrum,
@@ -158,7 +158,20 @@ class FrequencyDetectionResultCollector(
                 harmonicTolerance = harmonicTolerance,
                 minimumFactorOverLocalMean = minimumFactorOverLocalMean,
                 maxNumFail = maxGapBetweenHarmonics,
+                relativePeakThreshold = 5e-3f
             )
+
+//            findHarmonicsFromSpectrum(
+//                collectedResults.memory.harmonics,
+//                collectedResults.memory.correlationBasedFrequency.frequency,
+//                frequencyMin,
+//                frequencyMax,
+//                collectedResults.memory.frequencySpectrum,
+//                collectedResults.memory.accuratePeakFrequency,
+//                harmonicTolerance = harmonicTolerance,
+//                minimumFactorOverLocalMean = minimumFactorOverLocalMean,
+//                maxNumFail = maxGapBetweenHarmonics,
+//            )
             collectedResults.memory.harmonics.sort()
 
             collectedResults.memory.harmonicStatistics.evaluate(
