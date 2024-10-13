@@ -180,7 +180,7 @@ fun ReferenceNoteDialog(
                 )
                 OutlinedButton(
                     onClick = {
-                        val note = musicalScale.noteNameScale.defaultReferenceNote
+                        val note = musicalScale.noteNameScale.referenceNote
                         selectedNoteIndex = musicalScale.getNoteIndex(note) - musicalScale.noteIndexBegin
                         frequencyAsString = decimalFormat.format(PreferenceResources.ReferenceFrequencyDefault)
                     },

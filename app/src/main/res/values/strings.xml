@@ -108,6 +108,10 @@
         <item quantity="one">%d instrument deleted</item>
         <item quantity="other">%d instruments deleted</item>
     </plurals>
+    <plurals name="items_deleted">
+        <item quantity="one">%d item deleted</item>
+        <item quantity="other">%d items deleted</item>
+    </plurals>
     <string name="undo">Undo</string>
     <string name="pick_icon">Pick icon</string>
     <string name="copy_instrument">Copy instrument</string>
@@ -276,4 +280,14 @@
     <string name="audio_record_permission_rationale">Grant microphone access to start tuning.</string>
     <string name="writing_wave_file">Writing wave file: %s</string>
     <string name="failed_writing_wave_file">Did not write wave file.</string>
+    <string name="instruments">Instruments</string>
+    <string name="edit">Edit</string>
+    <string name="copy">Copy</string>
+    <string name="delete">Delete</string>
+    <string name="temperaments">Temperaments</string>
+    <string name="list_of_cents">Cent list</string>
+    <string name="list_of_ratios">Ratio list</string>
+    <string name="hide_details">Hide details</string>
+    <string name="save">Save</string>
+    <string name="current_selection">Current selection</string>
 </resources>

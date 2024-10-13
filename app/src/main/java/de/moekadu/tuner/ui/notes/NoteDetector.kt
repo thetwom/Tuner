@@ -18,7 +18,6 @@
 */
 package de.moekadu.tuner.ui.notes
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
@@ -51,11 +50,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
 import androidx.compose.ui.unit.times
-import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
-import de.moekadu.tuner.temperaments.NoteModifier
 import de.moekadu.tuner.temperaments.TemperamentType
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.mutate
@@ -133,7 +130,7 @@ fun NoteDetector(
     }
 
     val minSingleNoteSize = rememberMaxNoteSize(
-        noteNameScale = musicalScale.noteNameScale,
+        notes = musicalScale.noteNameScale.notes,
         notePrintOptions = notePrintOptions,
         fontSize = fontSizeResolved,
         fontWeight = fontWeightResolved,

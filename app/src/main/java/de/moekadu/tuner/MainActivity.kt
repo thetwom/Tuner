@@ -108,7 +108,7 @@ class MainActivity : ComponentActivity() {
 //                    it.hasRoute(PreferencesGraphRoute::class)
 //                } == true
 
-                var canNavigateUp by remember { mutableStateOf(false) }
+//                var canNavigateUp by remember { mutableStateOf(false) }
 //                Log.v("Tuner", "MainActivity2: canNavigateUp: $canNavigateUp")
 
                 LaunchedEffect(loadInstrumentIntentChannel, controller) {
@@ -122,16 +122,15 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                DisposableEffect(controller) {
-                    val listener = NavController.OnDestinationChangedListener { controller, _, _ ->
-                        canNavigateUp = controller.previousBackStackEntry != null
-//                        Log.v("Tuner", "MainActivity2: destination changed: backstack: ${controller.previousBackStackEntry}, canNavigateUp: $canNavigateUp")
-                    }
-                    controller.addOnDestinationChangedListener(listener)
-                    onDispose {
-                        controller.removeOnDestinationChangedListener(listener)
-                    }
-                }
+//                DisposableEffect(controller) {
+//                    val listener = NavController.OnDestinationChangedListener { controller, _, _ ->
+//                        canNavigateUp = controller.previousBackStackEntry != null
+//                    }
+//                    controller.addOnDestinationChangedListener(listener)
+//                    onDispose {
+//                        controller.removeOnDestinationChangedListener(listener)
+//                    }
+//                }
 
                 NavHost(
                     modifier = Modifier.fillMaxSize(),
@@ -140,14 +139,14 @@ class MainActivity : ComponentActivity() {
                 ) {
                     mainGraph(
                         controller = controller,
-                        canNavigateUp = canNavigateUp,
+                        // canNavigateUp = canNavigateUp,
                         onNavigateUpClicked = { controller.navigateUp() },
                         preferences = pref,
                         instrumentResources = instruments
                     )
                     preferenceGraph(
                         controller = controller,
-                        canNavigateUp = canNavigateUp,
+                        //canNavigateUp = canNavigateUp,
                         onNavigateUpClicked = { controller.navigateUp() },
                         preferences = pref
                     )

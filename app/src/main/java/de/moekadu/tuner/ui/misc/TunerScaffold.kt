@@ -63,6 +63,7 @@ fun TunerScaffold(
     onNavigateUpClicked: () -> Unit = {},
     showPreferenceButton: Boolean = true,
     onPreferenceButtonClicked: () -> Unit = {},
+    title: String = stringResource(id = R.string.app_name),
     defaultModeTools: @Composable (RowScope.() -> Unit) = {}, // tools extra to preference in non-action mode
     actionModeActive: Boolean = false,
     actionModeTitle: String = "",
@@ -87,7 +88,7 @@ fun TunerScaffold(
                     if (actionModeActive)
                         Text(actionModeTitle)
                     else
-                        Text(stringResource(R.string.app_name))
+                        Text(title)
                 },
                 navigationIcon = {
                     val state = when {

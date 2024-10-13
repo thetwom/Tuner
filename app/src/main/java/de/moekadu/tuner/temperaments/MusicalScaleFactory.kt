@@ -39,7 +39,7 @@ class MusicalScaleFactory {
             frequencyMax: Float = 17000.0f
         ): MusicalScale {
             val rootNoteResolved = rootNote ?: noteNameScale.notes[0]
-            val referenceNoteResolved = referenceNote ?: noteNameScale.defaultReferenceNote
+            val referenceNoteResolved = referenceNote ?: noteNameScale.referenceNote
             return when (temperamentType) {
                 TemperamentType.EDO12 -> MusicalScaleEqualTemperament(
                     noteNameScale, referenceNoteResolved, referenceFrequency, rootNoteResolved, frequencyMin, frequencyMax

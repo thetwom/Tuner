@@ -116,7 +116,7 @@ private fun fifthCorrectionString(resources: Resources, correction: FifthModific
  */
 @Composable
 fun FifthJumpOverArrow(
-    fifthModification: FifthModification,
+    fifthModification: FifthModification?,
     modifier: Modifier = Modifier,
     color: Color = Color.Unspecified,
     style: TextStyle = LocalTextStyle.current,
@@ -135,7 +135,10 @@ fun FifthJumpOverArrow(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         val fifthCorrectionString = remember(fifthModification, resources) {
-            fifthCorrectionString(resources, fifthModification)
+            if (fifthModification != null)
+                fifthCorrectionString(resources, fifthModification)
+            else
+                "?"
         }
         Text(
             fifthCorrectionString,

@@ -58,9 +58,9 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
+import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
-import de.moekadu.tuner.temperaments.NoteNameScale
 import de.moekadu.tuner.temperaments.TemperamentType
 import de.moekadu.tuner.temperaments.createNoteNameScale53Tone
 import de.moekadu.tuner.ui.theme.TunerTheme
@@ -144,7 +144,7 @@ private fun NoteSelectorBase(
 
 /** Select between available notes.
  * @param selectedIndex List index of selected note in noteNameScale.notes
- * @param noteNameScale Scale of the available note names.
+ * @param notes Notes of the note chooser.
  * @param notePrintOptions How to print the notes.
  * @param modifier Modifier.
  * @param fontSize Font size of notes.
@@ -155,7 +155,7 @@ private fun NoteSelectorBase(
 @Composable
 fun NoteSelector(
     selectedIndex: Int,
-    noteNameScale: NoteNameScale,
+    notes: Array<MusicalNote>,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     fontSize: TextUnit = TextUnit.Unspecified,
@@ -170,7 +170,7 @@ fun NoteSelector(
     val fontWeightResolved = textStyle?.fontWeight
 
     val minSingleNoteSize = rememberMaxNoteSize(
-        noteNameScale = noteNameScale,
+        notes = notes,
         notePrintOptions = notePrintOptions,
         fontSize = fontSize,
         fontWeight = fontWeightResolved,
@@ -188,7 +188,7 @@ fun NoteSelector(
         singleNoteSize = singleNoteSize,
         onIndexChanged = onIndexChanged
     ) {
-        itemsIndexed(noteNameScale.notes) { index, note ->
+        itemsIndexed(notes) { index, note ->
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -243,7 +243,7 @@ fun NoteSelector(
     }
 
     val minSingleNoteSize = rememberMaxNoteSize(
-        noteNameScale = musicalScale.noteNameScale,
+        notes = musicalScale.noteNameScale.notes,
         notePrintOptions = notePrintOptions,
         fontSize = fontSizeResolved,
         fontWeight = fontWeightResolved,
@@ -305,7 +305,7 @@ private fun NoteSelectorPreview() {
         Column {
             NoteSelector(
                 selectedIndex = selectedIndex,
-                noteNameScale = noteNameScale,
+                notes = noteNameScale.notes,
                 notePrintOptions = notePrintOptions
             ) { selectedIndex = it }
             Spacer(modifier = Modifier.height(12.dp))

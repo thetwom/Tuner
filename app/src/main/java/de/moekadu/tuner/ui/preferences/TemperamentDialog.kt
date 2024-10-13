@@ -157,7 +157,7 @@ fun TemperamentDialog(
                 Spacer(modifier = Modifier.height(4.dp))
                 NoteSelector(
                     selectedIndex = selectedRootNoteIndex,
-                    noteNameScale = noteNameScale,
+                    notes = noteNameScale.notes,
                     notePrintOptions = notePrintOptions,
                     onIndexChanged = { selectedRootNoteIndex = it }
                 )

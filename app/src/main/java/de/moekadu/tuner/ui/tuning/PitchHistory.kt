@@ -265,7 +265,7 @@ fun PitchHistory(
     }
 
     val maxNoteHeight = rememberMaxNoteSize(
-        musicalScale.noteNameScale,
+        musicalScale.noteNameScale.notes,
         notePrintOptions = notePrintOptions,
         fontSize = tickLabelStyle.fontSize,
         fontWeight = null,
