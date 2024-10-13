@@ -233,7 +233,7 @@ fun ScientificTunerPortrait(
         val tickHeightPx = rememberTextLabelHeight(tunerPlotStyle.tickFontStyle)
         val tickHeightDp = with(LocalDensity.current) { tickHeightPx.toDp() }
         val noteWidthDp = rememberMaxNoteSize(
-            noteNameScale = musicalScaleAsState.noteNameScale,
+            notes = musicalScaleAsState.noteNameScale.notes,
             notePrintOptions = notePrintOptionsAsState,
             fontSize = tunerPlotStyle.stringFontStyle.fontSize,
             octaveRange = musicalScaleAsState.getNote(
@@ -404,7 +404,7 @@ fun ScientificTunerLandscape(
         val tickHeightPx = rememberTextLabelHeight(tunerPlotStyle.tickFontStyle)
         val tickHeightDp = with(LocalDensity.current) { tickHeightPx.toDp() }
         val noteWidthDp = rememberMaxNoteSize(
-            noteNameScale = musicalScaleAsState.noteNameScale,
+            notes = musicalScaleAsState.noteNameScale.notes,
             notePrintOptions = notePrintOptionsAsState,
             fontSize = tunerPlotStyle.stringFontStyle.fontSize,
             octaveRange = musicalScaleAsState.getNote(

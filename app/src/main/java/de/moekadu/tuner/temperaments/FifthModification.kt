@@ -18,8 +18,10 @@
 */
 package de.moekadu.tuner.temperaments
 
+import kotlinx.serialization.Serializable
 import kotlin.math.pow
 
+@Serializable
 data class FifthModification(
     var pythagoreanComma: RationalNumber = RationalNumber(0, 1),
     var syntonicComma: RationalNumber = RationalNumber(0, 1),

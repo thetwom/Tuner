@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -53,8 +54,8 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun Fraction(
-    numerator: Int,
-    denominator: Int,
+    numerator: Int?,
+    denominator: Int?,
     modifier: Modifier = Modifier,
     fontSize: TextUnit = TextUnit.Unspecified,
     fontStyle: FontStyle? = null,
@@ -64,14 +65,18 @@ fun Fraction(
     style: TextStyle = LocalTextStyle.current
 ) {
     val colorResolved = color.takeOrElse {
-        style.color.takeOrElse { Color.Black }
+        style.color.takeOrElse {
+            LocalContentColor.current.takeOrElse {
+                Color.Black
+            }
+        }
     }
     Column(
         modifier = modifier.width(IntrinsicSize.Min),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            numerator.toString(),
+            numerator?.toString() ?: "?",
             color = colorResolved,
             fontSize = fontSize,
             fontStyle = fontStyle,
@@ -87,7 +92,7 @@ fun Fraction(
                 .background(colorResolved)
         )
         Text(
-            denominator.toString(),
+            denominator?.toString() ?: "?",
             color = colorResolved,
             fontSize = fontSize,
             fontStyle = fontStyle,

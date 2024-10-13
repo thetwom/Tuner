@@ -19,11 +19,9 @@
 package de.moekadu.tuner.ui.notes
 
 import android.content.res.Resources
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -55,7 +53,6 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.NoteNameScale
 import de.moekadu.tuner.temperaments.NoteNameStem
 import de.moekadu.tuner.temperaments.createNoteNameScale53Tone
 import de.moekadu.tuner.temperaments.flatSharpIndex
@@ -414,7 +411,7 @@ fun Note(
 }
 
 /** Compute the size of the biggest note within a scale.
- * @param noteNameScale Scale which tells which notes to print.
+ * @param notes Notes within one octave of the notes to print.
  * @param notePrintOptions Options which tell how to print notes.
  * @param fontSize Font size.
  * @param octaveRange Range of possible octaves or null if not octaves should be printed.
@@ -425,7 +422,7 @@ fun Note(
  * @return Size of largest note.
  */
 fun computeMaxNoteSize(
-    noteNameScale: NoteNameScale,
+    notes: Array<MusicalNote>,
     notePrintOptions: NotePrintOptions,
     fontSize: TextUnit,
     fontWeight: FontWeight?,
@@ -436,7 +433,7 @@ fun computeMaxNoteSize(
 //    Log.v("Tuner", "Note.computeMaxNoteSize, $measurer")
 
     // find the widest note when ignoring the octave index
-    val widestNoteNoOctave = noteNameScale.notes.maxByOrNull { musicalNote ->
+    val widestNoteNoOctave = notes.maxByOrNull { musicalNote ->
         val properties = resolveNoteProperties(
             note = musicalNote,
             notePrintOptions = notePrintOptions,
@@ -474,7 +471,7 @@ fun computeMaxNoteSize(
 }
 
 /** Compute and remember the size of the biggest note within a scale.
- * @param noteNameScale Scale which tells which notes to print.
+ * @param notes Notes within one octave.
  * @param notePrintOptions Options which tell how to print notes.
  * @param fontSize Font size.
  * @param octaveRange Range of possible octaves or null if not octaves should be printed.
@@ -483,7 +480,7 @@ fun computeMaxNoteSize(
  */
 @Composable
 fun rememberMaxNoteSize(
-    noteNameScale: NoteNameScale,
+    notes: Array<MusicalNote>,
     notePrintOptions: NotePrintOptions,
     fontSize: TextUnit,
     octaveRange: IntRange?,
@@ -492,8 +489,8 @@ fun rememberMaxNoteSize(
 ): DpSize {
     val resources = LocalContext.current.resources
     val density = LocalDensity.current
-    return remember(noteNameScale, notePrintOptions, fontSize, octaveRange, textMeasurer, resources, density) {
-        val sizePx = computeMaxNoteSize(noteNameScale, notePrintOptions, fontSize, fontWeight, octaveRange, textMeasurer, resources)
+    return remember(notes, notePrintOptions, fontSize, octaveRange, textMeasurer, resources, density) {
+        val sizePx = computeMaxNoteSize(notes, notePrintOptions, fontSize, fontWeight, octaveRange, textMeasurer, resources)
         DpSize(with(density) { sizePx.width.toDp() }, with(density) { sizePx.height.toDp() }
         )
     }
@@ -514,7 +511,7 @@ private fun NotePreview() {
         )
     }
     val maxLabelSize = rememberMaxNoteSize(
-        noteNameScale = createNoteNameScale53Tone(null),
+        notes = createNoteNameScale53Tone(null).notes,
         notePrintOptions = notePrintOptions,
         fontSize = fontSize,
         fontWeight = fontWeight,

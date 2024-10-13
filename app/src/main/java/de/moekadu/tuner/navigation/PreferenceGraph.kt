@@ -19,6 +19,7 @@
 package de.moekadu.tuner.navigation
 
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -27,6 +28,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.navigation
 import de.moekadu.tuner.preferences.PreferenceResources
+import de.moekadu.tuner.R
 import de.moekadu.tuner.ui.misc.TunerScaffold
 import de.moekadu.tuner.ui.preferences.AboutDialog
 import de.moekadu.tuner.ui.preferences.AppearanceDialog
@@ -39,7 +41,7 @@ import kotlinx.serialization.Serializable
 
 fun NavGraphBuilder.preferenceGraph(
     controller: NavController,
-    canNavigateUp: Boolean,
+    //canNavigateUp: Boolean,
     onNavigateUpClicked: () -> Unit,
     preferences: PreferenceResources
 ) {
@@ -50,8 +52,9 @@ fun NavGraphBuilder.preferenceGraph(
             val musicalScale by preferences.musicalScale.collectAsStateWithLifecycle()
             val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
             TunerScaffold(
-                canNavigateUp = canNavigateUp,
+                canNavigateUp = controller.rememberCanNavigateUp(),
                 onNavigateUpClicked = onNavigateUpClicked,
+                title = stringResource(id = R.string.settings),
                 showPreferenceButton = false,
                 showBottomBar = false,
                 musicalScale = musicalScale,

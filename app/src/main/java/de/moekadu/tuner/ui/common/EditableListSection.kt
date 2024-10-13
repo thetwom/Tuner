@@ -16,13 +16,12 @@
 * You should have received a copy of the GNU General Public License
 * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
 */
-package de.moekadu.tuner.ui.instruments
+package de.moekadu.tuner.ui.common
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.HorizontalDivider
@@ -41,7 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import de.moekadu.tuner.ui.theme.TunerTheme
 
 @Composable
-fun InstrumentListSection(
+fun EditableListSection(
     title: String,
     expanded: Boolean,
     modifier: Modifier = Modifier,
@@ -75,7 +74,7 @@ private fun InstrumentListSectionPreview() {
     TunerTheme {
         var expanded by remember {mutableStateOf(true)}
         Column(modifier = Modifier.fillMaxSize()) {
-            InstrumentListSection(
+            EditableListSection(
                 "My section",
                 expanded = expanded,
                 onExpandClicked = { expanded = it }

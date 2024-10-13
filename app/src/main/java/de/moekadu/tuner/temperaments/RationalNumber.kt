@@ -18,8 +18,10 @@
 */
 package de.moekadu.tuner.temperaments
 
+import kotlinx.serialization.Serializable
 import kotlin.math.absoluteValue
 
+@Serializable
 data class RationalNumber(var numerator: Int, var denominator: Int) {
     companion object {
         fun gcd(a: Int, b: Int): Int {

@@ -18,6 +18,8 @@
 */
 package de.moekadu.tuner.temperaments
 
+import kotlinx.serialization.Serializable
+
 val circleOfFifthsPythagorean = TemperamentCircleOfFifths(
     CG = FifthModification(),
     GD = FifthModification(),
@@ -280,7 +282,8 @@ val circleOfFifthsYoung2 = TemperamentCircleOfFifths(
     FC = FifthModification()
 )
 
-class TemperamentCircleOfFifths(
+@Serializable
+data class TemperamentCircleOfFifths(
     val CG: FifthModification,
     val GD: FifthModification,
     val DA: FifthModification,

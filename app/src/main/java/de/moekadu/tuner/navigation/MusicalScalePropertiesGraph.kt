@@ -68,7 +68,7 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
                     controller.navigateUp()
                 } else {
                     val proposedCorrectedProperties = newProperties.copy(
-                        referenceNote = newNoteNameScale.defaultReferenceNote
+                        referenceNote = newNoteNameScale.referenceNote
                     )
                     controller.navigate(
                         ReferenceFrequencyDialogRoute.create(

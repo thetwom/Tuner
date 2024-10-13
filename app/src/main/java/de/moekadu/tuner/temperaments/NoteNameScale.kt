@@ -31,21 +31,21 @@ import kotlin.math.roundToInt
 /** Note names, which can map indices between musical notes and via verse.
  * @param notes Scale of note names, must contain the referenceNote. The octaves of
  *   the notes are not needed and must not be set.
- * @param defaultReferenceNote Reference note of the scale, which refers to noteIndex 0.
+ * @param referenceNote Reference note of the scale, which refers to noteIndex 0.
  *   This note must be part of the notes-array.
  */
 @Stable
 class NoteNameScale(
     val notes: Array<MusicalNote>,
-    val defaultReferenceNote: MusicalNote
+    val referenceNote: MusicalNote
 ) {
     /** Reference note index within the octave (index in notes). */
     private val referenceNoteIndexWithinOctave = notes.indexOfFirst {
-        MusicalNote.notesEqualIgnoreOctave(it, defaultReferenceNote)
+        MusicalNote.notesEqualIgnoreOctave(it, referenceNote)
     }
 
     /** Octave of reference note. */
-    private val referenceNoteOctave = defaultReferenceNote.octave
+    private val referenceNoteOctave = referenceNote.octave
 
     /** Number of notes contained in the scale. */
     val size = notes.size
@@ -81,7 +81,7 @@ class NoteNameScale(
      * @return New note name scale where notes and enharmonics are exchanged.
      */
     fun switchEnharmonic(): NoteNameScale {
-        return NoteNameScale(notes.map {it.switchEnharmonic()}.toTypedArray(), defaultReferenceNote.switchEnharmonic())
+        return NoteNameScale(notes.map {it.switchEnharmonic()}.toTypedArray(), referenceNote.switchEnharmonic())
     }
 
     fun hasNote(note: MusicalNote): Boolean {

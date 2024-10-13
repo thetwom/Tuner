@@ -53,7 +53,7 @@ import kotlinx.serialization.json.Json
 
 fun NavGraphBuilder.mainGraph(
     controller: NavController,
-    canNavigateUp: Boolean,
+    // canNavigateUp: Boolean,
     onNavigateUpClicked: () -> Unit,
     preferences: PreferenceResources,
     instrumentResources: InstrumentResources
@@ -65,7 +65,7 @@ fun NavGraphBuilder.mainGraph(
             val viewModel: ScientificTunerViewModel = hiltViewModel()
             ScientificTuner(
                 data = viewModel,
-                canNavigateUp = canNavigateUp,
+                canNavigateUp = controller.rememberCanNavigateUp(), //canNavigateUp,
                 onNavigateUpClicked = onNavigateUpClicked,
                 onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
                 onSharpFlatClicked = { preferences.switchSharpFlatPreference() },
@@ -82,7 +82,7 @@ fun NavGraphBuilder.mainGraph(
         } else {
             val viewModel: InstrumentTunerViewModel = hiltViewModel()
             InstrumentTuner(
-                canNavigateUp = canNavigateUp,
+                canNavigateUp = controller.rememberCanNavigateUp(), // canNavigateUp,
                 onNavigateUpClicked = onNavigateUpClicked,
                 onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
                 onSharpFlatClicked = { preferences.switchSharpFlatPreference() },
