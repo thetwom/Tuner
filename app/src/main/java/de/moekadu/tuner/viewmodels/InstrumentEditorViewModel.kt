@@ -31,6 +31,7 @@ import de.moekadu.tuner.notedetection.FrequencyDetectionCollectedResults
 import de.moekadu.tuner.notedetection.FrequencyEvaluationResult
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments2.TemperamentResources
 import de.moekadu.tuner.tuner.Tuner
 import de.moekadu.tuner.ui.instruments.StringWithInfo
 import de.moekadu.tuner.ui.notes.NoteDetectorState
@@ -40,34 +41,22 @@ import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlin.math.min
 
 @HiltViewModel(assistedFactory = InstrumentEditorViewModel.Factory::class)
 class InstrumentEditorViewModel @AssistedInject constructor(
     @Assisted instrument: Instrument,
-    private val pref: PreferenceResources
+    pref: PreferenceResources,
+    private val temperaments: TemperamentResources
 ) : ViewModel(), InstrumentEditorData {
      @AssistedFactory
      interface Factory {
          fun create(instrument: Instrument): InstrumentEditorViewModel
      }
 
-    private val tuner = Tuner(
-        pref,
-        instrumentChromatic,
-        viewModelScope,
-        onResultAvailableListener = object : Tuner.OnResultAvailableListener {
-            override fun onFrequencyDetected(result: FrequencyDetectionCollectedResults) {}
-
-            override fun onFrequencyEvaluated(result: FrequencyEvaluationResult) {
-                result.target?.let { tuningTarget ->
-                    noteDetectorState.hitNote(tuningTarget.note)
-                }
-            }
-        }
-    )
-
-    val musicalScale get() = pref.musicalScale
+    val musicalScale get() = temperaments.musicalScale
     private var stableId = instrument.stableId
 
     override val icon = MutableStateFlow(instrument.icon)
@@ -143,6 +132,23 @@ class InstrumentEditorViewModel @AssistedInject constructor(
                 initializerNote.value = stringsValue[0].note
         }
     }
+
+    private val instrumentChromaticFlow = MutableStateFlow(instrumentChromatic)
+    private val tuner = Tuner(
+        pref,
+        instrumentChromaticFlow,
+        musicalScale,
+        viewModelScope,
+        onResultAvailableListener = object : Tuner.OnResultAvailableListener {
+            override fun onFrequencyDetected(result: FrequencyDetectionCollectedResults) {}
+
+            override fun onFrequencyEvaluated(result: FrequencyEvaluationResult) {
+                result.target?.let { tuningTarget ->
+                    noteDetectorState.hitNote(tuningTarget.note)
+                }
+            }
+        }
+    )
 
 //    private fun setInstrument(instrument: Instrument) {
 //        setIcon(instrument.iconResource)

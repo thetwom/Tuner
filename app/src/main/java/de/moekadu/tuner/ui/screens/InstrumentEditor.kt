@@ -51,11 +51,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.InstrumentIcon
+import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
-import de.moekadu.tuner.temperaments.TemperamentType
+import de.moekadu.tuner.temperaments2.MusicalScale2
+import de.moekadu.tuner.temperaments2.MusicalScale2Factory
+import de.moekadu.tuner.temperaments2.StretchTuning
+import de.moekadu.tuner.temperaments2.Temperament
 import de.moekadu.tuner.ui.instruments.StringWithInfo
 import de.moekadu.tuner.ui.instruments.Strings
 import de.moekadu.tuner.ui.instruments.StringsScrollMode
@@ -102,8 +104,8 @@ interface InstrumentEditorData {
 @Composable
 fun InstrumentEditor(
     state: InstrumentEditorData,
+    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
-    musicalScale: MusicalScale = MusicalScaleFactory.create(TemperamentType.EDO12),
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create(),
     onIconButtonClicked: () -> Unit = {}
@@ -113,8 +115,8 @@ fun InstrumentEditor(
         Configuration.ORIENTATION_LANDSCAPE -> {
             InstrumentEditorLandscape(
                 state = state,
-                modifier = modifier,
                 musicalScale = musicalScale,
+                modifier = modifier,
                 notePrintOptions = notePrintOptions,
                 tunerPlotStyle = tunerPlotStyle,
                 onIconButtonClicked = onIconButtonClicked
@@ -123,8 +125,8 @@ fun InstrumentEditor(
         else -> {
             InstrumentEditorPortrait(
                 state = state,
-                modifier = modifier,
                 musicalScale = musicalScale,
+                modifier = modifier,
                 notePrintOptions = notePrintOptions,
                 tunerPlotStyle = tunerPlotStyle,
                 onIconButtonClicked = onIconButtonClicked
@@ -136,8 +138,8 @@ fun InstrumentEditor(
 @Composable
 fun InstrumentEditorPortrait(
     state: InstrumentEditorData,
+    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
-    musicalScale: MusicalScale = MusicalScaleFactory.create(TemperamentType.EDO12),
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create(),
     onIconButtonClicked: () -> Unit = {}
@@ -278,8 +280,8 @@ fun InstrumentEditorPortrait(
 @Composable
 fun InstrumentEditorLandscape(
     state: InstrumentEditorData,
+    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
-    musicalScale: MusicalScale = MusicalScaleFactory.create(TemperamentType.EDO12),
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create(),
     onIconButtonClicked: () -> Unit = {}
@@ -448,7 +450,7 @@ fun InstrumentEditorLandscape(
 }
 
 private class InstrumentEditorDataTest : InstrumentEditorData {
-    val musicalScale = MusicalScaleFactory.create(TemperamentType.EDO12)
+    val musicalScale = MusicalScale2Factory.createTestEdo12()
 
     override val icon = MutableStateFlow(InstrumentIcon.piano)
     override val name = MutableStateFlow("Test name")

@@ -44,6 +44,7 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.preferences.PreferenceResources
+import de.moekadu.tuner.temperaments2.TemperamentResources
 import de.moekadu.tuner.ui.instruments.InstrumentIconPicker
 import de.moekadu.tuner.ui.misc.TunerScaffold
 import de.moekadu.tuner.ui.misc.rememberTunerAudioPermission
@@ -72,7 +73,8 @@ fun NavGraphBuilder.instrumentEditorGraph(
     canNavigateUp: Boolean,
     onNavigateUpClicked: () -> Unit,
     preferences: PreferenceResources,
-    instruments: InstrumentResources
+    instruments: InstrumentResources,
+    temperaments: TemperamentResources
 ) {
     navigation<InstrumentEditorGraphRoute>(
         startDestination = InstrumentEditorRoute
@@ -80,7 +82,7 @@ fun NavGraphBuilder.instrumentEditorGraph(
         composable<InstrumentEditorRoute> {
             val viewModel = createViewModel(controller = controller, backStackEntry = it)
 
-            val musicalScale by preferences.musicalScale.collectAsStateWithLifecycle()
+            val musicalScale by temperaments.musicalScale.collectAsStateWithLifecycle()
             val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
 
             val snackbarHostState = remember { SnackbarHostState() }
@@ -100,8 +102,8 @@ fun NavGraphBuilder.instrumentEditorGraph(
                 onSharpFlatClicked = { preferences.switchSharpFlatPreference() },
                 onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
                     controller.navigate(
-                        ReferenceFrequencyDialogRoute.create(
-                            preferences.musicalScale.value, null
+                        ReferenceFrequencyDialogRoute(
+                            temperaments.musicalScale.value, null
                         )
                     )
                 },

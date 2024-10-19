@@ -54,6 +54,7 @@ import de.moekadu.tuner.navigation.preferenceGraph
 import de.moekadu.tuner.navigation.mainGraph
 import de.moekadu.tuner.preferences.NightMode
 import de.moekadu.tuner.preferences.PreferenceResources
+import de.moekadu.tuner.temperaments2.TemperamentResources
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -69,6 +70,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var instruments: InstrumentResources
+
+    @Inject
+    lateinit var temperaments: TemperamentResources
 
     private val loadInstrumentIntentChannel = Channel<List<Instrument>>(Channel.CONFLATED)
 
@@ -142,18 +146,21 @@ class MainActivity : ComponentActivity() {
                         // canNavigateUp = canNavigateUp,
                         onNavigateUpClicked = { controller.navigateUp() },
                         preferences = pref,
-                        instrumentResources = instruments
+                        instrumentResources = instruments,
+                        temperamentResources = temperaments
                     )
                     preferenceGraph(
                         controller = controller,
                         //canNavigateUp = canNavigateUp,
                         onNavigateUpClicked = { controller.navigateUp() },
-                        preferences = pref
+                        preferences = pref,
+                        temperaments = temperaments
                     )
                     // provides TemperamentDialogRoute and ReferenceNoteDialog
                     musicalScalePropertiesGraph(
                         controller = controller,
-                        preferences = pref
+                        preferences = pref,
+                        temperaments = temperaments
                     )
 
                     instrumentEditorGraph(
@@ -161,7 +168,8 @@ class MainActivity : ComponentActivity() {
                         canNavigateUp = true,
                         onNavigateUpClicked = {},
                         preferences = pref,
-                        instruments = instruments
+                        instruments = instruments,
+                        temperaments = temperaments
                     )
                 }
             }

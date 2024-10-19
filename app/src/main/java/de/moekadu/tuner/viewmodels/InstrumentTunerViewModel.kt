@@ -32,7 +32,8 @@ import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.notedetection.checkTuning
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments2.MusicalScale2
+import de.moekadu.tuner.temperaments2.TemperamentResources
 import de.moekadu.tuner.tuner.Tuner
 import de.moekadu.tuner.ui.instruments.StringWithInfo
 import de.moekadu.tuner.ui.instruments.StringsState
@@ -43,42 +44,22 @@ import de.moekadu.tuner.ui.tuning.PitchHistoryState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class InstrumentTunerViewModel @Inject constructor (
     val pref: PreferenceResources,
-    val instruments: InstrumentResources
+    val instruments: InstrumentResources,
+    val temperaments: TemperamentResources
 ) : ViewModel(), InstrumentTunerData {
-    private val tuner = Tuner(
-        pref,
-        instruments.currentInstrument.value,
-        viewModelScope,
-        onResultAvailableListener = object : Tuner.OnResultAvailableListener {
-            override fun onFrequencyDetected(result: FrequencyDetectionCollectedResults) { }
-
-            override fun onFrequencyEvaluated(result: FrequencyEvaluationResult) {
-                if (result.smoothedFrequency > 0f) {
-                    pitchHistoryState.addFrequency(result.smoothedFrequency)
-                    currentSmoothedFrequency = result.smoothedFrequency
-
-                    result.target?.let { tuningTarget ->
-                        handleTargetNoteOnAutodetectChange(tuningTarget.note)
-                    }
-                }
-                //Log.v("Tuner", "ScientificTunerViewModel: dt = ${result.timeSinceThereIsNoFrequencyDetectionResult}")
-                resetTuningState(result.timeSinceThereIsNoFrequencyDetectionResult)
-            }
-        }
-    )
+    override val musicalScale: StateFlow<MusicalScale2> get() = temperaments.musicalScale
+    override val notePrintOptions: StateFlow<NotePrintOptions> get() = pref.notePrintOptions
+    override val toleranceInCents: StateFlow<Int> get() = pref.toleranceInCents
 
     private var autodetectedTargetNote = musicalScale.value.referenceNote
     private var currentSmoothedFrequency = musicalScale.value.referenceFrequency
-
-    override val musicalScale: StateFlow<MusicalScale> get() = pref.musicalScale
-    override val notePrintOptions: StateFlow<NotePrintOptions> get() = pref.notePrintOptions
-    override val toleranceInCents: StateFlow<Int> get() = pref.toleranceInCents
 
     override var pitchHistoryState: PitchHistoryState = PitchHistoryState(
         computePitchHistorySize()
@@ -123,6 +104,30 @@ class InstrumentTunerViewModel @Inject constructor (
         resetTuningState(null)
     }
 
+    private val tuner = Tuner(
+        pref,
+        instruments.currentInstrument,
+        musicalScale,
+        viewModelScope,
+        onResultAvailableListener = object : Tuner.OnResultAvailableListener {
+            override fun onFrequencyDetected(result: FrequencyDetectionCollectedResults) { }
+
+            override fun onFrequencyEvaluated(result: FrequencyEvaluationResult) {
+                if (result.smoothedFrequency > 0f) {
+                    pitchHistoryState.addFrequency(result.smoothedFrequency)
+                    currentSmoothedFrequency = result.smoothedFrequency
+
+                    result.target?.let { tuningTarget ->
+                        handleTargetNoteOnAutodetectChange(tuningTarget.note)
+                    }
+                }
+                //Log.v("Tuner", "ScientificTunerViewModel: dt = ${result.timeSinceThereIsNoFrequencyDetectionResult}")
+                resetTuningState(result.timeSinceThereIsNoFrequencyDetectionResult)
+            }
+        }
+    )
+
+
     init {
         viewModelScope.launch {
             pref.pitchHistoryDuration.collect {
@@ -145,7 +150,6 @@ class InstrumentTunerViewModel @Inject constructor (
                 strings = it.strings.mapIndexed { index, note ->
                     StringWithInfo(note, index) //, musicalScale.value.getNoteIndex(note))
                 }.toImmutableList()
-                tuner.changeInstrument(it)
             }
         }
     }

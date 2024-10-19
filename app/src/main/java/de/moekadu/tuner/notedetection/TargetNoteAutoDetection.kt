@@ -21,7 +21,7 @@ package de.moekadu.tuner.notedetection
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments2.MusicalScale2
 import kotlin.math.log
 import kotlin.math.max
 import kotlin.math.min
@@ -43,7 +43,7 @@ private fun centsToRatio(cents: Float): Float {
  *    is used for better evaluation of hysteresis effects when to switch to a new note.
  */
 class TargetNoteAutoDetection(
-    private val musicalScale: MusicalScale,
+    private val musicalScale: MusicalScale2,
     instrument: Instrument?,
     private val toleranceInCents: Float
     ) {
@@ -96,7 +96,9 @@ class TargetNoteAutoDetection(
 //        Log.v("Tuner", "TargetNote: setTargetNoteBasedOnFrequency: instrument.isChromatic: ${instrument.isChromatic} || numDifferentNotes==$numDifferentNotes")
         return when {
             instrument.isChromatic -> {
-                musicalScale.getClosestNote(frequency)
+                val noteIndex = musicalScale.getClosestNoteIndex(frequency)
+                musicalScale.getNote(noteIndex)
+                //musicalScale.getClosestNote(frequency)
             }
             numDifferentNotes == 1 -> {
                 musicalScale.getNote(sortedAndDistinctNoteIndices[0])

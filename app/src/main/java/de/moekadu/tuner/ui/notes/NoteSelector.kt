@@ -58,11 +58,13 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
+import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
-import de.moekadu.tuner.temperaments.TemperamentType
 import de.moekadu.tuner.temperaments.createNoteNameScale53Tone
+import de.moekadu.tuner.temperaments2.MusicalScale2
+import de.moekadu.tuner.temperaments2.MusicalScale2Factory
+import de.moekadu.tuner.temperaments2.StretchTuning
+import de.moekadu.tuner.temperaments2.Temperament
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlin.math.absoluteValue
 
@@ -224,7 +226,7 @@ fun NoteSelector(
 @Composable
 fun NoteSelector(
     selectedIndex: Int,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     fontSize: TextUnit = TextUnit.Unspecified,
@@ -243,7 +245,7 @@ fun NoteSelector(
     }
 
     val minSingleNoteSize = rememberMaxNoteSize(
-        notes = musicalScale.noteNameScale.notes,
+        notes = musicalScale.noteNames.notes,
         notePrintOptions = notePrintOptions,
         fontSize = fontSizeResolved,
         fontWeight = fontWeightResolved,
@@ -320,9 +322,7 @@ private fun NoteSelectorPreview() {
 @Composable
 private fun NoteSelector2Preview() {
     TunerTheme {
-        val musicalScale = remember {
-            MusicalScaleFactory.create(TemperamentType.EDO12)
-        }
+        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
 
         val notePrintOptions = remember {
             NotePrintOptions(

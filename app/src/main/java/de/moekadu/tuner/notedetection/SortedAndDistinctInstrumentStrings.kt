@@ -20,11 +20,11 @@ package de.moekadu.tuner.notedetection
 
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments2.MusicalScale2
 
 class SortedAndDistinctInstrumentStrings(
     private val instrument: Instrument,
-    private val musicalScale: MusicalScale
+    private val musicalScale: MusicalScale2
 ) {
     /** Note indices of different strings.
      * This list is sorted according to the note indices and made unique such that each note
@@ -66,7 +66,7 @@ class SortedAndDistinctInstrumentStrings(
     }
 
 
-    private fun sortStringsAccordingToNoteIndex(instrument: Instrument, musicalScale: MusicalScale): List<Int> {
+    private fun sortStringsAccordingToNoteIndex(instrument: Instrument, musicalScale: MusicalScale2): List<Int> {
         if (instrument.isChromatic)
             return ArrayList()
         val strings = instrument.strings

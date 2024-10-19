@@ -35,7 +35,8 @@ import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.notedetection.checkTuning
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments2.MusicalScale2
+import de.moekadu.tuner.temperaments2.TemperamentResources
 import de.moekadu.tuner.tuner.Tuner
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.plot.GestureBasedViewPort
@@ -44,6 +45,7 @@ import de.moekadu.tuner.ui.plot.VerticalLinesPositions
 import de.moekadu.tuner.ui.screens.ScientificTunerData
 import de.moekadu.tuner.ui.tuning.PitchHistoryState
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -51,11 +53,41 @@ import javax.inject.Inject
 @HiltViewModel
 class ScientificTunerViewModel @Inject constructor (
     val pref: PreferenceResources,
+    val temperaments: TemperamentResources,
     @ApplicationScope val applicationScope: CoroutineScope
 ) : ViewModel(), ScientificTunerData {
+    override val musicalScale: StateFlow<MusicalScale2> get() = temperaments.musicalScale
+    override val notePrintOptions: StateFlow<NotePrintOptions> get() = pref.notePrintOptions
+    override val sampleRate: Int get() = pref.sampleRate
+    override val toleranceInCents: StateFlow<Int> get() = pref.toleranceInCents
+
+    override var frequencyPlotData by mutableStateOf(LineCoordinates())
+    override var harmonicFrequencies by mutableStateOf(VerticalLinesPositions())
+    override val frequencyPlotGestureBasedViewPort: GestureBasedViewPort
+            = GestureBasedViewPort()
+
+    override var correlationPlotData by mutableStateOf(LineCoordinates())
+    override var correlationPlotDataYZeroPosition by mutableFloatStateOf(0f)
+    override val correlationPlotGestureBasedViewPort: GestureBasedViewPort
+            = GestureBasedViewPort()
+
+    override var pitchHistoryState: PitchHistoryState = PitchHistoryState(
+        computePitchHistorySize()
+    )
+
+    override val pitchHistoryGestureBasedViewPort: GestureBasedViewPort
+            = GestureBasedViewPort()
+    override var tuningState by mutableStateOf(TuningState.Unknown)
+    override var currentFrequency: Float?
+            by mutableStateOf(null)
+    override var targetNote: MusicalNote
+            by mutableStateOf(musicalScale.value.referenceNote)
+
+    private val instrumentChromaticFlow = MutableStateFlow(instrumentChromatic)
     private val tuner = Tuner(
         pref,
-        instrumentChromatic,
+        instrumentChromaticFlow,
+        musicalScale,
         viewModelScope,
         onResultAvailableListener = object : Tuner.OnResultAvailableListener {
             override fun onFrequencyDetected(result: FrequencyDetectionCollectedResults) {
@@ -98,32 +130,6 @@ class ScientificTunerViewModel @Inject constructor (
         }
     )
 
-    override val musicalScale: StateFlow<MusicalScale> get() = pref.musicalScale
-    override val notePrintOptions: StateFlow<NotePrintOptions> get() = pref.notePrintOptions
-    override val sampleRate: Int get() = pref.sampleRate
-    override val toleranceInCents: StateFlow<Int> get() = pref.toleranceInCents
-
-    override var frequencyPlotData by mutableStateOf(LineCoordinates())
-    override var harmonicFrequencies by mutableStateOf(VerticalLinesPositions())
-    override val frequencyPlotGestureBasedViewPort: GestureBasedViewPort
-            = GestureBasedViewPort()
-
-    override var correlationPlotData by mutableStateOf(LineCoordinates())
-    override var correlationPlotDataYZeroPosition by mutableFloatStateOf(0f)
-    override val correlationPlotGestureBasedViewPort: GestureBasedViewPort
-            = GestureBasedViewPort()
-
-    override var pitchHistoryState: PitchHistoryState = PitchHistoryState(
-        computePitchHistorySize()
-    )
-
-    override val pitchHistoryGestureBasedViewPort: GestureBasedViewPort
-            = GestureBasedViewPort()
-    override var tuningState by mutableStateOf(TuningState.Unknown)
-    override var currentFrequency: Float?
-            by mutableStateOf(null)
-    override var targetNote: MusicalNote
-            by mutableStateOf(musicalScale.value.referenceNote)
 
     init {
         viewModelScope.launch {

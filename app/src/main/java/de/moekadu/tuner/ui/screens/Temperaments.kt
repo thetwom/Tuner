@@ -1,6 +1,7 @@
 package de.moekadu.tuner.ui.screens
 
 import android.content.Context
+import android.content.res.Configuration
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -47,6 +49,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -56,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.StringOrResId
+import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.RationalNumber
 import de.moekadu.tuner.temperaments2.MusicalScale2Factory
 import de.moekadu.tuner.temperaments2.StretchTuning
@@ -91,15 +95,51 @@ interface TemperamentsData {
         uri: Uri,
         temperaments: List<TemperamentResources.TemperamentWithNoteNames>
     )
+    fun resetToDefault()
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Temperaments(
     state: TemperamentsData,
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
-    onNewTemperament:  (temperament: TemperamentResources.TemperamentWithNoteNames) -> Unit = { },
+    onNewTemperament:  (temperament: TemperamentResources.TemperamentWithNoteNames, rootNote: MusicalNote) -> Unit = {_, _ ->},
+    onAbort: () -> Unit = { },
+    onEditTemperamentClicked: (temperament: TemperamentResources.TemperamentWithNoteNames, copy: Boolean) -> Unit = {_, _ ->}
+) {
+    val configuration = LocalConfiguration.current
+    when (configuration.orientation) {
+        Configuration.ORIENTATION_LANDSCAPE -> {
+            TemperamentsLandscape(
+                state = state,
+                modifier = modifier,
+                notePrintOptions = notePrintOptions,
+                onNewTemperament = onNewTemperament,
+                onAbort = onAbort,
+                onEditTemperamentClicked = onEditTemperamentClicked
+            )
+        }
+
+        else -> {
+            TemperamentsPortrait(
+                state = state,
+                modifier = modifier,
+                notePrintOptions = notePrintOptions,
+                onNewTemperament = onNewTemperament,
+                onAbort = onAbort,
+                onEditTemperamentClicked = onEditTemperamentClicked
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TemperamentsPortrait(
+    state: TemperamentsData,
+    modifier: Modifier = Modifier,
+    notePrintOptions: NotePrintOptions = NotePrintOptions(),
+    onNewTemperament:  (temperament: TemperamentResources.TemperamentWithNoteNames, rootNote: MusicalNote) -> Unit = {_, _ ->},
     onAbort: () -> Unit = { },
     onEditTemperamentClicked: (temperament: TemperamentResources.TemperamentWithNoteNames, copy: Boolean) -> Unit = {_, _ ->}
 ) {
@@ -115,23 +155,7 @@ fun Temperaments(
         }
     }
     val selectedRootNoteIndex by state.selectedRootNoteIndex.collectAsStateWithLifecycle()
-    val musicalScale = remember(activeTemperament, selectedRootNoteIndex) {
-        val t = activeTemperament
-        if (t != null) {
-            MusicalScale2Factory.create(
-                t.temperament,
-                noteNames,
-                noteNames[selectedRootNoteIndex].copy(octave = 4),
-                noteNames[selectedRootNoteIndex],
-                440f,
-                frequencyMin = 439f,
-                frequencyMax = centsToFrequency(t.temperament.cents.last(), 440.0).toFloat() + 1f,
-                stretchTuning = StretchTuning()
-            )
-        } else {
-            null
-        }
-    }
+
     val detailChoice by state.detailChoice.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
@@ -179,9 +203,10 @@ fun Temperaments(
                     }
                 },
                 actions = {
-                    TextButton(onClick = { state.listData.activeItem.value?.let {
-                        onNewTemperament(it)
-                    } }) {
+                    TextButton(onClick = {
+                        val rootNote = noteNames[selectedRootNoteIndex]
+                        state.listData.activeItem.value?.let { onNewTemperament(it, rootNote) }
+                    }) {
                         Text(stringResource(id = R.string.save))
                     }
                 }
@@ -271,16 +296,18 @@ fun Temperaments(
         Column(
             modifier = Modifier.padding(paddingValues)
         ) {
-            if (musicalScale != null) {
+            activeTemperament?.let {
                 ActiveTemperament(
-                    musicalScale = musicalScale,
+                    temperament = it.temperament,
+                    noteNames = noteNames,
+                    rootNoteIndex = selectedRootNoteIndex,
                     detailChoice = detailChoice,
-                    onChooseDetail = { state.changeDetailChoice(it)},
-                    notePrintOptions = notePrintOptions
+                    onChooseDetail = { state.changeDetailChoice(it) },
+                    notePrintOptions = notePrintOptions,
+                    onResetClicked = { state.resetToDefault() }
                 )
             }
-//            Spacer(modifier = Modifier.height(12.dp))
-//            HorizontalDivider(modifier = Modifier.fillMaxWidth())
+
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 stringResource(id = R.string.root_note),
@@ -336,6 +363,241 @@ fun Temperaments(
                 snackbarHostState = snackbarHostState,
                 listState = temperamentListState
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TemperamentsLandscape(
+    state: TemperamentsData,
+    modifier: Modifier = Modifier,
+    notePrintOptions: NotePrintOptions = NotePrintOptions(),
+    onNewTemperament:  (temperament: TemperamentResources.TemperamentWithNoteNames, rootNote: MusicalNote) -> Unit = {_, _ -> },
+    onAbort: () -> Unit = { },
+    onEditTemperamentClicked: (temperament: TemperamentResources.TemperamentWithNoteNames, copy: Boolean) -> Unit = {_, _ ->}
+) {
+    val context = LocalContext.current
+    val selectedTemperaments by state.listData.selectedItems.collectAsStateWithLifecycle()
+    val activeTemperament by state.listData.activeItem.collectAsStateWithLifecycle()
+    val noteNames = remember(activeTemperament) {
+        val t = activeTemperament
+        if (t != null) {
+            t.noteNames ?: getSuitableNoteNames(t.temperament.numberOfNotesPerOctave)
+        } else {
+            getSuitableNoteNames(12)
+        }
+    }
+    val selectedRootNoteIndex by state.selectedRootNoteIndex.collectAsStateWithLifecycle()
+
+    val detailChoice by state.detailChoice.collectAsStateWithLifecycle()
+
+    val scope = rememberCoroutineScope()
+    val temperamentListState = rememberLazyListState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val overflowCallbacks = object: OverflowMenuCallbacks {
+        override fun onDeleteClicked() {
+            if (state.listData.selectedItems.value.isNotEmpty())
+                state.listData.deleteSelectedItems()
+            else
+                state.listData.deleteAllItems()
+        }
+        override fun onShareClicked() {
+            val instruments = state.listData.extractSelectedItems()
+            if (instruments.isEmpty()) {
+                Toast.makeText(context, R.string.database_empty_share, Toast.LENGTH_LONG).show()
+            } else {
+                //val intent = ShareInstruments.createShareInstrumentsIntent(context, instruments)
+                //shareInstrumentLauncher.launch(intent)
+            }
+        }
+        override fun onExportClicked() {
+            if (state.listData.editableItems.value.isEmpty()) {
+                Toast.makeText(context, R.string.database_empty, Toast.LENGTH_LONG).show()
+            } else {
+                //saveInstrumentLauncher.launch("tuner.txt")
+            }
+        }
+        override fun onImportClicked() {
+            //importInstrumentLauncher.launch(arrayOf("text/plain"))
+        }
+        override fun onSettingsClicked() {
+            // onPreferenceButtonClicked()
+        }
+    }
+
+    Scaffold(
+        modifier = modifier,
+        topBar = { TopAppBar(
+            title = {
+                if (selectedTemperaments.isEmpty()) {
+                    Text(stringResource(id = R.string.temperaments))
+                } else {
+                    Text("${selectedTemperaments.size}")
+                }
+            },
+            navigationIcon = {
+                IconButton(onClick = {
+                    if (selectedTemperaments.isEmpty()) {
+                        onAbort()
+                    } else {
+                        state.listData.clearSelectedItems()
+                    }
+                }) {
+                    Icon(Icons.Default.Close, "close")
+                }
+            },
+            actions = {
+                if (selectedTemperaments.isEmpty()) {
+                    IconButton(onClick = { overflowCallbacks.onDeleteClicked() }) {
+                        Icon(Icons.Default.Delete, contentDescription = "delete")
+                    }
+                    IconButton(onClick = { overflowCallbacks.onShareClicked() }) {
+                        Icon(Icons.Default.Share, contentDescription = "share")
+                    }
+                    // TODO: strings must not use the term "instrument"
+                    ImportExportOverflowMenu(
+                        onExportClicked = { overflowCallbacks.onExportClicked() },
+                        onImportClicked = { overflowCallbacks.onImportClicked() }
+                    )
+
+                } else {
+                    IconButton(onClick = {
+                        scope.launch {
+                            val changed = state.listData.moveSelectedItemsUp()
+                            if (changed) {
+                                temperamentListState.animateScrollToItem(
+                                    (temperamentListState.firstVisibleItemIndex - 1).coerceAtLeast(0),
+                                    -temperamentListState.firstVisibleItemScrollOffset
+                                )
+                            }
+                        }
+                    }) {
+                        Icon(
+                            Icons.Default.KeyboardArrowUp,
+                            contentDescription = "move up"
+                        )
+                    }
+                    IconButton(onClick = {
+                        scope.launch {
+                            val changed = state.listData.moveSelectedItemsDown()
+                            if (changed) {
+                                temperamentListState.animateScrollToItem(
+                                    temperamentListState.firstVisibleItemIndex + 1,
+                                    -temperamentListState.firstVisibleItemScrollOffset
+                                )
+                            }
+                        }
+                    }) {
+                        Icon(
+                            Icons.Default.KeyboardArrowDown,
+                            contentDescription = "move down"
+                        )
+                    }
+                    // TODO: strings should not say "instruments"
+                    OverflowMenu(callbacks = overflowCallbacks, showSettings = false)
+                }
+                TextButton(onClick = {
+                    state.listData.activeItem.value?.let {
+                        val rootNote = noteNames[selectedRootNoteIndex]
+                        onNewTemperament(it, rootNote)
+                    }
+                }) {
+                    Text(stringResource(id = R.string.save))
+                }
+            }
+        ) },
+        floatingActionButton = {
+            if (selectedTemperaments.isEmpty()) {
+                FloatingActionButton(
+                    onClick = { /*TODO*/ },
+                    containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
+                    elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = "new temperament")
+                }
+            }
+        }
+    ) { paddingValues ->
+        Row {
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .weight(0.5f)
+            ) {
+                activeTemperament?.let {
+                    ActiveTemperament(
+                        temperament = it.temperament,
+                        noteNames = noteNames,
+                        rootNoteIndex = selectedRootNoteIndex,
+                        detailChoice = detailChoice,
+                        onChooseDetail = { state.changeDetailChoice(it) },
+                        notePrintOptions = notePrintOptions,
+                        onResetClicked = { state.resetToDefault() }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    stringResource(id = R.string.root_note),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.labelSmall
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                NoteSelector(
+                    selectedIndex = selectedRootNoteIndex,
+                    notes = noteNames.notes,
+                    notePrintOptions = notePrintOptions,
+                    onIndexChanged = { state.changeRootNoteIndex(it) }
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .weight(0.5f)
+            ) {
+//                Text(
+//                    stringResource(id = R.string.temperaments),
+//                    style = MaterialTheme.typography.labelSmall,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(top = 4.dp),
+//                    textAlign = TextAlign.Center
+//                )
+                val iconTextSize = with(LocalDensity.current) { 18.dp.toSp() }
+                EditableList(
+                    itemTitle = { Text(it.temperament.name.value(context)) },
+                    itemDescription = { Text(it.temperament.description.value(context)) },
+                    itemIcon = {
+                        Surface(
+                            shape = CircleShape,
+                            modifier = Modifier.fillMaxSize(),
+                            color = Color.Transparent,
+                            border = BorderStroke(1.dp, LocalContentColor.current)
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "${it.temperament.name.value(context)[0]}",
+                                    fontSize = iconTextSize
+                                )
+                            }
+                        }
+                    },
+                    isItemCopyable = { true },
+                    state = state.listData,
+                    modifier = Modifier.weight(1f),
+                    onActivateItemClicked = { state.changeActiveTemperament(it) },
+                    onEditItemClicked = onEditTemperamentClicked,
+                    snackbarHostState = snackbarHostState,
+                    listState = temperamentListState
+                )
+            }
         }
     }
 }
@@ -416,7 +678,13 @@ private class TestTemperamentData : TemperamentsData {
         context: Context,
         uri: Uri,
         temperaments: List<TemperamentResources.TemperamentWithNoteNames>
-    ) {
+    ) { }
+
+    override fun resetToDefault() {
+        selectedRootNoteIndex.value = 0
+        activeTemperament.value = TemperamentResources.TemperamentWithNoteNames(
+            testTemperament1, null
+        )
     }
 }
 

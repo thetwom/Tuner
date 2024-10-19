@@ -243,6 +243,28 @@ data class Temperament(
 
 val temperamentDatabase = createPredefinedTemperaments()
 
+/** Create test temperament */
+fun createTestTemperamentEdo12(): Temperament {
+    return Temperament.create(
+        StringOrResId(R.string.equal_temperament_12),
+        StringOrResId(R.string.equal_temperament_12_abbr),
+        StringOrResId(R.string.equal_temperament_12_desc),
+        12,
+        1L
+    )
+}
+
+/** Create test temperament */
+fun createTestTemperamentWerckmeisterVI(): Temperament {
+    return Temperament.create(
+        StringOrResId(R.string.werckmeister_vi),
+        StringOrResId(R.string.werckmeister_vi_abbr),
+        StringOrResId(R.string.werckmeister_vi_desc),
+        rationalNumberTemperamentWerckmeisterVI,
+        1L
+    )
+}
+
 private fun createPredefinedTemperaments(): ArrayList<Temperament> {
     val temperaments = ArrayList<Temperament>()
 

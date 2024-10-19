@@ -39,30 +39,32 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
-import de.moekadu.tuner.temperaments.TemperamentType
-import de.moekadu.tuner.temperaments.getTuningNameAbbrResourceId
+import de.moekadu.tuner.misc.StringOrResId
+import de.moekadu.tuner.temperaments2.MusicalScale2
+import de.moekadu.tuner.temperaments2.MusicalScale2Factory
+import de.moekadu.tuner.temperaments2.StretchTuning
+import de.moekadu.tuner.temperaments2.Temperament
 import de.moekadu.tuner.ui.notes.Note
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.theme.TunerTheme
 
 @Composable
 fun QuickSettingsBar(
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     onSharpFlatClicked: () -> Unit = {},
     onTemperamentClicked: () -> Unit = {},
     onReferenceNoteClicked: () -> Unit = {}
 ) {
-
+    val context = LocalContext.current
     val decimalFormat = rememberNumberFormatter()
 
     Row(
@@ -108,7 +110,7 @@ fun QuickSettingsBar(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    stringResource(id = getTuningNameAbbrResourceId(musicalScale.temperamentType)),
+                    musicalScale.temperament.abbreviation.value(context),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -147,16 +149,8 @@ fun QuickSettingsBar(
 @Composable
 private fun QuickSettingsBarPreview() {
     TunerTheme {
-        var notePrintOptions by remember {
-            mutableStateOf(NotePrintOptions())
-        }
-
-        val musicalScale by remember { mutableStateOf(
-            MusicalScaleFactory.create(
-                TemperamentType.EDO12,
-                referenceFrequency = 432.1554f
-            )
-        ) }
+        var notePrintOptions by remember { mutableStateOf(NotePrintOptions()) }
+        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
 
         QuickSettingsBar(
             musicalScale = musicalScale,

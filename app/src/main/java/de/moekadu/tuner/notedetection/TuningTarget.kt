@@ -21,7 +21,7 @@ package de.moekadu.tuner.notedetection
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments2.MusicalScale2
 
 data class TuningTarget(
     val note: MusicalNote,
@@ -31,7 +31,7 @@ data class TuningTarget(
 )
 
 class TuningTargetComputer(
-    private val musicalScale: MusicalScale,
+    private val musicalScale: MusicalScale2,
     instrument: Instrument?,
     toleranceInCents: Float
 ) {

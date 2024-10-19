@@ -68,11 +68,13 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
+import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
-import de.moekadu.tuner.temperaments.TemperamentType
+import de.moekadu.tuner.temperaments2.MusicalScale2
+import de.moekadu.tuner.temperaments2.MusicalScale2Factory
+import de.moekadu.tuner.temperaments2.StretchTuning
+import de.moekadu.tuner.temperaments2.Temperament
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.rememberMaxNoteSize
 import de.moekadu.tuner.ui.plot.PlotWindowOutline
@@ -125,7 +127,7 @@ private fun findIndexOfClosestScrollableHighlightedString(
     strings: List<StringWithInfo>?,
     highlightedStringKey: Int?,
     highlightedStringNote: MusicalNote?,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     listState: LazyListState
 ): Int {
     return if (highlightedStringKey == null && highlightedStringNote == null) {
@@ -305,7 +307,7 @@ private fun StringsSidebar(
 @Composable
 fun Strings(
     strings: ImmutableList<StringWithInfo>?, // if null, we assume chromatic
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
     tuningState: TuningState = TuningState.Unknown,
     highlightedNoteKey: Int? = null,
@@ -334,11 +336,11 @@ fun Strings(
 
     val minOctave = remember(strings, musicalScale) {
         strings?.minOfOrNull { it.note.octave }
-            ?: musicalScale.noteNameScale.getNoteOfIndex(musicalScale.noteIndexBegin).octave
+            ?: musicalScale.getNote(musicalScale.noteIndexBegin).octave
     }
     val maxOctave = remember(strings, musicalScale) {
         strings?.maxOfOrNull { it.note.octave }
-            ?: musicalScale.noteNameScale.getNoteOfIndex(musicalScale.noteIndexEnd - 1).octave
+            ?: musicalScale.getNote(musicalScale.noteIndexEnd - 1).octave
     }
     val minNoteIndex = remember(strings, musicalScale) {
         strings?.minOfOrNull {
@@ -368,7 +370,7 @@ fun Strings(
     }
 
     val labelSize = rememberMaxNoteSize(
-        notes = musicalScale.noteNameScale.notes,
+        notes = musicalScale.noteNames.notes,
         notePrintOptions = notePrintOptions,
         fontSize = fontSizeResolved,
         octaveRange = minOctave..maxOctave
@@ -437,13 +439,14 @@ fun Strings(
                     ),
                     size = Size(
                         size.width - sidebarWidth.toPx() - outline.lineWidth.toPx(),
-                        size.height - outline.lineWidth.toPx())
+                        size.height - outline.lineWidth.toPx()
+                    )
                 )
             }
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
-            )  {
+            ) {
                 state.scrollMode = StringsScrollMode.Automatic
                 val i = findIndexOfClosestScrollableHighlightedString(
                     strings,
@@ -580,8 +583,8 @@ fun Strings(
 @Composable
 private fun StringsPreview() {
     TunerTheme {
-        val musicalScale = remember { MusicalScaleFactory.create(TemperamentType.EDO12) }
-        val noteNameScale = musicalScale.noteNameScale
+        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
+        val noteNameScale = musicalScale.noteNames
         val strings = remember(noteNameScale) {
             listOf<MusicalNote>(
                 noteNameScale.notes[0].copy(octave = 2),
@@ -643,8 +646,8 @@ private fun StringsPreview() {
 @Composable
 private fun StringsPreview2() {
     TunerTheme {
-        val musicalScale = remember { MusicalScaleFactory.create(TemperamentType.EDO12) }
-        val noteNameScale = musicalScale.noteNameScale
+        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
+        val noteNameScale = musicalScale.noteNames
         val strings = remember(noteNameScale) {
             listOf(
                 noteNameScale.notes[0].copy(octave = 2),
@@ -666,7 +669,9 @@ private fun StringsPreview2() {
                 onStringClicked = { key, note ->
                     highlightedNote = note
                 },
-                modifier = Modifier.padding(8.dp).fillMaxSize()
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxSize()
             )
         }
     }
