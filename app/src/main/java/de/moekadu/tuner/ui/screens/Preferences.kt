@@ -72,7 +72,7 @@ fun Preferences(
     val context = LocalContext.current
 
     val notePrintOptions by pref.notePrintOptions.collectAsStateWithLifecycle()
-    val musicalScale by pref.musicalScale.collectAsStateWithLifecycle()
+    val musicalScale by viewModel.musicalScale.collectAsStateWithLifecycle()
     val decimalFormat = rememberNumberFormatter()
 
     LazyColumn(
@@ -200,7 +200,8 @@ fun Preferences(
                     val textStyle = LocalTextStyle.current
                     val summary = remember(musicalScale, resources, textStyle) {
                         buildAnnotatedString {
-                            append(resources.getString(getTuningNameResourceId(musicalScale.temperamentType)))
+                            //append(resources.getString(getTuningNameResourceId(musicalScale.temperamentType)))
+                            append(musicalScale.temperament.name.value(context))
                             append(resources.getString(R.string.comma_separator))
                             append(musicalScale.rootNote.asAnnotatedString(
                                 notePrintOptions,

@@ -53,12 +53,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIcon
+import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.notedetection.SortedAndDistinctInstrumentStrings
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
-import de.moekadu.tuner.temperaments.TemperamentType
+import de.moekadu.tuner.temperaments2.MusicalScale2
+import de.moekadu.tuner.temperaments2.MusicalScale2Factory
+import de.moekadu.tuner.temperaments2.StretchTuning
+import de.moekadu.tuner.temperaments2.Temperament
 import de.moekadu.tuner.ui.instruments.InstrumentButton
 import de.moekadu.tuner.ui.instruments.StringWithInfo
 import de.moekadu.tuner.ui.instruments.Strings
@@ -81,7 +83,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 interface InstrumentTunerData {
-    val musicalScale: StateFlow<MusicalScale>
+    val musicalScale: StateFlow<MusicalScale2>
     val notePrintOptions: StateFlow<NotePrintOptions>
     val toleranceInCents: StateFlow<Int>
 
@@ -114,7 +116,7 @@ interface InstrumentTunerData {
 }
 
 private fun checkInstrumentCompatibility(
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     instrument: Instrument): Boolean {
     if (instrument.isChromatic)
         return true
@@ -206,7 +208,7 @@ fun InstrumentTunerPortrait(
 //        val tickHeightPx = rememberTextLabelHeight(tunerPlotStyle.tickFontStyle)
 //        val tickHeightDp = with(LocalDensity.current) { tickHeightPx.toDp() }
             val noteWidthDp = rememberMaxNoteSize(
-                notes = musicalScaleAsState.noteNameScale.notes,
+                notes = musicalScaleAsState.noteNames.notes,
                 notePrintOptions = notePrintOptionsAsState,
                 fontSize = tunerPlotStyle.stringFontStyle.fontSize,
                 octaveRange = musicalScaleAsState.getNote(
@@ -361,7 +363,7 @@ fun InstrumentTunerLandscape(
 //        val tickHeightPx = rememberTextLabelHeight(tunerPlotStyle.tickFontStyle)
 //        val tickHeightDp = with(LocalDensity.current) { tickHeightPx.toDp() }
         val noteWidthDp = rememberMaxNoteSize(
-            notes = musicalScaleAsState.noteNameScale.notes,
+            notes = musicalScaleAsState.noteNames.notes,
             notePrintOptions = notePrintOptionsAsState,
             fontSize = tunerPlotStyle.stringFontStyle.fontSize,
             octaveRange = musicalScaleAsState.getNote(
@@ -499,15 +501,16 @@ fun InstrumentTunerLandscape(
 }
 
 class TestInstrumentTunerData : InstrumentTunerData {
-    override val musicalScale: StateFlow<MusicalScale>
-            = MutableStateFlow(MusicalScaleFactory.create(TemperamentType.EDO12))
+    override val musicalScale: StateFlow<MusicalScale2> = MutableStateFlow(
+        MusicalScale2Factory.createTestEdo12()
+    )
 
     override val notePrintOptions: StateFlow<NotePrintOptions>
             = MutableStateFlow(NotePrintOptions())
     override val toleranceInCents: StateFlow<Int>
             = MutableStateFlow(10)
 
-    private val noteNameScale = musicalScale.value.noteNameScale
+    private val noteNameScale = musicalScale.value.noteNames
 
     override val instrument: StateFlow<Instrument> = MutableStateFlow(
         Instrument(

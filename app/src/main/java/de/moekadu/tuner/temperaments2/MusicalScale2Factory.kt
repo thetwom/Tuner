@@ -30,5 +30,31 @@ class MusicalScale2Factory {
                 stretchTuning
             )
         }
+
+        /** Create simple test temperament. */
+        fun createTestEdo12(referenceFrequency: Float = 440f): MusicalScale2 {
+            return create(createTestTemperamentEdo12(),
+                null,
+                null,
+                null,
+                referenceFrequency,
+                16f,
+                16000f,
+                StretchTuning()
+            )
+        }
+
+        fun createTestWerckmeisterVI(referenceFrequency: Float = 440f): MusicalScale2 {
+            return create(
+                createTestTemperamentWerckmeisterVI(),
+                null,
+                null,
+                null,
+                referenceFrequency,
+                16f,
+                16000f,
+                StretchTuning()
+            )
+        }
     }
 }

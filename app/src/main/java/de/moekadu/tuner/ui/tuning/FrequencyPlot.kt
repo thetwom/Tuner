@@ -34,9 +34,9 @@ import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.temperaments.TemperamentType
+import de.moekadu.tuner.temperaments2.MusicalScale2
+import de.moekadu.tuner.temperaments2.MusicalScale2Factory
 import de.moekadu.tuner.ui.common.Label
 import de.moekadu.tuner.ui.plot.Anchor
 import de.moekadu.tuner.ui.plot.GestureBasedViewPort
@@ -69,7 +69,7 @@ import kotlin.math.min
 fun FrequencyPlot(
     frequencyPlotData: LineCoordinates,
     targetNote: MusicalNote,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
     gestureBasedViewPort: GestureBasedViewPort = remember { GestureBasedViewPort() },
     plotWindowPadding: DpRect = DpRect(0.dp, 0.dp, 0.dp, 0.dp),
@@ -215,7 +215,7 @@ private fun FrequencyPlotPreview() {
         val harmonicFrequencyData = remember {
             VerticalLinesPositions.create(floatArrayOf(300f, 510f, 800f))
         }
-        val musicalScale = remember { MusicalScaleFactory.create(TemperamentType.EDO12) }
+        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
         val targetNote = musicalScale.referenceNote
 
         FrequencyPlot(

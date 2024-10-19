@@ -40,9 +40,9 @@ import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.temperaments.TemperamentType
+import de.moekadu.tuner.temperaments2.MusicalScale2
+import de.moekadu.tuner.temperaments2.MusicalScale2Factory
 import de.moekadu.tuner.ui.common.Label
 import de.moekadu.tuner.ui.plot.Anchor
 import de.moekadu.tuner.ui.plot.GestureBasedViewPort
@@ -50,26 +50,20 @@ import de.moekadu.tuner.ui.plot.HorizontalLinesPositions
 import de.moekadu.tuner.ui.plot.LineCoordinates
 import de.moekadu.tuner.ui.plot.Plot
 import de.moekadu.tuner.ui.plot.PlotWindowOutline
-import de.moekadu.tuner.ui.plot.TickLevel
 import de.moekadu.tuner.ui.plot.TickLevelDeltaBased
-import de.moekadu.tuner.ui.plot.TickLevelExplicitRanges
-import de.moekadu.tuner.ui.plot.VerticalLinesPositions
 import de.moekadu.tuner.ui.plot.VerticalMark
 import de.moekadu.tuner.ui.plot.rememberTextLabelWidth
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlin.math.ceil
-import kotlin.math.max
 import kotlin.math.pow
-import kotlin.math.roundToInt
 
 @Composable
 fun CorrelationPlot(
     correlationPlotData: LineCoordinates, // TODO: pass zero position
     correlationPlotDataYZeroPosition: Float,
     targetNote: MusicalNote,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
     gestureBasedViewPort: GestureBasedViewPort = remember { GestureBasedViewPort() },
     plotWindowPadding: DpRect = DpRect(0.dp, 0.dp, 0.dp, 0.dp),
@@ -235,7 +229,7 @@ private fun CorrelationPlotPreview() {
             //CorrelationPlotData(timeShifts.size, { timeShifts[it] }, { correlations[it] })
         }
 
-        val musicalScale = remember { MusicalScaleFactory.create(TemperamentType.EDO12) }
+        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
         val targetNote = musicalScale.referenceNote
 
         CorrelationPlot(

@@ -38,6 +38,7 @@ import de.moekadu.tuner.instruments.InstrumentIO
 import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.preferences.PreferenceResources
+import de.moekadu.tuner.temperaments2.TemperamentResources
 import de.moekadu.tuner.ui.instruments.ImportInstrumentsDialog
 import de.moekadu.tuner.ui.screens.InstrumentTuner
 import de.moekadu.tuner.ui.screens.Instruments
@@ -56,7 +57,8 @@ fun NavGraphBuilder.mainGraph(
     // canNavigateUp: Boolean,
     onNavigateUpClicked: () -> Unit,
     preferences: PreferenceResources,
-    instrumentResources: InstrumentResources
+    instrumentResources: InstrumentResources,
+    temperamentResources: TemperamentResources
 ) {
     composable<TunerRoute> {
         val isScientificTuner by preferences.scientificMode.collectAsStateWithLifecycle()
@@ -72,8 +74,8 @@ fun NavGraphBuilder.mainGraph(
                 onReferenceNoteClicked = {
                     controller.navigate(
                         // provided by musicalScalePropertiesGraph
-                        ReferenceFrequencyDialogRoute.create(
-                            preferences.musicalScale.value, null
+                        ReferenceFrequencyDialogRoute(
+                            temperamentResources.musicalScale.value, null
                         )
                     )
                 },
@@ -89,8 +91,8 @@ fun NavGraphBuilder.mainGraph(
                 onReferenceNoteClicked = {
                     controller.navigate(
                         // provided by musicalScalePropertiesGraph
-                        ReferenceFrequencyDialogRoute.create(
-                            preferences.musicalScale.value, null
+                        ReferenceFrequencyDialogRoute(
+                            temperamentResources.musicalScale.value, null
                         )
                     )
                 },
@@ -103,7 +105,7 @@ fun NavGraphBuilder.mainGraph(
 
     composable<InstrumentsRoute> {
         val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
-        val musicalScale by preferences.musicalScale.collectAsStateWithLifecycle()
+        val musicalScale by temperamentResources.musicalScale.collectAsStateWithLifecycle()
         val viewModel: InstrumentViewModel = hiltViewModel()
         val context = LocalContext.current
         Instruments(
@@ -144,8 +146,8 @@ fun NavGraphBuilder.mainGraph(
             onSharpFlatClicked = { preferences.switchSharpFlatPreference() },
             onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
                 controller.navigate(
-                    ReferenceFrequencyDialogRoute.create(
-                        preferences.musicalScale.value, null
+                    ReferenceFrequencyDialogRoute(
+                        temperamentResources.musicalScale.value, null
                     )
                 )
             },

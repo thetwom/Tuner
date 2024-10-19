@@ -33,6 +33,7 @@ import de.moekadu.tuner.notedetection.launchSoundSourceJob
 import de.moekadu.tuner.notedetection.testFunction
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.temperaments2.MusicalScale2
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
@@ -40,6 +41,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.collectLatest
@@ -54,7 +56,8 @@ import kotlinx.coroutines.withContext
 
 class Tuner(
     private val pref: PreferenceResources,
-    @Volatile private var instrument: Instrument,
+    private var instrument: StateFlow<Instrument>,
+    private var musicalScale: StateFlow<MusicalScale2>,
     private val scope: CoroutineScope,
     private val onResultAvailableListener: OnResultAvailableListener
 ) {
@@ -107,11 +110,20 @@ class Tuner(
         scope.launch {
             pref.sensitivity.collect { restartChannel.trySend(Command.ChangePreferences) }
         }
-        scope.launch {
-            pref.musicalScale.collect { restartChannel.trySend(Command.ChangePreferences) }
-        }
+        // TODO: make sure to call: changeMusicalScale on changes!
+//        scope.launch {
+//            pref.musicalScale.collect { restartChannel.trySend(Command.ChangePreferences) }
+//        }
         scope.launch {
             pref.waveWriterDurationInSeconds.collect { restartChannel.trySend(Command.ChangePreferences) }
+        }
+
+        scope.launch {
+            instrument.collect { restartChannel.trySend(Command.ChangePreferences) }
+        }
+
+        scope.launch {
+            musicalScale.collect { restartChannel.trySend(Command.ChangePreferences) }
         }
 
         scope.launch {
@@ -150,11 +162,6 @@ class Tuner(
 
     fun disconnect() {
         channel.trySend(Command.Disconnect)
-    }
-
-    fun changeInstrument(instrument: Instrument) {
-        this.instrument = instrument
-        restartChannel.trySend(Command.ChangePreferences)
     }
 
     private suspend fun run(
@@ -212,8 +219,8 @@ class Tuner(
                 pref.maxNoise.value,
                 pref.minHarmonicEnergyContent.value,
                 pref.sensitivity.value.toFloat(),
-                pref.musicalScale.value,
-                instrument
+                musicalScale.value,
+                instrument.value
             )
 
             frequencyDetectionResultsChannel

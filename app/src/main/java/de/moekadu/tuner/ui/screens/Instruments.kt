@@ -53,13 +53,15 @@ import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIO
 import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.instruments.ShareInstruments
+import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.TemperamentType
+import de.moekadu.tuner.temperaments2.MusicalScale2
+import de.moekadu.tuner.temperaments2.MusicalScale2Factory
+import de.moekadu.tuner.temperaments2.StretchTuning
+import de.moekadu.tuner.temperaments2.Temperament
 import de.moekadu.tuner.ui.common.EditableList
 import de.moekadu.tuner.ui.common.EditableListData
 import de.moekadu.tuner.ui.common.OverflowMenu
@@ -79,9 +81,9 @@ interface InstrumentsData {
 @Composable
 fun Instruments(
     state: InstrumentsData,
+    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
-    musicalScale: MusicalScale = MusicalScaleFactory.create(TemperamentType.EDO12),
     onInstrumentClicked: (instrument: Instrument) -> Unit = { },
     onEditInstrumentClicked: (instrument: Instrument, copy: Boolean) -> Unit = {_,_ -> },
     onCreateNewInstrumentClicked: () -> Unit = {},
@@ -341,9 +343,10 @@ private class TestInstrumentsData : InstrumentsData {
 private fun InstrumentsPreview() {
     TunerTheme {
         val data = remember{ TestInstrumentsData() }
-
+        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
         Instruments(
-            state = data
+            state = data,
+            musicalScale = musicalScale
         )
     }
 }

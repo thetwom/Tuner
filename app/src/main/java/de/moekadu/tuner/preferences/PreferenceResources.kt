@@ -36,8 +36,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.notedetection.WindowingFunction
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.temperaments.TemperamentType
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import kotlinx.coroutines.CoroutineScope
@@ -78,26 +76,26 @@ class PreferenceResources @Inject constructor (
         val useSystemColorAccents: Boolean = true
     )
 
-    @Serializable
-    @Parcelize
-    data class MusicalScaleProperties(
-        val temperamentType: TemperamentType,
-        val rootNote: MusicalNote,
-        val referenceNote: MusicalNote,
-        val referenceFrequency: Float
-    ) : Parcelable {
-        fun toMusicalScale() = MusicalScaleFactory.create(
-            temperamentType, referenceNote, rootNote, referenceFrequency
-        )
-        companion object {
-            fun create(musicalScale: MusicalScale) = MusicalScaleProperties(
-                musicalScale.temperamentType,
-                musicalScale.rootNote,
-                musicalScale.referenceNote,
-                musicalScale.referenceFrequency
-            )
-        }
-    }
+//    @Serializable
+//    @Parcelize
+//    data class MusicalScaleProperties(
+//        val temperamentType: TemperamentType,
+//        val rootNote: MusicalNote,
+//        val referenceNote: MusicalNote,
+//        val referenceFrequency: Float
+//    ) : Parcelable {
+//        fun toMusicalScale() = MusicalScaleFactory.create(
+//            temperamentType, referenceNote, rootNote, referenceFrequency
+//        )
+//        companion object {
+//            fun create(musicalScale: MusicalScale) = MusicalScaleProperties(
+//                musicalScale.temperamentType,
+//                musicalScale.rootNote,
+//                musicalScale.referenceNote,
+//                musicalScale.referenceFrequency
+//            )
+//        }
+//    }
 
     val sampleRate = 44100
 
@@ -153,17 +151,17 @@ class PreferenceResources @Inject constructor (
         writePreference(SCIENTIFIC_MODE_KEY, scientificMode)
     }
 
-    val musicalScale = getTransformablePreferenceFlow(TEMPERAMENT_AND_REFERENCE_NOTE_KEY, MusicalScaleDefault) {
-        try {
-            Json.decodeFromString<MusicalScaleProperties>(it).toMusicalScale()
-        } catch (ex: Exception) {
-            MusicalScaleDefault
-        }
-    }
-
-    fun writeMusicalScaleProperties(properties: MusicalScaleProperties) {
-        writeSerializablePreference(TEMPERAMENT_AND_REFERENCE_NOTE_KEY, properties)
-    }
+//    val musicalScale = getTransformablePreferenceFlow(TEMPERAMENT_AND_REFERENCE_NOTE_KEY, MusicalScaleDefault) {
+//        try {
+//            Json.decodeFromString<MusicalScaleProperties>(it).toMusicalScale()
+//        } catch (ex: Exception) {
+//            MusicalScaleDefault
+//        }
+//    }
+//
+//    fun writeMusicalScaleProperties(properties: MusicalScaleProperties) {
+//        writeSerializablePreference(TEMPERAMENT_AND_REFERENCE_NOTE_KEY, properties)
+//    }
 
     // windowing
     val windowing = getTransformablePreferenceFlow(WINDOWING_KEY, WindowingDefault) {
@@ -234,9 +232,9 @@ class PreferenceResources @Inject constructor (
             dataStore.edit {
                 it[APPEARANCE_KEY] = Json.encodeToString(AppearanceDefault)
                 it[SCREEN_ALWAYS_ON] = ScreenAlwaysOnDefault
-                it[TEMPERAMENT_AND_REFERENCE_NOTE_KEY] = Json.encodeToString(
-                    MusicalScaleProperties.create(MusicalScaleDefault)
-                )
+//                it[TEMPERAMENT_AND_REFERENCE_NOTE_KEY] = Json.encodeToString(
+//                    MusicalScaleProperties.create(MusicalScaleDefault)
+//                )
                 it[TOLERANCE_IN_CENTS_KEY] = ToleranceInCentsDefault
                 it[NOTE_PRINT_OPTIONS_KEY] = Json.encodeToString(NotePrintOptionsDefault)
                 it[SENSITIVITY_KEY] = SensitivityDefault
@@ -324,7 +322,7 @@ class PreferenceResources @Inject constructor (
         private const val ScreenAlwaysOnDefault = false
         private val NotePrintOptionsDefault = NotePrintOptions()
         private const val ScientificModeDefault = false
-        private val MusicalScaleDefault = MusicalScaleFactory.create(TemperamentType.EDO12)
+//        private val MusicalScaleDefault = MusicalScaleFactory.create(TemperamentType.EDO12)
         private val WindowingDefault = WindowingFunction.Tophat
         private val OverlapDefault = 25f / 100f
         private val WindowSizeExponentDefault = 12

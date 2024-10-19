@@ -29,6 +29,7 @@ import androidx.navigation.compose.dialog
 import androidx.navigation.navigation
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.R
+import de.moekadu.tuner.temperaments2.TemperamentResources
 import de.moekadu.tuner.ui.misc.TunerScaffold
 import de.moekadu.tuner.ui.preferences.AboutDialog
 import de.moekadu.tuner.ui.preferences.AppearanceDialog
@@ -43,13 +44,14 @@ fun NavGraphBuilder.preferenceGraph(
     controller: NavController,
     //canNavigateUp: Boolean,
     onNavigateUpClicked: () -> Unit,
-    preferences: PreferenceResources
+    preferences: PreferenceResources,
+    temperaments: TemperamentResources
 ) {
     navigation<PreferencesGraphRoute>(
         startDestination = PreferencesRoute,
     ) {
         composable<PreferencesRoute> {
-            val musicalScale by preferences.musicalScale.collectAsStateWithLifecycle()
+            val musicalScale by temperaments.musicalScale.collectAsStateWithLifecycle()
             val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
             TunerScaffold(
                 canNavigateUp = controller.rememberCanNavigateUp(),
@@ -66,8 +68,8 @@ fun NavGraphBuilder.preferenceGraph(
                     onAppearanceClicked = { controller.navigate(AppearanceDialogRoute) },
                     onReferenceFrequencyClicked = {
                         controller.navigate(
-                            ReferenceFrequencyDialogRoute.create(
-                                preferences.musicalScale.value,
+                            ReferenceFrequencyDialogRoute(
+                                temperaments.musicalScale.value,
                                 null
                             )
                         )
@@ -126,7 +128,7 @@ fun NavGraphBuilder.preferenceGraph(
             )
         }
         // dialogs for reference frequency and temperament
-        musicalScalePropertiesGraph(controller, preferences)
+        musicalScalePropertiesGraph(controller, preferences, temperaments)
     }
 }
 

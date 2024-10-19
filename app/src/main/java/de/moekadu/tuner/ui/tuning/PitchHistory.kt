@@ -45,9 +45,9 @@ import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.temperaments.TemperamentType
+import de.moekadu.tuner.temperaments2.MusicalScale2
+import de.moekadu.tuner.temperaments2.MusicalScale2Factory
 import de.moekadu.tuner.ui.common.Label
 import de.moekadu.tuner.ui.notes.Note
 import de.moekadu.tuner.ui.notes.NotePrintOptions
@@ -159,7 +159,7 @@ class PitchHistoryState(
 @Composable
 fun PitchHistory(
     state: PitchHistoryState,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     gestureBasedViewPort: GestureBasedViewPort = remember { GestureBasedViewPort() },
@@ -265,7 +265,7 @@ fun PitchHistory(
     }
 
     val maxNoteHeight = rememberMaxNoteSize(
-        musicalScale.noteNameScale.notes,
+        musicalScale.noteNames.notes,
         notePrintOptions = notePrintOptions,
         fontSize = tickLabelStyle.fontSize,
         fontWeight = null,
@@ -448,7 +448,7 @@ fun PitchHistory2Preview() {
         val notePrintOptions = remember {
             NotePrintOptions()
         }
-        val musicalScale = remember { MusicalScaleFactory.create(TemperamentType.EDO12) }
+        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
         val state = remember {
             PitchHistoryState(
                 capacity = 9

@@ -18,34 +18,44 @@
 */
 package de.moekadu.tuner.navigation
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.toRoute
 import de.moekadu.tuner.R
 import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.NoteNameScaleFactory
+import de.moekadu.tuner.temperaments2.MusicalScale2
+import de.moekadu.tuner.temperaments2.MusicalScale2Factory
+import de.moekadu.tuner.temperaments2.TemperamentResources
+import de.moekadu.tuner.temperaments2.getSuitableNoteNames
 import de.moekadu.tuner.ui.preferences.ReferenceNoteDialog
-import de.moekadu.tuner.ui.preferences.TemperamentDialog
+import de.moekadu.tuner.ui.screens.Temperaments
+import de.moekadu.tuner.viewmodels.TemperamentViewModel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 fun NavGraphBuilder.musicalScalePropertiesGraph(
     controller: NavController,
-    preferences: PreferenceResources
+    preferences: PreferenceResources,
+    temperaments: TemperamentResources
 ) {
     dialog<ReferenceFrequencyDialogRoute> {
         val state = it.toRoute<ReferenceFrequencyDialogRoute>()
         val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
         ReferenceNoteDialog(
-            initialState = state.getMusicalScaleProperties(),
+            initialState = state.musicalScale,
             onReferenceNoteChange = { newState ->
-                preferences.writeMusicalScaleProperties(newState)
+                temperaments.writeMusicalScale(newState)
                 controller.navigateUp()
             },
             notePrintOptions = notePrintOptions,
@@ -54,34 +64,63 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
         )
     }
 
-    dialog<TemperamentDialogRoute> {
+    composable<TemperamentDialogRoute> {
         val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
         val resources = LocalContext.current.resources
-        TemperamentDialog(
-            initialState = PreferenceResources.MusicalScaleProperties.create(
-                preferences.musicalScale.value
-            ),
-            onTemperamentChange = { newProperties ->
-                val newNoteNameScale = NoteNameScaleFactory.create(newProperties.temperamentType)
-                if (newNoteNameScale.hasNote(newProperties.referenceNote)) {
-                    preferences.writeMusicalScaleProperties(newProperties)
+        val viewModel: TemperamentViewModel = hiltViewModel()
+        Temperaments(
+            viewModel,
+            modifier = Modifier.fillMaxSize(),
+            notePrintOptions = notePrintOptions,
+            onAbort = { controller.navigateUp() },
+            onNewTemperament = { temperament, rootNote ->
+                val noteNames = temperament.noteNames ?: getSuitableNoteNames(temperament.temperament.numberOfNotesPerOctave)
+                if (noteNames.hasNote(temperaments.musicalScale.value.referenceNote)) {
+                    temperaments.writeMusicalScale(temperament = temperament, rootNote = rootNote)
                     controller.navigateUp()
                 } else {
-                    val proposedCorrectedProperties = newProperties.copy(
-                        referenceNote = newNoteNameScale.referenceNote
+                    val oldScale = temperaments.musicalScale.value
+                    val proposedScale = MusicalScale2Factory.create(
+                        temperament = temperament.temperament,
+                        noteNames = temperament.noteNames,
+                        referenceNote = null,
+                        rootNote = rootNote,
+                        referenceFrequency = oldScale.referenceFrequency,
+                        frequencyMin = oldScale.frequencyMin,
+                        frequencyMax = oldScale.frequencyMax,
+                        stretchTuning = oldScale.stretchTuning
                     )
                     controller.navigate(
-                        ReferenceFrequencyDialogRoute.create(
-                            proposedCorrectedProperties,
+                        ReferenceFrequencyDialogRoute(
+                            proposedScale,
                             resources.getString(R.string.new_temperament_requires_adapting_reference_note)
                         )
                     ) {
                         popUpTo(TemperamentDialogRoute) { inclusive = true }
                     }
                 }
-            },
-            notePrintOptions =  notePrintOptions,
-            onDismiss = { controller.navigateUp() }
+            }
+//            onTemperamentChange = { newProperties ->
+//                val newNoteNameScale = NoteNameScaleFactory.create(newProperties.temperamentType)
+//                if (newNoteNameScale.hasNote(newProperties.referenceNote)) {
+//                    preferences.writeMusicalScaleProperties(newProperties)
+//                    controller.navigateUp()
+//                } else {
+//                    val proposedCorrectedProperties = newProperties.copy(
+//                        referenceNote = newNoteNameScale.referenceNote
+//                    )
+//                    controller.navigate(
+//                        ReferenceFrequencyDialogRoute.create(
+//                            proposedCorrectedProperties,
+//                            resources.getString(R.string.new_temperament_requires_adapting_reference_note)
+//                        )
+//                    ) {
+//                        popUpTo(TemperamentDialogRoute) { inclusive = true }
+//                    }
+//                }
+//            },
+//            notePrintOptions =  notePrintOptions,
+//            onDismiss = { controller.navigateUp() }
         )
     }
 
@@ -93,16 +132,22 @@ data class ReferenceFrequencyDialogRoute(
     val serializedString: String,
     val warning: String?
 ) {
-    fun getMusicalScaleProperties() =
-        Json.decodeFromString<PreferenceResources.MusicalScaleProperties>(serializedString)
-    companion object {
-        fun create(musicalScale: MusicalScale, warning: String?) = ReferenceFrequencyDialogRoute(
-            Json.encodeToString(PreferenceResources.MusicalScaleProperties.create(musicalScale)),
-            warning
-        )
-        fun create(properties: PreferenceResources.MusicalScaleProperties, warning: String?)
-                = ReferenceFrequencyDialogRoute(Json.encodeToString(properties), warning)
-    }
+    constructor(musicalScale: MusicalScale2, warning: String?) : this(
+        Json.encodeToString(musicalScale),
+        warning
+    )
+    val musicalScale get() = Json.decodeFromString<MusicalScale2>(serializedString)
+
+//    fun getMusicalScaleProperties() =
+//        Json.decodeFromString<PreferenceResources.MusicalScaleProperties>(serializedString)
+//    companion object {
+//        fun create(musicalScale: MusicalScale2, warning: String?) = ReferenceFrequencyDialogRoute(
+//            Json.encodeToString(PreferenceResources.MusicalScaleProperties.create(musicalScale)),
+//            warning
+//        )
+//        fun create(properties: PreferenceResources.MusicalScaleProperties, warning: String?)
+//                = ReferenceFrequencyDialogRoute(Json.encodeToString(properties), warning)
+//    }
 }
 
 @Serializable

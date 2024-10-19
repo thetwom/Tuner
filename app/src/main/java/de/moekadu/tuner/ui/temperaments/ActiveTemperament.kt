@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -26,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,8 +48,10 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.temperaments2.MusicalScale2
 import de.moekadu.tuner.temperaments2.MusicalScale2Factory
+import de.moekadu.tuner.temperaments2.NoteNames
 import de.moekadu.tuner.temperaments2.StretchTuning
 import de.moekadu.tuner.temperaments2.Temperament
+import de.moekadu.tuner.temperaments2.getSuitableNoteNames
 import de.moekadu.tuner.ui.notes.CentAndRatioTable
 import de.moekadu.tuner.ui.notes.CentTable
 import de.moekadu.tuner.ui.notes.CircleOfFifthTable
@@ -65,11 +69,14 @@ enum class ActiveTemperamentDetailChoice{
 
 @Composable
 fun ActiveTemperament(
-    musicalScale: MusicalScale2,
+    temperament: Temperament,
+    noteNames: NoteNames,
+    rootNoteIndex: Int,
     detailChoice: ActiveTemperamentDetailChoice,
     onChooseDetail: (ActiveTemperamentDetailChoice) -> Unit,
     notePrintOptions: NotePrintOptions,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onResetClicked: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var menuExpanded by remember { mutableStateOf(false) }
@@ -98,7 +105,7 @@ fun ActiveTemperament(
                         contentAlignment = Alignment.Center,
                     ) {
                         Note(
-                            musicalScale.rootNote,
+                            noteNames[rootNoteIndex % noteNames.size],
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -107,35 +114,22 @@ fun ActiveTemperament(
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
-                    musicalScale.temperament.let {
-                        Text(
-                            it.name.value(context),
-                            style = MaterialTheme.typography.bodyLarge,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            it.description.value(context),
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                    Text(
+                        temperament.name.value(context),
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        temperament.description.value(context),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 Box {
-//                    Button(onClick = { menuExpanded = !menuExpanded }) {
-//                        Column(
-//                            horizontalAlignment = Alignment.CenterHorizontally
-//                        ) {
-//                            Icon(Icons.Default.MoreVert, "options")
-//                            Text(
-//                                stringResource(id = R.string.details),
-//                                style = MaterialTheme.typography.labelSmall,
-//                            )
-//                        }
-//                    }
                     IconButton(
                         onClick = { menuExpanded = !menuExpanded },
                         modifier = Modifier.padding(horizontal = 16.dp)
@@ -207,7 +201,21 @@ fun ActiveTemperament(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            TextButton(
+                onClick = onResetClicked,
+                colors = ButtonDefaults.buttonColors().copy(contentColor = MaterialTheme.colorScheme.onPrimary),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp) //, vertical = 8.dp)
+            ) {
+                Text(
+                    stringResource(id = R.string.set_default),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.End
+                )
+            }
+
+            //Spacer(modifier = Modifier.height(8.dp))
 
             AnimatedVisibility(visible = (detailChoice != ActiveTemperamentDetailChoice.Off)) {
                 HorizontalDivider(modifier = Modifier.fillMaxWidth())
@@ -226,7 +234,9 @@ fun ActiveTemperament(
 
 
                     CentTable(
-                        musicalScale = musicalScale,
+                        temperament,
+                        noteNames,
+                        rootNoteIndex = rootNoteIndex,
                         notePrintOptions = notePrintOptions,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -246,7 +256,9 @@ fun ActiveTemperament(
                     )
 
                     RatioTable(
-                        musicalScale = musicalScale,
+                        temperament,
+                        noteNames,
+                        rootNoteIndex = rootNoteIndex,
                         notePrintOptions = notePrintOptions,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -271,7 +283,9 @@ fun ActiveTemperament(
                     )
 
                     CircleOfFifthTable(
-                        musicalScale = musicalScale,
+                        temperament,
+                        noteNames,
+                        rootNoteIndex = rootNoteIndex,
                         notePrintOptions = notePrintOptions,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -294,23 +308,17 @@ fun ActiveTemperament(
 @Composable
 private fun ActiveTemperamentPreview() {
     TunerTheme {
-        val musicalScale2 = remember {
-            MusicalScale2Factory.create(
-                temperament = Temperament.create(
-                    StringOrResId("Test"),
-                    StringOrResId("T"),
-                    StringOrResId("Test description"),
-                    12,
-                    -1L
-                ),
-                noteNames = null,
-                rootNote = null,
-                referenceFrequency = 440f,
-                referenceNote = null,
-                frequencyMin = 10f,
-                frequencyMax = 20000f,
-                stretchTuning = StretchTuning()
+        val temperament = remember {
+            Temperament.create(
+                StringOrResId("Test"),
+                StringOrResId("T"),
+                StringOrResId("Test description"),
+                12,
+                -1L
             )
+        }
+        val noteNames = remember {
+            getSuitableNoteNames(temperament.numberOfNotesPerOctave)
         }
 
         var detailChoice by remember { mutableStateOf(ActiveTemperamentDetailChoice.Off) }
@@ -318,7 +326,9 @@ private fun ActiveTemperamentPreview() {
         Column {
 
             ActiveTemperament(
-                musicalScale = musicalScale2,
+                temperament,
+                noteNames,
+                rootNoteIndex = 1,
                 detailChoice = detailChoice,
                 onChooseDetail = { detailChoice = it },
                 notePrintOptions = NotePrintOptions()

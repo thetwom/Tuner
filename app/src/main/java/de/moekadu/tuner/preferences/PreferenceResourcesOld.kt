@@ -24,8 +24,6 @@ import androidx.preference.PreferenceManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import de.moekadu.tuner.notedetection.WindowingFunction
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.temperaments.TemperamentType
 import de.moekadu.tuner.ui.notes.NotationType
 import de.moekadu.tuner.ui.notes.NotePrintOptions
@@ -162,14 +160,14 @@ class PreferenceResourcesOld @Inject constructor (
     val waveWriterDurationInSeconds get() = getInt(WAVE_WRITER_DURATION_IN_SECONDS_KEY)
 
     private val temperamentAndReferenceNote get() = TemperamentAndReferenceNoteFromPreference.fromSharedPreferences(sharedPreferences)
-    val musicalScale: MusicalScale? get() = temperamentAndReferenceNote?.let {
-            MusicalScaleFactory.create(
-                it.temperamentType,
-                it.referenceNote,
-                it.rootNote,
-                it.referenceFrequency.toFloatOrNull() ?: 440f
-            )
-        }
+//    val musicalScale: MusicalScale? get() = temperamentAndReferenceNote?.let {
+//            MusicalScaleFactory.create(
+//                it.temperamentType,
+//                it.referenceNote,
+//                it.rootNote,
+//                it.referenceFrequency.toFloatOrNull() ?: 440f
+//            )
+//        }
 
     private fun getBoolean(key: String) = if(sharedPreferences.contains(key))
         sharedPreferences.getBoolean(key, false)

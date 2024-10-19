@@ -52,8 +52,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
-import de.moekadu.tuner.temperaments.TemperamentType
+import de.moekadu.tuner.temperaments2.MusicalScale2
+import de.moekadu.tuner.temperaments2.MusicalScale2Factory
 import de.moekadu.tuner.ui.misc.rememberNumberFormatter
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.NoteSelector
@@ -78,21 +78,15 @@ private fun DecimalFormat.toFloatOrNull(string: String): Float? {
 
 @Composable
 fun ReferenceNoteDialog(
-    initialState: PreferenceResources.MusicalScaleProperties,
-    onReferenceNoteChange: (modifiedState: PreferenceResources.MusicalScaleProperties) -> Unit,
+    initialState: MusicalScale2,
+    onReferenceNoteChange: (modifiedState: MusicalScale2) -> Unit,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     warning: String? = null,
     onDismiss: () -> Unit = {}
 ) {
-    val savedInitialState = rememberSaveable {
-        initialState
-    }
-    val musicalScale = remember {
-        MusicalScaleFactory.create(savedInitialState.temperamentType)
-    }
     var selectedNoteIndex by rememberSaveable { mutableIntStateOf(
-        musicalScale.getNoteIndex(savedInitialState.referenceNote) - musicalScale.noteIndexBegin
+        initialState.getNoteIndex(initialState.referenceNote) - initialState.noteIndexBegin
     ) }
     val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         LocalConfiguration.current.locales[0]
@@ -114,11 +108,11 @@ fun ReferenceNoteDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    val note = musicalScale.getNote(selectedNoteIndex + musicalScale.noteIndexBegin)
+                    val note = initialState.getNote(selectedNoteIndex + initialState.noteIndexBegin)
                     onReferenceNoteChange(
-                        savedInitialState.copy(
+                        initialState.copy(
                             referenceNote = note,
-                            referenceFrequency = frequencyAsString.toFloatOrNull() ?: musicalScale.referenceFrequency
+                            referenceFrequency = frequencyAsString.toFloatOrNull() ?: initialState.referenceFrequency
                         )
                     )
                 },
@@ -158,7 +152,7 @@ fun ReferenceNoteDialog(
                 }
                 NoteSelector(
                     selectedIndex = selectedNoteIndex,
-                    musicalScale = musicalScale,
+                    musicalScale = initialState,
                     notePrintOptions = notePrintOptions,
                     fontSize = MaterialTheme.typography.labelLarge.fontSize,
                     onIndexChanged = { selectedNoteIndex = it }
@@ -180,8 +174,8 @@ fun ReferenceNoteDialog(
                 )
                 OutlinedButton(
                     onClick = {
-                        val note = musicalScale.noteNameScale.referenceNote
-                        selectedNoteIndex = musicalScale.getNoteIndex(note) - musicalScale.noteIndexBegin
+                        val note = initialState.noteNames.defaultReferenceNote
+                        selectedNoteIndex = initialState.getNoteIndex(note) - initialState.noteIndexBegin
                         frequencyAsString = decimalFormat.format(PreferenceResources.ReferenceFrequencyDefault)
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -197,10 +191,7 @@ fun ReferenceNoteDialog(
 @Composable
 private fun AppearanceDialogTest() {
     TunerTheme {
-        val state = remember {
-            val scale = MusicalScaleFactory.create(TemperamentType.EDO12)
-            PreferenceResources.MusicalScaleProperties.create(scale)
-        }
+        val state = remember { MusicalScale2Factory.createTestEdo12() }
         val notePrintOptions = remember { NotePrintOptions() }
         ReferenceNoteDialog(
             state,

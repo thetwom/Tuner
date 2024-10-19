@@ -53,9 +53,9 @@ fun PreferenceResources.migrateFromV6(context: Context): Boolean {
     from.sensitivity?.let { writeSensitivity(it) }
     from.toleranceInCents?.let { writeToleranceInCents(it) }
     from.waveWriterDurationInSeconds?.let { writeWaveWriterDurationInSeconds(it) }
-    from.musicalScale?.let { writeMusicalScaleProperties(
-        PreferenceResources.MusicalScaleProperties.create(it)
-    ) }
+//    from.musicalScale?.let { writeMusicalScaleProperties(
+//        PreferenceResources.MusicalScaleProperties.create(it)
+//    ) }
     writeMigrationsFromV6Complete()
     return true
 }

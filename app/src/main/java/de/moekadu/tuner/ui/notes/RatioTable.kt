@@ -34,49 +34,35 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import de.moekadu.tuner.R
-import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.misc.StringOrResId
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
-import de.moekadu.tuner.temperaments.NoteNameScaleFactory
 import de.moekadu.tuner.temperaments.RationalNumber
-import de.moekadu.tuner.temperaments.TemperamentType
-import de.moekadu.tuner.temperaments2.MusicalScale2
-import de.moekadu.tuner.temperaments2.MusicalScale2Factory
-import de.moekadu.tuner.temperaments2.StretchTuning
+import de.moekadu.tuner.temperaments2.NoteNames
 import de.moekadu.tuner.temperaments2.Temperament
-import de.moekadu.tuner.temperaments2.ratioToCents
+import de.moekadu.tuner.temperaments2.getSuitableNoteNames
 import de.moekadu.tuner.ui.theme.TunerTheme
-import kotlin.math.log
-import kotlin.math.pow
-import kotlin.math.roundToInt
 
 /** Table showing cents between musical scale notes.
- * @param musicalScale Musical scale which defines the notes shown in the table.
+ * @param temperament Temperament.
+ * @param noteNames Note names to print.
+ * @param rootNoteIndex Index of root (first) note within the note names.
  * @param notePrintOptions How to print the notes.
  * @param modifier Modifier.
  */
 @Composable
 fun RatioTable(
-    musicalScale: MusicalScale2,
+    temperament: Temperament,
+    noteNames: NoteNames,
+    rootNoteIndex: Int,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier) {
 
-    val rootNoteIndex = remember(musicalScale) {
-        val rootNote4 = musicalScale.rootNote.copy(octave = 4)
-        musicalScale.getNoteIndex(rootNote4)
-    }
-
     LazyRow(modifier = modifier) {
-        items(musicalScale.numberOfNotesPerOctave + 1) {
-            //val note = musicalScale.noteNameScale.getNoteOfIndex(rootNoteIndex + it)
-            val note = musicalScale.getNote(rootNoteIndex + it)
+        items(temperament.numberOfNotesPerOctave + 1) {
+            val note = noteNames[(rootNoteIndex + it) % noteNames.size]
+
             Column(
                 modifier = Modifier.width(IntrinsicSize.Max),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -93,7 +79,7 @@ fun RatioTable(
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
-                val number = musicalScale.temperament.rationalNumbers?.get(it)
+                val number = temperament.rationalNumbers?.get(it)
 
                 Fraction(
                     number?.numerator,
@@ -111,31 +97,31 @@ fun RatioTable(
 @Composable
 private fun RatioTablePreview() {
     TunerTheme {
-        val temperamentType = TemperamentType.WerckmeisterVI
-        val notePrintOptions = NotePrintOptions(
-            sharpFlatPreference = NotePrintOptions.SharpFlatPreference.Sharp,
-            helmholtzNotation = false,
-            notationType = NotationType.Standard
-        )
-        val musicalScale = MusicalScale2Factory.create(
+        val notePrintOptions = remember {
+            NotePrintOptions(
+                sharpFlatPreference = NotePrintOptions.SharpFlatPreference.Sharp,
+                helmholtzNotation = false,
+                notationType = NotationType.Standard
+            )
+        }
+
+        val temperament = remember {
             Temperament.create(
                 StringOrResId("Test 1"),
                 StringOrResId("A 1"),
                 StringOrResId("Description 1"),
-                (0..12).map {RationalNumber(it + 12, 12)}.toTypedArray(),
+                (0..12).map { RationalNumber(it + 12, 12) }.toTypedArray(),
                 1
-            ),
-            noteNames = null,
-            rootNote = null,
-            referenceNote = null,
-            referenceFrequency = 440f,
-            frequencyMin = 10f,
-            frequencyMax = 20000f,
-            stretchTuning = StretchTuning()
-        )
+            )
+        }
 
+        val noteNames = remember {
+            getSuitableNoteNames(temperament.numberOfNotesPerOctave)
+        }
         RatioTable(
-            musicalScale,
+            temperament,
+            noteNames,
+            9,
             notePrintOptions = notePrintOptions
         )
     }

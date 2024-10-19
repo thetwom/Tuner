@@ -90,6 +90,12 @@ class TemperamentResources @Inject constructor(
         }
     }
 
+    fun writeMusicalScale(musicalScale: MusicalScale2) {
+        applicationScope.launch {
+            store.writeSerializablePreference(MUSICAL_SCALE_KEY, musicalScale)
+        }
+    }
+
     fun writeMusicalScale(
         temperament: TemperamentWithNoteNames? = null,
         referenceNote: MusicalNote? = null,
