@@ -47,6 +47,14 @@ data class NoteNames(
         return notes[index]
     }
 
+    /** Obtain note at given index if it exists else null.
+     * @param index Index of note.
+     * @return Note or null if it does not exist.
+     */
+    fun getOrNull(index: Int): MusicalNote? {
+        return notes.getOrNull(index)
+    }
+
     /** Get new note name scale, where base note and enharmonics are switched.
      * This will not change name, description or stableIds, since it effectively are the same
      * notes.
@@ -96,7 +104,7 @@ data class NoteNames(
     }
 }
 
-fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames {
+fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
     return when (numberOfNotesPerOctave) {
         // 12 tones
         12 -> {
@@ -977,7 +985,7 @@ fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames {
             )
         }
         else -> {
-            throw RuntimeException("No note names with $numberOfNotesPerOctave note per octave")
+            null
         }
     }
 }

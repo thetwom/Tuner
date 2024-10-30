@@ -227,7 +227,7 @@ private fun CircleOfFifthTable2Preview() {
         }
         val temperament = remember { createTestTemperamentEdo12() }
         val noteNames = remember {
-            getSuitableNoteNames(temperament.numberOfNotesPerOctave)
+            getSuitableNoteNames(temperament.numberOfNotesPerOctave)!!
         }
         CircleOfFifthTable(
             temperament,

@@ -1,6 +1,7 @@
 package de.moekadu.tuner.temperaments2
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -114,28 +115,28 @@ class TemperamentResources @Inject constructor(
         }
         val referenceNoteResolved = if (referenceNote != null) {
             referenceNote
-        } else if (noteNamesResolved.hasNote(currentMusicalScale.referenceNote)) {
+        } else if (noteNamesResolved?.hasNote(currentMusicalScale.referenceNote) == true) {
             currentMusicalScale.referenceNote
         } else {
             null
         }
         val rootNoteResolved = if (rootNote != null) {
             rootNote
-        } else if (noteNamesResolved.hasNote(currentMusicalScale.rootNote)) {
+        } else if (noteNamesResolved?.hasNote(currentMusicalScale.rootNote) == true) {
             currentMusicalScale.rootNote
         } else {
             null
         }
 
         val newMusicalScale = MusicalScale2Factory.create(
-            temperamentResolved,
-            noteNamesResolved,
-            referenceNoteResolved,
-            rootNoteResolved,
-            referenceFrequency ?: currentMusicalScale.referenceFrequency,
-            currentMusicalScale.frequencyMin,
-            currentMusicalScale.frequencyMax,
-            stretchTuning ?: currentMusicalScale.stretchTuning
+            temperament = temperamentResolved,
+            noteNames = noteNamesResolved,
+            referenceNote = referenceNoteResolved,
+            rootNote = rootNoteResolved,
+            referenceFrequency = referenceFrequency ?: currentMusicalScale.referenceFrequency,
+            frequencyMin = currentMusicalScale.frequencyMin,
+            frequencyMax = currentMusicalScale.frequencyMax,
+            stretchTuning = stretchTuning ?: currentMusicalScale.stretchTuning
         )
         applicationScope.launch {
             store.writeSerializablePreference(MUSICAL_SCALE_KEY, newMusicalScale)

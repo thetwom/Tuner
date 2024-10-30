@@ -52,6 +52,7 @@ import de.moekadu.tuner.navigation.instrumentEditorGraph
 import de.moekadu.tuner.navigation.musicalScalePropertiesGraph
 import de.moekadu.tuner.navigation.preferenceGraph
 import de.moekadu.tuner.navigation.mainGraph
+import de.moekadu.tuner.navigation.temperamentEditorGraph
 import de.moekadu.tuner.preferences.NightMode
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments2.TemperamentResources
@@ -170,6 +171,11 @@ class MainActivity : ComponentActivity() {
                         preferences = pref,
                         instruments = instruments,
                         temperaments = temperaments
+                    )
+
+                    temperamentEditorGraph(
+                        controller = controller,
+                        preferences = pref
                     )
                 }
             }

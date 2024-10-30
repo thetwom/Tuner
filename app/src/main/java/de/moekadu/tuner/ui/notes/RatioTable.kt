@@ -116,7 +116,7 @@ private fun RatioTablePreview() {
         }
 
         val noteNames = remember {
-            getSuitableNoteNames(temperament.numberOfNotesPerOctave)
+            getSuitableNoteNames(temperament.numberOfNotesPerOctave)!!
         }
         RatioTable(
             temperament,

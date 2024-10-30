@@ -19,9 +19,11 @@
 package de.moekadu.tuner.ui.notes
 
 import android.content.res.Resources
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -54,6 +56,8 @@ import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
 import de.moekadu.tuner.temperaments.NoteNameStem
+import de.moekadu.tuner.temperaments.createNoteNameScale12Tone
+import de.moekadu.tuner.temperaments.createNoteNameScale15Tone
 import de.moekadu.tuner.temperaments.createNoteNameScale53Tone
 import de.moekadu.tuner.temperaments.flatSharpIndex
 import kotlinx.serialization.Serializable
@@ -174,7 +178,7 @@ private fun resolveNotePropertiesWithoutEnharmonicCheck(
             octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else noteEnharmonic.octave + noteEnharmonic.octaveOffset
         )
     }
-    return ResolvedNoteProperties("X", NoteModifier.None, note.octave)
+    return ResolvedNoteProperties("O", note.modifier, note.octave)
 }
 
 private fun preferEnharmonic(
@@ -496,7 +500,7 @@ fun rememberMaxNoteSize(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 500, heightDp = 300)
 @Composable
 private fun NotePreview() {
     val noteNameScale = remember { createNoteNameScale53Tone(null) }
@@ -507,7 +511,7 @@ private fun NotePreview() {
         NotePrintOptions(
             sharpFlatPreference = NotePrintOptions.SharpFlatPreference.Sharp,
             helmholtzNotation = false,
-            notationType = NotationType.Standard
+            notationType = NotationType.Solfege
         )
     }
     val maxLabelSize = rememberMaxNoteSize(
@@ -519,17 +523,19 @@ private fun NotePreview() {
     )
 
     Box(
-      contentAlignment = Alignment.Center,
-        modifier = Modifier.size(maxLabelSize),
-
+        contentAlignment = Alignment.Center
     ) {
-
-        Note(musicalNote,
-            withOctave = true,
-            notePrintOptions = notePrintOptions,
-            fontSize = fontSize,
-            fontWeight = fontWeight,
-            //style = MaterialTheme.typography.displayLarge
-        )
+        Box(
+            modifier = Modifier.size(maxLabelSize).background(MaterialTheme.colorScheme.surfaceVariant),
+        ) {
+            Note(
+                musicalNote,
+                withOctave = true,
+                notePrintOptions = notePrintOptions,
+                fontSize = fontSize,
+                fontWeight = fontWeight,
+                //style = MaterialTheme.typography.displayLarge
+            )
+        }
     }
 }
