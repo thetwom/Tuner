@@ -107,6 +107,7 @@ fun Temperaments(
     onAbort: () -> Unit = { },
     onEditTemperamentClicked: (temperament: TemperamentResources.TemperamentWithNoteNames, copy: Boolean) -> Unit = {_, _ ->}
 ) {
+    // TODO: snackbar with "Undo" when temperaments have been deleted
     val configuration = LocalConfiguration.current
     when (configuration.orientation) {
         Configuration.ORIENTATION_LANDSCAPE -> {
@@ -149,9 +150,9 @@ fun TemperamentsPortrait(
     val noteNames = remember(activeTemperament) {
         val t = activeTemperament
         if (t != null) {
-            t.noteNames ?: getSuitableNoteNames(t.temperament.numberOfNotesPerOctave)
+            t.noteNames ?: getSuitableNoteNames(t.temperament.numberOfNotesPerOctave)!!
         } else {
-            getSuitableNoteNames(12)
+            getSuitableNoteNames(12)!!
         }
     }
     val selectedRootNoteIndex by state.selectedRootNoteIndex.collectAsStateWithLifecycle()
@@ -383,9 +384,9 @@ fun TemperamentsLandscape(
     val noteNames = remember(activeTemperament) {
         val t = activeTemperament
         if (t != null) {
-            t.noteNames ?: getSuitableNoteNames(t.temperament.numberOfNotesPerOctave)
+            t.noteNames ?: getSuitableNoteNames(t.temperament.numberOfNotesPerOctave)!!
         } else {
-            getSuitableNoteNames(12)
+            getSuitableNoteNames(12)!!
         }
     }
     val selectedRootNoteIndex by state.selectedRootNoteIndex.collectAsStateWithLifecycle()

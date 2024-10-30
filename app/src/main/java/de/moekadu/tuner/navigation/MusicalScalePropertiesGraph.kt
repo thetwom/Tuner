@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -32,9 +33,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.toRoute
 import de.moekadu.tuner.R
+import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments2.MusicalScale2
 import de.moekadu.tuner.temperaments2.MusicalScale2Factory
+import de.moekadu.tuner.temperaments2.Temperament
 import de.moekadu.tuner.temperaments2.TemperamentResources
 import de.moekadu.tuner.temperaments2.getSuitableNoteNames
 import de.moekadu.tuner.ui.preferences.ReferenceNoteDialog
@@ -68,6 +71,8 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
         val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
         val resources = LocalContext.current.resources
         val viewModel: TemperamentViewModel = hiltViewModel()
+        val context = LocalContext.current
+
         Temperaments(
             viewModel,
             modifier = Modifier.fillMaxSize(),
@@ -75,7 +80,7 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
             onAbort = { controller.navigateUp() },
             onNewTemperament = { temperament, rootNote ->
                 val noteNames = temperament.noteNames ?: getSuitableNoteNames(temperament.temperament.numberOfNotesPerOctave)
-                if (noteNames.hasNote(temperaments.musicalScale.value.referenceNote)) {
+                if (noteNames?.hasNote(temperaments.musicalScale.value.referenceNote) == true) {
                     temperaments.writeMusicalScale(temperament = temperament, rootNote = rootNote)
                     controller.navigateUp()
                 } else {
@@ -99,6 +104,23 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
                         popUpTo(TemperamentDialogRoute) { inclusive = true }
                     }
                 }
+            },
+            onEditTemperamentClicked = { temperament, copy ->
+                controller.navigate(
+                    TemperamentEditorGraphRoute(
+                        if (copy) {
+                            temperament.temperament.copy(
+                                name = StringOrResId(
+                                    "${temperament.temperament.name.value(context)} (${resources.getString(R.string.copy)})"
+                                ),
+                                stableId = Temperament.NO_STABLE_ID
+                            )
+                        } else {
+                            temperament.temperament
+                        },
+                        temperament.noteNames
+                    )
+                )
             }
 //            onTemperamentChange = { newProperties ->
 //                val newNoteNameScale = NoteNameScaleFactory.create(newProperties.temperamentType)

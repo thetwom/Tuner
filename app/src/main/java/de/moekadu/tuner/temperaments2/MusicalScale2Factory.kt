@@ -1,5 +1,6 @@
 package de.moekadu.tuner.temperaments2
 
+import android.util.Log
 import de.moekadu.tuner.temperaments.MusicalNote
 
 class MusicalScale2Factory {
@@ -14,11 +15,11 @@ class MusicalScale2Factory {
             frequencyMax: Float,
             stretchTuning: StretchTuning
         ): MusicalScale2 {
-            val noteNamesResolved = noteNames ?: getSuitableNoteNames(temperament.numberOfNotesPerOctave)
+            val noteNamesResolved = noteNames ?: getSuitableNoteNames(temperament.numberOfNotesPerOctave)!! // TODO: this might be risky?
             assert(temperament.numberOfNotesPerOctave == noteNamesResolved.size)
             val rootNoteResolved = rootNote ?: noteNamesResolved[0]
             val referenceNoteResolved = referenceNote ?: noteNamesResolved.defaultReferenceNote
-
+            Log.v("Tuner", "MusicalScale2Factory: $temperament")
             return MusicalScale2(
                 temperament,
                 noteNamesResolved,

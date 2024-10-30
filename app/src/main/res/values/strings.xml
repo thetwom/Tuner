@@ -45,6 +45,7 @@
     <string name="autocorrelation">autocorrelation</string>
     <string name="pitch_history">pitch history</string>
     <string name="spectrum">spectrum</string>
+    <string name="cent_symbol">&#162;</string>
     <string name="cent" translatable="false">%+d&#x200A;&#162;</string>
     <string name="cent_nosign" translatable="false">%d&#x200A;&#162;</string>
     <string name="keep_screen_on">Keep screen on</string>
@@ -290,4 +291,17 @@
     <string name="hide_details">Hide details</string>
     <string name="save">Save</string>
     <string name="current_selection">Current selection</string>
+    <string name="temperament_editor">Edit temperament</string>
+    <string name="note_number">Number of notes</string>
+    <string name="description">Description</string>
+    <string name="default_reference_note">Default reference note</string>
+    <string name="cent_str">cent</string>
+    <string name="note_name">Note name</string>
+    <string name="enharmonic_note_name">Enharmonic</string>
+    <string name="octave_offset">Octave offset</string>
+    <string name="octave">Octave</string>
+    <string name="ratio">ratio</string>
+    <string name="temperament_name">Temperament name</string>
+    <string name="temperament_abbreviation">Abbreviation</string>
+    <string name="temperament_description">Description</string>
 </resources>

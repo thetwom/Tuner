@@ -110,7 +110,7 @@ private fun CentTablePreview() {
 
         val temperament = remember { createTestTemperamentEdo12() }
         val noteNames = remember {
-            getSuitableNoteNames(temperament.numberOfNotesPerOctave)
+            getSuitableNoteNames(temperament.numberOfNotesPerOctave)!!
         }
         CentTable(
             temperament,
