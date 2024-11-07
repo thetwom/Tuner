@@ -101,8 +101,8 @@
     <string name="lately_detected_notes">Lately detected tones</string>
     <string name="done">Done</string>
     <string name="edit_instrument">Edit instrument</string>
-    <string name="predefined_instruments">Default</string>
-    <string name="custom_instruments">Custom</string>
+    <string name="predefined_items">Default</string>
+    <string name="custom_item">Custom</string>
     <string name="file_empty">File is empty: %s</string>
     <string name="file_invalid">File is invalid: %s</string>
     <plurals name="instruments_deleted">
@@ -304,4 +304,10 @@
     <string name="temperament_name">Temperament name</string>
     <string name="temperament_abbreviation">Abbreviation</string>
     <string name="temperament_description">Description</string>
+    <string name="decreasing_value_error">Value must be greater than the previous one.</string>
+    <string name="missing_note_name">Missing note name.</string>
+    <string name="missing_value">Missing cent or ratio value.</string>
+    <string name="duplicate_note_name">Duplicate note name.</string>
+    <string name="invalid_value">Invalid value.</string>
+    <string name="maximum_value_exceeded">Maximum value of %d exceeded.</string>
 </resources>

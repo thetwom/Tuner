@@ -60,8 +60,8 @@
     <string name="lately_detected_notes">Nedávno smazané noty</string>
     <string name="done">Hotovo</string>
     <string name="edit_instrument">Upravit nástroj</string>
-    <string name="predefined_instruments">Výchozí</string>
-    <string name="custom_instruments">Vlastní</string>
+    <string name="predefined_items">Výchozí</string>
+    <string name="custom_item">Vlastní</string>
     <string name="file_empty">Soubor je prázdný: %s</string>
     <string name="file_invalid">Soubor je neplatný: %s</string>
     <string name="undo">Zpět</string>

@@ -37,6 +37,7 @@ import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -184,15 +185,18 @@ fun <T>EditableList(
     snackbarHostState: SnackbarHostState? = null,
     listState: LazyListState = rememberLazyListState()
 ) {
-    val selectedInstruments by state.selectedItems.collectAsStateWithLifecycle()
-    val customInstruments by state.editableItems.collectAsStateWithLifecycle()
-    val customInstrumentsExpanded by state.editableItemsExpanded.collectAsStateWithLifecycle()
-    val predefinedInstrumentsExpanded by state.predefinedItemsExpanded.collectAsStateWithLifecycle()
-    val activeInstrument by state.activeItem.collectAsStateWithLifecycle()
-    val activeInstrumentId = activeInstrument?.let { state.getStableId(it) }
+    val selectedItems by state.selectedItems.collectAsStateWithLifecycle()
+    val editableItems by state.editableItems.collectAsStateWithLifecycle()
+    val editableItemsExpanded by state.editableItemsExpanded.collectAsStateWithLifecycle()
+    val predefinedItemsExpanded by state.predefinedItemsExpanded.collectAsStateWithLifecycle()
+    val activeItem by state.activeItem.collectAsStateWithLifecycle()
+    val activeItemId = activeItem?.let { state.getStableId(it) }
     val resources = LocalContext.current.resources
     val snackbarHostStateUpdated by rememberUpdatedState(newValue = snackbarHostState)
 
+    LaunchedEffect(editableItems, listState) {
+        listState.animateScrollToItem(0)
+    }
     // handle recovering deleted items
     LaunchedEffect(resources, state, listState) {
         for (delete in state.editableItemsBackup) {
@@ -208,6 +212,10 @@ fun <T>EditableList(
                     SnackbarResult.Dismissed -> {}
                     SnackbarResult.ActionPerformed -> {
                         state.setNewItems(delete.backup)
+                        // delay a bit, since setNewItems runs internally on another coroutine, and
+                        // we must let this finish. 100ms is of course not really save, but on the
+                        // other hand, if the scroll to 0 fails, it is not really  a bit problem.
+                        delay(100)
                         listState.animateScrollToItem(0) // otherwise it might look to the user as nothing happened
                     }
                     null -> {}
@@ -216,7 +224,7 @@ fun <T>EditableList(
         }
     }
 
-    BackHandler(enabled = selectedInstruments.isNotEmpty()) {
+    BackHandler(enabled = selectedItems.isNotEmpty()) {
         state.clearSelectedItems()
     }
 
@@ -224,19 +232,19 @@ fun <T>EditableList(
         modifier = modifier,
         state = listState
     ) {
-        if ( customInstruments.size > 0
+        if ( editableItems.size > 0
             ) {
             item(contentType = 1) {
                 EditableListSection(
-                    title = stringResource(id = R.string.custom_instruments), // TODO: rename custom_instrument to something general
-                    expanded = customInstrumentsExpanded
+                    title = stringResource(id = R.string.custom_item),
+                    expanded = editableItemsExpanded
                 ) {
                     state.toggleEditableItemsExpanded(it)
                 }
             }
         }
-        if (customInstrumentsExpanded && customInstruments.size > 0) {
-            items(customInstruments, { state.getStableId(it) }, { 2 }) { listItem ->
+        if (editableItemsExpanded && editableItems.size > 0) {
+            items(editableItems, { state.getStableId(it) }, { 2 }) { listItem ->
                 EditableListItem(
                     title = { itemTitle(listItem) },
                     description = { itemDescription(listItem) },
@@ -247,7 +255,7 @@ fun <T>EditableList(
                             detectTapGestures(
                                 onLongPress = { state.toggleSelection(state.getStableId(listItem)) },
                                 onTap = {
-                                    if (selectedInstruments.size >= 1)
+                                    if (selectedItems.size >= 1)
                                         state.toggleSelection(state.getStableId(listItem))
                                     else
                                         onActivateItemClicked(listItem)
@@ -264,25 +272,25 @@ fun <T>EditableList(
                             )
                         }
                     },
-                    isActive = (state.getStableId(listItem) == activeInstrumentId),
-                    isSelected = selectedInstruments.contains(state.getStableId(listItem)),
+                    isActive = (state.getStableId(listItem) == activeItemId),
+                    isSelected = selectedItems.contains(state.getStableId(listItem)),
                     readOnly = false,
                     isCopyable = isItemCopyable(listItem)
                 )
             }
         }
-        if (customInstruments.size > 0) {
+        if (editableItems.size > 0) {
             item(contentType = 1) {
                 EditableListSection(
-                    title = stringResource(id = R.string.predefined_instruments),
-                    expanded = predefinedInstrumentsExpanded
+                    title = stringResource(id = R.string.predefined_items),
+                    expanded = predefinedItemsExpanded
                 ) {
                     state.togglePredefinedItemsExpanded(it)
                 }
             }
         }
 
-        if (predefinedInstrumentsExpanded || customInstruments.isEmpty()) {
+        if (predefinedItemsExpanded || editableItems.isEmpty()) {
             items(state.predefinedItems, { state.getStableId(it) }, { 3 }) { listItem ->
                 EditableListItem(
                     title = { itemTitle(listItem) },
@@ -298,7 +306,7 @@ fun <T>EditableList(
                             onEditItemClicked(listItem, true)
                         }
                     },
-                    isActive = (state.getStableId(listItem) == activeInstrumentId),
+                    isActive = (state.getStableId(listItem) == activeItemId),
                     isSelected = false,
                     readOnly = true,
                     isCopyable = isItemCopyable(listItem)

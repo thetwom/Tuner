@@ -72,8 +72,8 @@
     <string name="lately_detected_notes">Kürzlich erkannte Noten</string>
     <string name="done">Fertig</string>
     <string name="edit_instrument">Instrument bearbeiten</string>
-    <string name="predefined_instruments">Voreingestellt</string>
-    <string name="custom_instruments">Benutzerdefiniert</string>
+    <string name="predefined_items">Voreingestellt</string>
+    <string name="custom_item">Benutzerdefiniert</string>
         <string name="file_empty">Datei ist leer: %s</string>
     <string name="file_invalid">Datei ist ungültig: %s</string>
     <plurals name="instruments_deleted">

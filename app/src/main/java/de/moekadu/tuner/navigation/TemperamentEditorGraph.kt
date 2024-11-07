@@ -63,14 +63,7 @@ fun NavGraphBuilder.temperamentEditorGraph(
                     viewModel.saveTemperament()
                     controller.navigateUp()
                 },
-                onNumberOfNotesClicked = { controller.navigate(NumberOfNotesDialogRoute) },
-                onDescriptionClicked = { controller.navigate(TemperamentDescriptionDialogRoute) },
-                onCentValueChanged = { i, v ->
-                    viewModel.modifyCentOrRatioValue(i, v)
-                },
-                onNoteNameClicked = { index ->
-                    controller.navigate(TemperamentLineDialogRoute(index))
-                }
+                onNumberOfNotesClicked = { controller.navigate(NumberOfNotesDialogRoute) }
             )
         }
 
@@ -81,44 +74,6 @@ fun NavGraphBuilder.temperamentEditorGraph(
                 onDismiss = { controller.navigateUp() },
                 onDoneClicked = { numberOfNotes ->
                     viewModel.changeNumberOfValues(numberOfNotes)
-                    controller.navigateUp()
-                }
-            )
-        }
-
-        dialog<TemperamentDescriptionDialogRoute> {
-            val viewModel = createViewModel(controller = controller, backStackEntry = it)
-            val context = LocalContext.current
-            TemperamentDescriptionDialog(
-                initialName = viewModel.name.value.value(context),
-                initialAbbreviation = viewModel.abbreviation.value.value(context),
-                initialDescription =  viewModel.description.value.value(context),
-                onDismiss = { controller.navigateUp() },
-                onDoneClicked = { n, a, d ->
-                    viewModel.changeDescription(n, a, d)
-                    controller.navigateUp()
-                }
-            )
-        }
-
-        dialog<TemperamentLineDialogRoute> {
-            val viewModel = createViewModel(controller = controller, backStackEntry = it)
-
-            val state = it.toRoute<TemperamentLineDialogRoute>()
-            val index = state.index
-            val line = viewModel.temperamentValues.value.getOrNull(index)
-            val note = line?.note ?: MusicalNote(BaseNote.A, NoteModifier.None, octave = 4)
-            val isReferenceNote = line?.isReferenceNote == true
-            val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
-
-            TemperamentLineDialog(
-                initialNote = note,
-                initialIsReferenceNote = isReferenceNote,
-                initialReferenceNoteOctave = note.octave,
-                notePrintOptions = notePrintOptions,
-                onDismiss = { controller.navigateUp() },
-                onDoneClicked = { newNote, newIsReference ->
-                    viewModel.modifyNote(index, newNote, newIsReference)
                     controller.navigateUp()
                 }
             )
@@ -147,10 +102,4 @@ data class TemperamentEditorGraphRoute(
 data object TemperamentEditorRoute
 
 @Serializable
-data object TemperamentDescriptionDialogRoute
-
-@Serializable
 data object NumberOfNotesDialogRoute
-
-@Serializable
-data class TemperamentLineDialogRoute(val index: Int)

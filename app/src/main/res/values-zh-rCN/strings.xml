@@ -52,8 +52,8 @@
     <string name="lately_detected_notes">最近检测的音调</string>
     <string name="done">完成</string>
     <string name="edit_instrument">编辑乐器</string>
-    <string name="predefined_instruments">默认</string>
-    <string name="custom_instruments">自定义</string>
+    <string name="predefined_items">默认</string>
+    <string name="custom_item">自定义</string>
     <string name="file_empty">文件为空：%s</string>
     <string name="file_invalid">文件无效：%s</string>
     <string name="undo">撤销</string>

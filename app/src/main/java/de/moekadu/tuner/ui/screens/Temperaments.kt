@@ -37,6 +37,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -66,6 +67,7 @@ import de.moekadu.tuner.temperaments2.StretchTuning
 import de.moekadu.tuner.temperaments2.Temperament
 import de.moekadu.tuner.temperaments2.TemperamentResources
 import de.moekadu.tuner.temperaments2.centsToFrequency
+import de.moekadu.tuner.temperaments2.createTestTemperamentEdo12
 import de.moekadu.tuner.temperaments2.getSuitableNoteNames
 import de.moekadu.tuner.ui.common.EditableList
 import de.moekadu.tuner.ui.common.EditableListData
@@ -283,7 +285,21 @@ fun TemperamentsPortrait(
                 floatingActionButton = {
                     if (selectedTemperaments.isEmpty()) {
                         FloatingActionButton(
-                            onClick = { /*TODO*/ },
+                            onClick = {
+                                onEditTemperamentClicked(
+                                    TemperamentResources.TemperamentWithNoteNames(
+                                        Temperament.create(
+                                            StringOrResId(""),
+                                            StringOrResId(""),
+                                            StringOrResId(""),
+                                            12,
+                                            Temperament.NO_STABLE_ID
+                                        ),
+                                        null
+                                    ),
+                                    true
+                                )
+                            },
                             containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
                             elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
                         ) {
@@ -292,7 +308,8 @@ fun TemperamentsPortrait(
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier.padding(paddingValues)
@@ -350,7 +367,7 @@ fun TemperamentsPortrait(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "${it.temperament.name.value(context)[0]}",
+                                text = "${it.temperament.name.value(context).getOrNull(0) ?: ""}",
                                 fontSize = iconTextSize
                             )
                         }
@@ -519,6 +536,9 @@ fun TemperamentsLandscape(
                     Icon(Icons.Filled.Add, contentDescription = "new temperament")
                 }
             }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         }
     ) { paddingValues ->
         Row {

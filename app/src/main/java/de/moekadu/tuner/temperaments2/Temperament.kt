@@ -212,32 +212,31 @@ data class Temperament(
 
         other as Temperament
 
-//        if (name != other.name) return false
-//        if (abbreviation != other.abbreviation) return false
-//        if (description != other.description) return false
-//        if (!cents.contentEquals(other.cents)) return false
-//        if (rationalNumbers != null) {
-//            if (other.rationalNumbers == null) return false
-//            if (!rationalNumbers.contentEquals(other.rationalNumbers)) return false
-//        } else if (other.rationalNumbers != null) return false
-//        if (circleOfFifths != other.circleOfFifths) return false
-//        if (equalOctaveDivision != other.equalOctaveDivision) return false
+        if (name != other.name) return false
+        if (abbreviation != other.abbreviation) return false
+        if (description != other.description) return false
+        if (!cents.contentEquals(other.cents)) return false
+        if (rationalNumbers != null) {
+            if (other.rationalNumbers == null) return false
+            if (!rationalNumbers.contentEquals(other.rationalNumbers)) return false
+        } else if (other.rationalNumbers != null) return false
+        if (circleOfFifths != other.circleOfFifths) return false
+        if (equalOctaveDivision != other.equalOctaveDivision) return false
         if (stableId != other.stableId) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-//        var result = name.hashCode()
-//        result = 31 * result + abbreviation.hashCode()
-//        result = 31 * result + description.hashCode()
-//        result = 31 * result + cents.contentHashCode()
-//        result = 31 * result + (rationalNumbers?.contentHashCode() ?: 0)
-//        result = 31 * result + (circleOfFifths?.hashCode() ?: 0)
-//        result = 31 * result + (equalOctaveDivision ?: 0)
-//        result = 31 * result + stableId.hashCode()
-//        return result
-        return stableId.hashCode()
+        var result = name.hashCode()
+        result = 31 * result + abbreviation.hashCode()
+        result = 31 * result + description.hashCode()
+        result = 31 * result + cents.contentHashCode()
+        result = 31 * result + (rationalNumbers?.contentHashCode() ?: 0)
+        result = 31 * result + (circleOfFifths?.hashCode() ?: 0)
+        result = 31 * result + (equalOctaveDivision ?: 0)
+        result = 31 * result + stableId.hashCode()
+        return result
     }
 }
 
