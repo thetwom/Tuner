@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,12 +30,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.StringOrResId
+import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments2.NoteNames
 import de.moekadu.tuner.temperaments2.Temperament
 import de.moekadu.tuner.temperaments2.TemperamentResources
@@ -52,6 +58,15 @@ interface TemperamentEditorState {
     val description: State<StringOrResId>
     val numberOfValues: State<Int>
     val temperamentValues: State<PersistentList<TemperamentTableLineState>>
+    val hasErrors: State<Boolean>
+
+    fun modifyName(value: String)
+    fun modifyAbbreviation(value: String)
+    fun modifyDescription(value: String)
+    fun onCentValueChanged(index: Int, value: String)
+    fun onNoteNameClicked(index: Int, enharmonic: Boolean)
+    fun onCloseNoteEditorClicked(index: Int)
+    fun modifyNote(index: Int, note: MusicalNote)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,91 +77,126 @@ fun TemperamentEditor(
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
     onAbortClicked: () -> Unit = {},
     onSaveClicked: () -> Unit = {},
-    onNumberOfNotesClicked: () -> Unit = {},
-    onDescriptionClicked: () -> Unit = {},
-    onCentValueChanged: (index: Int, value: String) -> Unit = {_,_ -> },
-    onNoteNameClicked: (index: Int) -> Unit = { }
+    onNumberOfNotesClicked: () -> Unit = {}
 ) {
     val context = LocalContext.current
     Scaffold(
         modifier = modifier,
-        topBar = { TopAppBar(
-            title = { Text(stringResource(id = R.string.temperament_editor)) },
-            navigationIcon = {
-                IconButton(onClick = { onAbortClicked() }) {
-                    Icon(Icons.Default.Close, "close")
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(id = R.string.temperament_editor)) },
+                navigationIcon = {
+                    IconButton(onClick = { onAbortClicked() }) {
+                        Icon(Icons.Default.Close, "close")
+                    }
+                },
+                actions = {
+                    TextButton(
+                        onClick = { onSaveClicked() },
+                        enabled = !state.hasErrors.value
+                    ) {
+                        Text(stringResource(id = R.string.save))
+                    }
                 }
-            },
-            actions = {
-                TextButton(onClick = {
-                    onSaveClicked()
-                }) {
-                    Text(stringResource(id = R.string.save))
-                }
-            }
-        ) }
+            )
+        }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
-            Card(
-                onClick = onDescriptionClicked,
-                modifier = Modifier
-                    .padding(start = 16.dp, end = 16.dp)
-                    .fillMaxWidth()
-            ){
-                Column {
-                    Text(
-                        stringResource(id = R.string.description),
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                    Text(
-                        "${state.name.value.value(context)} (${state.abbreviation.value.value(context)})",
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        state.description.value.value(context),
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Card(
-                onClick = onNumberOfNotesClicked,
-                modifier = Modifier
-                    .padding(start = 16.dp, end = 16.dp)
-                    .fillMaxWidth()
-            ) {
-                Column {
-                    Text(
-                        stringResource(id = R.string.note_number),
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                    Text(
-                        "${state.numberOfValues.value}",
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                item {
+                    TextField(
+                        value = state.name.value.value(context),
+                        onValueChange = { state.modifyName(it) },
+                        label = { Text(stringResource(id = R.string.temperament_name)) },
                         modifier = Modifier
-                            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                            .fillMaxWidth(),
-                        style = MaterialTheme.typography.titleLarge,
-                        textAlign = TextAlign.Center
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        trailingIcon = {
+                            IconButton(onClick = { state.modifyName("") }) {
+                                Icon(Icons.Default.Clear, contentDescription = "clear text")
+                            }
+                        },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
                     )
                 }
-            }
+                item {
+                    TextField(
+                        value = state.abbreviation.value.value(context),
+                        onValueChange = { state.modifyAbbreviation(it) },
+                        label = { Text(stringResource(id = R.string.temperament_abbreviation)) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 8.dp),
+                        trailingIcon = {
+                            IconButton(onClick = { state.modifyAbbreviation("") }) {
+                                Icon(Icons.Default.Clear, contentDescription = "clear text")
+                            }
+                        },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+                    )
+                }
+                item {
+                    TextField(
+                        value = state.description.value.value(context),
+                        onValueChange = { state.modifyDescription(it) },
+                        label = { Text(stringResource(id = R.string.temperament_description)) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 8.dp),
+                        trailingIcon = {
+                            IconButton(onClick = { state.modifyDescription("") }) {
+                                Icon(Icons.Default.Clear, contentDescription = "clear text")
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+                    )
+                }
+                item {
+                    Card(
+                        onClick = onNumberOfNotesClicked,
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Column {
+                            Text(
+                                stringResource(id = R.string.note_number),
+                                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                            Text(
+                                "${state.numberOfValues.value}",
+                                modifier = Modifier
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                                    .fillMaxWidth(),
+                                style = MaterialTheme.typography.titleLarge,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
 
-            LazyColumn(modifier = Modifier.padding(end=16.dp)) {
                 itemsIndexed(state.temperamentValues.value) { index, line ->
+                    val keyboardController = LocalSoftwareKeyboardController.current
                     TemperamentTableLine(
-                        lineNumber = index,
+                        lineNumber = if (line.isOctaveLine) 0 else index,
                         state = line,
+                        modifier = Modifier.padding(horizontal = 8.dp),
                         notePrintOptions = notePrintOptions,
-                        onValueChange = { onCentValueChanged(index, it) },
-                        onNoteNameClicked = { onNoteNameClicked(index) }
+                        onValueChange = { state.onCentValueChanged(index, it) },
+                        onNoteNameClicked = { enharmonic ->
+                            state.onNoteNameClicked(index, enharmonic)
+                            keyboardController?.hide()
+                        },
+                        onChangeNote = { it?.let { n -> state.modifyNote(index, n) } },
+                        onNoteEditorCloseClicked = { state.onCloseNoteEditorClicked(index) }
                     )
                 }
             }
-
         }
     }
 }
@@ -158,17 +208,65 @@ private class TemperamentEditorStateTest : TemperamentEditorState {
     override val numberOfValues = mutableIntStateOf(12)
 
     val noteNames = getSuitableNoteNames(numberOfValues.intValue)
+
+    override fun modifyName(value: String) {
+        name.value = StringOrResId(value)
+    }
+
+    override fun modifyAbbreviation(value: String) {
+        abbreviation.value = StringOrResId(value)
+    }
+
+    override fun modifyDescription(value: String) {
+        description.value = StringOrResId(value)
+    }
+    
     override val temperamentValues = mutableStateOf(
         (0..numberOfValues.intValue).map { index ->
             TemperamentTableLineState(
                 noteNames?.getOrNull(index)?.copy(octave = 4),
                 cent = index * 100.0,
                 ratio = null,
-                isReferenceNote = index == 5,
-                isOctaveLine = (index + 1) == numberOfValues.intValue
+                isOctaveLine = (index + 1) == numberOfValues.intValue,
+                decreasingValueError = false,
+                duplicateNoteError = false
             )
         }.toPersistentList()
     )
+    override val hasErrors = mutableStateOf(false)
+
+    override fun onCentValueChanged(index: Int, value: String) {
+        temperamentValues.value.getOrNull(index)?.changeCentOrRatio(value)
+    }
+
+    override fun onNoteNameClicked(index: Int, enharmonic: Boolean) {
+        temperamentValues.value.forEachIndexed { i, value ->
+            value.setNoteEditor(
+                if (i != index
+                    || (!enharmonic && value.noteEditorState == TemperamentTableLineState.NoteEditorState.Standard)
+                    || (enharmonic && value.noteEditorState == TemperamentTableLineState.NoteEditorState.Enharmonic)
+                ) {
+                    TemperamentTableLineState.NoteEditorState.Off
+                } else if (enharmonic) {
+                    TemperamentTableLineState.NoteEditorState.Enharmonic
+                } else {
+                    TemperamentTableLineState.NoteEditorState.Standard
+                }
+            )
+        }
+    }
+
+    override fun onCloseNoteEditorClicked(index: Int) {
+        temperamentValues.value.getOrNull(index)?.setNoteEditor(
+            TemperamentTableLineState.NoteEditorState.Off
+        )
+    }
+
+    override fun modifyNote(index: Int, note: MusicalNote) {
+        temperamentValues.value.getOrNull(index)?.let {
+            it.note = note
+        }
+    }
 }
 
 

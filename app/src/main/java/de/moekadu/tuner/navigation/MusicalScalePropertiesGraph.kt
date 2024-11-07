@@ -111,7 +111,10 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
                         if (copy) {
                             temperament.temperament.copy(
                                 name = StringOrResId(
-                                    "${temperament.temperament.name.value(context)} (${resources.getString(R.string.copy)})"
+                                    if (temperament.temperament.name.value(context) == "")
+                                        ""
+                                    else
+                                        "${temperament.temperament.name.value(context)} (${resources.getString(R.string.copy)})"
                                 ),
                                 stableId = Temperament.NO_STABLE_ID
                             )

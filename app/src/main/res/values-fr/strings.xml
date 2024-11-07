@@ -76,8 +76,8 @@
     <string name="lately_detected_notes">Dernière notes détectées</string>
     <string name="done">Fait</string>
     <string name="edit_instrument">Éditer l’instrument</string>
-    <string name="predefined_instruments">Défaut</string>
-    <string name="custom_instruments">Personnalisé</string>
+    <string name="predefined_items">Défaut</string>
+    <string name="custom_item">Personnalisé</string>
     <string name="file_empty">Le fichier est vide\u00A0: %s</string>
     <string name="file_invalid">Le fichier est invalide\u00A0: %s</string>
     <string name="undo">Annuler</string>

@@ -84,23 +84,22 @@ data class NoteNames(
 
         other as NoteNames
 
-//        if (name != other.name) return false
-//        if (description != other.description) return false
-//        if (!notes.contentEquals(other.notes)) return false
-//        if (defaultReferenceNote != other.defaultReferenceNote) return false
+        if (name != other.name) return false
+        if (description != other.description) return false
+        if (!notes.contentEquals(other.notes)) return false
+        if (defaultReferenceNote != other.defaultReferenceNote) return false
         if (stableId != other.stableId) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-//        var result = name.hashCode()
-//        result = 31 * result + description.hashCode()
-//        result = 31 * result + notes.contentHashCode()
-//        result = 31 * result + defaultReferenceNote.hashCode()
-//        result = 31 * result + stableId.hashCode()
-//        return result
-        return stableId.hashCode()
+        var result = name.hashCode()
+        result = 31 * result + description.hashCode()
+        result = 31 * result + notes.contentHashCode()
+        result = 31 * result + defaultReferenceNote.hashCode()
+        result = 31 * result + stableId.hashCode()
+        return result
     }
 }
 

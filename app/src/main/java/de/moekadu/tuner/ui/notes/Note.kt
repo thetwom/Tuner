@@ -185,7 +185,7 @@ private fun preferEnharmonic(
     note: MusicalNote,
     sharpFlatPreference: NotePrintOptions.SharpFlatPreference): Boolean {
     if (note.enharmonicBase == BaseNote.None)
-        return sharpFlatPreference == NotePrintOptions.SharpFlatPreference.Flat
+        return false // sharpFlatPreference == NotePrintOptions.SharpFlatPreference.Flat
 
     return when (sharpFlatPreference) {
         NotePrintOptions.SharpFlatPreference.None -> {

@@ -19,7 +19,7 @@ class MusicalScale2Factory {
             assert(temperament.numberOfNotesPerOctave == noteNamesResolved.size)
             val rootNoteResolved = rootNote ?: noteNamesResolved[0]
             val referenceNoteResolved = referenceNote ?: noteNamesResolved.defaultReferenceNote
-            Log.v("Tuner", "MusicalScale2Factory: $temperament")
+//            Log.v("Tuner", "MusicalScale2Factory: $temperament")
             return MusicalScale2(
                 temperament,
                 noteNamesResolved,

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -42,6 +43,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -94,18 +96,26 @@ fun TemperamentLineDialog(
     val hasErrors by remember { derivedStateOf { isReferenceNote && isReferenceOctaveError }}
 
     AlertDialog(
+        title = {Text(stringResource(id = R.string.note_name))},
         onDismissRequest = { onDismiss() },
         confirmButton = {
             TextButton(
                 onClick = {
+                    val hasNoEnharmonic = (
+                            baseNote2 == BaseNote.None || (
+                                    baseNote == baseNote2 &&
+                                    noteModifier == noteModifier2 &&
+                                    octaveOffset == octaveOffset2
+                                    )
+                            )
                     val note = MusicalNote(
                         baseNote,
                         noteModifier,
                         referenceNoteOctave.toIntOrNull() ?: 4,
                         octaveOffset,
-                        baseNote2,
-                        noteModifier2,
-                        octaveOffset2
+                        if (hasNoEnharmonic) BaseNote.None else baseNote2,
+                        if (hasNoEnharmonic) NoteModifier.None else noteModifier2,
+                        if (hasNoEnharmonic) 0 else octaveOffset2
                     )
                     onDoneClicked(note, isReferenceNote)
                 },
@@ -243,7 +253,9 @@ fun TemperamentLineDialog(
                             )
                             Text(
                                 stringResource(R.string.default_reference_note),
-                                modifier = Modifier.padding(start = 16.dp).weight(1f),
+                                modifier = Modifier
+                                    .padding(start = 16.dp)
+                                    .weight(1f),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -253,7 +265,7 @@ fun TemperamentLineDialog(
                                 value = referenceNoteOctave,
                                 onValueChange = { referenceNoteOctave = it },
                                 label = { Text(stringResource(id = R.string.octave)) },
-                                isError = isReferenceOctaveError
+                                isError = isReferenceOctaveError,
                             )
                         }
                     }

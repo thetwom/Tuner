@@ -144,6 +144,7 @@ class TemperamentResources @Inject constructor(
     }
 
     fun writeCustomTemperaments(temperaments: List<TemperamentWithNoteNames>) {
+//        Log.v("Tuner", "TemperamentResources.writeCustomTemperaments: $temperaments")
         val currentMusicalScale = musicalScale.value
         // if current temperament did change, update this also
         val currentTemperamentId = currentMusicalScale.temperament.stableId
@@ -155,6 +156,7 @@ class TemperamentResources @Inject constructor(
         }
 
         applicationScope.launch {
+//            Log.v("Tuner", "TemperamentResources.writeCustomTemperaments, write to store: $temperaments")
             store.writeSerializablePreference(CUSTOM_TEMPERAMENTS_KEY, temperaments.toTypedArray())
         }
     }
@@ -170,6 +172,7 @@ class TemperamentResources @Inject constructor(
         val oldTemperaments = customTemperaments.value
         val newTemperaments = oldTemperaments.mutate { mutated ->
             val index = oldTemperaments.indexOfFirst { it.stableId == temperament.stableId }
+//            Log.v("Tuner", "TemperamentResource.addNewOrReplaceTemperament: Writing temperament to index $index")
             if (index >= 0)
                 mutated[index] = newTemperament
             else

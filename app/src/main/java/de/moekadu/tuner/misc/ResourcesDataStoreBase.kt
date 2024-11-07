@@ -19,6 +19,7 @@
 package de.moekadu.tuner.misc
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.IOException
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
@@ -33,6 +34,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -69,22 +71,24 @@ class ResourcesDataStoreBase(
     fun<K, T> getTransformablePreferenceFlow(key: Preferences.Key<K>, default: T, transform: (K) -> T): StateFlow<T> {
         return dataStore.data
             .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+            .map { it[key] }
+            .distinctUntilChanged()
             .map {
-                val s = it[key]
-                if (s == null) default else transform(s)
+                if (it == null) default else transform(it)
             }
             .stateIn(scope, SharingStarted.Eagerly, default)
     }
     inline fun<reified T> getSerializablePreferenceFlow(key: Preferences.Key<String>, default: T): StateFlow<T> {
         return dataStore.data
             .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+            .map { it[key] }
+            .distinctUntilChanged()
             .map {
-                val s = it[key]
-                if (s == null) {
+                if (it == null) {
                     default
                 } else {
                     try {
-                        Json.decodeFromString<T>(s)
+                        Json.decodeFromString<T>(it)
                     } catch(ex: Exception) {
                         default
                     }
