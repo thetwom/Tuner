@@ -152,7 +152,8 @@ fun TemperamentEditor(
                                 Icon(Icons.Default.Clear, contentDescription = "clear text")
                             }
                         },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     )
                 }
                 item {
@@ -227,6 +228,7 @@ private class TemperamentEditorStateTest : TemperamentEditorState {
                 noteNames?.getOrNull(index)?.copy(octave = 4),
                 cent = index * 100.0,
                 ratio = null,
+                isFirstLine = index == 0,
                 isOctaveLine = (index + 1) == numberOfValues.intValue,
                 decreasingValueError = false,
                 duplicateNoteError = false

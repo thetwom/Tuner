@@ -47,7 +47,7 @@ fun OverflowMenu(
             onDismissRequest = { expanded = false }
         ) {
             DropdownMenuItem(
-                text = { Text(stringResource(id = R.string.delete_instruments)) },
+                text = { Text(stringResource(id = R.string.delete_items)) },
                 leadingIcon = { Icon(Icons.Default.Delete, contentDescription = "delete") },
                 onClick = {
                     callbacks.onDeleteClicked()

@@ -3,7 +3,6 @@ package de.moekadu.tuner.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
@@ -14,16 +13,11 @@ import androidx.navigation.compose.dialog
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
 import de.moekadu.tuner.temperaments2.NoteNames
 import de.moekadu.tuner.temperaments2.Temperament
-import de.moekadu.tuner.temperaments2.TemperamentResources
+import de.moekadu.tuner.temperaments2.TemperamentWithNoteNames
 import de.moekadu.tuner.ui.screens.TemperamentEditor
 import de.moekadu.tuner.ui.temperaments.NumberOfNotesDialog
-import de.moekadu.tuner.ui.temperaments.TemperamentDescriptionDialog
-import de.moekadu.tuner.ui.temperaments.TemperamentLineDialog
 import de.moekadu.tuner.viewmodels.TemperamentEditorViewModel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -90,8 +84,8 @@ data class TemperamentEditorGraphRoute(
         Json.encodeToString(temperament),
         noteNames?.let { Json.encodeToString(it) }
     )
-    fun getTemperamentWithNoteNames(): TemperamentResources.TemperamentWithNoteNames {
-        return TemperamentResources.TemperamentWithNoteNames(
+    fun getTemperamentWithNoteNames(): TemperamentWithNoteNames {
+        return TemperamentWithNoteNames(
             Json.decodeFromString<Temperament>(serializedTemperament),
             serializedNoteNames?.let { Json.decodeFromString<NoteNames>(it) }
         )

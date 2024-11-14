@@ -116,6 +116,7 @@ class TemperamentTableLineState(
     note: MusicalNote?,
     cent: Double?,
     ratio: RationalNumber?, // if there is a ratio, we ignore the cent value!
+    val isFirstLine: Boolean,
     val isOctaveLine: Boolean,
     decreasingValueError: Boolean,
     duplicateNoteError: Boolean
@@ -340,6 +341,7 @@ fun TemperamentTableLine(
                                 stringResource(id = R.string.cent_str)
                         )
                     },
+                    enabled = !state.isFirstLine,
                     textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End),
                     isError = state.invalidValueError || state.decreasingValueError,
                     singleLine = true,
@@ -509,6 +511,7 @@ private fun TemperamentTableLinePreview() {
                         note.copy(octave = 4),
                         index * 100.0,
                         if (index == 5) RationalNumber(1, 6) else null,
+                        isFirstLine = index == 0,
                         isOctaveLine = index == notes.size - 1,
                         decreasingValueError = index == 4 || index == 3,
                         duplicateNoteError = index == 1 || index == 3

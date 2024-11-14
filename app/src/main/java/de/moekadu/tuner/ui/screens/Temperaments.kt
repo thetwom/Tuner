@@ -4,9 +4,10 @@ import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,7 +28,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -47,6 +47,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -60,14 +61,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.StringOrResId
+import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.RationalNumber
-import de.moekadu.tuner.temperaments2.MusicalScale2Factory
-import de.moekadu.tuner.temperaments2.StretchTuning
 import de.moekadu.tuner.temperaments2.Temperament
-import de.moekadu.tuner.temperaments2.TemperamentResources
-import de.moekadu.tuner.temperaments2.centsToFrequency
-import de.moekadu.tuner.temperaments2.createTestTemperamentEdo12
+import de.moekadu.tuner.temperaments2.TemperamentIO
+import de.moekadu.tuner.temperaments2.TemperamentWithNoteNames
 import de.moekadu.tuner.temperaments2.getSuitableNoteNames
 import de.moekadu.tuner.ui.common.EditableList
 import de.moekadu.tuner.ui.common.EditableListData
@@ -85,31 +84,116 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 interface TemperamentsData {
-    val listData: EditableListData<TemperamentResources.TemperamentWithNoteNames>
+    val listData: EditableListData<TemperamentWithNoteNames>
     val selectedRootNoteIndex: StateFlow<Int>
     val detailChoice: StateFlow<ActiveTemperamentDetailChoice>
 
     fun changeDetailChoice(choice: ActiveTemperamentDetailChoice)
     fun changeRootNoteIndex(index: Int)
-    fun changeActiveTemperament(temperament: TemperamentResources.TemperamentWithNoteNames)
+    fun changeActiveTemperament(temperament: TemperamentWithNoteNames)
     fun saveTemperaments(
         context: Context,
         uri: Uri,
-        temperaments: List<TemperamentResources.TemperamentWithNoteNames>
+        temperaments: List<TemperamentWithNoteNames>
     )
     fun resetToDefault()
 }
+
+@Composable
+private fun rememberImportExportCallbacks(
+    state: TemperamentsData,
+    onLoadTemperaments: (temperaments: List<TemperamentIO.ParsedTemperament>) -> Unit
+): OverflowMenuCallbacks {
+    val context = LocalContext.current
+    val stateUpdated by rememberUpdatedState(newValue = state)
+    val onLoadTemperamentsUpdated by rememberUpdatedState(newValue = onLoadTemperaments)
+
+    val saveTemperamentsLauncher =  rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/plain")
+    ) { uri ->
+        if (uri != null) {
+            val temperaments = stateUpdated.listData.extractSelectedItems()
+            stateUpdated.saveTemperaments(context, uri, temperaments)
+            stateUpdated.listData.clearSelectedItems()
+            val filename = getFilenameFromUri(context, uri)
+            Toast.makeText(
+                context,
+                context.resources.getQuantityString(
+                    R.plurals.database_num_saved,
+                    temperaments.size,
+                    temperaments.size,
+                    filename
+                ),
+                Toast.LENGTH_LONG).show()
+        } else {
+            Toast.makeText(context,
+                R.string.failed_to_archive_items, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    val importTemperamentsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            val temperaments = TemperamentIO.readTemperamentsFromFile(context, uri)
+            if (temperaments.isEmpty()) {
+                val filename = getFilenameFromUri(context, uri)
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.file_empty, filename),
+                    Toast.LENGTH_LONG
+                ).show()
+            } else {
+                onLoadTemperamentsUpdated(temperaments)
+                state.listData.clearSelectedItems()
+            }
+        }
+    }
+    return remember(context) {
+        object: OverflowMenuCallbacks {
+            override fun onDeleteClicked() {
+                if (stateUpdated.listData.selectedItems.value.isNotEmpty())
+                    stateUpdated.listData.deleteSelectedItems()
+                else
+                    stateUpdated.listData.deleteAllItems()
+            }
+            override fun onShareClicked() {
+                val temperaments = stateUpdated.listData.extractSelectedItems()
+                if (temperaments.isEmpty()) {
+                    Toast.makeText(context, R.string.database_empty_share, Toast.LENGTH_LONG).show()
+                } else {
+                    //val intent = ShareInstruments.createShareInstrumentsIntent(context, instruments)
+                    //shareInstrumentLauncher.launch(intent)
+                }
+            }
+            override fun onExportClicked() {
+                if (stateUpdated.listData.editableItems.value.isEmpty()) {
+                    Toast.makeText(context, R.string.database_empty, Toast.LENGTH_LONG).show()
+                } else {
+                    saveTemperamentsLauncher.launch("temperaments.txt")
+                }
+            }
+            override fun onImportClicked() {
+                importTemperamentsLauncher.launch(arrayOf("text/plain"))
+            }
+            override fun onSettingsClicked() {
+                // onPreferenceButtonClicked()
+            }
+        }
+    }
+}
+
 
 @Composable
 fun Temperaments(
     state: TemperamentsData,
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
-    onNewTemperament:  (temperament: TemperamentResources.TemperamentWithNoteNames, rootNote: MusicalNote) -> Unit = {_, _ ->},
+    onNewTemperament:  (temperament: TemperamentWithNoteNames, rootNote: MusicalNote) -> Unit = { _, _ ->},
     onAbort: () -> Unit = { },
-    onEditTemperamentClicked: (temperament: TemperamentResources.TemperamentWithNoteNames, copy: Boolean) -> Unit = {_, _ ->}
+    onEditTemperamentClicked: (temperament: TemperamentWithNoteNames, copy: Boolean) -> Unit = { _, _ ->},
+    onLoadTemperaments: (temperaments: List<TemperamentIO.ParsedTemperament>) -> Unit = { }
 ) {
-    // TODO: snackbar with "Undo" when temperaments have been deleted
     val configuration = LocalConfiguration.current
     when (configuration.orientation) {
         Configuration.ORIENTATION_LANDSCAPE -> {
@@ -119,7 +203,8 @@ fun Temperaments(
                 notePrintOptions = notePrintOptions,
                 onNewTemperament = onNewTemperament,
                 onAbort = onAbort,
-                onEditTemperamentClicked = onEditTemperamentClicked
+                onEditTemperamentClicked = onEditTemperamentClicked,
+                onLoadTemperaments = onLoadTemperaments
             )
         }
 
@@ -130,7 +215,8 @@ fun Temperaments(
                 notePrintOptions = notePrintOptions,
                 onNewTemperament = onNewTemperament,
                 onAbort = onAbort,
-                onEditTemperamentClicked = onEditTemperamentClicked
+                onEditTemperamentClicked = onEditTemperamentClicked,
+                onLoadTemperaments = onLoadTemperaments
             )
         }
     }
@@ -142,9 +228,10 @@ fun TemperamentsPortrait(
     state: TemperamentsData,
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
-    onNewTemperament:  (temperament: TemperamentResources.TemperamentWithNoteNames, rootNote: MusicalNote) -> Unit = {_, _ ->},
+    onNewTemperament:  (temperament: TemperamentWithNoteNames, rootNote: MusicalNote) -> Unit = { _, _ ->},
     onAbort: () -> Unit = { },
-    onEditTemperamentClicked: (temperament: TemperamentResources.TemperamentWithNoteNames, copy: Boolean) -> Unit = {_, _ ->}
+    onEditTemperamentClicked: (temperament: TemperamentWithNoteNames, copy: Boolean) -> Unit = { _, _ ->},
+    onLoadTemperaments: (temperaments: List<TemperamentIO.ParsedTemperament>) -> Unit = { }
 ) {
     val context = LocalContext.current
     val selectedTemperaments by state.listData.selectedItems.collectAsStateWithLifecycle()
@@ -165,36 +252,10 @@ fun TemperamentsPortrait(
     val temperamentListState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val overflowCallbacks = object: OverflowMenuCallbacks {
-        override fun onDeleteClicked() {
-            if (state.listData.selectedItems.value.isNotEmpty())
-                state.listData.deleteSelectedItems()
-            else
-                state.listData.deleteAllItems()
-        }
-        override fun onShareClicked() {
-            val instruments = state.listData.extractSelectedItems()
-            if (instruments.isEmpty()) {
-                Toast.makeText(context, R.string.database_empty_share, Toast.LENGTH_LONG).show()
-            } else {
-                //val intent = ShareInstruments.createShareInstrumentsIntent(context, instruments)
-                //shareInstrumentLauncher.launch(intent)
-            }
-        }
-        override fun onExportClicked() {
-            if (state.listData.editableItems.value.isEmpty()) {
-                Toast.makeText(context, R.string.database_empty, Toast.LENGTH_LONG).show()
-            } else {
-                //saveInstrumentLauncher.launch("tuner.txt")
-            }
-        }
-        override fun onImportClicked() {
-            //importInstrumentLauncher.launch(arrayOf("text/plain"))
-        }
-        override fun onSettingsClicked() {
-            // onPreferenceButtonClicked()
-        }
-    }
+    val overflowCallbacks = rememberImportExportCallbacks(
+        state = state,
+        onLoadTemperaments = onLoadTemperaments
+    )
 
     Scaffold(
         modifier = modifier,
@@ -287,7 +348,7 @@ fun TemperamentsPortrait(
                         FloatingActionButton(
                             onClick = {
                                 onEditTemperamentClicked(
-                                    TemperamentResources.TemperamentWithNoteNames(
+                                    TemperamentWithNoteNames(
                                         Temperament.create(
                                             StringOrResId(""),
                                             StringOrResId(""),
@@ -391,9 +452,10 @@ fun TemperamentsLandscape(
     state: TemperamentsData,
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
-    onNewTemperament:  (temperament: TemperamentResources.TemperamentWithNoteNames, rootNote: MusicalNote) -> Unit = {_, _ -> },
+    onNewTemperament:  (temperament: TemperamentWithNoteNames, rootNote: MusicalNote) -> Unit = { _, _ -> },
     onAbort: () -> Unit = { },
-    onEditTemperamentClicked: (temperament: TemperamentResources.TemperamentWithNoteNames, copy: Boolean) -> Unit = {_, _ ->}
+    onEditTemperamentClicked: (temperament: TemperamentWithNoteNames, copy: Boolean) -> Unit = { _, _ ->},
+    onLoadTemperaments: (temperaments: List<TemperamentIO.ParsedTemperament>) -> Unit = { }
 ) {
     val context = LocalContext.current
     val selectedTemperaments by state.listData.selectedItems.collectAsStateWithLifecycle()
@@ -414,36 +476,9 @@ fun TemperamentsLandscape(
     val temperamentListState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val overflowCallbacks = object: OverflowMenuCallbacks {
-        override fun onDeleteClicked() {
-            if (state.listData.selectedItems.value.isNotEmpty())
-                state.listData.deleteSelectedItems()
-            else
-                state.listData.deleteAllItems()
-        }
-        override fun onShareClicked() {
-            val instruments = state.listData.extractSelectedItems()
-            if (instruments.isEmpty()) {
-                Toast.makeText(context, R.string.database_empty_share, Toast.LENGTH_LONG).show()
-            } else {
-                //val intent = ShareInstruments.createShareInstrumentsIntent(context, instruments)
-                //shareInstrumentLauncher.launch(intent)
-            }
-        }
-        override fun onExportClicked() {
-            if (state.listData.editableItems.value.isEmpty()) {
-                Toast.makeText(context, R.string.database_empty, Toast.LENGTH_LONG).show()
-            } else {
-                //saveInstrumentLauncher.launch("tuner.txt")
-            }
-        }
-        override fun onImportClicked() {
-            //importInstrumentLauncher.launch(arrayOf("text/plain"))
-        }
-        override fun onSettingsClicked() {
-            // onPreferenceButtonClicked()
-        }
-    }
+    val overflowCallbacks = rememberImportExportCallbacks(
+        state = state, onLoadTemperaments = onLoadTemperaments
+    )
 
     Scaffold(
         modifier = modifier,
@@ -529,7 +564,21 @@ fun TemperamentsLandscape(
         floatingActionButton = {
             if (selectedTemperaments.isEmpty()) {
                 FloatingActionButton(
-                    onClick = { /*TODO*/ },
+                    onClick = {
+                        onEditTemperamentClicked(
+                            TemperamentWithNoteNames(
+                                Temperament.create(
+                                    StringOrResId(""),
+                                    StringOrResId(""),
+                                    StringOrResId(""),
+                                    12,
+                                    Temperament.NO_STABLE_ID
+                                ),
+                                null
+                            ),
+                            true
+                        )
+                    },
                     containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
                     elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
                 ) {
@@ -648,21 +697,21 @@ private class TestTemperamentData : TemperamentsData {
         3L
     )
 
-    val activeTemperament = MutableStateFlow<TemperamentResources.TemperamentWithNoteNames?>(
-        TemperamentResources.TemperamentWithNoteNames(testTemperament1.copy(stableId = -1), null)
+    val activeTemperament = MutableStateFlow<TemperamentWithNoteNames?>(
+        TemperamentWithNoteNames(testTemperament1.copy(stableId = -1), null)
     )
 
     val predefinedTemperaments = persistentListOf(
-        TemperamentResources.TemperamentWithNoteNames(testTemperament1.copy(stableId = -1), null),
-        TemperamentResources.TemperamentWithNoteNames(testTemperament2.copy(stableId = -2), null)
+        TemperamentWithNoteNames(testTemperament1.copy(stableId = -1), null),
+        TemperamentWithNoteNames(testTemperament2.copy(stableId = -2), null)
     )
     val predefinedTemperamentsExpanded = MutableStateFlow(true)
 
     val customTemperaments = MutableStateFlow(
         persistentListOf(
-            TemperamentResources.TemperamentWithNoteNames(testTemperament1.copy(stableId = 1), null),
-            TemperamentResources.TemperamentWithNoteNames(testTemperament2.copy(stableId = 2), null),
-            TemperamentResources.TemperamentWithNoteNames(testTemperament3.copy(stableId = 3), null),
+            TemperamentWithNoteNames(testTemperament1.copy(stableId = 1), null),
+            TemperamentWithNoteNames(testTemperament2.copy(stableId = 2), null),
+            TemperamentWithNoteNames(testTemperament3.copy(stableId = 3), null),
         )
     )
     val customTemperamentsExpanded = MutableStateFlow(true)
@@ -687,7 +736,7 @@ private class TestTemperamentData : TemperamentsData {
         selectedRootNoteIndex.value = index
     }
 
-    override fun changeActiveTemperament(temperament: TemperamentResources.TemperamentWithNoteNames) {
+    override fun changeActiveTemperament(temperament: TemperamentWithNoteNames) {
         activeTemperament.value = temperament
     }
 
@@ -698,12 +747,12 @@ private class TestTemperamentData : TemperamentsData {
     override fun saveTemperaments(
         context: Context,
         uri: Uri,
-        temperaments: List<TemperamentResources.TemperamentWithNoteNames>
+        temperaments: List<TemperamentWithNoteNames>
     ) { }
 
     override fun resetToDefault() {
         selectedRootNoteIndex.value = 0
-        activeTemperament.value = TemperamentResources.TemperamentWithNoteNames(
+        activeTemperament.value = TemperamentWithNoteNames(
             testTemperament1, null
         )
     }

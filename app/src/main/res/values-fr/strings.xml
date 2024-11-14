@@ -84,8 +84,8 @@
     <string name="pick_icon">Choisir une icône</string>
     <string name="copy_instrument">Copier l’instrument</string>
     <string name="copy_extension">%s (copie)</string>
-    <string name="failed_to_archive_instruments">Impossible d’enregistrer les instruments dans le fichier</string>
-    <string name="database_empty">Il n’y a pas d’instrument à enregistrer.</string>
+    <string name="failed_to_archive_items">Impossible d’enregistrer les  dans le fichier</string>
+    <string name="database_empty">Il n’y a pas d’élément à enregistrer.</string>
     <plurals name="load_instruments">
         <item quantity="one">Chargement d’%d instrument</item>
         <item quantity="other">Chargement de %d instruments</item>
@@ -98,8 +98,8 @@
         <item quantity="one">Partager %d instrument</item>
         <item quantity="other">Partager %d instruments</item>
     </plurals>
-    <string name="load_from_disk">Charger les instruments depuis un fichier</string>
-    <string name="save_to_disk">Enregistrer les instruments dans un fichier</string>
+    <string name="load_from_disk">Charger les éléments depuis un fichier</string>
+    <string name="save_to_disk">Enregistrer les éléments dans un fichier</string>
 
     <string name="prefer_flat">Préférer \u266D à \u266F</string>
     <string name="viola_cgda">Alto</string>

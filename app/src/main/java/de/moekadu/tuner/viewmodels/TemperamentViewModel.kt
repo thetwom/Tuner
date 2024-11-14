@@ -2,32 +2,32 @@ package de.moekadu.tuner.viewmodels
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
-import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.moekadu.tuner.temperaments2.MusicalScale2
+import de.moekadu.tuner.hilt.ApplicationScope
+import de.moekadu.tuner.temperaments2.TemperamentIO
 import de.moekadu.tuner.temperaments2.TemperamentResources
+import de.moekadu.tuner.temperaments2.TemperamentWithNoteNames
 import de.moekadu.tuner.ui.common.EditableListData
 import de.moekadu.tuner.ui.screens.TemperamentsData
 import de.moekadu.tuner.ui.temperaments.ActiveTemperamentDetailChoice
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class TemperamentViewModel @Inject constructor(
-    val pref: TemperamentResources
+    val pref: TemperamentResources,
+    @ApplicationScope val applicationScope: CoroutineScope
 ) : ViewModel(), TemperamentsData {
 
     private val initialMusicalScale = pref.musicalScale.value
 
     private val activeTemperament = MutableStateFlow(
-        TemperamentResources.TemperamentWithNoteNames(
+        TemperamentWithNoteNames(
             initialMusicalScale.temperament,
             initialMusicalScale.noteNames
         )
@@ -59,7 +59,7 @@ class TemperamentViewModel @Inject constructor(
         selectedRootNoteIndex.value = index
     }
 
-    override fun changeActiveTemperament(temperament: TemperamentResources.TemperamentWithNoteNames) {
+    override fun changeActiveTemperament(temperament: TemperamentWithNoteNames) {
         if (selectedRootNoteIndex.value >= temperament.temperament.numberOfNotesPerOctave)
             selectedRootNoteIndex.value = temperament.temperament.numberOfNotesPerOctave - 1
         activeTemperament.value = temperament
@@ -68,9 +68,15 @@ class TemperamentViewModel @Inject constructor(
     override fun saveTemperaments(
         context: Context,
         uri: Uri,
-        temperaments: List<TemperamentResources.TemperamentWithNoteNames>
+        temperaments: List<TemperamentWithNoteNames>
     ) {
-        TODO("Not yet implemented")
+        applicationScope.launch(Dispatchers.IO) {
+            context.contentResolver?.openOutputStream(uri, "wt")?.use { stream ->
+                stream.bufferedWriter().use { writer ->
+                    TemperamentIO.writeTemperaments(temperaments, writer, context)
+                }
+            }
+        }
     }
 
     override fun resetToDefault() {

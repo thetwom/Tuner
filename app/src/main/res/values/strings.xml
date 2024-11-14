@@ -117,12 +117,12 @@
     <string name="pick_icon">Pick icon</string>
     <string name="copy_instrument">Copy instrument</string>
     <string name="copy_extension">%s (copy)</string>
-    <string name="failed_to_archive_instruments">Failed to write instruments to file</string>
+    <string name="failed_to_archive_items">Failed to write items to file</string>
     <plurals name="database_num_saved">
-        <item quantity="one">Writing %d instrument to \"%s\".</item>
-        <item quantity="other">Writing %d instruments to \"%s\".</item>
+        <item quantity="one">Writing %d items to \"%s\".</item>
+        <item quantity="other">Writing %d items to \"%s\".</item>
     </plurals>
-    <string name="database_empty">There are no instruments which can be saved.</string>
+    <string name="database_empty">There are no items which can be saved.</string>
     <plurals name="load_instruments">
         <item quantity="one">Loading %d instruments</item>
         <item quantity="other">Loading %d instruments</item>
@@ -130,13 +130,13 @@
     <string name="replace_current_list">Replace current list</string>
     <string name="prepend_current_list">Prepend to current list</string>
     <string name="append_current_list">Append to current list</string>
-    <string name="share">Share instruments</string>
+    <string name="share">Share items</string>
     <plurals name="sharing_num_instruments">
         <item quantity="one">Sharing %d instrument</item>
         <item quantity="other">Sharing %d instruments</item>
     </plurals>
-    <string name="load_from_disk">Load instruments from file</string>
-    <string name="save_to_disk">Save instruments to file</string>
+    <string name="load_from_disk">Load items from file</string>
+    <string name="save_to_disk">Save items to file</string>
     <string name="prefer_flat">Prefer \u266D over \u266F</string>
     <string name="viola_cgda">Viola</string>
     <string name="cello_cgda">Cello</string>
@@ -276,8 +276,8 @@
     <string name="extended_quarter_comma_mean_tone_abbr">Extended ¼ comma meantone</string>
     <string name="sensitivity">Sensitivity</string>
     <string name="delete_instrument">Delete instrument</string>
-    <string name="delete_instruments">Delete instruments</string>
-    <string name="database_empty_share">There are no instruments to share.</string>
+    <string name="delete_items">Delete items</string>
+    <string name="database_empty_share">There are no items to share.</string>
     <string name="audio_record_permission_rationale">Grant microphone access to start tuning.</string>
     <string name="writing_wave_file">Writing wave file: %s</string>
     <string name="failed_writing_wave_file">Did not write wave file.</string>

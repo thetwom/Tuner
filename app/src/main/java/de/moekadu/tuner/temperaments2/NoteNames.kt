@@ -8,22 +8,16 @@ import de.moekadu.tuner.temperaments.NoteModifier
 import kotlinx.serialization.Serializable
 
 /** Class containing the notes of one octave.
- * @param name Name of the instance for printing.
- * @param description Description of the instance for printing.
  * @param notes Array of the note names within the octave. The octave index of the note is of no
  *   importance here.
  * @param defaultReferenceNote The note which normally is used as reference note within tuning. Note
  *   that here, the octave index is important.
- * @param stableId Id to uniquely identify an instance of this class.
  */
 @Serializable
 @Immutable
 data class NoteNames(
-    val name: StringOrResId,
-    val description: StringOrResId,
     val notes: Array<MusicalNote>,
-    val defaultReferenceNote: MusicalNote,
-    val stableId: Long
+    val defaultReferenceNote: MusicalNote
 ) {
     /** Number of notes. */
     val size get() = notes.size
@@ -62,11 +56,8 @@ data class NoteNames(
      */
     fun switchEnharmonics(): NoteNames {
         return NoteNames(
-            name,
-            description,
             notes.map { it.switchEnharmonic() }.toTypedArray(),
-            defaultReferenceNote.switchEnharmonic(),
-            stableId
+            defaultReferenceNote.switchEnharmonic()
         )
     }
 
@@ -83,22 +74,15 @@ data class NoteNames(
         if (javaClass != other?.javaClass) return false
 
         other as NoteNames
-
-        if (name != other.name) return false
-        if (description != other.description) return false
         if (!notes.contentEquals(other.notes)) return false
         if (defaultReferenceNote != other.defaultReferenceNote) return false
-        if (stableId != other.stableId) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = name.hashCode()
-        result = 31 * result + description.hashCode()
-        result = 31 * result + notes.contentHashCode()
+        var result = notes.contentHashCode()
         result = 31 * result + defaultReferenceNote.hashCode()
-        result = 31 * result + stableId.hashCode()
         return result
     }
 }
@@ -107,7 +91,7 @@ fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
     return when (numberOfNotesPerOctave) {
         // 12 tones
         12 -> {
-            var notes = arrayOf(
+            val notes = arrayOf(
                 MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
                 MusicalNote(
                     base = BaseNote.C,
@@ -147,17 +131,11 @@ fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
                 MusicalNote(base = BaseNote.B, modifier = NoteModifier.None)
             )
 
-            NoteNames(
-                StringOrResId(""),
-                StringOrResId(""),
-                notes,
-                notes[9].copy(octave = 4),
-                -notes.size.toLong()
-            )
+            NoteNames(notes, notes[9].copy(octave = 4))
         }
         // 15 tones
         15 -> {
-            var notes = arrayOf(
+            val notes = arrayOf(
                 MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
                 MusicalNote(
                     base = BaseNote.C,
@@ -185,17 +163,11 @@ fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
                 MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),
             )
 
-            NoteNames(
-                StringOrResId(""),
-                StringOrResId(""),
-                notes,
-                notes[11].copy(octave = 4),
-                -notes.size.toLong()
-            )
+            NoteNames(notes, notes[11].copy(octave = 4))
         }
         // 17 tone
         17 -> {
-            var notes = arrayOf(
+            val notes = arrayOf(
                 MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
                 MusicalNote(base = BaseNote.C, modifier = NoteModifier.NaturalUp),
                 MusicalNote(base = BaseNote.D, modifier = NoteModifier.NaturalDown),
@@ -221,17 +193,11 @@ fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
                 MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),
             )
 
-            NoteNames(
-                StringOrResId(""),
-                StringOrResId(""),
-                notes,
-                notes[13].copy(octave = 4),
-                -notes.size.toLong()
-            )
+            NoteNames(notes, notes[13].copy(octave = 4))
         }
         // 19 tone
         19 -> {
-            var notes = arrayOf(
+            val notes = arrayOf(
                 MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
                 MusicalNote(base = BaseNote.C, modifier = NoteModifier.Sharp),
                 MusicalNote(base = BaseNote.D, modifier = NoteModifier.Flat),
@@ -270,13 +236,7 @@ fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
                 )
             )
 
-            NoteNames(
-                StringOrResId(""),
-                StringOrResId(""),
-                notes,
-                notes[14].copy(octave = 4),
-                -notes.size.toLong()
-            )
+            NoteNames(notes, notes[14].copy(octave = 4))
         }
         // 22 tone
         22 -> {
@@ -336,13 +296,7 @@ fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
                 MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),
             )
 
-            NoteNames(
-                StringOrResId(""),
-                StringOrResId(""),
-                notes,
-                notes[17].copy(octave = 4),
-                -notes.size.toLong()
-            )
+            NoteNames(notes, notes[17].copy(octave = 4))
         }
         // 24 tone
         24 -> {
@@ -415,13 +369,7 @@ fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
                 ),
             )
 
-            NoteNames(
-                StringOrResId(""),
-                StringOrResId(""),
-                notes,
-                notes[18].copy(octave = 4),
-                -notes.size.toLong()
-            )
+            NoteNames(notes, notes[18].copy(octave = 4))
         }
         // 27 tone
         27 -> {
@@ -461,13 +409,7 @@ fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
                 MusicalNote(base = BaseNote.B, modifier = NoteModifier.None),
             )
 
-            NoteNames(
-                StringOrResId(""),
-                StringOrResId(""),
-                notes,
-                notes[21].copy(octave = 4),
-                -notes.size.toLong()
-            )
+            NoteNames(notes, notes[21].copy(octave = 4))
         }
     // 29 tone
         29 -> {
@@ -570,13 +512,7 @@ fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
                 ),
             )
 
-            NoteNames(
-                StringOrResId(""),
-                StringOrResId(""),
-                notes,
-                notes[22].copy(octave = 4),
-                -notes.size.toLong()
-            )
+            NoteNames(notes, notes[22].copy(octave = 4))
         }
         // 31 tone
         31 -> {
@@ -624,13 +560,7 @@ fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
                 ),
             )
 
-            NoteNames(
-                StringOrResId(""),
-                StringOrResId(""),
-                notes,
-                notes[23].copy(octave = 4),
-                -notes.size.toLong()
-            )
+            NoteNames(notes, notes[23].copy(octave = 4))
         }
         // 41 tone
         41 -> {
@@ -788,13 +718,7 @@ fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
                 ),
             )
 
-            NoteNames(
-                StringOrResId(""),
-                StringOrResId(""),
-                notes,
-                notes[31].copy(octave = 4),
-                -notes.size.toLong()
-            )
+            NoteNames(notes, notes[31].copy(octave = 4))
         }
         // 53 tone
         53 -> {
@@ -975,13 +899,7 @@ fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
                 ),
             )
 
-            NoteNames(
-                StringOrResId(""),
-                StringOrResId(""),
-                notes,
-                notes[40].copy(octave = 4),
-                -notes.size.toLong()
-            )
+            NoteNames(notes, notes[40].copy(octave = 4))
         }
         else -> {
             null

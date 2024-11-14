@@ -51,7 +51,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-
+// TODO: Get rid of the CanNavigateUp, but just hardcode it
 fun NavGraphBuilder.mainGraph(
     controller: NavController,
     // canNavigateUp: Boolean,

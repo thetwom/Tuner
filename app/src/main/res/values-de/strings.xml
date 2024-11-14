@@ -2,8 +2,8 @@
 <resources>
     <string name="app_name">Tuner</string>
     <string name="delete_instrument">Instrument löschen</string>
-    <string name="delete_instruments">Instrumente löschen</string>
-    <string name="database_empty_share">Keine Instrumente zum teilen.</string>
+    <string name="delete_items">Einträge löschen</string>
+    <string name="database_empty_share">Keine Einträge zum Teilen.</string>
     <string name="audio_record_permission_rationale">Erlaube Verwendung des Mikrofons um zu stimmen.</string>
     <string name="writing_wave_file">Schreibe wav-Datei: %s</string>
     <string name="failed_writing_wave_file">Keine wav-Datei geschrieben.</string>
@@ -84,14 +84,18 @@
     <string name="pick_icon">Icon auswählen</string>
     <string name="copy_instrument">Instrument kopieren</string>
     <string name="copy_extension">%s (Kopie)</string>
-    <string name="failed_to_archive_instruments">Speichern der Instrumente fehlgeschlagen</string>
-    <string name="database_empty">Keine zu speichernden Instrumente.</string>
+    <string name="failed_to_archive_items">Speichern der Einträge fehlgeschlagen</string>
+    <plurals name="database_num_saved">
+        <item quantity="one">Schreibe %d Eintrag nach \"%s\".</item>
+        <item quantity="other">Schreibe %d Einträge nach \"%s\".</item>
+    </plurals>
+    <string name="database_empty">Keine zu speichernden Einträge.</string>
     <string name="replace_current_list">Aktuelle Liste ersetzen</string>
     <string name="prepend_current_list">Vor aktueller Liste einfügen</string>
     <string name="append_current_list">An aktuelle Liste anhängen</string>
-    <string name="share">Instrumente teilen</string>
-    <string name="load_from_disk">Lade Instrumente aus Datei</string>
-    <string name="save_to_disk">Instrumente in Datei speichern</string>
+    <string name="share">Einträge teilen</string>
+    <string name="load_from_disk">Lade Einträge aus Datei</string>
+    <string name="save_to_disk">Einträge in Datei speichern</string>
     <plurals name="load_instruments">
         <item quantity="one">Lade %d Instrument</item>
         <item quantity="other">Lade %d Instrumente</item>
