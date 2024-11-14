@@ -1,7 +1,6 @@
 package de.moekadu.tuner.temperaments2
 
 import android.content.Context
-import android.util.Log
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -15,7 +14,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,19 +24,6 @@ class TemperamentResources @Inject constructor(
     @ApplicationContext context: Context,
     @ApplicationScope val applicationScope: CoroutineScope
 ){
-    @Serializable
-    data class TemperamentWithNoteNames(
-        val temperament: Temperament,
-        val noteNames: NoteNames?
-    ) {
-        val stableId get() = temperament.stableId
-        fun clone(newStableId: Long): TemperamentWithNoteNames {
-            return TemperamentWithNoteNames(
-                temperament = temperament.copy(stableId = newStableId),
-                noteNames = noteNames?.copy(stableId = newStableId),
-            )
-        }
-    }
 
     val store = ResourcesDataStoreBase(context, "temperaments")
 

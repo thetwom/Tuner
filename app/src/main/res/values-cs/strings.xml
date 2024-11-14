@@ -68,7 +68,7 @@
     <string name="pick_icon">Vybrat ikonu</string>
     <string name="copy_instrument">Kopírovat nástroj</string>
     <string name="copy_extension">%s (kopie)</string>
-    <string name="failed_to_archive_instruments">Nepodařilo se uložit nástroj do souboru</string>
+    <string name="failed_to_archive_items">Nepodařilo se uložit nástroj do souboru</string>
     <string name="database_empty">Neexistují žádné nástroje, které by bylo možné uložit.</string>
     <string name="replace_current_list">Nahradit aktuální seznam</string>
     <string name="prepend_current_list">Přidat na začátek stávajícího seznamu</string>

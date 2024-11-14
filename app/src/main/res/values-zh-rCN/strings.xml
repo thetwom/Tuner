@@ -60,7 +60,7 @@
     <string name="pick_icon">选取图标</string>
     <string name="copy_instrument">复制乐器</string>
     <string name="copy_extension">%s（副本）</string>
-    <string name="failed_to_archive_instruments">无法将乐器写入文件</string>
+    <string name="failed_to_archive_items">无法将乐器写入文件</string>
     <string name="database_empty">没有可以保存的乐器</string>
     <string name="replace_current_list">替换当前列表</string>
     <string name="prepend_current_list">在当前列表之前添加</string>

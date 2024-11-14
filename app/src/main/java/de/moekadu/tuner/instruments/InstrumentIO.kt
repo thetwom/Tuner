@@ -229,7 +229,7 @@ object InstrumentIO {
             else
                 ""
         }
-        /** Read string where the exat number of characters is given. */
+        /** Read string where the exact number of characters is given. */
         fun readString(numCharacters: Int): String {
             val posStart = pos
             val res = if (numCharacters >= 0) {

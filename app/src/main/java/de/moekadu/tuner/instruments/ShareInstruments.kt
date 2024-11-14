@@ -45,7 +45,6 @@ object ShareInstruments {
         val sharedFile = File(sharePath.path, "tuner.txt")
         val fileContent = InstrumentIO.instrumentsListToString(context, instruments)
         sharedFile.writeBytes(fileContent.toByteArray())
-
         return FileProvider.getUriForFile(context, context.packageName, sharedFile)
     }
 
