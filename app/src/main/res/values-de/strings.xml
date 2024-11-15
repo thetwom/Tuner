@@ -100,6 +100,10 @@
         <item quantity="one">Lade %d Instrument</item>
         <item quantity="other">Lade %d Instrumente</item>
     </plurals>
+    <plurals name="load_temperaments">
+        <item quantity="one">Lade %d Temperament</item>
+        <item quantity="other">Lade %d Temperamente</item>
+    </plurals>
     <plurals name="sharing_num_instruments">
         <item quantity="one">Teile %d Instrument</item>
         <item quantity="other">Teile %d Instrumente</item>

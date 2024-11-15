@@ -124,8 +124,12 @@
     </plurals>
     <string name="database_empty">There are no items which can be saved.</string>
     <plurals name="load_instruments">
-        <item quantity="one">Loading %d instruments</item>
+        <item quantity="one">Loading %d instrument</item>
         <item quantity="other">Loading %d instruments</item>
+    </plurals>
+    <plurals name="load_temperaments">
+        <item quantity="one">Loading %d temperament</item>
+        <item quantity="other">Loading %d temperaments</item>
     </plurals>
     <string name="replace_current_list">Replace current list</string>
     <string name="prepend_current_list">Prepend to current list</string>
@@ -310,4 +314,5 @@
     <string name="duplicate_note_name">Duplicate note name.</string>
     <string name="invalid_value">Invalid value.</string>
     <string name="maximum_value_exceeded">Maximum value of %d exceeded.</string>
+    <string name="file_contains_no_temperaments">File contains no temperaments: %s</string>
 </resources>

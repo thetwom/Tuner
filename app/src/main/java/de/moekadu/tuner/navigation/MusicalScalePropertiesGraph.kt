@@ -18,6 +18,8 @@
 */
 package de.moekadu.tuner.navigation
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.getValue
@@ -124,6 +126,25 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
                         temperament.noteNames
                     )
                 )
+            },
+            onLoadTemperaments = { temperamentList ->
+//                Log.v("Tuner", "MusicalScalePropertiesGraph.onLoadTemperaments: errors=${temperamentList.firstOrNull{it.hasErrors()}==null}")
+                if (temperamentList.firstOrNull { it.hasErrors() } == null) {
+                    Toast.makeText(
+                        context,
+                        context.resources.getQuantityString(
+                            R.plurals.load_temperaments, temperamentList.size, temperamentList.size
+                        ),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    temperaments.appendTemperaments(
+                        temperamentList.mapNotNull { it.toTemperamentWithNoteNames() }
+                    )
+                }
+                // TODO: else branches:
+                //  - if one temperament with error -> go directly into editor
+                //  - if several temperaments, where there are errors -> launch dialog telling this
+                //    maybe with options to load the correct ones?
             }
 //            onTemperamentChange = { newProperties ->
 //                val newNoteNameScale = NoteNameScaleFactory.create(newProperties.temperamentType)

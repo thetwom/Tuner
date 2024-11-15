@@ -2,8 +2,12 @@ package de.moekadu.tuner.temperaments2
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
+import android.widget.Toast
 import de.moekadu.tuner.BuildConfig
+import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.StringOrResId
+import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
@@ -36,9 +40,8 @@ object TemperamentIO {
             if (noteLines.contains(null))
                 return true
             // check that there is a valid cent or ratio value
-            if (noteLines.firstOrNull { it?.cent == null && it?.ratio == null  } == null)
+            if (noteLines.firstOrNull { it?.cent == null && it?.ratio == null  } != null)
                 return true
-
             // check that values are increasing
             val orderingError = TemperamentValidityChecks.checkValueOrderingErrors(
                 noteLines.size,
@@ -50,12 +53,10 @@ object TemperamentIO {
             )
             if (orderingError != TemperamentValidityChecks.ValueOrdering.Increasing)
                 return true
-
             // check if we can use predefined notes
             val predefinedNotes = getSuitableNoteNames(noteLines.size)
             if (predefinedNotes != null)
                 return false
-
             // if predefined notes are note possible, check the validity of the user defined notes
             val noteNameError = TemperamentValidityChecks.checkNoteNameErrors(
                 noteLines.size,
@@ -64,7 +65,6 @@ object TemperamentIO {
             )
             if (noteNameError != TemperamentValidityChecks.NoteNameError.None)
                 return true
-
             return false
         }
 
@@ -325,7 +325,7 @@ object TemperamentIO {
         }
         return collectedTemperaments
     }
-
+    
     private fun notesEqualCheck(note: MusicalNote?, other: MusicalNote?): Boolean {
         return (note?.base == other?.base &&
                 note?.modifier == other?.modifier &&
@@ -395,6 +395,7 @@ object TemperamentIO {
     }
 
     private fun parseNote(string: String): MusicalNote? {
+//        Log.v("Tuner", "TemperamentIO.parseNote: $string")
         val keyAndValue = string.trim().split('=', limit = 2)
         if (keyAndValue.size < 2)
             return null
@@ -419,19 +420,22 @@ object TemperamentIO {
 
             // cut away string responsible for base note
             noteString = noteString.substring(baseNote.name.length)
+//            Log.v("Tuner", "TemperamentIO.parseNote, step 1: $noteString, baseNote=$baseNote")
             // then find note modifier
             noteModifier = stringToNoteModifierMap[
                 noteModifierNames.firstOrNull { noteString.startsWith(it) } ?: ""
             ] ?: NoteModifier.None
             // cut away string responsible for modifier
             noteString = noteString.substring(noteModifierToString(noteModifier).length)
+//            Log.v("Tuner", "TemperamentIO.parseNote, step 2: $noteString, noteModifier=$noteModifier")
             // find octave offset
             val offsetString = "^[-+]\\d+".toRegex().find(noteString)?.value
             octaveOffset = offsetString?.toIntOrNull() ?: 0
 
             // remove '/' if there is one, afterwards we read the enharmonic
             noteString = noteString.substring(offsetString?.length ?: 0).trim()
-            if (noteString[0] == '/')
+//            Log.v("Tuner", "TemperamentIO.parseNote, step 3: $noteString, offsetString = $offsetString")
+            if (noteString.getOrNull(0) == '/')
                 noteString = noteString.drop(1).trim()
         }
 
@@ -439,20 +443,24 @@ object TemperamentIO {
         val enharmonicBase = BaseNote.entries.firstOrNull {  noteString.startsWith(it.name) }
             ?: BaseNote.None
 
-        if (enharmonicBase == BaseNote.None)
+        if (enharmonicBase == BaseNote.None) {
+//            Log.v("Tuner", "TemperamentIO.parseNote result: $baseNote, $noteModifier, $octaveOffset")
             return MusicalNote(baseNote, noteModifier, octaveOffset)
+        }
 
         // cut away string responsible for enharmonic base
         noteString = noteString.substring(enharmonicBase.name.length)
-
+//        Log.v("Tuner", "TemperamentIO.parseNote, step 4: $noteString")
         val enharmonicModifier = stringToNoteModifierMap[
             noteModifierNames.firstOrNull { noteString.startsWith(it) } ?: ""
         ] ?: NoteModifier.None
         // cut away string responsible for enharmonic modifier
         noteString = noteString.substring(noteModifierToString(enharmonicModifier).length)
+//        Log.v("Tuner", "TemperamentIO.parseNote, step 5: $noteString")
         // find enharmonic octave offset
         val enharmonicOffsetString = "^[-+]\\d+".toRegex().find(noteString)?.value
         val enharmonicOctaveOffset = enharmonicOffsetString?.toIntOrNull() ?: 0
+//        Log.v("Tuner", "TemperamentIO.parseNote result: $baseNote, $noteModifier, $octaveOffset, $enharmonicBase, $enharmonicModifier, $enharmonicOctaveOffset")
         return MusicalNote(
             baseNote, noteModifier, octaveOffset,
             enharmonicBase = enharmonicBase,

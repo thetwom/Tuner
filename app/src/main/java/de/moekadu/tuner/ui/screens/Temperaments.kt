@@ -140,7 +140,7 @@ private fun rememberImportExportCallbacks(
                 val filename = getFilenameFromUri(context, uri)
                 Toast.makeText(
                     context,
-                    context.getString(R.string.file_empty, filename),
+                    context.getString(R.string.file_contains_no_temperaments, filename),
                     Toast.LENGTH_LONG
                 ).show()
             } else {
