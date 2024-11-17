@@ -21,137 +21,6 @@ private fun BufferedWriter.writeLine(line: String) {
 }
 
 object TemperamentIO {
-    data class NoteLineContents(
-        val note: MusicalNote?,
-        val cent: Double?,
-        val ratio: RationalNumber?
-    )
-
-    class ParsedTemperament(
-        val name: String,
-        val abbreviation: String,
-        val description: String,
-        val noteLines: Array<NoteLineContents?>
-    ) {
-        fun hasErrors(): Boolean {
-            if (noteLines.isEmpty())
-                return true
-            // check that all lines could be successfully parsed
-            if (noteLines.contains(null))
-                return true
-            // check that there is a valid cent or ratio value
-            if (noteLines.firstOrNull { it?.cent == null && it?.ratio == null  } != null)
-                return true
-            // check that values are increasing
-            val orderingError = TemperamentValidityChecks.checkValueOrderingErrors(
-                noteLines.size,
-                {
-                    val ratio = noteLines[it]?.ratio?.toDouble()
-                    if (ratio != null) ratioToCents(ratio.toDouble()) else noteLines[it]?.cent
-                },
-                null
-            )
-            if (orderingError != TemperamentValidityChecks.ValueOrdering.Increasing)
-                return true
-            // check if we can use predefined notes
-            val predefinedNotes = getSuitableNoteNames(noteLines.size)
-            if (predefinedNotes != null)
-                return false
-            // if predefined notes are note possible, check the validity of the user defined notes
-            val noteNameError = TemperamentValidityChecks.checkNoteNameErrors(
-                noteLines.size,
-                { noteLines[it]?.note },
-                null
-            )
-            if (noteNameError != TemperamentValidityChecks.NoteNameError.None)
-                return true
-            return false
-        }
-
-        fun toTemperamentWithNoteNames(): TemperamentWithNoteNames? {
-            if (noteLines.isEmpty())
-                return null
-
-            // fill different arrays
-            val numberOfNotesPerOctave = noteLines.size
-            val ratios = ArrayList<RationalNumber?>()
-            val cents = ArrayList<Double>()
-            val notes = ArrayList<MusicalNote?>()
-
-            for (line in noteLines) {
-                ratios.add(line?.ratio)
-                val centFromRatio = if (line?.ratio != null)
-                    ratioToCents(line.ratio.toDouble())
-                else
-                    null
-                val cent = line?.cent ?: centFromRatio ?: return null
-                cents.add(cent)
-                notes.add(line?.note)
-            }
-
-            // resolve note names, we try to use predefined note names
-            val predefinedNotes = getSuitableNoteNames(noteLines.size)
-            if (notes.contains(null) && predefinedNotes == null)
-                return null
-
-            val resolvedNotes = if (notes.contains(null)) {
-                null // this branch uses the predefined notes, which happens by specifiying null
-            } else if (predefinedNotes == null) {
-                notes
-            } else {
-                var usePredefined = true
-                for (i in 0 until numberOfNotesPerOctave) {
-                    if (!notesEqualCheck(predefinedNotes.notes[i], notes[i])) {
-                        usePredefined = false
-                        break
-                    }
-                }
-                if (usePredefined) null else notes
-            }
-
-            val noteNames = if (resolvedNotes == null) {
-                null
-            } else {
-                val referenceNote = detectReferenceNote(resolvedNotes) ?: return null
-                NoteNames(
-                    resolvedNotes.map { it!! }.toTypedArray(),
-                    referenceNote
-                )
-            }
-
-            // construct the temperament
-            return if (!ratios.contains(null)) {
-                TemperamentWithNoteNames(
-                    Temperament.create(
-                        name = StringOrResId(name ?: ""),
-                        abbreviation = StringOrResId(abbreviation ?: ""),
-                        description = StringOrResId(description ?: ""),
-                        rationalNumbers = ratios.map { it!! }.toTypedArray(),
-                        stableId = Temperament.NO_STABLE_ID
-                    ),
-                    noteNames = noteNames
-                )
-            } else {
-                TemperamentWithNoteNames(
-                    Temperament.create(
-                        name = StringOrResId(name ?: ""),
-                        abbreviation = StringOrResId(abbreviation ?: ""),
-                        description = StringOrResId(description ?: ""),
-                        cents = cents.toDoubleArray(),
-                        stableId = Temperament.NO_STABLE_ID
-                    ),
-                    noteNames = noteNames
-                )
-            }
-        }
-
-        private fun detectReferenceNote(notes: List<MusicalNote?>): MusicalNote? {
-            return notes.firstOrNull{
-                (it?.base == BaseNote.A && it.modifier == NoteModifier.None) ||
-                        (it?.enharmonicBase == BaseNote.A && it.enharmonicModifier == NoteModifier.None)
-            } ?: notes.firstOrNull { it != null }
-        }
-    }
 
 //    fun temperamentToString(temperament: TemperamentWithNoteNames): String {
 //        val result = StringBuilder()
@@ -258,14 +127,14 @@ object TemperamentIO {
         }
     }
 
-    fun readTemperamentsFromFile(context: Context, uri: Uri): List<ParsedTemperament>  {
+    fun readTemperamentsFromFile(context: Context, uri: Uri): List<EditableTemperament>  {
         return context.contentResolver?.openInputStream(uri)?.use { reader ->
             parseTemperaments(reader.bufferedReader())
         } ?: listOf()
     }
 
-    fun parseTemperaments(reader: BufferedReader): List<ParsedTemperament> {
-        val collectedTemperaments = ArrayList<ParsedTemperament>()
+    fun parseTemperaments(reader: BufferedReader): List<EditableTemperament> {
+        val collectedTemperaments = ArrayList<EditableTemperament>()
 
         var version: String? = null
         var name: String? = null
@@ -273,7 +142,7 @@ object TemperamentIO {
         var description: String? = null
         var numberOfNotes: Int = -1
 
-        val noteLines = ArrayList<NoteLineContents?>()
+        val noteLines = ArrayList<EditableTemperament.NoteLineContents?>()
 
         reader.forEachLine { line ->
             if (isCommentLine(line)) {
@@ -310,10 +179,15 @@ object TemperamentIO {
                         )
                     )
 
-                    collectedTemperaments.add(ParsedTemperament(
-                        name ?: "", abbreviation ?: "", description ?: "",
-                        noteLines.toTypedArray()
-                    ))
+                    collectedTemperaments.add(
+                        EditableTemperament(
+                            name ?: "",
+                            abbreviation ?: "",
+                            description ?: "",
+                            noteLines.toTypedArray(),
+                            Temperament.NO_STABLE_ID
+                        )
+                    )
                 }
 
                 name = null
@@ -325,7 +199,7 @@ object TemperamentIO {
         }
         return collectedTemperaments
     }
-    
+
     private fun notesEqualCheck(note: MusicalNote?, other: MusicalNote?): Boolean {
         return (note?.base == other?.base &&
                 note?.modifier == other?.modifier &&
@@ -341,7 +215,7 @@ object TemperamentIO {
 
     private fun parseCommentLine(string: String): Pair<String?, String?> {
         val keys = listOf(VERSION_KEY, DESCRIPTION_KEY, ABBREVIATION_KEY)
-        var trimmed = string.trim()
+        val trimmed = string.trim()
         if (trimmed.getOrNull(0) != '!')
             return Pair(null, null)
 
@@ -357,7 +231,7 @@ object TemperamentIO {
         return Pair(null, null)
     }
 
-    private fun parseNoteLine(string: String): NoteLineContents? {
+    private fun parseNoteLine(string: String): EditableTemperament.NoteLineContents? {
         val valueAndMore = string.trim().split("\\s+".toRegex(), limit = 2)
         if (valueAndMore.isEmpty())
             return null
@@ -367,7 +241,7 @@ object TemperamentIO {
             return null
 
         val note = if (valueAndMore.size >= 2) parseNote(valueAndMore[1]) else null
-        return NoteLineContents(note, cent, ratio)
+        return EditableTemperament.NoteLineContents(note, cent, ratio)
     }
 
     private fun parseRatio(string: String): RationalNumber? {

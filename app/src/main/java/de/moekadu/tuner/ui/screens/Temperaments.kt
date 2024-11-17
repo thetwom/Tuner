@@ -64,6 +64,7 @@ import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.RationalNumber
+import de.moekadu.tuner.temperaments2.EditableTemperament
 import de.moekadu.tuner.temperaments2.Temperament
 import de.moekadu.tuner.temperaments2.TemperamentIO
 import de.moekadu.tuner.temperaments2.TemperamentWithNoteNames
@@ -102,7 +103,7 @@ interface TemperamentsData {
 @Composable
 private fun rememberImportExportCallbacks(
     state: TemperamentsData,
-    onLoadTemperaments: (temperaments: List<TemperamentIO.ParsedTemperament>) -> Unit
+    onLoadTemperaments: (temperaments: List<EditableTemperament>) -> Unit
 ): OverflowMenuCallbacks {
     val context = LocalContext.current
     val stateUpdated by rememberUpdatedState(newValue = state)
@@ -192,7 +193,7 @@ fun Temperaments(
     onNewTemperament:  (temperament: TemperamentWithNoteNames, rootNote: MusicalNote) -> Unit = { _, _ ->},
     onAbort: () -> Unit = { },
     onEditTemperamentClicked: (temperament: TemperamentWithNoteNames, copy: Boolean) -> Unit = { _, _ ->},
-    onLoadTemperaments: (temperaments: List<TemperamentIO.ParsedTemperament>) -> Unit = { }
+    onLoadTemperaments: (temperaments: List<EditableTemperament>) -> Unit = { }
 ) {
     val configuration = LocalConfiguration.current
     when (configuration.orientation) {
@@ -231,7 +232,7 @@ fun TemperamentsPortrait(
     onNewTemperament:  (temperament: TemperamentWithNoteNames, rootNote: MusicalNote) -> Unit = { _, _ ->},
     onAbort: () -> Unit = { },
     onEditTemperamentClicked: (temperament: TemperamentWithNoteNames, copy: Boolean) -> Unit = { _, _ ->},
-    onLoadTemperaments: (temperaments: List<TemperamentIO.ParsedTemperament>) -> Unit = { }
+    onLoadTemperaments: (temperaments: List<EditableTemperament>) -> Unit = { }
 ) {
     val context = LocalContext.current
     val selectedTemperaments by state.listData.selectedItems.collectAsStateWithLifecycle()
@@ -455,7 +456,7 @@ fun TemperamentsLandscape(
     onNewTemperament:  (temperament: TemperamentWithNoteNames, rootNote: MusicalNote) -> Unit = { _, _ -> },
     onAbort: () -> Unit = { },
     onEditTemperamentClicked: (temperament: TemperamentWithNoteNames, copy: Boolean) -> Unit = { _, _ ->},
-    onLoadTemperaments: (temperaments: List<TemperamentIO.ParsedTemperament>) -> Unit = { }
+    onLoadTemperaments: (temperaments: List<EditableTemperament>) -> Unit = { }
 ) {
     val context = LocalContext.current
     val selectedTemperaments by state.listData.selectedItems.collectAsStateWithLifecycle()

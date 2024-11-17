@@ -53,9 +53,9 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 
 interface TemperamentEditorState {
-    val name: State<StringOrResId>
-    val abbreviation: State<StringOrResId>
-    val description: State<StringOrResId>
+    val name: State<String>
+    val abbreviation: State<String>
+    val description: State<String>
     val numberOfValues: State<Int>
     val temperamentValues: State<PersistentList<TemperamentTableLineState>>
     val hasErrors: State<Boolean>
@@ -105,7 +105,7 @@ fun TemperamentEditor(
             LazyColumn(modifier = Modifier.weight(1f)) {
                 item {
                     TextField(
-                        value = state.name.value.value(context),
+                        value = state.name.value,
                         onValueChange = { state.modifyName(it) },
                         label = { Text(stringResource(id = R.string.temperament_name)) },
                         modifier = Modifier
@@ -122,7 +122,7 @@ fun TemperamentEditor(
                 }
                 item {
                     TextField(
-                        value = state.abbreviation.value.value(context),
+                        value = state.abbreviation.value,
                         onValueChange = { state.modifyAbbreviation(it) },
                         label = { Text(stringResource(id = R.string.temperament_abbreviation)) },
                         modifier = Modifier
@@ -140,7 +140,7 @@ fun TemperamentEditor(
                 }
                 item {
                     TextField(
-                        value = state.description.value.value(context),
+                        value = state.description.value,
                         onValueChange = { state.modifyDescription(it) },
                         label = { Text(stringResource(id = R.string.temperament_description)) },
                         modifier = Modifier
@@ -203,23 +203,23 @@ fun TemperamentEditor(
 }
 
 private class TemperamentEditorStateTest : TemperamentEditorState {
-    override val name = mutableStateOf(StringOrResId("Test"))
-    override val abbreviation = mutableStateOf(StringOrResId("T"))
-    override val description = mutableStateOf(StringOrResId("Description of temperament"))
+    override val name = mutableStateOf("Test")
+    override val abbreviation = mutableStateOf("T")
+    override val description = mutableStateOf("Description of temperament")
     override val numberOfValues = mutableIntStateOf(12)
 
     val noteNames = getSuitableNoteNames(numberOfValues.intValue)
 
     override fun modifyName(value: String) {
-        name.value = StringOrResId(value)
+        name.value = value
     }
 
     override fun modifyAbbreviation(value: String) {
-        abbreviation.value = StringOrResId(value)
+        abbreviation.value = value
     }
 
     override fun modifyDescription(value: String) {
-        description.value = StringOrResId(value)
+        description.value = value
     }
     
     override val temperamentValues = mutableStateOf(

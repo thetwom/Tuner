@@ -3,6 +3,7 @@ package de.moekadu.tuner.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
@@ -13,9 +14,11 @@ import androidx.navigation.compose.dialog
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import de.moekadu.tuner.preferences.PreferenceResources
+import de.moekadu.tuner.temperaments2.EditableTemperament
 import de.moekadu.tuner.temperaments2.NoteNames
 import de.moekadu.tuner.temperaments2.Temperament
 import de.moekadu.tuner.temperaments2.TemperamentWithNoteNames
+import de.moekadu.tuner.temperaments2.toEditableTemperament
 import de.moekadu.tuner.ui.screens.TemperamentEditor
 import de.moekadu.tuner.ui.temperaments.NumberOfNotesDialog
 import de.moekadu.tuner.viewmodels.TemperamentEditorViewModel
@@ -29,12 +32,10 @@ private fun createViewModel(controller: NavController, backStackEntry: NavBackSt
     val parentEntry = remember(backStackEntry) {
         controller.getBackStackEntry<TemperamentEditorGraphRoute>()
     }
-    val temperament = parentEntry.toRoute<TemperamentEditorGraphRoute>().getTemperamentWithNoteNames()
+    val temperament = parentEntry.toRoute<TemperamentEditorGraphRoute>().getEditableTemperament()
     return hiltViewModel<TemperamentEditorViewModel, TemperamentEditorViewModel.Factory>(
         parentEntry
-    ) { factory ->
-        factory.create(temperament)
-    }
+    ) { factory -> factory.create(temperament) }
 }
 
 
@@ -77,18 +78,13 @@ fun NavGraphBuilder.temperamentEditorGraph(
 
 @Serializable
 data class TemperamentEditorGraphRoute(
-    val serializedTemperament: String,
-    val serializedNoteNames: String?
+    val serializedEditableTemperament: String,
     ) {
-    constructor(temperament: Temperament, noteNames: NoteNames?) : this(
-        Json.encodeToString(temperament),
-        noteNames?.let { Json.encodeToString(it) }
+    constructor(temperament: EditableTemperament) : this(
+        Json.encodeToString(temperament)
     )
-    fun getTemperamentWithNoteNames(): TemperamentWithNoteNames {
-        return TemperamentWithNoteNames(
-            Json.decodeFromString<Temperament>(serializedTemperament),
-            serializedNoteNames?.let { Json.decodeFromString<NoteNames>(it) }
-        )
+    fun getEditableTemperament(): EditableTemperament {
+        return Json.decodeFromString<EditableTemperament>(serializedEditableTemperament)
     }
 }
 
