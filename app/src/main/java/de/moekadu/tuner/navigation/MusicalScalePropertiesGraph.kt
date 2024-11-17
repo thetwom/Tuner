@@ -37,11 +37,15 @@ import androidx.navigation.toRoute
 import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.preferences.PreferenceResources
+import de.moekadu.tuner.temperaments2.EditableTemperament
 import de.moekadu.tuner.temperaments2.MusicalScale2
 import de.moekadu.tuner.temperaments2.MusicalScale2Factory
 import de.moekadu.tuner.temperaments2.Temperament
 import de.moekadu.tuner.temperaments2.TemperamentResources
 import de.moekadu.tuner.temperaments2.getSuitableNoteNames
+import de.moekadu.tuner.temperaments2.hasErrors
+import de.moekadu.tuner.temperaments2.toEditableTemperament
+import de.moekadu.tuner.temperaments2.toTemperamentWithNoteNames
 import de.moekadu.tuner.ui.preferences.ReferenceNoteDialog
 import de.moekadu.tuner.ui.screens.Temperaments
 import de.moekadu.tuner.viewmodels.TemperamentViewModel
@@ -108,27 +112,23 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
                 }
             },
             onEditTemperamentClicked = { temperament, copy ->
+                val name = temperament.temperament.name.value(context)
                 controller.navigate(
                     TemperamentEditorGraphRoute(
-                        if (copy) {
-                            temperament.temperament.copy(
-                                name = StringOrResId(
-                                    if (temperament.temperament.name.value(context) == "")
-                                        ""
-                                    else
-                                        "${temperament.temperament.name.value(context)} (${resources.getString(R.string.copy)})"
-                                ),
-                                stableId = Temperament.NO_STABLE_ID
-                            )
-                        } else {
-                            temperament.temperament
-                        },
-                        temperament.noteNames
+                        temperament.toEditableTemperament(
+                            context = context,
+                            name = when {
+                                copy && name == "" -> ""
+                                copy -> "$name (${resources.getString(R.string.copy)})"
+                                else -> null // i.e. use name from temperament
+                            },
+                            stableId = if (copy) Temperament.NO_STABLE_ID else null // null means use stable from temperament
+                        )
                     )
                 )
             },
             onLoadTemperaments = { temperamentList ->
-//                Log.v("Tuner", "MusicalScalePropertiesGraph.onLoadTemperaments: errors=${temperamentList.firstOrNull{it.hasErrors()}==null}")
+                //                Log.v("Tuner", "MusicalScalePropertiesGraph.onLoadTemperaments: errors=${temperamentList.firstOrNull{it.hasErrors()}==null}")
                 if (temperamentList.firstOrNull { it.hasErrors() } == null) {
                     Toast.makeText(
                         context,
@@ -137,10 +137,16 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
                         ),
                         Toast.LENGTH_LONG
                     ).show()
+
                     temperaments.appendTemperaments(
                         temperamentList.mapNotNull { it.toTemperamentWithNoteNames() }
                     )
+                } else if (temperamentList.size == 1) { // one temperament with errors
+                    controller.navigate(
+                        TemperamentEditorGraphRoute(temperamentList[0])
+                    )
                 }
+
                 // TODO: else branches:
                 //  - if one temperament with error -> go directly into editor
                 //  - if several temperaments, where there are errors -> launch dialog telling this

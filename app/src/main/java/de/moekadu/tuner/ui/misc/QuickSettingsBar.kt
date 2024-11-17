@@ -109,8 +109,17 @@ fun QuickSettingsBar(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
+                val abbreviation = musicalScale.temperament.abbreviation.value(context).let { abbr ->
+                    if (abbr == "")
+                        musicalScale.temperament.name.value(context).let { nme ->
+                            if (nme == "") "-" else nme
+                        }
+                    else
+                        abbr
+                }
+
                 Text(
-                    musicalScale.temperament.abbreviation.value(context),
+                    abbreviation,
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant

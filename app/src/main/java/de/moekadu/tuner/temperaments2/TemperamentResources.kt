@@ -1,6 +1,7 @@
 package de.moekadu.tuner.temperaments2
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -174,6 +175,7 @@ class TemperamentResources @Inject constructor(
                 modified.add(it.clone(newKey))
             }
         }
+        Log.v("Tuner", "TemperamentResources.appendTemperaments: size=${temperaments.size}")
         writeCustomTemperaments(newTemperamentsList)
     }
 
