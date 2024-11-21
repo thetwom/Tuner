@@ -20,6 +20,7 @@ import de.moekadu.tuner.temperaments2.TemperamentResources
 import de.moekadu.tuner.temperaments2.TemperamentValidityChecks
 import de.moekadu.tuner.temperaments2.TemperamentWithNoteNames
 import de.moekadu.tuner.temperaments2.getSuitableNoteNames
+import de.moekadu.tuner.temperaments2.ratioToCents
 import de.moekadu.tuner.ui.screens.TemperamentEditorState
 import de.moekadu.tuner.ui.temperaments.TemperamentTableLineState
 import kotlinx.collections.immutable.PersistentList
@@ -275,7 +276,7 @@ class TemperamentEditorViewModel @AssistedInject constructor(
             null
         }
         // TODO: we must ensure that we have valid number, otherwise saveTemperament is not allowed to be called
-        val cents = ratios?.map { it.toDouble() }
+        val cents = ratios?.map { ratioToCents(it.toDouble()) }
             ?: values.map { it.obtainCent() ?: 0.0 }
 
         var hasEqualDivisions = true
