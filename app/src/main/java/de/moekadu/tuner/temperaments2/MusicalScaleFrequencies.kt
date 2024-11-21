@@ -1,5 +1,6 @@
 package de.moekadu.tuner.temperaments2
 
+import android.util.Log
 import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable
 import kotlin.math.floor
@@ -138,6 +139,9 @@ class MusicalScaleFrequencies(
             frequencyMax: Float,
             stretchTuning: StretchTuning
         ): MusicalScaleFrequencies {
+//            cents.forEachIndexed { index, d ->
+//                Log.v("Tuner", "MusicalScaleFrequencies.create: cent at index $index = $d")
+//            }
             val numberOfNotesPerOctave: Int = cents.size - 1
             val centsReference = cents[referenceIndexWithinOctave]
 
@@ -148,6 +152,7 @@ class MusicalScaleFrequencies(
             var globalIndexOfReferenceHigh = 0
             var currentFrequency = stretchTuning.getStretchedFrequency(referenceFrequency.toDouble())
             while (currentFrequency < frequencyMax) {
+//                Log.v("Tuner", "MusicalScaleFrequencies.create: current f=$currentFrequency, max freq=$frequencyMax")
                 // condition is needed when reference frequency is outside min/max
                 if (currentFrequency > frequencyMin) {
                     higherFrequencies.add(currentFrequency)
@@ -172,6 +177,7 @@ class MusicalScaleFrequencies(
             var globalIndexOfReferenceLow = 0
             currentFrequency = stretchTuning.getStretchedFrequency(referenceFrequency.toDouble())
             while (currentFrequency > frequencyMin) {
+//                Log.v("Tuner", "MusicalScaleFrequencies.create: current f=$currentFrequency, min freq=$frequencyMin")
                 // condition is needed when reference frequency is outside min/max
                 if (currentFrequency < frequencyMax) {
                     lowerFrequencies.add(currentFrequency)
