@@ -104,9 +104,9 @@
         <item quantity="one">Lade %d Temperament</item>
         <item quantity="other">Lade %d Temperamente</item>
     </plurals>
-    <plurals name="sharing_num_instruments">
-        <item quantity="one">Teile %d Instrument</item>
-        <item quantity="other">Teile %d Instrumente</item>
+    <plurals name="sharing_num_items">
+        <item quantity="one">Teile %d Eintrag</item>
+        <item quantity="other">Teile %d Einträge</item>
     </plurals>
 
     <string name="prefer_flat">Bevorzuge \u266D vor \u266F</string>

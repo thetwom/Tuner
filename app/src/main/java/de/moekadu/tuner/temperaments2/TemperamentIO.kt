@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.Toast
 import de.moekadu.tuner.BuildConfig
 import de.moekadu.tuner.R
+import de.moekadu.tuner.misc.FileCheck
 import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.temperaments.BaseNote
@@ -14,6 +15,7 @@ import de.moekadu.tuner.temperaments.NoteModifier
 import de.moekadu.tuner.temperaments.RationalNumber
 import java.io.BufferedReader
 import java.io.BufferedWriter
+import java.io.StringWriter
 
 private fun BufferedWriter.writeLine(line: String) {
     write(line)
@@ -21,53 +23,17 @@ private fun BufferedWriter.writeLine(line: String) {
 }
 
 object TemperamentIO {
+    data class TemperamentAndFileCheckResult(
+        val fileCheck: FileCheck,
+        val instruments: List<EditableTemperament>
+    )
 
-//    fun temperamentToString(temperament: TemperamentWithNoteNames): String {
-//        val result = StringBuilder()
-//        val name = temperament.temperament.name.value(null)
-//            .replace("\n", " ")
-//        val abbreviation = temperament.temperament.abbreviation.value(null)
-//            .replace("\n", " ")
-//        val description = temperament.temperament.description.value(null)
-//            .replace("\n", " ")
-//
-//        result.append("! ${name.replace(" ","_")}.scl\n")
-//        result.append("!\n")
-//
-//        if (name != "")
-//            result.append("! $NAME_KEY=$name\n")
-//        if (abbreviation != "")
-//            result.append("! $ABBREVIATION_KEY=$abbreviation\n")
-//        if (description != "")
-//            result.append("! $DESCRIPTION_KEY=$description\n")
-//        result.append("!\n")
-//        result.append("$name\n")
-//        result.append("${temperament.temperament.numberOfNotesPerOctave}\n")
-//        result.append("!\n")
-//
-//        val numberOfNotes = temperament.temperament.numberOfNotesPerOctave
-//        val noteNames = temperament.noteNames ?: getSuitableNoteNames(numberOfNotes)
-//        val ratios = temperament.temperament.rationalNumbers
-//        val cents = temperament.temperament.cents
-//
-//        for (i in 1 .. numberOfNotes) {
-//            if (ratios != null) {
-//                val r = ratios[i]
-//                result.append(" ${r.numerator}/${r.denominator}\n")
-//            } else {
-//                val c = cents[i]
-//                result.append(" %.2f".format(c))
-//            }
-//            noteNames?.getOrNull(i % numberOfNotes)?.let { note ->
-//                result.append("    ")
-//                result.append(noteToString(note))
-//            }
-//
-//            result.append("\n")
-//        }
-//
-//        return result.toString()
-//    }
+    fun temperamentsListToString(context: Context, temperaments: List<TemperamentWithNoteNames>)
+    : String {
+        val writer = StringWriter()
+        writeTemperaments(temperaments, writer.buffered(), context)
+        return writer.toString()
+    }
 
     fun writeTemperaments(
         temperaments: List<TemperamentWithNoteNames>,
@@ -127,13 +93,13 @@ object TemperamentIO {
         }
     }
 
-    fun readTemperamentsFromFile(context: Context, uri: Uri): List<EditableTemperament>  {
+    fun readTemperamentsFromFile(context: Context, uri: Uri): TemperamentAndFileCheckResult  {
         return context.contentResolver?.openInputStream(uri)?.use { reader ->
             parseTemperaments(reader.bufferedReader())
-        } ?: listOf()
+        } ?: TemperamentAndFileCheckResult(FileCheck.Invalid, listOf())
     }
 
-    fun parseTemperaments(reader: BufferedReader): List<EditableTemperament> {
+    fun parseTemperaments(reader: BufferedReader): TemperamentAndFileCheckResult {
         val collectedTemperaments = ArrayList<EditableTemperament>()
 
         var version: String? = null
@@ -143,6 +109,7 @@ object TemperamentIO {
         var numberOfNotes: Int = -1
 
         val noteLines = ArrayList<EditableTemperament.NoteLineContents?>()
+        var fileCheckResult = FileCheck.Ok
 
         reader.forEachLine { line ->
             if (isCommentLine(line)) {
@@ -158,17 +125,27 @@ object TemperamentIO {
                         name = line.trim()
                     }
                     numberOfNotes < 0 -> {
-                        numberOfNotes = line.trim().toIntOrNull() ?: return@forEachLine
-                        if (numberOfNotes < 0)
+                        val n = line.trim().toIntOrNull()
+                        if (n == null || n < 0) {
+                            fileCheckResult = FileCheck.Invalid
                             return@forEachLine
+                        } else {
+                            numberOfNotes = n
+                        }
                     }
                     else -> {
-                        noteLines.add(parseNoteLine(line))
+                        val noteLineCheck = parseNoteLine(line)
+                        if (noteLineCheck == null) {
+                            fileCheckResult = FileCheck.Invalid
+                            return@forEachLine
+                        } else {
+                            noteLines.add(parseNoteLine(line))
+                        }
                     }
                 }
             }
 
-            if (numberOfNotes >= 0 && noteLines.size == numberOfNotes) {
+            if (fileCheckResult == FileCheck.Ok && numberOfNotes >= 0 && noteLines.size == numberOfNotes) {
                 // we do not support temperaments with only one note, we at least need the octave
                 if (numberOfNotes > 0) {
                     noteLines.add(
@@ -196,8 +173,21 @@ object TemperamentIO {
                 numberOfNotes = -1
                 noteLines.clear()
             }
+            if (fileCheckResult != FileCheck.Ok)
+                return@forEachLine
         }
-        return collectedTemperaments
+
+        return when{
+            fileCheckResult == FileCheck.Ok && collectedTemperaments.size == 0 -> {
+                TemperamentAndFileCheckResult(FileCheck.Empty, collectedTemperaments)
+            }
+            fileCheckResult == FileCheck.Ok -> {
+                TemperamentAndFileCheckResult(FileCheck.Ok, collectedTemperaments)
+            }
+            else -> {
+                TemperamentAndFileCheckResult(FileCheck.Invalid, listOf())
+            }
+        }
     }
 
     private fun notesEqualCheck(note: MusicalNote?, other: MusicalNote?): Boolean {
@@ -391,7 +381,6 @@ object TemperamentIO {
     private val noteModifierNames = NoteModifier.entries
         .map { noteModifierToString(it) }
         .sortedByDescending { it.length }
-
 
     const val VERSION_KEY = "version"
     const val ABBREVIATION_KEY = "abbreviation"

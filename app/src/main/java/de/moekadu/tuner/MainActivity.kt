@@ -18,20 +18,17 @@
 */
 package de.moekadu.tuner
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,17 +42,25 @@ import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIO
 import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.instruments.migratingFromV6
+import de.moekadu.tuner.misc.FileCheck
+import de.moekadu.tuner.misc.toastPotentialFileCheckError
 import de.moekadu.tuner.navigation.ImportInstrumentsDialogRoute
 import de.moekadu.tuner.navigation.InstrumentsRoute
+import de.moekadu.tuner.navigation.TemperamentDialogRoute
 import de.moekadu.tuner.navigation.TunerRoute
 import de.moekadu.tuner.navigation.instrumentEditorGraph
 import de.moekadu.tuner.navigation.musicalScalePropertiesGraph
 import de.moekadu.tuner.navigation.preferenceGraph
 import de.moekadu.tuner.navigation.mainGraph
 import de.moekadu.tuner.navigation.temperamentEditorGraph
+import de.moekadu.tuner.navigation.TemperamentEditorGraphRoute
 import de.moekadu.tuner.preferences.NightMode
 import de.moekadu.tuner.preferences.PreferenceResources
+import de.moekadu.tuner.temperaments2.EditableTemperament
+import de.moekadu.tuner.temperaments2.TemperamentIO
 import de.moekadu.tuner.temperaments2.TemperamentResources
+import de.moekadu.tuner.temperaments2.hasErrors
+import de.moekadu.tuner.temperaments2.toTemperamentWithNoteNames
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -76,6 +81,7 @@ class MainActivity : ComponentActivity() {
     lateinit var temperaments: TemperamentResources
 
     private val loadInstrumentIntentChannel = Channel<List<Instrument>>(Channel.CONFLATED)
+    private val loadTemperamentIntentChannel = Channel<List<EditableTemperament>>(Channel.CONFLATED)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -107,15 +113,8 @@ class MainActivity : ComponentActivity() {
                 blackNightMode = appearance.blackNightEnabled
             ) {
                 val controller = rememberNavController()
-                // TODO: preference screen does not show back button
-//                val backStack by controller.currentBackStackEntryAsState()
-//                val inPreferencesGraph = backStack?.destination?.hierarchy?.any {
-//                    it.hasRoute(PreferencesGraphRoute::class)
-//                } == true
 
-//                var canNavigateUp by remember { mutableStateOf(false) }
-//                Log.v("Tuner", "MainActivity2: canNavigateUp: $canNavigateUp")
-
+                // handle incoming intents for loading instruments
                 LaunchedEffect(loadInstrumentIntentChannel, controller) {
                     for (instruments in loadInstrumentIntentChannel) {
 //                        Log.v("Tuner", "MainActivity2: Loading file ...")
@@ -124,6 +123,18 @@ class MainActivity : ComponentActivity() {
                         controller.navigate(ImportInstrumentsDialogRoute(
                             Json.encodeToString(instruments.toTypedArray())
                         ))
+                    }
+                }
+
+                // handle incoming intents for loading temperamens
+                LaunchedEffect(loadTemperamentIntentChannel, controller) {
+                    for (temperamentList in loadTemperamentIntentChannel) {
+//                        Log.v("Tuner", "MainActivity2: Loading file ...")
+                        controller.popBackStack(TunerRoute, inclusive = false)
+                        controller.navigate(TemperamentDialogRoute)
+                        loadTemperaments(
+                            controller, temperamentList, temperaments, this@MainActivity
+                        )
                     }
                 }
 
@@ -155,13 +166,23 @@ class MainActivity : ComponentActivity() {
                         //canNavigateUp = canNavigateUp,
                         onNavigateUpClicked = { controller.navigateUp() },
                         preferences = pref,
-                        temperaments = temperaments
+                        temperaments = temperaments,
+                        onLoadTemperaments = { temperamentList ->
+                            loadTemperaments(
+                                controller, temperamentList, temperaments, this@MainActivity
+                            )
+                        }
                     )
                     // provides TemperamentDialogRoute and ReferenceNoteDialog
                     musicalScalePropertiesGraph(
                         controller = controller,
                         preferences = pref,
-                        temperaments = temperaments
+                        temperaments = temperaments,
+                        onLoadTemperaments = { temperamentList ->
+                            loadTemperaments(
+                                controller, temperamentList, temperaments, this@MainActivity
+                            )
+                        }
                     )
 
                     instrumentEditorGraph(
@@ -195,11 +216,55 @@ class MainActivity : ComponentActivity() {
         val uri = intent?.data
         if ((intent?.action == Intent.ACTION_SEND || intent?.action == Intent.ACTION_VIEW) && uri != null) {
 //            Log.v("Tuner", "MainActivity2.onNewIntent: intent=${intent.data}")
-            val (readState, instruments) = InstrumentIO.readInstrumentsFromFile(this, uri)
-            InstrumentIO.toastFileLoadingResult(this, readState, uri)
-            if (instruments.isNotEmpty()) {
-                loadInstrumentIntentChannel.trySend(instruments)
+            val (stateInstruments, instruments) = InstrumentIO.readInstrumentsFromFile(
+                this, uri
+            )
+            val (stateTemperaments, temperaments) = TemperamentIO.readTemperamentsFromFile(
+                this, uri
+            )
+            when {
+                stateInstruments == FileCheck.Ok && instruments.isNotEmpty() -> {
+                    loadInstrumentIntentChannel.trySend(instruments)
+                }
+                stateTemperaments == FileCheck.Ok && temperaments.isNotEmpty() -> {
+                    loadTemperamentIntentChannel.trySend(temperaments)
+                }
+                stateInstruments == FileCheck.Empty || stateTemperaments == FileCheck.Empty -> {
+                    FileCheck.Empty.toastPotentialFileCheckError(this, uri)
+                }
+                else -> {
+                    FileCheck.Invalid.toastPotentialFileCheckError(this, uri)
+                }
             }
         }
     }
 }
+
+private fun loadTemperaments(
+    controller: NavController,
+    temperamentList: List<EditableTemperament>,
+    temperamentResources: TemperamentResources,
+    context: Context
+) {
+    if (temperamentList.firstOrNull { it.hasErrors() } == null) {
+        Toast.makeText(
+            context,
+            context.resources.getQuantityString(
+                R.plurals.load_temperaments, temperamentList.size, temperamentList.size
+            ),
+            Toast.LENGTH_LONG
+        ).show()
+
+        temperamentResources.appendTemperaments(
+            temperamentList.mapNotNull { it.toTemperamentWithNoteNames() }
+        )
+    } else if (temperamentList.size == 1) { // one temperament with errors
+        controller.navigate(
+            TemperamentEditorGraphRoute(temperamentList[0])
+        )
+    }
+    // TODO: else branches:
+    //  - if several temperaments, where there are errors -> launch dialog telling this
+    //    maybe with options to load the correct ones?
+}
+

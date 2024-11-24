@@ -94,9 +94,9 @@
     <string name="prepend_current_list">Ajouter en haut de la liste actuelle</string>
     <string name="append_current_list">Ajouter en bas de la liste actuelle</string>
     <string name="share">Partager les instruments</string>
-    <plurals name="sharing_num_instruments">
-        <item quantity="one">Partager %d instrument</item>
-        <item quantity="other">Partager %d instruments</item>
+    <plurals name="sharing_num_items">
+        <item quantity="one">Partager %d élément</item>
+        <item quantity="other">Partager %d éléments</item>
     </plurals>
     <string name="load_from_disk">Charger les éléments depuis un fichier</string>
     <string name="save_to_disk">Enregistrer les éléments dans un fichier</string>

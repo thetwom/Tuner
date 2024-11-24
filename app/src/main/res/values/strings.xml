@@ -135,9 +135,9 @@
     <string name="prepend_current_list">Prepend to current list</string>
     <string name="append_current_list">Append to current list</string>
     <string name="share">Share items</string>
-    <plurals name="sharing_num_instruments">
-        <item quantity="one">Sharing %d instrument</item>
-        <item quantity="other">Sharing %d instruments</item>
+    <plurals name="sharing_num_items">
+        <item quantity="one">Sharing %d items</item>
+        <item quantity="other">Sharing %d items</item>
     </plurals>
     <string name="load_from_disk">Load items from file</string>
     <string name="save_to_disk">Save items to file</string>

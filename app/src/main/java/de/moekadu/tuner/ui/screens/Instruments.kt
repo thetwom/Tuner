@@ -52,8 +52,9 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIO
 import de.moekadu.tuner.instruments.InstrumentIcon
-import de.moekadu.tuner.instruments.ShareInstruments
+import de.moekadu.tuner.misc.ShareData
 import de.moekadu.tuner.misc.getFilenameFromUri
+import de.moekadu.tuner.misc.toastPotentialFileCheckError
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
@@ -120,7 +121,8 @@ fun Instruments(
         }
     }
     val shareInstrumentLauncher = rememberLauncherForActivityResult(
-        contract = ShareInstruments.Contract()
+        contract = ShareData.Contract()
+        //contract = ShareInstruments.Contract()
     ) {
         state.listData.clearSelectedItems()
     }
@@ -130,7 +132,7 @@ fun Instruments(
     ) { uri ->
         if (uri != null) {
             val (readState, instruments) = InstrumentIO.readInstrumentsFromFile(context, uri)
-            InstrumentIO.toastFileLoadingResult(context, readState, uri)
+            readState.toastPotentialFileCheckError(context, uri)
             if (instruments.isNotEmpty()) {
                 onLoadInstruments(instruments)
                 state.listData.clearSelectedItems()
@@ -150,7 +152,13 @@ fun Instruments(
             if (instruments.isEmpty()) {
                 Toast.makeText(context, R.string.database_empty_share, Toast.LENGTH_LONG).show()
             } else {
-                val intent = ShareInstruments.createShareInstrumentsIntent(context, instruments)
+                val intent = ShareData.createShareDataIntent(
+                    context,
+                    "tuner-instruments.txt",
+                    InstrumentIO.instrumentsListToString(context, instruments),
+                    instruments.size
+                )
+                //val intent = ShareInstruments.createShareInstrumentsIntent(context, instruments)
                 shareInstrumentLauncher.launch(intent)
             }
         }
