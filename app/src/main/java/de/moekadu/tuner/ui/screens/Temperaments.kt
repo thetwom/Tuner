@@ -299,7 +299,6 @@ fun TemperamentsPortrait(
                         IconButton(onClick = { overflowCallbacks.onShareClicked() }) {
                             Icon(Icons.Default.Share, contentDescription = "share")
                         }
-                        // TODO: strings must not use the term "instrument"
                         ImportExportOverflowMenu(
                             onExportClicked = { overflowCallbacks.onExportClicked() },
                             onImportClicked = { overflowCallbacks.onImportClicked() }
@@ -353,7 +352,6 @@ fun TemperamentsPortrait(
                                 contentDescription = "move down"
                             )
                         }
-                        // TODO: strings should not say "instruments"
                         OverflowMenu(callbacks = overflowCallbacks, showSettings = false)
                     }
                 },
@@ -523,7 +521,6 @@ fun TemperamentsLandscape(
                     IconButton(onClick = { overflowCallbacks.onShareClicked() }) {
                         Icon(Icons.Default.Share, contentDescription = "share")
                     }
-                    // TODO: strings must not use the term "instrument"
                     ImportExportOverflowMenu(
                         onExportClicked = { overflowCallbacks.onExportClicked() },
                         onImportClicked = { overflowCallbacks.onImportClicked() }
@@ -562,7 +559,6 @@ fun TemperamentsLandscape(
                             contentDescription = "move down"
                         )
                     }
-                    // TODO: strings should not say "instruments"
                     OverflowMenu(callbacks = overflowCallbacks, showSettings = false)
                 }
                 TextButton(onClick = {

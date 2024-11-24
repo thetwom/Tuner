@@ -341,7 +341,7 @@ private fun NoteSelector2Preview() {
                 notePrintOptions = notePrintOptions
             ) { selectedIndex = it }
             Spacer(modifier = Modifier.height(12.dp))
-            OutlinedButton(onClick = { /*TODO*/ }) {
+            OutlinedButton(onClick = { }) {
                 Text("Text button")
             }
         }

@@ -275,9 +275,7 @@ class TemperamentEditorViewModel @AssistedInject constructor(
         } else {
             null
         }
-        // TODO: we must ensure that we have valid number, otherwise saveTemperament is not allowed to be called
-        val cents = ratios?.map { ratioToCents(it.toDouble()) }
-            ?: values.map { it.obtainCent() ?: 0.0 }
+        val cents = values.map { it.obtainCent() ?: return false }
 
         var hasEqualDivisions = true
         for (i in 0 until cents.size - 2)
