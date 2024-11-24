@@ -3,6 +3,8 @@ package de.moekadu.tuner.ui.screens
 import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
+import android.util.Log
+import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -60,8 +62,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
+import de.moekadu.tuner.misc.ShareData
 import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.misc.getFilenameFromUri
+import de.moekadu.tuner.misc.toastPotentialFileCheckError
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.RationalNumber
 import de.moekadu.tuner.temperaments2.EditableTemperament
@@ -132,19 +136,22 @@ private fun rememberImportExportCallbacks(
         }
     }
 
+    val shareTemperamentsLauncher = rememberLauncherForActivityResult(
+        contract = ShareData.Contract()
+    ) {
+        state.listData.clearSelectedItems()
+    }
+
     val importTemperamentsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri != null) {
-            val temperaments = TemperamentIO.readTemperamentsFromFile(context, uri)
-            if (temperaments.isEmpty()) {
-                val filename = getFilenameFromUri(context, uri)
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.file_contains_no_temperaments, filename),
-                    Toast.LENGTH_LONG
-                ).show()
-            } else {
+//            val cR = context.contentResolver
+//            Log.v("Tuner", "Temperaments import temperament file, mimetype=${cR.getType(uri)}")
+
+            val (readState, temperaments) = TemperamentIO.readTemperamentsFromFile(context, uri)
+            readState.toastPotentialFileCheckError(context, uri)
+            if (temperaments.isNotEmpty()) {
                 onLoadTemperamentsUpdated(temperaments)
                 state.listData.clearSelectedItems()
             }
@@ -163,8 +170,14 @@ private fun rememberImportExportCallbacks(
                 if (temperaments.isEmpty()) {
                     Toast.makeText(context, R.string.database_empty_share, Toast.LENGTH_LONG).show()
                 } else {
+                    val intent = ShareData.createShareDataIntent(
+                        context,
+                        "tuner-temperaments.txt",
+                        TemperamentIO.temperamentsListToString(context, temperaments),
+                        temperaments.size
+                    )
                     //val intent = ShareInstruments.createShareInstrumentsIntent(context, instruments)
-                    //shareInstrumentLauncher.launch(intent)
+                    shareTemperamentsLauncher.launch(intent)
                 }
             }
             override fun onExportClicked() {
@@ -175,7 +188,7 @@ private fun rememberImportExportCallbacks(
                 }
             }
             override fun onImportClicked() {
-                importTemperamentsLauncher.launch(arrayOf("text/plain"))
+                importTemperamentsLauncher.launch(arrayOf("text/plain", "application/octet-stream"))  // text/plain or */*
             }
             override fun onSettingsClicked() {
                 // onPreferenceButtonClicked()

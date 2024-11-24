@@ -202,7 +202,7 @@
         <item quantity="few">Načítájí se %d nástroje</item>
         <item quantity="other">Načítá se %d nástrojů</item>
     </plurals>
-    <plurals name="sharing_num_instruments" tools:ignore="MissingQuantity">
+    <plurals name="sharing_num_items" tools:ignore="MissingQuantity">
         <item quantity="one">Sdíení nástroje</item>
         <item quantity="few">Sdílí se %d nástroje</item>
         <item quantity="other">Sdílí se %d nástrojů</item>

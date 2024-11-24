@@ -23,6 +23,7 @@ import android.net.Uri
 import android.widget.Toast
 import de.moekadu.tuner.BuildConfig
 import de.moekadu.tuner.R
+import de.moekadu.tuner.misc.FileCheck
 import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.legacyNoteIndexToNote
@@ -44,7 +45,6 @@ object InstrumentIO {
         }
     }
 
-    enum class FileCheck { Ok, Empty, Invalid }
     enum class InsertMode { Replace, Prepend, Append }
 
     data class InstrumentsAndFileCheckResult(
@@ -64,29 +64,6 @@ object InstrumentIO {
             InstrumentsAndFileCheckResult(FileCheck.Invalid, listOf())
         } else {
             stringToInstruments(instrumentsString)
-        }
-    }
-
-    fun toastFileLoadingResult(context: Context, readState: FileCheck, uri: Uri) {
-        when (readState) {
-            FileCheck.Empty -> {
-                val filename = getFilenameFromUri(context, uri)
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.file_empty, filename),
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-
-            FileCheck.Invalid -> {
-                val filename = getFilenameFromUri(context, uri)
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.file_invalid, filename),
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-            else -> { }
         }
     }
 

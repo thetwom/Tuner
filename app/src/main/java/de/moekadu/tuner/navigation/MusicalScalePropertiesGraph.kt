@@ -56,7 +56,8 @@ import kotlinx.serialization.json.Json
 fun NavGraphBuilder.musicalScalePropertiesGraph(
     controller: NavController,
     preferences: PreferenceResources,
-    temperaments: TemperamentResources
+    temperaments: TemperamentResources,
+    onLoadTemperaments: (List<EditableTemperament>) -> Unit
 ) {
     dialog<ReferenceFrequencyDialogRoute> {
         val state = it.toRoute<ReferenceFrequencyDialogRoute>()
@@ -127,31 +128,7 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
                     )
                 )
             },
-            onLoadTemperaments = { temperamentList ->
-                //                Log.v("Tuner", "MusicalScalePropertiesGraph.onLoadTemperaments: errors=${temperamentList.firstOrNull{it.hasErrors()}==null}")
-                if (temperamentList.firstOrNull { it.hasErrors() } == null) {
-                    Toast.makeText(
-                        context,
-                        context.resources.getQuantityString(
-                            R.plurals.load_temperaments, temperamentList.size, temperamentList.size
-                        ),
-                        Toast.LENGTH_LONG
-                    ).show()
-
-                    temperaments.appendTemperaments(
-                        temperamentList.mapNotNull { it.toTemperamentWithNoteNames() }
-                    )
-                } else if (temperamentList.size == 1) { // one temperament with errors
-                    controller.navigate(
-                        TemperamentEditorGraphRoute(temperamentList[0])
-                    )
-                }
-
-                // TODO: else branches:
-                //  - if one temperament with error -> go directly into editor
-                //  - if several temperaments, where there are errors -> launch dialog telling this
-                //    maybe with options to load the correct ones?
-            }
+            onLoadTemperaments = onLoadTemperaments
 //            onTemperamentChange = { newProperties ->
 //                val newNoteNameScale = NoteNameScaleFactory.create(newProperties.temperamentType)
 //                if (newNoteNameScale.hasNote(newProperties.referenceNote)) {

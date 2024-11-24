@@ -29,6 +29,7 @@ import androidx.navigation.compose.dialog
 import androidx.navigation.navigation
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.R
+import de.moekadu.tuner.temperaments2.EditableTemperament
 import de.moekadu.tuner.temperaments2.TemperamentResources
 import de.moekadu.tuner.ui.misc.TunerScaffold
 import de.moekadu.tuner.ui.preferences.AboutDialog
@@ -45,7 +46,8 @@ fun NavGraphBuilder.preferenceGraph(
     //canNavigateUp: Boolean,
     onNavigateUpClicked: () -> Unit,
     preferences: PreferenceResources,
-    temperaments: TemperamentResources
+    temperaments: TemperamentResources,
+    onLoadTemperaments: (List<EditableTemperament>) -> Unit
 ) {
     navigation<PreferencesGraphRoute>(
         startDestination = PreferencesRoute,
@@ -128,7 +130,7 @@ fun NavGraphBuilder.preferenceGraph(
             )
         }
         // dialogs for reference frequency and temperament
-        musicalScalePropertiesGraph(controller, preferences, temperaments)
+        musicalScalePropertiesGraph(controller, preferences, temperaments, onLoadTemperaments)
     }
 }
 

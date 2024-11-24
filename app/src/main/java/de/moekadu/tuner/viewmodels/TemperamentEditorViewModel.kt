@@ -78,7 +78,7 @@ private fun checkAndSetValueOrderingErrors(values: PersistentList<TemperamentTab
 : TemperamentValidityChecks.ValueOrdering {
     return TemperamentValidityChecks.checkValueOrderingErrors(
         values.size,
-        { values[it].cent },
+        { values[it].obtainCent() },
         { i, e -> values[i].changeDecreasingValueError(e) }
     )
 }
