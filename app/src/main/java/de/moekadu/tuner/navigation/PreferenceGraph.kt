@@ -43,7 +43,6 @@ import kotlinx.serialization.Serializable
 
 fun NavGraphBuilder.preferenceGraph(
     controller: NavController,
-    //canNavigateUp: Boolean,
     onNavigateUpClicked: () -> Unit,
     preferences: PreferenceResources,
     temperaments: TemperamentResources,
@@ -56,7 +55,7 @@ fun NavGraphBuilder.preferenceGraph(
             val musicalScale by temperaments.musicalScale.collectAsStateWithLifecycle()
             val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
             TunerScaffold(
-                canNavigateUp = controller.rememberCanNavigateUp(),
+                canNavigateUp = true,
                 onNavigateUpClicked = onNavigateUpClicked,
                 title = stringResource(id = R.string.settings),
                 showPreferenceButton = false,

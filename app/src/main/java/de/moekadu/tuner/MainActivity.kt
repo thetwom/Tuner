@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // handle incoming intents for loading temperamens
+                // handle incoming intents for loading temperaments
                 LaunchedEffect(loadTemperamentIntentChannel, controller) {
                     for (temperamentList in loadTemperamentIntentChannel) {
 //                        Log.v("Tuner", "MainActivity2: Loading file ...")
@@ -155,7 +155,6 @@ class MainActivity : ComponentActivity() {
                 ) {
                     mainGraph(
                         controller = controller,
-                        // canNavigateUp = canNavigateUp,
                         onNavigateUpClicked = { controller.navigateUp() },
                         preferences = pref,
                         instrumentResources = instruments,
@@ -163,7 +162,6 @@ class MainActivity : ComponentActivity() {
                     )
                     preferenceGraph(
                         controller = controller,
-                        //canNavigateUp = canNavigateUp,
                         onNavigateUpClicked = { controller.navigateUp() },
                         preferences = pref,
                         temperaments = temperaments,
