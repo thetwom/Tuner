@@ -51,10 +51,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-// TODO: Get rid of the CanNavigateUp, but just hardcode it
 fun NavGraphBuilder.mainGraph(
     controller: NavController,
-    // canNavigateUp: Boolean,
     onNavigateUpClicked: () -> Unit,
     preferences: PreferenceResources,
     instrumentResources: InstrumentResources,
@@ -67,7 +65,7 @@ fun NavGraphBuilder.mainGraph(
             val viewModel: ScientificTunerViewModel = hiltViewModel()
             ScientificTuner(
                 data = viewModel,
-                canNavigateUp = controller.rememberCanNavigateUp(), //canNavigateUp,
+                canNavigateUp = false,
                 onNavigateUpClicked = onNavigateUpClicked,
                 onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
                 onSharpFlatClicked = { preferences.switchSharpFlatPreference() },
@@ -84,7 +82,7 @@ fun NavGraphBuilder.mainGraph(
         } else {
             val viewModel: InstrumentTunerViewModel = hiltViewModel()
             InstrumentTuner(
-                canNavigateUp = controller.rememberCanNavigateUp(), // canNavigateUp,
+                canNavigateUp = false,
                 onNavigateUpClicked = onNavigateUpClicked,
                 onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
                 onSharpFlatClicked = { preferences.switchSharpFlatPreference() },
