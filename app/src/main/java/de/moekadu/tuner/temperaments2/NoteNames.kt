@@ -101,10 +101,10 @@ fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
                 ),
                 MusicalNote(base = BaseNote.D, modifier = NoteModifier.None),
                 MusicalNote(
-                    base = BaseNote.E,
-                    modifier = NoteModifier.Flat,
-                    enharmonicBase = BaseNote.D,
-                    enharmonicModifier = NoteModifier.Sharp
+                    base = BaseNote.D,
+                    modifier = NoteModifier.Sharp,
+                    enharmonicBase = BaseNote.E,
+                    enharmonicModifier = NoteModifier.Flat
                 ),
                 MusicalNote(base = BaseNote.E, modifier = NoteModifier.None),
                 MusicalNote(base = BaseNote.F, modifier = NoteModifier.None),
@@ -123,10 +123,10 @@ fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
                 ),
                 MusicalNote(base = BaseNote.A, modifier = NoteModifier.None),
                 MusicalNote(
-                    base = BaseNote.B,
-                    modifier = NoteModifier.Flat,
-                    enharmonicBase = BaseNote.A,
-                    enharmonicModifier = NoteModifier.Sharp
+                    base = BaseNote.A,
+                    modifier = NoteModifier.Sharp,
+                    enharmonicBase = BaseNote.B,
+                    enharmonicModifier = NoteModifier.Flat
                 ),
                 MusicalNote(base = BaseNote.B, modifier = NoteModifier.None)
             )
