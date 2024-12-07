@@ -22,7 +22,6 @@ import androidx.annotation.StringRes
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.NoteNameStem
 
 /** Available note notation types. */
 enum class NotationType(@StringRes val stringResourceId: Int) {

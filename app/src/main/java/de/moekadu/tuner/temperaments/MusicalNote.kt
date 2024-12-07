@@ -39,20 +39,9 @@ enum class NoteModifier {
     SharpDownDown, SharpDown, Sharp, SharpUp, SharpUpUp,
 }
 
-fun NoteModifier.flatSharpIndex(): Int {
-    return this.ordinal - NoteModifier.None.ordinal
-}
-
-data class NoteNameStem(val baseNote: BaseNote,
-                        val modifier: NoteModifier = NoteModifier.None,
-                        val enharmonicBaseNote: BaseNote = BaseNote.None,
-                        val enharmonicModifier: NoteModifier = NoteModifier.None) {
-    companion object {
-        fun fromMusicalNote(note: MusicalNote): NoteNameStem {
-            return NoteNameStem(note.base, note.modifier, note.enharmonicBase, note.enharmonicModifier)
-        }
-    }
-}
+//fun NoteModifier.flatSharpIndex(): Int {
+//    return this.ordinal - NoteModifier.None.ordinal
+//}
 
 /** Representation of a musical note.
  * @param base Base of note (C, D, E, ...).
@@ -82,7 +71,7 @@ data class MusicalNote(val base: BaseNote, val modifier: NoteModifier, val octav
         return "MusicalNote(base=$base,modifier=$modifier,octave=$octave,octaveOffset=$octaveOffset,enharmonicBase=$enharmonicBase,enharmonicModifier=$enharmonicModifier,enharmonicOctaveOffset=$enharmonicOctaveOffset)"
     }
 
-    /** Return a note, where enharmonic and base represenation are exchanged. */
+    /** Return a note, where enharmonic and base representation are exchanged. */
     fun switchEnharmonic(switchAlsoForBaseNone: Boolean = false): MusicalNote {
         if (enharmonicBase == BaseNote.None && !switchAlsoForBaseNone)
             return this
@@ -126,59 +115,23 @@ data class MusicalNote(val base: BaseNote, val modifier: NoteModifier, val octav
                 enharmonicBase = enharmonicBase, enharmonicModifier = enharmonicModifier,
                 enharmonicOctaveOffset = enharmonicOctaveOffset)
         }
-        /** Check if two notes are equal, where we also take enharmonics into account.
-         * E.g. if the base values of one note are the same as the enharmonic of the other note
-         *   we also return true.
-         * @param first First note to compare.
-         * @param second Second note to compare.
-         * @return True for the following cases:
-         *  - first and second are both null
-         *  - base, modifier and octave are the same for both notes
-         *  - base, modifier, octave of one note are the same as enharmonicBase, enharmonicModifier, octave
-         *     of the other note are the same.
-         *  - enharmonicBase and enharmonic modifier and octave are the same for both notes
-         *  else false.
-         */
-        fun notesEqual(first: MusicalNote?, second: MusicalNote?): Boolean {
-            return if (first == null && second == null)
-                true
-            else if (first == null || second == null)
-                false
-            else if (noteStemEqual(first, second) && first.octave == second.octave)
-                true
-            else
-                notesEnharmonic(first, second) && first.octave == second.octave
-        }
 
         /** Check if two notes are the same, while ignoring the octave.
-         * We return true, if the notes are either both the same or if they are enharmonic, but
-         * we ignore the octave during comparison.
          * @param first First note to compare.
          * @param second Second note to compare.
-         * @return True if notes are the same (ignoring the octave), if both notes are null, we return
-         *   false.
+         * @return True if notes are the same (ignoring the octave but not octave offset). If both
+         *   notes are null, we return false.
          */
         fun notesEqualIgnoreOctave(first: MusicalNote?, second: MusicalNote?): Boolean {
             return if (first == null || second == null) {
                 false
             } else {
-                noteStemEqual(first, second) || notesEnharmonic(first, second)
+                (first.base == second.base && first.modifier == second.modifier
+                        && first.octaveOffset == second.octaveOffset
+                        && first.enharmonicBase == second.enharmonicBase
+                        && first.enharmonicModifier == second.enharmonicModifier
+                        && first.enharmonicOctaveOffset == second.enharmonicOctaveOffset)
             }
-        }
-
-        private fun noteStemEqual(first: MusicalNote, second: MusicalNote): Boolean {
-            return (first.base == second.base && first.modifier == second.modifier
-                    && first.octaveOffset == second.octaveOffset
-                    && first.enharmonicBase == second.enharmonicBase
-                    && first.enharmonicModifier == second.enharmonicModifier
-                    && first.enharmonicOctaveOffset == second.enharmonicOctaveOffset)
-        }
-
-        private fun notesEnharmonic(first: MusicalNote, second: MusicalNote): Boolean {
-            return (first.base == second.enharmonicBase && first.modifier == second.enharmonicModifier
-                    && first.enharmonicBase == second.base && first.enharmonicModifier == second.modifier
-                    && first.octaveOffset == second.enharmonicOctaveOffset
-                    && first.enharmonicOctaveOffset == second.octaveOffset)
         }
     }
 }

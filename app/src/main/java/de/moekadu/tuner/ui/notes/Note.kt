@@ -55,11 +55,7 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.NoteNameStem
-import de.moekadu.tuner.temperaments.createNoteNameScale12Tone
-import de.moekadu.tuner.temperaments.createNoteNameScale15Tone
 import de.moekadu.tuner.temperaments.createNoteNameScale53Tone
-import de.moekadu.tuner.temperaments.flatSharpIndex
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
@@ -99,6 +95,21 @@ private val modifierPrefixStrings = mapOf(
     NoteModifier.NaturalDownDown to "\uE110",
 )
 
+/** Stem of note name, which is the not including enharmonic info but no octave info.
+ * @param baseNote Base note.
+ * @param modifier Note modifier.
+ * @param enharmonicBaseNote Base note of enharmonic.
+ * @param enharmonicModifier Modifier of enharmonic.
+ */
+data class NoteNameStem(val baseNote: BaseNote,
+                        val modifier: NoteModifier = NoteModifier.None,
+                        val enharmonicBaseNote: BaseNote = BaseNote.None,
+                        val enharmonicModifier: NoteModifier = NoteModifier.None) {
+    constructor(note: MusicalNote) : this(
+        note.base, note.modifier, note.enharmonicBase, note.enharmonicModifier
+    )
+}
+
 
 private data class ResolvedNoteProperties(
     val baseName: CharSequence,
@@ -130,7 +141,7 @@ private fun resolveNotePropertiesWithoutEnharmonicCheck(
     resourceIdOfStem: (NoteNameStem) -> Int?
     ): ResolvedNoteProperties {
     // check if we can directly resolve the note
-    val stem = NoteNameStem.fromMusicalNote(note)
+    val stem = NoteNameStem(note)
     val noteName = resourceIdOfStem(stem)?.let {resources.getText(it)}
     if (noteName != null && noteName != "" && noteName != "-") {
         return ResolvedNoteProperties(
@@ -142,7 +153,7 @@ private fun resolveNotePropertiesWithoutEnharmonicCheck(
 
     // check if we can directly resolve the enharmonic
     val noteEnharmonic = note.switchEnharmonic(switchAlsoForBaseNone = true)
-    val stemEnharmonic = NoteNameStem.fromMusicalNote(noteEnharmonic)
+    val stemEnharmonic = NoteNameStem(noteEnharmonic)
     val noteNameEnharmonic = resourceIdOfStem(stemEnharmonic)?.let { resources.getText(it) }
 
     if (noteNameEnharmonic != null && noteNameEnharmonic != "" && noteNameEnharmonic != "-") {
@@ -192,16 +203,10 @@ private fun preferEnharmonic(
             false
         }
         NotePrintOptions.SharpFlatPreference.Sharp -> {
-            if (note.enharmonicModifier.flatSharpIndex() == note.modifier.flatSharpIndex())
-                false
-            else
-                note.enharmonicModifier.flatSharpIndex() > note.modifier.flatSharpIndex()
+            false
         }
         NotePrintOptions.SharpFlatPreference.Flat -> {
-            if (note.enharmonicModifier.flatSharpIndex() == note.modifier.flatSharpIndex())
-                true
-            else
-                note.enharmonicModifier.flatSharpIndex() < note.modifier.flatSharpIndex()
+            true
         }
     }
 }
@@ -209,7 +214,7 @@ private fun preferEnharmonic(
 /** Options for note printing.
  * @param sharpFlatPreference Tells if sharp or flat signs should be preferred for enharmonics.
  * @param helmholtzNotation Set this to true, to use Helmholtz notation (this uses small letters
- *   for higher octaves and capital letters for lower octaves. Also for octaves oround 2 and 3, no
+ *   for higher octaves and capital letters for lower octaves. Also for octaves around 2 and 3, no
  *   octaves numbers are printed but instead , and '.
  * @param notationType Notation type used for printing.
  */

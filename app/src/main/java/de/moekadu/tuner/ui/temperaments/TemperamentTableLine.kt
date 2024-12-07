@@ -256,6 +256,9 @@ fun TemperamentTableLine(
     val notePrintOptionsDefault = remember(notePrintOptions) {
         notePrintOptions.copy(sharpFlatPreference = NotePrintOptions.SharpFlatPreference.None)
     }
+    val notePrintOptionsEnharmonic = remember(notePrintOptions) {
+        notePrintOptions.copy(sharpFlatPreference = NotePrintOptions.SharpFlatPreference.Flat)
+    }
 
     val density = LocalDensity.current
     val noteWidth = with(density) { 45.sp.toDp()}
@@ -286,12 +289,6 @@ fun TemperamentTableLine(
             ) {
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        // TODO: don't use a switch note, but notePrintOptions with enharmonic preference
-                        //  -> However, this needs to refactor the notePrintOptions, and remove this
-                        //     whole sharp/flat preference to a simple "useEnharmonic"
-                        val noteSwitched by remember {derivedStateOf {
-                            state.note?.switchEnharmonic(true)
-                        }}
                         Text(
                             "${lineNumber + 1}",
                             style = MaterialTheme.typography.labelSmall,
@@ -317,10 +314,10 @@ fun TemperamentTableLine(
                             color = contentColor
                         )
                         ClickableNote(
-                            note = noteSwitched,
+                            note = state.note,
                             selected = (state.noteEditorState == TemperamentTableLineState.NoteEditorState.Enharmonic),
                             onClick = { onNoteNameClicked(true) },
-                            notePrintOptions = notePrintOptionsDefault,
+                            notePrintOptions = notePrintOptionsEnharmonic,
                             maximumNoteWidth = noteWidth,
                             isError = state.duplicateNoteError,
                             enabled = !state.isOctaveLine
