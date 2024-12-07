@@ -58,13 +58,10 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
-import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.createNoteNameScale53Tone
 import de.moekadu.tuner.temperaments2.MusicalScale2
 import de.moekadu.tuner.temperaments2.MusicalScale2Factory
-import de.moekadu.tuner.temperaments2.StretchTuning
-import de.moekadu.tuner.temperaments2.Temperament
+import de.moekadu.tuner.temperaments2.getSuitableNoteNames
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlin.math.absoluteValue
 
@@ -292,11 +289,10 @@ fun NoteSelector(
 @Composable
 private fun NoteSelectorPreview() {
     TunerTheme {
-        val noteNameScale = remember { createNoteNameScale53Tone(null) }
+        val noteNameScale = remember { getSuitableNoteNames(53) }
 
         val notePrintOptions = remember {
             NotePrintOptions(
-                sharpFlatPreference = NotePrintOptions.SharpFlatPreference.Sharp,
                 helmholtzNotation = false,
                 notationType = NotationType.Standard
             )
@@ -307,7 +303,7 @@ private fun NoteSelectorPreview() {
         Column {
             NoteSelector(
                 selectedIndex = selectedIndex,
-                notes = noteNameScale.notes,
+                notes = noteNameScale!!.notes,
                 notePrintOptions = notePrintOptions
             ) { selectedIndex = it }
             Spacer(modifier = Modifier.height(12.dp))
@@ -326,7 +322,6 @@ private fun NoteSelector2Preview() {
 
         val notePrintOptions = remember {
             NotePrintOptions(
-                sharpFlatPreference = NotePrintOptions.SharpFlatPreference.Sharp,
                 helmholtzNotation = false,
                 notationType = NotationType.Standard
             )

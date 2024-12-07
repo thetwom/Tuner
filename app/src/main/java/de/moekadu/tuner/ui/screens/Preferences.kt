@@ -37,7 +37,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.preferences.NightMode
-import de.moekadu.tuner.temperaments.getTuningNameResourceId
 import de.moekadu.tuner.ui.misc.rememberNumberFormatter
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.asAnnotatedString
@@ -144,14 +143,9 @@ fun Preferences(
         item {
             SwitchPreference(
                 name = stringResource(id = R.string.prefer_flat),
-                checked = notePrintOptions.sharpFlatPreference == NotePrintOptions.SharpFlatPreference.Flat,
+                checked = notePrintOptions.useEnharmonic,
                 onCheckChange = {
-                    val newNotePrintOptions = notePrintOptions.copy(
-                        sharpFlatPreference = if (it)
-                            NotePrintOptions.SharpFlatPreference.Flat
-                        else
-                            NotePrintOptions.SharpFlatPreference.Sharp
-                    )
+                    val newNotePrintOptions = notePrintOptions.copy(useEnharmonic = it)
                     pref.writeNotePrintOptions(newNotePrintOptions)
                 },
                 iconId = R.drawable.ic_prefer_flat

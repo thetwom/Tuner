@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.TemperamentType
 import de.moekadu.tuner.temperaments2.MusicalScale2
 import de.moekadu.tuner.temperaments2.MusicalScale2Factory
 import de.moekadu.tuner.ui.common.Label
@@ -49,8 +48,6 @@ import de.moekadu.tuner.ui.plot.VerticalMark
 import de.moekadu.tuner.ui.plot.rememberTextLabelWidth
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.persistentListOf
-import kotlin.math.max
-import kotlin.math.min
 
 //class FrequencyPlotModel(musicalScale: MusicalScale) {
 //    var frequencyPlotData by mutableStateOf(FrequencyPlotData(0, { 0f }, { 0f }))

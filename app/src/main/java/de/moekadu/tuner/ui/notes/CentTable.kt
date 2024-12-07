@@ -102,7 +102,6 @@ private fun CentTablePreview() {
     TunerTheme {
         val notePrintOptions = remember {
             NotePrintOptions(
-                sharpFlatPreference = NotePrintOptions.SharpFlatPreference.Sharp,
                 helmholtzNotation = false,
                 notationType = NotationType.Standard
             )

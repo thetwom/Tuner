@@ -24,9 +24,13 @@ import androidx.preference.PreferenceManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import de.moekadu.tuner.notedetection.WindowingFunction
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.TemperamentType
+import de.moekadu.tuner.temperaments.TemperamentTypeOld
+import de.moekadu.tuner.temperaments.resourceId
+import de.moekadu.tuner.temperaments2.TemperamentWithNoteNames
+import de.moekadu.tuner.temperaments2.temperamentDatabase
 import de.moekadu.tuner.ui.notes.NotationType
 import de.moekadu.tuner.ui.notes.NotePrintOptions
+import de.moekadu.tuner.ui.notes.NotePrintOptionsOld
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.pow
@@ -108,7 +112,7 @@ class PreferenceResourcesOld @Inject constructor (
             return null
         val pF = preferFlat
         val nP = notationPreference
-        val def = NotePrintOptions()
+        val def = NotePrintOptionsOld()
         val nT = when(nP?.notation) {
             "international" -> NotationType.International
             "solfege" -> NotationType.Solfege
@@ -120,10 +124,14 @@ class PreferenceResourcesOld @Inject constructor (
         val sharpFlatPreference = if (pF == null)
             def.sharpFlatPreference
         else if (pF == true)
-            NotePrintOptions.SharpFlatPreference.Flat
+            NotePrintOptionsOld.SharpFlatPreference.Flat
         else
-            NotePrintOptions.SharpFlatPreference.Sharp
-        return NotePrintOptions(sharpFlatPreference, hH, nT)
+            NotePrintOptionsOld.SharpFlatPreference.Sharp
+        return NotePrintOptions(
+            sharpFlatPreference == NotePrintOptionsOld.SharpFlatPreference.Flat,
+            hH,
+            nT
+        )
     }
 
     val windowing get() = getString(WINDOWING_KEY)?.let {
@@ -160,6 +168,22 @@ class PreferenceResourcesOld @Inject constructor (
     val waveWriterDurationInSeconds get() = getInt(WAVE_WRITER_DURATION_IN_SECONDS_KEY)
 
     private val temperamentAndReferenceNote get() = TemperamentAndReferenceNoteFromPreference.fromSharedPreferences(sharedPreferences)
+
+    val referenceNote get() = temperamentAndReferenceNote?.referenceNote
+    val rootNote get() = temperamentAndReferenceNote?.rootNote
+    val referenceFrequency get() = temperamentAndReferenceNote?.referenceFrequency
+    val temperament: TemperamentWithNoteNames?  get() {
+        val temperamentType = temperamentAndReferenceNote?.temperamentType
+        val rid = temperamentType?.resourceId()
+        val t = temperamentDatabase.firstOrNull {
+            it.name.resId != null && it.name.resId == rid
+        }
+        return if (t == null)
+            null
+        else
+            TemperamentWithNoteNames(t, null)
+    }
+
 //    val musicalScale: MusicalScale? get() = temperamentAndReferenceNote?.let {
 //            MusicalScaleFactory.create(
 //                it.temperamentType,
@@ -201,7 +225,7 @@ class PreferenceResourcesOld @Inject constructor (
 }
 
 private data class TemperamentAndReferenceNoteFromPreference (
-    val temperamentType: TemperamentType,
+    val temperamentType: TemperamentTypeOld,
     val rootNote: MusicalNote,
     val referenceNote: MusicalNote,
     val referenceFrequency: String) {
@@ -225,9 +249,9 @@ private data class TemperamentAndReferenceNoteFromPreference (
             if (values.size != 4)
                 return null
             val temperamentType = try {
-                TemperamentType.valueOf(values[0])
+                TemperamentTypeOld.valueOf(values[0])
             } catch (ex: IllegalArgumentException) {
-                TemperamentType.EDO12
+                TemperamentTypeOld.EDO12
             }
             val rootNote = try {
                 MusicalNote.fromString(values[1])

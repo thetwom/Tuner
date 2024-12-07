@@ -18,7 +18,6 @@
 */
 package de.moekadu.tuner.navigation
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
@@ -68,7 +67,7 @@ fun NavGraphBuilder.mainGraph(
                 canNavigateUp = false,
                 onNavigateUpClicked = onNavigateUpClicked,
                 onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
-                onSharpFlatClicked = { preferences.switchSharpFlatPreference() },
+                onSharpFlatClicked = { preferences.switchEnharmonicPreference() },
                 onReferenceNoteClicked = {
                     controller.navigate(
                         // provided by musicalScalePropertiesGraph
@@ -85,7 +84,7 @@ fun NavGraphBuilder.mainGraph(
                 canNavigateUp = false,
                 onNavigateUpClicked = onNavigateUpClicked,
                 onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
-                onSharpFlatClicked = { preferences.switchSharpFlatPreference() },
+                onSharpFlatClicked = { preferences.switchEnharmonicPreference() },
                 onReferenceNoteClicked = {
                     controller.navigate(
                         // provided by musicalScalePropertiesGraph
@@ -141,7 +140,7 @@ fun NavGraphBuilder.mainGraph(
                 )
                 controller.navigate(InstrumentEditorGraphRoute.create(newInstrument))
             },
-            onSharpFlatClicked = { preferences.switchSharpFlatPreference() },
+            onSharpFlatClicked = { preferences.switchEnharmonicPreference() },
             onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
                 controller.navigate(
                     ReferenceFrequencyDialogRoute(

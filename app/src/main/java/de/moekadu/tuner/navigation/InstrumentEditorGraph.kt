@@ -99,7 +99,7 @@ fun NavGraphBuilder.instrumentEditorGraph(
                 showPreferenceButton = false,
                 onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
                 showBottomBar = true,
-                onSharpFlatClicked = { preferences.switchSharpFlatPreference() },
+                onSharpFlatClicked = { preferences.switchEnharmonicPreference() },
                 onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
                     controller.navigate(
                         ReferenceFrequencyDialogRoute(

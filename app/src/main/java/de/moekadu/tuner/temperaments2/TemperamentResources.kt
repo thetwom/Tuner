@@ -113,7 +113,7 @@ class TemperamentResources @Inject constructor(
         } else {
             null
         }
-        Log.v("Tuner", "TemperamentResources:writeMusicalScale: ofmin=${currentMusicalScale.frequencyMin}, ofmax=${currentMusicalScale.frequencyMax}")
+//        Log.v("Tuner", "TemperamentResources:writeMusicalScale: ofmin=${currentMusicalScale.frequencyMin}, ofmax=${currentMusicalScale.frequencyMax}")
         val newMusicalScale = MusicalScale2Factory.create(
             temperament = temperamentResolved,
             noteNames = noteNamesResolved,

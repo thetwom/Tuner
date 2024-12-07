@@ -254,10 +254,10 @@ fun TemperamentTableLine(
     onChangeNote: (MusicalNote?) -> Unit = {}
 ) {
     val notePrintOptionsDefault = remember(notePrintOptions) {
-        notePrintOptions.copy(sharpFlatPreference = NotePrintOptions.SharpFlatPreference.None)
+        notePrintOptions.copy(useEnharmonic = false)
     }
     val notePrintOptionsEnharmonic = remember(notePrintOptions) {
-        notePrintOptions.copy(sharpFlatPreference = NotePrintOptions.SharpFlatPreference.Flat)
+        notePrintOptions.copy(useEnharmonic = true)
     }
 
     val density = LocalDensity.current

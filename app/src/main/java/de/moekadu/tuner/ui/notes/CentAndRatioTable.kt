@@ -213,7 +213,6 @@ private fun CentTablePreview() {
 //        val noteNameScale = NoteNameScaleFactory.create(temperamentType)
 //        val rootNote = noteNameScale.notes[6]
         val notePrintOptions = NotePrintOptions(
-            sharpFlatPreference = NotePrintOptions.SharpFlatPreference.Sharp,
             helmholtzNotation = false,
             notationType = NotationType.Standard
         )
