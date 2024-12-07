@@ -56,6 +56,7 @@ import de.moekadu.tuner.navigation.temperamentEditorGraph
 import de.moekadu.tuner.navigation.TemperamentEditorGraphRoute
 import de.moekadu.tuner.preferences.NightMode
 import de.moekadu.tuner.preferences.PreferenceResources
+import de.moekadu.tuner.preferences.migrateFromV6
 import de.moekadu.tuner.temperaments2.EditableTemperament
 import de.moekadu.tuner.temperaments2.TemperamentIO
 import de.moekadu.tuner.temperaments2.TemperamentResources
@@ -64,6 +65,7 @@ import de.moekadu.tuner.temperaments2.toTemperamentWithNoteNames
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
@@ -86,6 +88,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        Log.v("Tuner", "MainActivity2.onCreate: savedInstanceState = $savedInstanceState")
+
+        runBlocking {
+            migrateFromV6(this@MainActivity, pref, temperaments, instruments)
+        }
 
         if (savedInstanceState == null)
             handleFileLoadingIntent(intent)
@@ -200,8 +206,8 @@ class MainActivity : ComponentActivity() {
             }
         }
 //        Log.v("Tuner", "Migrating instruments? ${pref.isMigratingFromV6}")
-        if (pref.isMigratingFromV6)
-            instruments.migratingFromV6(this)
+//        if (pref.isMigratingFromV6)
+//            instruments.migratingFromV6(this)
     }
 
     override fun onNewIntent(intent: Intent) {

@@ -139,7 +139,7 @@ fun QuickSettingsBar(
             ) {
                 Icon(
                     ImageVector.vectorResource(
-                        if (notePrintOptions.sharpFlatPreference == NotePrintOptions.SharpFlatPreference.Flat)
+                        if (notePrintOptions.useEnharmonic)
                             R.drawable.ic_prefer_flat_isflat
                         else
                             R.drawable.ic_prefer_flat_issharp
@@ -166,10 +166,7 @@ private fun QuickSettingsBarPreview() {
             notePrintOptions = notePrintOptions,
             onSharpFlatClicked = {
                 notePrintOptions = notePrintOptions.copy(
-                    sharpFlatPreference = if (notePrintOptions.sharpFlatPreference == NotePrintOptions.SharpFlatPreference.Flat)
-                            NotePrintOptions.SharpFlatPreference.Sharp
-                        else
-                            NotePrintOptions.SharpFlatPreference.Flat
+                    useEnharmonic = !notePrintOptions.useEnharmonic
                 )
             }
         )

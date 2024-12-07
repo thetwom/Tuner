@@ -19,8 +19,6 @@
 package de.moekadu.tuner.preferences
 
 import android.content.Context
-import android.os.Parcelable
-import android.util.Log
 import androidx.datastore.core.IOException
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
@@ -35,8 +33,6 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import dagger.hilt.android.qualifiers.ApplicationContext
 import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.notedetection.WindowingFunction
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.TemperamentType
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,7 +44,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -105,12 +100,12 @@ class PreferenceResources @Inject constructor (
         writePreference(MIGRATIONS_FROM_V6_KEY, true)
 //        Log.v("Tuner", "PreferenceMigrations: writing complete = ${migrationsFromV6Complete.value}")
     }
-    /** True, if during load, we are migrating from v6.
-     * This is normally false, just on the first start when coming from v6, this is true.
-     * */
-    @Volatile
-    var isMigratingFromV6: Boolean = false
-        private set
+//    /** True, if during load, we are migrating from v6.
+//     * This is normally false, just on the first start when coming from v6, this is true.
+//     * */
+//    @Volatile
+//    var isMigratingFromV6: Boolean = false
+//        private set
 
     // appearance
     val appearance = getSerializablePreferenceFlow(APPEARANCE_KEY, AppearanceDefault)
@@ -131,18 +126,11 @@ class PreferenceResources @Inject constructor (
         writeSerializablePreference(NOTE_PRINT_OPTIONS_KEY, notePrintOptions)
     }
 
-    fun switchSharpFlatPreference() {
-        val currentFlatSharpChoice = notePrintOptions.value.sharpFlatPreference
-        val newFlatShapeChoice =
-            if (currentFlatSharpChoice == NotePrintOptions.SharpFlatPreference.Flat)
-                NotePrintOptions.SharpFlatPreference.Sharp
-            else
-                NotePrintOptions.SharpFlatPreference.Flat
-        writeNotePrintOptions(
-            notePrintOptions.value.copy(
-                sharpFlatPreference = newFlatShapeChoice
-            )
-        )
+    fun switchEnharmonicPreference() {
+        val currentUseEnharmonic = notePrintOptions.value.useEnharmonic
+        writeNotePrintOptions(notePrintOptions.value.copy(
+            useEnharmonic = !currentUseEnharmonic
+        ))
     }
 
     // scientific mode
@@ -311,7 +299,7 @@ class PreferenceResources @Inject constructor (
         // block everything until all data is read to avoid incorrect startup behaviour
         runBlocking {
             dataStore.data.first()
-            isMigratingFromV6 = this@PreferenceResources.migrateFromV6(context)
+            // isMigratingFromV6 = this@PreferenceResources.migrateFromV6(context)
         }
     }
 

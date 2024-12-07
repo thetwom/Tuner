@@ -20,18 +20,28 @@ package de.moekadu.tuner.preferences
 
 import android.content.Context
 import android.util.Log
+import de.moekadu.tuner.instruments.InstrumentResources
+import de.moekadu.tuner.instruments.InstrumentResourcesOld
+import de.moekadu.tuner.temperaments2.TemperamentResources
+import de.moekadu.tuner.ui.notes.NotePrintOptions
+import de.moekadu.tuner.ui.notes.NotePrintOptionsOld
 import kotlin.math.roundToInt
 
-fun PreferenceResources.migrateFromV6(context: Context): Boolean {
+fun migrateFromV6(
+    context: Context,
+    newPreferenceResources: PreferenceResources,
+    newTemperamentResources: TemperamentResources,
+    newInstrumentResources: InstrumentResources
+    ): Boolean {
 //    Log.v("Tuner", "PreferenceMigrations: complete = ${migrationsFromV6Complete.value}")
-    if (migrationsFromV6Complete.value) {
+    if (newPreferenceResources.migrationsFromV6Complete.value) {
 //        Log.v("Tuner", "PreferenceMigrations: Do not migrate, since already done")
         return false
     }
 //    Log.v("Tuner", "PreferenceMigrations: Migrating preferences from v6")
     val from = PreferenceResourcesOld(context)
     from.appearance?.let {
-        writeAppearance(
+        newPreferenceResources.writeAppearance(
             PreferenceResources.Appearance(
                 it.mode,
                 it.blackNightEnabled,
@@ -39,23 +49,48 @@ fun PreferenceResources.migrateFromV6(context: Context): Boolean {
             )
         )
     }
-    from.screenAlwaysOn?.let { writeScientificMode(it) }
-    from.screenAlwaysOn?.let { writeScreenAlwaysOn(it) }
-    from.notePrintOptions?.let { writeNotePrintOptions(it) }
-    from.windowing?.let { writeWindowing(it) }
-    from.overlap?.let { writeOverlap(it) }
-    from.windowSizeExponent?.let { writeWindowSize(it) }
+    from.scientificMode?.let { newPreferenceResources.writeScientificMode(it) }
+    from.screenAlwaysOn?.let { newPreferenceResources.writeScreenAlwaysOn(it) }
+    from.notePrintOptions?.let { newPreferenceResources.writeNotePrintOptions(it) }
+
+    from.windowing?.let { newPreferenceResources.writeWindowing(it) }
+    from.overlap?.let { newPreferenceResources.writeOverlap(it) }
+    from.windowSizeExponent?.let { newPreferenceResources.writeWindowSize(it) }
     from.pitchHistoryDuration?.let {
-        writePitchHistoryDuration(((it / 0.25f).roundToInt() * 0.25f).coerceIn(0.25f, 10f))
+        newPreferenceResources
+            .writePitchHistoryDuration(((it / 0.25f).roundToInt() * 0.25f).coerceIn(0.25f, 10f))
     }
-    from.pitchHistoryNumFaultyValues?.let { writePitchHistoryNumFaultyValues(it) }
-    from.numMovingAverage?.let { writeNumMovingAverage(it) }
-    from.sensitivity?.let { writeSensitivity(it) }
-    from.toleranceInCents?.let { writeToleranceInCents(it) }
-    from.waveWriterDurationInSeconds?.let { writeWaveWriterDurationInSeconds(it) }
-//    from.musicalScale?.let { writeMusicalScaleProperties(
-//        PreferenceResources.MusicalScaleProperties.create(it)
-//    ) }
-    writeMigrationsFromV6Complete()
+    from.pitchHistoryNumFaultyValues?.let {
+        newPreferenceResources.writePitchHistoryNumFaultyValues(it)
+    }
+    from.numMovingAverage?.let { newPreferenceResources.writeNumMovingAverage(it) }
+    from.sensitivity?.let { newPreferenceResources.writeSensitivity(it) }
+    from.toleranceInCents?.let { newPreferenceResources.writeToleranceInCents(it) }
+    from.waveWriterDurationInSeconds?.let {
+        newPreferenceResources.writeWaveWriterDurationInSeconds(it)
+    }
+
+    newTemperamentResources.writeMusicalScale(
+        from.temperament,
+        from.referenceNote,
+        from.rootNote,
+        from.referenceFrequency?.toFloatOrNull()
+    )
+
+    val fromInstruments = InstrumentResourcesOld(context)
+    fromInstruments.customInstrumentsExpanded?.let {
+        newInstrumentResources.writeCustomInstrumentsExpanded(it)
+    }
+    fromInstruments.predefinedInstrumentsExpanded?.let {
+        newInstrumentResources.writePredefinedInstrumentsExpanded(it)
+    }
+    fromInstruments.customInstruments?.let {
+        newInstrumentResources.writeCustomInstruments(it)
+    }
+    fromInstruments.currentInstrument?.let {
+        newInstrumentResources.writeCurrentInstrument(it)
+    }
+
+    newPreferenceResources.writeMigrationsFromV6Complete()
     return true
 }

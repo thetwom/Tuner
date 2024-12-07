@@ -220,7 +220,6 @@ private fun CircleOfFifthTable2Preview() {
     TunerTheme {
         val notePrintOptions = remember {
             NotePrintOptions(
-                sharpFlatPreference = NotePrintOptions.SharpFlatPreference.Sharp,
                 helmholtzNotation = false,
                 notationType = NotationType.Standard
             )

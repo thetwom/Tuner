@@ -55,9 +55,10 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.createNoteNameScale53Tone
+import de.moekadu.tuner.temperaments2.getSuitableNoteNames
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import kotlin.math.max
 
 private val modifierPostfixStrings = mapOf(
     NoteModifier.None to "",
@@ -110,7 +111,6 @@ data class NoteNameStem(val baseNote: BaseNote,
     )
 }
 
-
 private data class ResolvedNoteProperties(
     val baseName: CharSequence,
     val modifier: NoteModifier,
@@ -122,7 +122,7 @@ private fun resolveNoteProperties(
     notePrintOptions: NotePrintOptions,
     resources: Resources
     ): ResolvedNoteProperties {
-    return if (preferEnharmonic(note, notePrintOptions.sharpFlatPreference)) {
+    return if (notePrintOptions.useEnharmonic && note.enharmonicBase != BaseNote.None) {
         resolveNotePropertiesWithoutEnharmonicCheck(
             note.switchEnharmonic(switchAlsoForBaseNone = true),
             resources = resources,
@@ -192,27 +192,8 @@ private fun resolveNotePropertiesWithoutEnharmonicCheck(
     return ResolvedNoteProperties("O", note.modifier, note.octave)
 }
 
-private fun preferEnharmonic(
-    note: MusicalNote,
-    sharpFlatPreference: NotePrintOptions.SharpFlatPreference): Boolean {
-    if (note.enharmonicBase == BaseNote.None)
-        return false // sharpFlatPreference == NotePrintOptions.SharpFlatPreference.Flat
-
-    return when (sharpFlatPreference) {
-        NotePrintOptions.SharpFlatPreference.None -> {
-            false
-        }
-        NotePrintOptions.SharpFlatPreference.Sharp -> {
-            false
-        }
-        NotePrintOptions.SharpFlatPreference.Flat -> {
-            true
-        }
-    }
-}
-
 /** Options for note printing.
- * @param sharpFlatPreference Tells if sharp or flat signs should be preferred for enharmonics.
+ * @param useEnharmonic Tells if the enharmonic should be used for printing.
  * @param helmholtzNotation Set this to true, to use Helmholtz notation (this uses small letters
  *   for higher octaves and capital letters for lower octaves. Also for octaves around 2 and 3, no
  *   octaves numbers are printed but instead , and '.
@@ -221,14 +202,10 @@ private fun preferEnharmonic(
 @Serializable
 @Stable
 data class NotePrintOptions(
-    val sharpFlatPreference: SharpFlatPreference = SharpFlatPreference.None,
+    val useEnharmonic: Boolean = false,
     val helmholtzNotation: Boolean = false,
     val notationType: NotationType = NotationType.Standard
 ) {
-    enum class SharpFlatPreference {
-        Sharp, Flat, None
-    }
-
     @Transient
     private val resourceIds = notationType.resourceIds()
     fun resourceId(noteNameStem: NoteNameStem) = resourceIds[noteNameStem]
@@ -499,7 +476,18 @@ fun rememberMaxNoteSize(
     val resources = LocalContext.current.resources
     val density = LocalDensity.current
     return remember(notes, notePrintOptions, fontSize, octaveRange, textMeasurer, resources, density) {
-        val sizePx = computeMaxNoteSize(notes, notePrintOptions, fontSize, fontWeight, octaveRange, textMeasurer, resources)
+        val sizePx1 = computeMaxNoteSize(
+            notes, notePrintOptions.copy(useEnharmonic = false),
+            fontSize, fontWeight, octaveRange, textMeasurer, resources
+        )
+        val sizePx2 = computeMaxNoteSize(
+            notes, notePrintOptions.copy(useEnharmonic = true),
+            fontSize, fontWeight, octaveRange, textMeasurer, resources
+        )
+        val sizePx = IntSize(
+            max(sizePx1.width, sizePx2.width),
+            max(sizePx1.height, sizePx2.height)
+        )
         DpSize(with(density) { sizePx.width.toDp() }, with(density) { sizePx.height.toDp() }
         )
     }
@@ -508,19 +496,19 @@ fun rememberMaxNoteSize(
 @Preview(showBackground = true, widthDp = 500, heightDp = 300)
 @Composable
 private fun NotePreview() {
-    val noteNameScale = remember { createNoteNameScale53Tone(null) }
-    val musicalNote = noteNameScale.notes[12].copy(octave = 9)
+    val noteNameScale = remember { getSuitableNoteNames(53) }
+    val musicalNote = noteNameScale!!.notes[12].copy(octave = 9)
     val fontSize = 100.sp
     val fontWeight = null // FontWeight.Bold
     val notePrintOptions = remember {
         NotePrintOptions(
-            sharpFlatPreference = NotePrintOptions.SharpFlatPreference.Sharp,
+            useEnharmonic = false,
             helmholtzNotation = false,
             notationType = NotationType.Solfege
         )
     }
     val maxLabelSize = rememberMaxNoteSize(
-        notes = createNoteNameScale53Tone(null).notes,
+        notes = noteNameScale.notes,
         notePrintOptions = notePrintOptions,
         fontSize = fontSize,
         fontWeight = fontWeight,

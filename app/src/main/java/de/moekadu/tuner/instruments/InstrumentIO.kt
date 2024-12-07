@@ -20,13 +20,9 @@ package de.moekadu.tuner.instruments
 
 import android.content.Context
 import android.net.Uri
-import android.widget.Toast
 import de.moekadu.tuner.BuildConfig
-import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.FileCheck
-import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.legacyNoteIndexToNote
 import kotlin.math.min
 
 object InstrumentIO {
@@ -79,7 +75,6 @@ object InstrumentIO {
         var numInstrumentsRead = 0
         var nameLength = -1
         var instrumentName = ""
-        var stringIndices: IntArray? = null
         var strings: Array<MusicalNote>? = null
         var icon = InstrumentIcon.entries[0]
         var stableId = Instrument.NO_STABLE_ID
@@ -116,16 +111,9 @@ object InstrumentIO {
 //                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading strings: ${strings?.joinToString(separator=";", prefix="[", postfix="]"){it.asString()}}")
                 }
 
-                Keyword.Indices -> {
-                    stringIndices = stream.readIntArray()
-//                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading string indices: ${stringIndices?.joinToString(separator=",", prefix="[", postfix="]")}")
-                }
-
                 Keyword.Instrument -> {
                     // string indices were used in older versions, we still allow reading them ....
-                    val stringsResolved =
-                        strings ?: stringIndices?.map { legacyNoteIndexToNote(it) }?.toTypedArray()
-                    stringsResolved?.let {
+                    strings?.let {
                         val instrument = Instrument(instrumentName, null, it, icon, stableId)
                         instruments.add(instrument)
                         numInstrumentsRead += 1
@@ -133,7 +121,6 @@ object InstrumentIO {
                     nameLength = -1
                     instrumentName = ""
                     strings = null
-                    stringIndices = null
                     icon = InstrumentIcon.entries[0]
                     stableId = stream.readLong() ?: Instrument.NO_STABLE_ID
 //                        Log.v("Tuner", "InstrumentDatabase.stringToInstruments: reading next instrument")
@@ -145,9 +132,7 @@ object InstrumentIO {
         }
 
         // string indices were used in older versions, we still allow reading them ....
-        val stringsResolved =
-            strings ?: stringIndices?.map { legacyNoteIndexToNote(it) }?.toTypedArray()
-        stringsResolved?.let {
+        strings?.let {
             val instrument = Instrument(instrumentName, null, it, icon, stableId)
             instruments.add(instrument)
             numInstrumentsRead += 1
@@ -160,7 +145,7 @@ object InstrumentIO {
 
     private val keywords = arrayOf("Version=", "Instrument", "Length of name=", "Name=", "Icon=", "String indices=", "Strings=")
 
-    private enum class Keyword {Version, Instrument, NameLength, Name, Icon, Indices, Strings, Invalid}
+    private enum class Keyword {Version, Instrument, NameLength, Name, Icon, Strings, Invalid}
 
     /** Get string representation of a single instrument.
      * @param context Context is only needed, if the instrument name is a string resource.
@@ -306,7 +291,6 @@ object InstrumentIO {
             "Name=" -> Keyword.Name
             "Icon=" -> Keyword.Icon
             "Strings=" -> Keyword.Strings
-            "String indices=" -> Keyword.Indices
             else -> Keyword.Invalid
         }
     }

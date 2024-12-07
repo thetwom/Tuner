@@ -2,7 +2,6 @@ package de.moekadu.tuner.temperaments2
 
 import androidx.compose.runtime.Immutable
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteNameScale
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
