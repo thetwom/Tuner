@@ -41,10 +41,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIO
 import de.moekadu.tuner.instruments.InstrumentResources
-import de.moekadu.tuner.instruments.migratingFromV6
 import de.moekadu.tuner.misc.FileCheck
 import de.moekadu.tuner.misc.toastPotentialFileCheckError
-import de.moekadu.tuner.navigation.ImportInstrumentsDialogRoute
 import de.moekadu.tuner.navigation.InstrumentsRoute
 import de.moekadu.tuner.navigation.TemperamentDialogRoute
 import de.moekadu.tuner.navigation.TunerRoute
@@ -66,8 +64,6 @@ import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -122,13 +118,11 @@ class MainActivity : ComponentActivity() {
 
                 // handle incoming intents for loading instruments
                 LaunchedEffect(loadInstrumentIntentChannel, controller) {
-                    for (instruments in loadInstrumentIntentChannel) {
+                    for (instrumentList in loadInstrumentIntentChannel) {
 //                        Log.v("Tuner", "MainActivity2: Loading file ...")
                         controller.popBackStack(TunerRoute, inclusive = false)
                         controller.navigate(InstrumentsRoute)
-                        controller.navigate(ImportInstrumentsDialogRoute(
-                            Json.encodeToString(instruments.toTypedArray())
-                        ))
+                        loadInstruments(instrumentList, instruments, this@MainActivity)
                     }
                 }
 
@@ -163,8 +157,10 @@ class MainActivity : ComponentActivity() {
                         controller = controller,
                         onNavigateUpClicked = { controller.navigateUp() },
                         preferences = pref,
-                        instrumentResources = instruments,
-                        temperamentResources = temperaments
+                        temperamentResources = temperaments,
+                        onLoadInstruments = {
+                            loadInstruments(it, instruments, this@MainActivity)
+                        }
                     )
                     preferenceGraph(
                         controller = controller,
@@ -270,5 +266,22 @@ private fun loadTemperaments(
     // TODO: else branches:
     //  - if several temperaments, where there are errors -> launch dialog telling this
     //    maybe with options to load the correct ones?
+}
+
+private fun loadInstruments(
+    instrumentList: List<Instrument>,
+    instrumentResources: InstrumentResources,
+    context: Context
+) {
+    Toast.makeText(
+        context,
+        context.resources.getQuantityString(
+            R.plurals.load_instruments,
+            instrumentList.size,
+            instrumentList.size
+        ),
+        Toast.LENGTH_LONG
+    ).show()
+    instrumentResources.appendInstruments(instrumentList)
 }
 

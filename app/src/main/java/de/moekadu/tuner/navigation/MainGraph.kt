@@ -18,10 +18,8 @@
 */
 package de.moekadu.tuner.navigation
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -29,33 +27,25 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.dialog
-import androidx.navigation.toRoute
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
-import de.moekadu.tuner.instruments.InstrumentIO
 import de.moekadu.tuner.instruments.InstrumentIcon
-import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments2.TemperamentResources
-import de.moekadu.tuner.ui.instruments.ImportInstrumentsDialog
 import de.moekadu.tuner.ui.screens.InstrumentTuner
 import de.moekadu.tuner.ui.screens.Instruments
 import de.moekadu.tuner.ui.screens.ScientificTuner
 import de.moekadu.tuner.viewmodels.InstrumentTunerViewModel
 import de.moekadu.tuner.viewmodels.InstrumentViewModel
 import de.moekadu.tuner.viewmodels.ScientificTunerViewModel
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 fun NavGraphBuilder.mainGraph(
     controller: NavController,
     onNavigateUpClicked: () -> Unit,
     preferences: PreferenceResources,
-    instrumentResources: InstrumentResources,
-    temperamentResources: TemperamentResources
+    temperamentResources: TemperamentResources,
+    onLoadInstruments: (List<Instrument>) -> Unit
 ) {
     composable<TunerRoute> {
         val isScientificTuner by preferences.scientificMode.collectAsStateWithLifecycle()
@@ -150,46 +140,7 @@ fun NavGraphBuilder.mainGraph(
             },
             onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
             onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
-            onLoadInstruments = {
-                controller.navigate(
-                    ImportInstrumentsDialogRoute(Json.encodeToString(it.toTypedArray()))
-                )
-            }
-        )
-    }
-
-    dialog<ImportInstrumentsDialogRoute> {
-        val instrumentsString = it.toRoute<ImportInstrumentsDialogRoute>().instrumentsString
-        val instruments = remember(instrumentsString) {
-            Json.decodeFromString<Array<Instrument>>(instrumentsString).toList().toImmutableList()
-        }
-        val context = LocalContext.current
-        ImportInstrumentsDialog(
-            instruments = instruments,
-            onDismiss = { controller.navigateUp() },
-            onImport = { mode, importedInstruments ->
-                when (mode) {
-                    InstrumentIO.InsertMode.Replace -> {
-                        instrumentResources.replaceInstruments(importedInstruments)
-                    }
-                    InstrumentIO.InsertMode.Prepend -> {
-                        instrumentResources.prependInstruments(importedInstruments)
-                    }
-                    InstrumentIO.InsertMode.Append -> {
-                        instrumentResources.appendInstruments(importedInstruments)
-                    }
-                }
-                Toast.makeText(
-                    context,
-                    context.resources.getQuantityString(
-                        R.plurals.load_instruments,
-                        importedInstruments.size,
-                        importedInstruments.size
-                    ),
-                    Toast.LENGTH_LONG
-                ).show()
-                controller.navigateUp()
-            }
+            onLoadInstruments = onLoadInstruments
         )
     }
 
@@ -216,9 +167,6 @@ data object TunerRoute
 
 @Serializable
 data object InstrumentsRoute
-
-@Serializable
-data class ImportInstrumentsDialogRoute(val instrumentsString: String)
 
 //@Serializable
 //data object TestRoute
