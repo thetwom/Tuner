@@ -132,29 +132,29 @@ class InstrumentResources @Inject constructor(
         writeCustomInstruments(newInstrumentList)
     }
 
-    fun prependInstruments(instruments: List<Instrument>) {
-        val current = this.customInstruments.value
-        val newInstrumentList = current.mutate { modified ->
-            instruments.forEachIndexed { index, instrument ->
-                val newKey = getNewStableId(modified)
-                modified.add(index, instrument.copy(stableId = newKey))
-            }
-        }
-        writeCustomInstruments(newInstrumentList)
-    }
+//    fun prependInstruments(instruments: List<Instrument>) {
+//        val current = this.customInstruments.value
+//        val newInstrumentList = current.mutate { modified ->
+//            instruments.forEachIndexed { index, instrument ->
+//                val newKey = getNewStableId(modified)
+//                modified.add(index, instrument.copy(stableId = newKey))
+//            }
+//        }
+//        writeCustomInstruments(newInstrumentList)
+//    }
 
-    fun replaceInstruments(instruments: List<Instrument>) {
-        var key = 0L
-        val currentKey = currentInstrument.value.stableId
-        val newInstrumentList = instruments.map {
-            ++key
-            if (key == currentKey)
-                ++key
-            it.copy(stableId = key)
-        }
-
-        writeCustomInstruments(newInstrumentList)
-    }
+//    fun replaceInstruments(instruments: List<Instrument>) {
+//        var key = 0L
+//        val currentKey = currentInstrument.value.stableId
+//        val newInstrumentList = instruments.map {
+//            ++key
+//            if (key == currentKey)
+//                ++key
+//            it.copy(stableId = key)
+//        }
+//
+//        writeCustomInstruments(newInstrumentList)
+//    }
 
     private fun getNewStableId(existingInstruments: List<Instrument> = customInstruments.value): Long {
         val currentKey = currentInstrument.value.stableId
