@@ -285,7 +285,7 @@ fun TemperamentsPortrait(
                         val rootNote = noteNames[selectedRootNoteIndex]
                         state.listData.activeItem.value?.let { onNewTemperament(it, rootNote) }
                     }) {
-                        Text(stringResource(id = R.string.save))
+                        Text(stringResource(id = R.string.done))
                     }
                 }
             ) },
@@ -303,14 +303,6 @@ fun TemperamentsPortrait(
                             onExportClicked = { overflowCallbacks.onExportClicked() },
                             onImportClicked = { overflowCallbacks.onImportClicked() }
                         )
-
-//                        IconButton(onClick = { overflowCallbacks.onExportClicked() }) {
-//                            Icon(ImageVector.vectorResource(id = R.drawable.ic_archive), contentDescription = "export")
-//                        }
-//                        IconButton(onClick = { overflowCallbacks.onImportClicked() }) {
-//                            Icon(ImageVector.vectorResource(id = R.drawable.ic_unarchive), contentDescription = "import")
-//                        }
-
                     } else {
                         IconButton(onClick = { state.listData.clearSelectedItems() }) {
                             Icon(Icons.Default.Clear, contentDescription = "clear selection")
@@ -514,88 +506,88 @@ fun TemperamentsLandscape(
                 }
             },
             actions = {
-                if (selectedTemperaments.isEmpty()) {
-                    IconButton(onClick = { overflowCallbacks.onDeleteClicked() }) {
-                        Icon(Icons.Default.Delete, contentDescription = "delete")
-                    }
-                    IconButton(onClick = { overflowCallbacks.onShareClicked() }) {
-                        Icon(Icons.Default.Share, contentDescription = "share")
-                    }
-                    ImportExportOverflowMenu(
-                        onExportClicked = { overflowCallbacks.onExportClicked() },
-                        onImportClicked = { overflowCallbacks.onImportClicked() }
-                    )
-
-                } else {
-                    IconButton(onClick = {
-                        scope.launch {
-                            val changed = state.listData.moveSelectedItemsUp()
-                            if (changed) {
-                                temperamentListState.animateScrollToItem(
-                                    (temperamentListState.firstVisibleItemIndex - 1).coerceAtLeast(0),
-                                    -temperamentListState.firstVisibleItemScrollOffset
-                                )
-                            }
-                        }
-                    }) {
-                        Icon(
-                            Icons.Default.KeyboardArrowUp,
-                            contentDescription = "move up"
-                        )
-                    }
-                    IconButton(onClick = {
-                        scope.launch {
-                            val changed = state.listData.moveSelectedItemsDown()
-                            if (changed) {
-                                temperamentListState.animateScrollToItem(
-                                    temperamentListState.firstVisibleItemIndex + 1,
-                                    -temperamentListState.firstVisibleItemScrollOffset
-                                )
-                            }
-                        }
-                    }) {
-                        Icon(
-                            Icons.Default.KeyboardArrowDown,
-                            contentDescription = "move down"
-                        )
-                    }
-                    OverflowMenu(callbacks = overflowCallbacks, showSettings = false)
-                }
+//                if (selectedTemperaments.isEmpty()) {
+//                    IconButton(onClick = { overflowCallbacks.onDeleteClicked() }) {
+//                        Icon(Icons.Default.Delete, contentDescription = "delete")
+//                    }
+//                    IconButton(onClick = { overflowCallbacks.onShareClicked() }) {
+//                        Icon(Icons.Default.Share, contentDescription = "share")
+//                    }
+//                    ImportExportOverflowMenu(
+//                        onExportClicked = { overflowCallbacks.onExportClicked() },
+//                        onImportClicked = { overflowCallbacks.onImportClicked() }
+//                    )
+//
+//                } else {
+//                    IconButton(onClick = {
+//                        scope.launch {
+//                            val changed = state.listData.moveSelectedItemsUp()
+//                            if (changed) {
+//                                temperamentListState.animateScrollToItem(
+//                                    (temperamentListState.firstVisibleItemIndex - 1).coerceAtLeast(0),
+//                                    -temperamentListState.firstVisibleItemScrollOffset
+//                                )
+//                            }
+//                        }
+//                    }) {
+//                        Icon(
+//                            Icons.Default.KeyboardArrowUp,
+//                            contentDescription = "move up"
+//                        )
+//                    }
+//                    IconButton(onClick = {
+//                        scope.launch {
+//                            val changed = state.listData.moveSelectedItemsDown()
+//                            if (changed) {
+//                                temperamentListState.animateScrollToItem(
+//                                    temperamentListState.firstVisibleItemIndex + 1,
+//                                    -temperamentListState.firstVisibleItemScrollOffset
+//                                )
+//                            }
+//                        }
+//                    }) {
+//                        Icon(
+//                            Icons.Default.KeyboardArrowDown,
+//                            contentDescription = "move down"
+//                        )
+//                    }
+//                    OverflowMenu(callbacks = overflowCallbacks, showSettings = false)
+//                }
                 TextButton(onClick = {
                     state.listData.activeItem.value?.let {
                         val rootNote = noteNames[selectedRootNoteIndex]
                         onNewTemperament(it, rootNote)
                     }
                 }) {
-                    Text(stringResource(id = R.string.save))
+                    Text(stringResource(id = R.string.done))
                 }
             }
         ) },
-        floatingActionButton = {
-            if (selectedTemperaments.isEmpty()) {
-                FloatingActionButton(
-                    onClick = {
-                        onEditTemperamentClicked(
-                            TemperamentWithNoteNames(
-                                Temperament.create(
-                                    StringOrResId(""),
-                                    StringOrResId(""),
-                                    StringOrResId(""),
-                                    12,
-                                    Temperament.NO_STABLE_ID
-                                ),
-                                null
-                            ),
-                            true
-                        )
-                    },
-                    containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
-                    elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
-                ) {
-                    Icon(Icons.Filled.Add, contentDescription = "new temperament")
-                }
-            }
-        },
+//        floatingActionButton = {
+//            if (selectedTemperaments.isEmpty()) {
+//                FloatingActionButton(
+//                    onClick = {
+//                        onEditTemperamentClicked(
+//                            TemperamentWithNoteNames(
+//                                Temperament.create(
+//                                    StringOrResId(""),
+//                                    StringOrResId(""),
+//                                    StringOrResId(""),
+//                                    12,
+//                                    Temperament.NO_STABLE_ID
+//                                ),
+//                                null
+//                            ),
+//                            true
+//                        )
+//                    },
+//                    containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
+//                    elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
+//                ) {
+//                    Icon(Icons.Filled.Add, contentDescription = "new temperament")
+//                }
+//            }
+//        },
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         }
@@ -676,6 +668,90 @@ fun TemperamentsLandscape(
                     onEditItemClicked = onEditTemperamentClicked,
                     snackbarHostState = snackbarHostState,
                     listState = temperamentListState
+                )
+
+                BottomAppBar(
+                    actions = {
+                        if (selectedTemperaments.isEmpty()) {
+                            IconButton(onClick = { overflowCallbacks.onDeleteClicked() }) {
+                                Icon(Icons.Default.Delete, contentDescription = "delete")
+                            }
+                            IconButton(onClick = { overflowCallbacks.onShareClicked() }) {
+                                Icon(Icons.Default.Share, contentDescription = "share")
+                            }
+                            ImportExportOverflowMenu(
+                                onExportClicked = { overflowCallbacks.onExportClicked() },
+                                onImportClicked = { overflowCallbacks.onImportClicked() }
+                            )
+                        } else {
+                            IconButton(onClick = { state.listData.clearSelectedItems() }) {
+                                Icon(Icons.Default.Clear, contentDescription = "clear selection")
+                            }
+                            Text(
+                                "${selectedTemperaments.size}",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
+                            IconButton(onClick = {
+                                scope.launch {
+                                    val changed = state.listData.moveSelectedItemsUp()
+                                    if (changed) {
+                                        temperamentListState.animateScrollToItem(
+                                            (temperamentListState.firstVisibleItemIndex - 1).coerceAtLeast(0),
+                                            -temperamentListState.firstVisibleItemScrollOffset
+                                        )
+                                    }
+                                }
+                            }) {
+                                Icon(
+                                    Icons.Default.KeyboardArrowUp,
+                                    contentDescription = "move up"
+                                )
+                            }
+                            IconButton(onClick = {
+                                scope.launch {
+                                    val changed = state.listData.moveSelectedItemsDown()
+                                    if (changed) {
+                                        temperamentListState.animateScrollToItem(
+                                            temperamentListState.firstVisibleItemIndex + 1,
+                                            -temperamentListState.firstVisibleItemScrollOffset
+                                        )
+                                    }
+                                }
+                            }) {
+                                Icon(
+                                    Icons.Default.KeyboardArrowDown,
+                                    contentDescription = "move down"
+                                )
+                            }
+                            OverflowMenu(callbacks = overflowCallbacks, showSettings = false)
+                        }
+                    },
+                    floatingActionButton = {
+                        if (selectedTemperaments.isEmpty()) {
+                            FloatingActionButton(
+                                onClick = {
+                                    onEditTemperamentClicked(
+                                        TemperamentWithNoteNames(
+                                            Temperament.create(
+                                                StringOrResId(""),
+                                                StringOrResId(""),
+                                                StringOrResId(""),
+                                                12,
+                                                Temperament.NO_STABLE_ID
+                                            ),
+                                            null
+                                        ),
+                                        true
+                                    )
+                                },
+                                containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
+                                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
+                            ) {
+                                Icon(Icons.Filled.Add, contentDescription = "new temperament")
+                            }
+                        }
+                    }
                 )
             }
         }

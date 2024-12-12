@@ -90,13 +90,12 @@ private fun checkAndSetNoteNameErrors(values: PersistentList<TemperamentTableLin
 }
 
 /** Check if list of notes is the same as the default note names.
- * @param noteNameList List of notes to be checked. This is expected to include the octave note,
- *   so the number of notes per octave is expected noteNameList.size - 1.
+ * @param noteNameList List of notes to be checked.
  * @return True if the list ist the same as the default note names, else false
  */
 private fun checkIfDefaultNoteNames(noteNameList: List<MusicalNote>): Boolean {
     var useDefaultNoteNames = true
-    val predefinedNoteNames = getSuitableNoteNames(noteNameList.size - 1)
+    val predefinedNoteNames = getSuitableNoteNames(noteNameList.size)
     if (predefinedNoteNames == null) {
         useDefaultNoteNames = false
     } else {
@@ -248,7 +247,7 @@ class TemperamentEditorViewModel @AssistedInject constructor(
 
     fun saveTemperament(): Boolean {
         val values = temperamentValues.value
-        val noteNameList = values.map {
+        val noteNameList = values.dropLast(1).map {
             it.note ?: return false
         }
         val predefinedNoteNames = getSuitableNoteNames(values.size - 1)

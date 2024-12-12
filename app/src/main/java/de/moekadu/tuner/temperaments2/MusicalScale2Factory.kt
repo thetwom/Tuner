@@ -16,6 +16,7 @@ class MusicalScale2Factory {
             stretchTuning: StretchTuning
         ): MusicalScale2 {
             val noteNamesResolved = noteNames ?: getSuitableNoteNames(temperament.numberOfNotesPerOctave)!! // TODO: this might be risky?
+//            Log.v("Tuner", "MusicalScale2Factory: numberOfNotesPerOctave=${temperament.numberOfNotesPerOctave}, noteNames size=${noteNamesResolved.size}")
             assert(temperament.numberOfNotesPerOctave == noteNamesResolved.size)
             val rootNoteResolved = rootNote ?: noteNamesResolved[0]
             val referenceNoteResolved = referenceNote ?: noteNamesResolved.defaultReferenceNote
