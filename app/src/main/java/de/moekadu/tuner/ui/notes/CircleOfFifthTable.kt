@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.temperaments2.MusicalScale2
@@ -118,7 +119,8 @@ fun CircleOfFifthTable(
     noteNames: NoteNames,
     rootNoteIndex: Int,
     notePrintOptions: NotePrintOptions,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    horizontalContentPadding: Dp = 16.dp
 ) {
     val textMeasurer = rememberTextMeasurer()
     val noteTypography = MaterialTheme.typography.labelLarge
@@ -145,7 +147,7 @@ fun CircleOfFifthTable(
         modifier = modifier,
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp)
+        contentPadding = PaddingValues(horizontal = horizontalContentPadding)
     ) {
         if (fifthArray.isNotEmpty()) {
             items(2 * temperament.numberOfNotesPerOctave + 1) {

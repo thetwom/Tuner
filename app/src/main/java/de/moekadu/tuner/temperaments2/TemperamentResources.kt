@@ -25,7 +25,6 @@ class TemperamentResources @Inject constructor(
     @ApplicationContext context: Context,
     @ApplicationScope val applicationScope: CoroutineScope
 ){
-
     val store = ResourcesDataStoreBase(context, "temperaments")
 
     val predefinedTemperaments = temperamentDatabase

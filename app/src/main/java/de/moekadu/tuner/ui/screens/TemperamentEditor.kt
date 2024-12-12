@@ -79,7 +79,7 @@ fun TemperamentEditor(
     onSaveClicked: () -> Unit = {},
     onNumberOfNotesClicked: () -> Unit = {}
 ) {
-    val context = LocalContext.current
+//    val context = LocalContext.current
     Scaffold(
         modifier = modifier,
         topBar = {

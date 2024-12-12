@@ -232,8 +232,7 @@ fun <T>EditableList(
         modifier = modifier,
         state = listState
     ) {
-        if ( editableItems.size > 0
-            ) {
+        if ( editableItems.size > 0 && state.predefinedItems.size > 0) {
             item(contentType = 1) {
                 EditableListSection(
                     title = stringResource(id = R.string.custom_item),
@@ -279,7 +278,7 @@ fun <T>EditableList(
                 )
             }
         }
-        if (editableItems.size > 0) {
+        if (editableItems.size > 0 && state.predefinedItems.size > 0) {
             item(contentType = 1) {
                 EditableListSection(
                     title = stringResource(id = R.string.predefined_items),

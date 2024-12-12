@@ -315,4 +315,5 @@
     <string name="invalid_value">Invalid value.</string>
     <string name="maximum_value_exceeded">Maximum value of %d exceeded.</string>
     <string name="file_contains_no_temperaments">File contains no temperaments: %s</string>
+    <string name="manage_temperaments">Manage temperaments</string>
 </resources>
