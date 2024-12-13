@@ -1,5 +1,6 @@
 package de.moekadu.tuner.viewmodels
 
+import androidx.compose.runtime.IntState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -31,18 +32,17 @@ class TemperamentDialogViewModel  @Inject constructor(
     private val _noteNames = mutableStateOf(initialMusicalScale.noteNames)
     override val noteNames: State<NoteNames> get() = _noteNames
 
-    override val predefinedTemperaments: ImmutableList<TemperamentWithNoteNames>
-        get() = pref.predefinedTemperaments
-    override val customTemperaments get() = pref.customTemperaments
+    override val defaultTemperament: TemperamentWithNoteNames
+        get() = pref.predefinedTemperaments[0]
 
     private val _selectedRootNoteIndex = mutableIntStateOf(
         initialMusicalScale.noteNames.getNoteIndex(initialMusicalScale.rootNote)
             .coerceAtLeast(0)
     )
-    override val selectedRootNoteIndex: State<Int> get() = _selectedRootNoteIndex
+    override val selectedRootNoteIndex: IntState get() = _selectedRootNoteIndex
 
     override fun setNewTemperament(temperamentWithNoteNames: TemperamentWithNoteNames) {
-        val oldRootNoteIndex = selectedRootNoteIndex.value
+        val oldRootNoteIndex = selectedRootNoteIndex.intValue
         val oldRootNote = noteNames.value[oldRootNoteIndex]
         val newNoteNames = temperamentWithNoteNames.noteNames
             ?: getSuitableNoteNames(temperamentWithNoteNames.temperament.numberOfNotesPerOctave)!!
@@ -62,7 +62,7 @@ class TemperamentDialogViewModel  @Inject constructor(
         // make sure that the currently active item will follow changes when it was changed in
         // the temperament editor
         viewModelScope.launch {
-            customTemperaments.collect { custom ->
+            pref.customTemperaments.collect { custom ->
                 val stableId = temperament.value.stableId
                 custom.firstOrNull { it.stableId == stableId }?.let { temperament ->
                     setNewTemperament(temperament)

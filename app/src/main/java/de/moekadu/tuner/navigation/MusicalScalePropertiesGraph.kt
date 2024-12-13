@@ -18,24 +18,21 @@
 */
 package de.moekadu.tuner.navigation
 
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.toRoute
 import de.moekadu.tuner.R
-import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments2.EditableTemperament
 import de.moekadu.tuner.temperaments2.MusicalScale2
@@ -44,19 +41,33 @@ import de.moekadu.tuner.temperaments2.Temperament
 import de.moekadu.tuner.temperaments2.TemperamentResources
 import de.moekadu.tuner.temperaments2.TemperamentWithNoteNames
 import de.moekadu.tuner.temperaments2.getSuitableNoteNames
-import de.moekadu.tuner.temperaments2.hasErrors
 import de.moekadu.tuner.temperaments2.toEditableTemperament
-import de.moekadu.tuner.temperaments2.toTemperamentWithNoteNames
 import de.moekadu.tuner.ui.preferences.ReferenceNoteDialog
 import de.moekadu.tuner.ui.preferences.TemperamentDialog
-import de.moekadu.tuner.ui.screens.Temperaments
 import de.moekadu.tuner.ui.screens.Temperaments2
 import de.moekadu.tuner.viewmodels.TemperamentDialogViewModel
-import de.moekadu.tuner.viewmodels.TemperamentViewModel
 import de.moekadu.tuner.viewmodels.Temperaments2ViewModel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+
+@Composable
+private fun createTemperamentDialogViewModel(
+    controller: NavController, backStackEntry: NavBackStackEntry
+): TemperamentDialogViewModel? {
+    val parentEntry = remember(backStackEntry) {
+        try {
+            controller.getBackStackEntry<TemperamentDialogRoute>()
+        } catch (ex: IllegalArgumentException) {
+            null
+        }
+    }
+    return if (parentEntry == null)
+        null
+    else
+        hiltViewModel<TemperamentDialogViewModel>(parentEntry)
+}
+
 
 fun NavGraphBuilder.musicalScalePropertiesGraph(
     controller: NavController,
@@ -83,7 +94,10 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
         val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
         val resources = LocalContext.current.resources
 //        val viewModel: TemperamentViewModel = hiltViewModel()
-        val viewModel: TemperamentDialogViewModel = hiltViewModel()
+        val viewModel: TemperamentDialogViewModel = createTemperamentDialogViewModel(
+            controller = controller,
+            backStackEntry = it
+        )!!
 //        val context = LocalContext.current
 
         TemperamentDialog(
@@ -130,7 +144,9 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
                     }
                 }
             },
-            onManageTemperaments = { controller.navigate(TemperamentsManager) }
+            onChooseTemperaments = { controller.navigate(TemperamentsManagerRoute(
+                viewModel.temperament.value.stableId
+            )) }
         )
 
 //        Temperaments(
@@ -185,13 +201,28 @@ fun NavGraphBuilder.musicalScalePropertiesGraph(
 //        )
     }
 
-    composable<TemperamentsManager> {
+    composable<TemperamentsManagerRoute> {
         val context = LocalContext.current
         val resources = context.resources
-        val viewModel: Temperaments2ViewModel = hiltViewModel()
+        val initialTemperamentKey = it.toRoute<TemperamentsManagerRoute>().currentTemperamentKey
+        val viewModel = hiltViewModel<Temperaments2ViewModel, Temperaments2ViewModel.Factory>{ factory ->
+            factory.create(initialTemperamentKey)
+        }
+        val viewModelParentDialog = createTemperamentDialogViewModel(
+            controller = controller,
+            backStackEntry = it
+        )
         Temperaments2(
             state = viewModel,
             modifier = Modifier.fillMaxSize(),
+            onTemperamentClicked = { temperament ->
+                if (viewModelParentDialog != null) {
+                    viewModelParentDialog.setNewTemperament(temperament)
+                    controller.navigateUp()
+                } else {
+                    viewModel.activateTemperament(temperament.stableId)
+                }
+            },
             onEditTemperamentClicked = { temperament, copy ->
                 val name = temperament.temperament.name.value(context)
                 controller.navigate(
@@ -242,4 +273,6 @@ data class ReferenceFrequencyDialogRoute(
 data object TemperamentDialogRoute
 
 @Serializable
-data object TemperamentsManager
+data class TemperamentsManagerRoute(
+    val currentTemperamentKey: Long
+)

@@ -144,6 +144,78 @@ fun TunerScaffold(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TunerScaffoldWithoutBottomBar(
+    modifier: Modifier = Modifier,
+    canNavigateUp: Boolean = true,
+    onNavigateUpClicked: () -> Unit = {},
+    showPreferenceButton: Boolean = true,
+    onPreferenceButtonClicked: () -> Unit = {},
+    title: String = stringResource(id = R.string.app_name),
+    defaultModeTools: @Composable (RowScope.() -> Unit) = {}, // tools extra to preference in non-action mode
+    actionModeActive: Boolean = false,
+    actionModeTitle: String = "",
+    actionModeTools: @Composable (RowScope.() -> Unit) = {},
+    onActionModeFinishedClicked: () -> Unit = {},
+    floatingActionButton: @Composable () -> Unit = {},
+    floatingActionBarPosition: FabPosition = FabPosition.End,
+    snackbarHost: @Composable () -> Unit = {},
+    content: @Composable (PaddingValues) -> Unit
+) {
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            TopAppBar(
+                title = {
+                    if (actionModeActive)
+                        Text(actionModeTitle)
+                    else
+                        Text(title)
+                },
+                navigationIcon = {
+                    val state = when {
+                        actionModeActive -> NavigationIconState.Clear
+                        canNavigateUp -> NavigationIconState.Arrow
+                        else -> NavigationIconState.Off
+                    }
+                    when (state) {
+                        NavigationIconState.Clear -> {
+                            IconButton(onClick = onActionModeFinishedClicked) {
+                                Icon(Icons.Default.Close, "close")
+                            }
+                        }
+                        NavigationIconState.Arrow -> {
+                            IconButton(onClick = onNavigateUpClicked) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, "back")
+                            }
+
+                        }
+                        NavigationIconState.Off -> {}}
+                },
+                actions = {
+                    if (actionModeActive) {
+                        actionModeTools()
+                    } else {
+                        defaultModeTools()
+                        if (showPreferenceButton) {
+                            IconButton(onClick = onPreferenceButtonClicked) {
+                                Icon(Icons.Filled.Settings, "settings")
+                            }
+                        }
+                    }
+                }
+            )
+        },
+        floatingActionButton = floatingActionButton,
+        floatingActionButtonPosition = floatingActionBarPosition,
+        snackbarHost = snackbarHost
+    ) { paddingValues ->
+        content(paddingValues)
+    }
+}
+
+
 @Preview(widthDp = 300, heightDp = 500)
 @Composable
 private fun TunerScaffoldPreview() {

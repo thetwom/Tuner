@@ -47,6 +47,7 @@ import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments2.TemperamentResources
 import de.moekadu.tuner.ui.instruments.InstrumentIconPicker
 import de.moekadu.tuner.ui.misc.TunerScaffold
+import de.moekadu.tuner.ui.misc.TunerScaffoldWithoutBottomBar
 import de.moekadu.tuner.ui.misc.rememberTunerAudioPermission
 import de.moekadu.tuner.ui.screens.InstrumentEditor
 import de.moekadu.tuner.viewmodels.InstrumentEditorViewModel
@@ -93,23 +94,23 @@ fun NavGraphBuilder.instrumentEditorGraph(
                     viewModel.startTuner()
                 onPauseOrDispose { viewModel.stopTuner() }
             }
-            TunerScaffold(
+            TunerScaffoldWithoutBottomBar(
                 canNavigateUp = canNavigateUp,
                 onNavigateUpClicked = onNavigateUpClicked,
                 showPreferenceButton = false,
                 onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
-                showBottomBar = true,
-                onSharpFlatClicked = { preferences.switchEnharmonicPreference() },
-                onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
-                    controller.navigate(
-                        ReferenceFrequencyDialogRoute(
-                            temperaments.musicalScale.value, null
-                        )
-                    )
-                },
-                onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
-                musicalScale = musicalScale,
-                notePrintOptions = notePrintOptions,
+//                showBottomBar = true,
+//                onSharpFlatClicked = { preferences.switchEnharmonicPreference() },
+//                onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
+//                    controller.navigate(
+//                        ReferenceFrequencyDialogRoute(
+//                            temperaments.musicalScale.value, null
+//                        )
+//                    )
+//                },
+//                onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
+//                musicalScale = musicalScale,
+//                notePrintOptions = notePrintOptions,
                 actionModeActive = true,
                 actionModeTitle = stringResource(id = R.string.edit_instrument),
                 actionModeTools = {

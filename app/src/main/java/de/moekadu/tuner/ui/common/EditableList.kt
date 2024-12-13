@@ -3,6 +3,9 @@ package de.moekadu.tuner.ui.common
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +19,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -244,12 +248,17 @@ fun <T>EditableList(
         }
         if (editableItemsExpanded && editableItems.size > 0) {
             items(editableItems, { state.getStableId(it) }, { 2 }) { listItem ->
+                val interactionSource = remember { MutableInteractionSource() }
                 EditableListItem(
                     title = { itemTitle(listItem) },
                     description = { itemDescription(listItem) },
                     icon = { itemIcon(listItem) },
                     Modifier
                         .animateItem()
+                        .indication(
+                            interactionSource = interactionSource,
+                            indication = ripple()
+                        )
                         .pointerInput(Unit) {
                             detectTapGestures(
                                 onLongPress = { state.toggleSelection(state.getStableId(listItem)) },
@@ -258,6 +267,12 @@ fun <T>EditableList(
                                         state.toggleSelection(state.getStableId(listItem))
                                     else
                                         onActivateItemClicked(listItem)
+                                },
+                                onPress = {
+                                    val press = PressInteraction.Press(it)
+                                    interactionSource.tryEmit(press)
+                                    tryAwaitRelease()
+                                    interactionSource.tryEmit(PressInteraction.Release(press))
                                 }
                             )
                         },

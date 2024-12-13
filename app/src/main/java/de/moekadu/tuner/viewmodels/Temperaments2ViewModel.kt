@@ -3,6 +3,9 @@ package de.moekadu.tuner.viewmodels
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.temperaments2.TemperamentIO
@@ -16,13 +19,24 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@HiltViewModel
-class Temperaments2ViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = Temperaments2ViewModel.Factory::class)
+class Temperaments2ViewModel @AssistedInject constructor(
+    @Assisted initialTemperamentKey: Long,
     val pref: TemperamentResources,
     @ApplicationScope val applicationScope: CoroutineScope
 ) : Temperaments2Data, ViewModel() {
+    @AssistedFactory
+    interface Factory {
+        fun create(initialTemperamentKey: Long): Temperaments2ViewModel
+    }
 
-    private val activeTemperament = MutableStateFlow<TemperamentWithNoteNames?>(null)
+    private val activeTemperament = MutableStateFlow(
+        pref.predefinedTemperaments.firstOrNull {
+            it.temperament.stableId == initialTemperamentKey
+        } ?: pref.customTemperaments.value.firstOrNull {
+            it.temperament.stableId == initialTemperamentKey
+        }
+    )
 
     override val listData = EditableListData(
         predefinedItems = pref.predefinedTemperaments,
@@ -47,6 +61,14 @@ class Temperaments2ViewModel @Inject constructor(
                     TemperamentIO.writeTemperaments(temperaments, writer, context)
                 }
             }
+        }
+    }
+
+    fun activateTemperament(key: Long) {
+        activeTemperament.value = pref.predefinedTemperaments.firstOrNull {
+            it.temperament.stableId == key
+        } ?: pref.customTemperaments.value.firstOrNull {
+            it.temperament.stableId == key
         }
     }
 }
