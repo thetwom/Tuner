@@ -65,6 +65,7 @@ import de.moekadu.tuner.ui.common.EditableListData
 import de.moekadu.tuner.ui.common.ImportExportOverflowMenu
 import de.moekadu.tuner.ui.common.OverflowMenu
 import de.moekadu.tuner.ui.common.OverflowMenuCallbacks
+import de.moekadu.tuner.ui.misc.TunerScaffoldWithoutBottomBar
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -187,7 +188,7 @@ fun Temperaments2(
     val selectedTemperaments by state.listData.selectedItems.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
-    val temperamentListState = rememberLazyListState()
+    val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     val overflowCallbacks = rememberImportExportCallbacks(
@@ -195,106 +196,83 @@ fun Temperaments2(
         onLoadTemperaments = onLoadTemperaments
     )
 
-    Scaffold(
+    TunerScaffoldWithoutBottomBar(
         modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(id = R.string.temperaments)) },
-                navigationIcon = {
-                    IconButton(onClick = { onNavigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "back")
-                    }
-                }
+        title = stringResource(id = R.string.temperaments),
+        defaultModeTools = {
+            OverflowMenu(
+                callbacks = overflowCallbacks,
+                showSettings = false
             )
         },
-        bottomBar = {
-            BottomAppBar(
-                actions = {
-                    if (selectedTemperaments.isEmpty()) {
-                        IconButton(onClick = { overflowCallbacks.onDeleteClicked() }) {
-                            Icon(Icons.Default.Delete, contentDescription = "delete")
-                        }
-                        IconButton(onClick = { overflowCallbacks.onShareClicked() }) {
-                            Icon(Icons.Default.Share, contentDescription = "share")
-                        }
-                        ImportExportOverflowMenu(
-                            onExportClicked = { overflowCallbacks.onExportClicked() },
-                            onImportClicked = { overflowCallbacks.onImportClicked() }
+        actionModeActive = selectedTemperaments.isNotEmpty(),
+        actionModeTitle = "${selectedTemperaments.size}",
+        actionModeTools = {
+            IconButton(onClick = {
+                scope.launch {
+                    val changed = state.listData.moveSelectedItemsUp()
+                    if (changed) {
+                        listState.animateScrollToItem(
+                            (listState.firstVisibleItemIndex - 1).coerceAtLeast(0),
+                            -listState.firstVisibleItemScrollOffset
                         )
-                    } else {
-                        IconButton(onClick = { state.listData.clearSelectedItems() }) {
-                            Icon(Icons.Default.Clear, contentDescription = "clear selection")
-                        }
-                        Text(
-                            "${selectedTemperaments.size}",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
-                        IconButton(onClick = {
-                            scope.launch {
-                                val changed = state.listData.moveSelectedItemsUp()
-                                if (changed) {
-                                    temperamentListState.animateScrollToItem(
-                                        (temperamentListState.firstVisibleItemIndex - 1).coerceAtLeast(
-                                            0
-                                        ),
-                                        -temperamentListState.firstVisibleItemScrollOffset
-                                    )
-                                }
-                            }
-                        }) {
-                            Icon(
-                                Icons.Default.KeyboardArrowUp,
-                                contentDescription = "move up"
-                            )
-                        }
-                        IconButton(onClick = {
-                            scope.launch {
-                                val changed = state.listData.moveSelectedItemsDown()
-                                if (changed) {
-                                    temperamentListState.animateScrollToItem(
-                                        temperamentListState.firstVisibleItemIndex + 1,
-                                        -temperamentListState.firstVisibleItemScrollOffset
-                                    )
-                                }
-                            }
-                        }) {
-                            Icon(
-                                Icons.Default.KeyboardArrowDown,
-                                contentDescription = "move down"
-                            )
-                        }
-                        OverflowMenu(callbacks = overflowCallbacks, showSettings = false)
                     }
+                }
+            }) {
+                Icon(
+                    Icons.Default.KeyboardArrowUp,
+                    contentDescription = "move up"
+                )
+            }
+            IconButton(onClick = {
+                scope.launch {
+                    val changed = state.listData.moveSelectedItemsDown()
+                    if (changed) {
+                        listState.animateScrollToItem(
+                            listState.firstVisibleItemIndex + 1,
+                            -listState.firstVisibleItemScrollOffset
+                        )
+                    }
+                }
+            }) {
+                Icon(
+                    Icons.Default.KeyboardArrowDown,
+                    contentDescription = "move down"
+                )
+            }
+            OverflowMenu(overflowCallbacks, showSettings = false)
+        },
+        onActionModeFinishedClicked = {
+            state.listData.clearSelectedItems()
+        },
+        onNavigateUpClicked = onNavigateUp,
+        showPreferenceButton = false,
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    onEditTemperamentClicked(
+                        TemperamentWithNoteNames(
+                            Temperament.create(
+                                StringOrResId(""),
+                                StringOrResId(""),
+                                StringOrResId(""),
+                                12,
+                                Temperament.NO_STABLE_ID
+                            ),
+                            null
+                        ),
+                        true
+                    )
                 },
-                floatingActionButton = {
-                    if (selectedTemperaments.isEmpty()) {
-                        FloatingActionButton(
-                            onClick = {
-                                onEditTemperamentClicked(
-                                    TemperamentWithNoteNames(
-                                        Temperament.create(
-                                            StringOrResId(""),
-                                            StringOrResId(""),
-                                            StringOrResId(""),
-                                            12,
-                                            Temperament.NO_STABLE_ID
-                                        ),
-                                        null
-                                    ),
-                                    true
-                                )
-                            },
-                            containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
-                            elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
-                        ) {
-                            Icon(Icons.Filled.Add, contentDescription = "new temperament")
-                        }
-                    }
-                }
-            )
+                containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
+                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "new temperament")
+            }
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        }
     ) { paddingValues ->
         val iconTextSize = with(LocalDensity.current) { 18.dp.toSp() }
         EditableList(
@@ -324,11 +302,10 @@ fun Temperaments2(
             onActivateItemClicked = { onTemperamentClicked(it) },
             onEditItemClicked = onEditTemperamentClicked,
             snackbarHostState = snackbarHostState,
-            listState = temperamentListState
+            listState = listState
         )
     }
 }
-
 
 private class TestTemperament2Data : Temperaments2Data {
     private val testTemperament1 = Temperament.create(
@@ -365,7 +342,7 @@ private class TestTemperament2Data : Temperaments2Data {
     val predefinedTemperamentsExpanded = MutableStateFlow(false)
     val customTemperamentsExpanded = MutableStateFlow(true)
 
-    val activeTemperament = MutableStateFlow<TemperamentWithNoteNames?>(null)
+    val activeTemperament = MutableStateFlow<TemperamentWithNoteNames?>(customTemperaments.value[1])
 
     override val listData = EditableListData(
         getStableId = { it.stableId },

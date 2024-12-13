@@ -65,6 +65,7 @@ import de.moekadu.tuner.ui.common.EditableListData
 import de.moekadu.tuner.ui.common.OverflowMenu
 import de.moekadu.tuner.ui.common.OverflowMenuCallbacks
 import de.moekadu.tuner.ui.misc.TunerScaffold
+import de.moekadu.tuner.ui.misc.TunerScaffoldWithoutBottomBar
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.persistentListOf
@@ -79,16 +80,16 @@ interface InstrumentsData {
 @Composable
 fun Instruments(
     state: InstrumentsData,
-    musicalScale: MusicalScale2,
+//    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
     onInstrumentClicked: (instrument: Instrument) -> Unit = { },
     onEditInstrumentClicked: (instrument: Instrument, copy: Boolean) -> Unit = {_,_ -> },
     onCreateNewInstrumentClicked: () -> Unit = {},
     onNavigateUpClicked: () -> Unit = {},
-    onReferenceNoteClicked: () -> Unit = {},
-    onTemperamentClicked: () -> Unit = {},
-    onSharpFlatClicked: () -> Unit = {},
+//    onReferenceNoteClicked: () -> Unit = {},
+//    onTemperamentClicked: () -> Unit = {},
+//    onSharpFlatClicked: () -> Unit = {},
     onLoadInstruments: (instruments: List<Instrument>) -> Unit = {},
     onPreferenceButtonClicked: () -> Unit = {}
 ) {
@@ -176,7 +177,7 @@ fun Instruments(
         }
     }
 
-    TunerScaffold(
+    TunerScaffoldWithoutBottomBar(
         modifier = modifier,
         title = stringResource(id = R.string.instruments),
         defaultModeTools = { OverflowMenu(callbacks = overflowCallbacks) },
@@ -221,11 +222,11 @@ fun Instruments(
             state.listData.clearSelectedItems()
         },
         onNavigateUpClicked = onNavigateUpClicked,
-        onTemperamentClicked = onTemperamentClicked,
-        onReferenceNoteClicked = onReferenceNoteClicked,
-        onSharpFlatClicked = onSharpFlatClicked,
-        musicalScale = musicalScale,
-        notePrintOptions = notePrintOptions,
+//        onTemperamentClicked = onTemperamentClicked,
+//        onReferenceNoteClicked = onReferenceNoteClicked,
+//        onSharpFlatClicked = onSharpFlatClicked,
+//        musicalScale = musicalScale,
+//        notePrintOptions = notePrintOptions,
         showPreferenceButton = false,
         floatingActionButton = {
             FloatingActionButton(
@@ -348,10 +349,10 @@ private class TestInstrumentsData : InstrumentsData {
 private fun InstrumentsPreview() {
     TunerTheme {
         val data = remember{ TestInstrumentsData() }
-        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
+//        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
         Instruments(
             state = data,
-            musicalScale = musicalScale
+//            musicalScale = musicalScale
         )
     }
 }

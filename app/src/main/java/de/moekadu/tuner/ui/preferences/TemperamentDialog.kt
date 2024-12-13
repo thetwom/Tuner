@@ -27,11 +27,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,9 +48,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.IntState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -79,60 +85,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.math.roundToInt
 
-//import androidx.compose.foundation.layout.Column
-//import androidx.compose.foundation.layout.Spacer
-//import androidx.compose.foundation.layout.fillMaxWidth
-//import androidx.compose.foundation.layout.height
-//import androidx.compose.foundation.layout.padding
-//import androidx.compose.foundation.rememberScrollState
-//import androidx.compose.foundation.verticalScroll
-//import androidx.compose.material3.AlertDialog
-//import androidx.compose.material3.DropdownMenuItem
-//import androidx.compose.material3.ExperimentalMaterial3Api
-//import androidx.compose.material3.ExposedDropdownMenuBox
-//import androidx.compose.material3.ExposedDropdownMenuDefaults
-//import androidx.compose.material3.HorizontalDivider
-//import androidx.compose.material3.Icon
-//import androidx.compose.material3.MaterialTheme
-//import androidx.compose.material3.OutlinedButton
-//import androidx.compose.material3.Text
-//import androidx.compose.material3.TextButton
-//import androidx.compose.material3.TextField
-//import androidx.compose.runtime.Composable
-//import androidx.compose.runtime.getValue
-//import androidx.compose.runtime.mutableIntStateOf
-//import androidx.compose.runtime.mutableStateOf
-//import androidx.compose.runtime.remember
-//import androidx.compose.runtime.saveable.rememberSaveable
-//import androidx.compose.runtime.setValue
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.graphics.vector.ImageVector
-//import androidx.compose.ui.res.stringResource
-//import androidx.compose.ui.res.vectorResource
-//import androidx.compose.ui.text.style.TextAlign
-//import androidx.compose.ui.tooling.preview.Preview
-//import androidx.compose.ui.unit.dp
-//import de.moekadu.tuner.R
-//import de.moekadu.tuner.preferences.PreferenceResources
-//import de.moekadu.tuner.temperaments.MusicalScaleFactory
-//import de.moekadu.tuner.temperaments.NoteNameScaleFactory
-//import de.moekadu.tuner.temperaments.TemperamentType
-//import de.moekadu.tuner.temperaments.getTuningDescriptionResourceId
-//import de.moekadu.tuner.temperaments.getTuningNameResourceId
-//import de.moekadu.tuner.ui.notes.CentAndRatioTable
-//import de.moekadu.tuner.ui.notes.CircleOfFifthTable
-//import de.moekadu.tuner.ui.notes.NotePrintOptions
-//import de.moekadu.tuner.ui.notes.NoteSelector
-//import de.moekadu.tuner.ui.theme.TunerTheme
-//import kotlin.math.roundToInt
-//
-
 interface TemperamentDialogState {
     val temperament: State<Temperament>
     val noteNames: State<NoteNames>
-    val predefinedTemperaments: ImmutableList<TemperamentWithNoteNames>
-    val customTemperaments: StateFlow<ImmutableList<TemperamentWithNoteNames>>
-    val selectedRootNoteIndex: State<Int>
+    //val predefinedTemperaments: ImmutableList<TemperamentWithNoteNames>
+    //val customTemperaments: StateFlow<ImmutableList<TemperamentWithNoteNames>>
+    val selectedRootNoteIndex: IntState
+
+    val defaultTemperament: TemperamentWithNoteNames
 
     fun setNewTemperament(temperamentWithNoteNames: TemperamentWithNoteNames)
     fun selectRootNote(index: Int)
@@ -142,18 +102,18 @@ interface TemperamentDialogState {
 @Composable
 fun TemperamentDialog(
     state: TemperamentDialogState,
-    //onTemperamentChange: (newState: PreferenceResources.MusicalScaleProperties) -> Unit,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit = {},
     onDone: (Temperament, NoteNames, rootNote: MusicalNote) -> Unit = { _, _, _ -> },
-    onManageTemperaments: () -> Unit = {}
+    onChooseTemperaments: () -> Unit = {}
 ) {
-    val customTemperaments by state.customTemperaments.collectAsStateWithLifecycle()
-    val temperamentsList by remember { derivedStateOf {
-        (customTemperaments + state.predefinedTemperaments).toImmutableList()
-    }}
-    
+//    val customTemperaments by state.customTemperaments.collectAsStateWithLifecycle()
+//    val temperamentsList by remember { derivedStateOf {
+//        (customTemperaments + state.predefinedTemperaments).toImmutableList()
+//    }}
+    val context = LocalContext.current
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -176,18 +136,6 @@ fun TemperamentDialog(
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                text = { Text(stringResource(R.string.manage_temperaments)) },
-                icon = {
-                    Icon(
-                        ImageVector.vectorResource(id = R.drawable.ic_temperament),
-                        contentDescription = null
-                    )
-                },
-                onClick = { onManageTemperaments() }
-            )
         }
     ) { paddingValues ->
         Column(
@@ -195,12 +143,35 @@ fun TemperamentDialog(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            TemperamentChooser(
-                temperament = state.temperament.value,
-                temperamentList = temperamentsList,
-                onTemperamentClicked = { state.setNewTemperament(it) },
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
+            Card(
+                onClick = { onChooseTemperaments() },
+                colors = CardDefaults.cardColors().copy(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(stringResource(
+                    id = R.string.temperament),
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 8.dp),
+                    style = MaterialTheme.typography.labelSmall
+                )
+                Text(
+                    state.temperament.value.name.value(context),
+                    modifier = Modifier.padding(horizontal=16.dp),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    state.temperament.value.description.value(context),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 stringResource(id = R.string.root_note),
@@ -219,7 +190,7 @@ fun TemperamentDialog(
             OutlinedButton(
                 onClick = {
                     state.selectRootNote(0)
-                    state.setNewTemperament(state.predefinedTemperaments[0])
+                    state.setNewTemperament(state.defaultTemperament)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -280,88 +251,82 @@ fun TemperamentDialog(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class)
-@Composable
-private fun TemperamentChooser(
-    temperament: Temperament,
-    temperamentList: ImmutableList<TemperamentWithNoteNames>,
-    onTemperamentClicked: (temperamentType: TemperamentWithNoteNames) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it },
-        modifier = modifier.fillMaxWidth()
-    ) {
-        TextField(
-            value = temperament.name.value(context),
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(stringResource(id = R.string.temperament)) },
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(
-                    expanded = expanded
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(MenuAnchorType.PrimaryEditable, enabled = true),
-            colors = ExposedDropdownMenuDefaults.textFieldColors()
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            temperamentList.forEach { temperament ->
-                DropdownMenuItem(
-                    text = {
-                        Column {
-                            Text(
-                                temperament.temperament.name.value(context),
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                            val description = temperament.temperament.description.value(context)
-                            if (description.isNotEmpty()) {
-                                Text(description, style = MaterialTheme.typography.labelSmall)
-                            }
-                        }
-                    },
-                    onClick = {
-                        onTemperamentClicked(temperament)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
+//@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class)
+//@Composable
+//private fun TemperamentChooser(
+//    temperament: Temperament,
+//    temperamentList: ImmutableList<TemperamentWithNoteNames>,
+//    onTemperamentClicked: (temperamentType: TemperamentWithNoteNames) -> Unit,
+//    modifier: Modifier = Modifier
+//) {
+//    val context = LocalContext.current
+//    var expanded by rememberSaveable { mutableStateOf(false) }
+//    ExposedDropdownMenuBox(
+//        expanded = expanded,
+//        onExpandedChange = { expanded = it },
+//        modifier = modifier.fillMaxWidth()
+//    ) {
+//        TextField(
+//            value = temperament.name.value(context),
+//            onValueChange = {},
+//            readOnly = true,
+//            label = { Text(stringResource(id = R.string.temperament)) },
+//            trailingIcon = {
+//                ExposedDropdownMenuDefaults.TrailingIcon(
+//                    expanded = expanded
+//                )
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .menuAnchor(MenuAnchorType.PrimaryEditable, enabled = true),
+//            colors = ExposedDropdownMenuDefaults.textFieldColors()
+//        )
+//        ExposedDropdownMenu(
+//            expanded = expanded,
+//            onDismissRequest = { expanded = false }
+//        ) {
+//            temperamentList.forEach { temperament ->
+//                DropdownMenuItem(
+//                    text = {
+//                        Column {
+//                            Text(
+//                                temperament.temperament.name.value(context),
+//                                style = MaterialTheme.typography.labelLarge
+//                            )
+//                            val description = temperament.temperament.description.value(context)
+//                            if (description.isNotEmpty()) {
+//                                Text(description, style = MaterialTheme.typography.labelSmall)
+//                            }
+//                        }
+//                    },
+//                    onClick = {
+//                        onTemperamentClicked(temperament)
+//                        expanded = false
+//                    }
+//                )
+//            }
+//        }
+//    }
+//}
 
 private class TemperamentDialogTestState : TemperamentDialogState {
     override var temperament = mutableStateOf(temperamentDatabase[0])
     override var noteNames
             = mutableStateOf(getSuitableNoteNames(temperamentDatabase[0].numberOfNotesPerOctave)!!)
 
-    override val predefinedTemperaments = temperamentDatabase.map {
-        TemperamentWithNoteNames(it, null)
-    }.toImmutableList()
-
-    override val customTemperaments = MutableStateFlow(
-        persistentListOf(
-            TemperamentWithNoteNames(temperamentDatabase[5], null)
-        )
+    override val defaultTemperament = TemperamentWithNoteNames(
+        temperamentDatabase[0], null
     )
 
-    override val selectedRootNoteIndex = mutableStateOf(0)
+    override val selectedRootNoteIndex = mutableIntStateOf(0)
 
     override fun setNewTemperament(temperamentWithNoteNames: TemperamentWithNoteNames) {
-        val oldRootNoteIndex = selectedRootNoteIndex.value
+        val oldRootNoteIndex = selectedRootNoteIndex.intValue
         val oldRootNote = noteNames.value[oldRootNoteIndex]
         val newNoteNames = temperamentWithNoteNames.noteNames
             ?: getSuitableNoteNames(temperamentWithNoteNames.temperament.numberOfNotesPerOctave)!!
         val rootNoteIndexInNewScale = newNoteNames.getNoteIndex(oldRootNote)
-        selectedRootNoteIndex.value = if (rootNoteIndexInNewScale == -1) {
+        selectedRootNoteIndex.intValue = if (rootNoteIndexInNewScale == -1) {
             0
         } else {
             rootNoteIndexInNewScale
@@ -372,7 +337,7 @@ private class TemperamentDialogTestState : TemperamentDialogState {
     }
 
     override fun selectRootNote(index: Int) {
-        selectedRootNoteIndex.value = index
+        selectedRootNoteIndex.intValue = index
     }
 
 }

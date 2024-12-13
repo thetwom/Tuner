@@ -99,7 +99,7 @@ fun NavGraphBuilder.mainGraph(
             state = viewModel,
             modifier = Modifier.fillMaxSize(),
             notePrintOptions = notePrintOptions,
-            musicalScale = musicalScale,
+//            musicalScale = musicalScale,
             onNavigateUpClicked = { controller.navigateUp() },
             onInstrumentClicked = {
                 viewModel.setCurrentInstrument(it)
@@ -130,15 +130,15 @@ fun NavGraphBuilder.mainGraph(
                 )
                 controller.navigate(InstrumentEditorGraphRoute.create(newInstrument))
             },
-            onSharpFlatClicked = { preferences.switchEnharmonicPreference() },
-            onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
-                controller.navigate(
-                    ReferenceFrequencyDialogRoute(
-                        temperamentResources.musicalScale.value, null
-                    )
-                )
-            },
-            onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
+//            onSharpFlatClicked = { preferences.switchEnharmonicPreference() },
+//            onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
+//                controller.navigate(
+//                    ReferenceFrequencyDialogRoute(
+//                        temperamentResources.musicalScale.value, null
+//                    )
+//                )
+//            },
+//            onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
             onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
             onLoadInstruments = onLoadInstruments
         )

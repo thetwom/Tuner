@@ -32,6 +32,7 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments2.EditableTemperament
 import de.moekadu.tuner.temperaments2.TemperamentResources
 import de.moekadu.tuner.ui.misc.TunerScaffold
+import de.moekadu.tuner.ui.misc.TunerScaffoldWithoutBottomBar
 import de.moekadu.tuner.ui.preferences.AboutDialog
 import de.moekadu.tuner.ui.preferences.AppearanceDialog
 import de.moekadu.tuner.ui.preferences.NotationDialog
@@ -52,16 +53,16 @@ fun NavGraphBuilder.preferenceGraph(
         startDestination = PreferencesRoute,
     ) {
         composable<PreferencesRoute> {
-            val musicalScale by temperaments.musicalScale.collectAsStateWithLifecycle()
-            val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
-            TunerScaffold(
+//            val musicalScale by temperaments.musicalScale.collectAsStateWithLifecycle()
+//            val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
+            TunerScaffoldWithoutBottomBar(
                 canNavigateUp = true,
                 onNavigateUpClicked = onNavigateUpClicked,
                 title = stringResource(id = R.string.settings),
                 showPreferenceButton = false,
-                showBottomBar = false,
-                musicalScale = musicalScale,
-                notePrintOptions = notePrintOptions
+//                showBottomBar = false,
+//                musicalScale = musicalScale,
+//                notePrintOptions = notePrintOptions
             ) {
                 val viewModel: PreferencesViewModel = hiltViewModel()
                 Preferences(
