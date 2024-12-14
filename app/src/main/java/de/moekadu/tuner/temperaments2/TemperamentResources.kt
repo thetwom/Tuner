@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dagger.hilt.android.qualifiers.ApplicationContext
+import de.moekadu.tuner.R
 import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.misc.ResourcesDataStoreBase
@@ -61,6 +62,21 @@ class TemperamentResources @Inject constructor(
     val customTemperamentsExpanded = store.getPreferenceFlow(
         CUSTOM_TEMPERAMENTS_EXPANDED_KEY, CustomTemperamentsExpandedDefault
     )
+
+    fun resetAllSettings() {
+        applicationScope.launch {
+             val noteNames = defaultTemperament.noteNames
+                 ?: getSuitableNoteNames(defaultTemperament.temperament.numberOfNotesPerOctave)!!
+            writeMusicalScale(
+                temperament = defaultTemperament,
+                referenceNote = noteNames.defaultReferenceNote,
+                rootNote = noteNames[0],
+                referenceFrequency = DefaultValues.REFERENCE_FREQUENCY,
+                stretchTuning = StretchTuning()
+            )
+        }
+    }
+
     fun writeCustomTemperamentsExpanded(expanded: Boolean) {
         applicationScope.launch {
             store.writePreference(CUSTOM_TEMPERAMENTS_EXPANDED_KEY, expanded)

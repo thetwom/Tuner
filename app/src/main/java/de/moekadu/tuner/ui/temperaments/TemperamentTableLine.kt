@@ -35,8 +35,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.ImeOptions
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -222,7 +220,11 @@ private fun ClickableNote(
                 isError && !selected -> MaterialTheme.colorScheme.error
                 else -> LocalContentColor.current
             }
-            if (note != null && note.base != BaseNote.None) {
+            if (note != null && (
+                 (note.base != BaseNote.None && !notePrintOptions.useEnharmonic) ||
+                 (note.enharmonicBase != BaseNote.None && notePrintOptions.useEnharmonic)
+              ))
+            {
                 Note(
                     note,
                     notePrintOptions = notePrintOptions,
@@ -422,9 +424,14 @@ fun TemperamentTableLine(
                                     )
                                 )
                             } else {
+                                val hasEnharmonic = !(
+                                        state.note?.base == base &&
+                                        state.note?.modifier == modifier &&
+                                        state.note?.octaveOffset == offset
+                                        )
                                 onChangeNote(
                                     state.note?.copy(
-                                        enharmonicBase = base,
+                                        enharmonicBase = if (hasEnharmonic) base else BaseNote.None,
                                         enharmonicModifier = modifier,
                                         enharmonicOctaveOffset = offset
                                     )

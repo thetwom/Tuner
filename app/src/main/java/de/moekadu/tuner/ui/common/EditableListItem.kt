@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -47,7 +48,19 @@ import de.moekadu.tuner.ui.theme.TunerTheme
 enum class ListItemTask {
     Copy,
     Edit,
-    Delete
+    Delete,
+    Info
+}
+
+private fun numMenuOptions(readOnly: Boolean, isCopyable: Boolean, hasInfo: Boolean): Int {
+    var count = 0
+    if (hasInfo)
+        ++count // enable info
+    if (isCopyable)
+        ++count // enable copy
+    if (!readOnly)
+        count += 2  // enable edit and delete
+    return count
 }
 
 @Composable
@@ -60,7 +73,8 @@ fun EditableListItem(
     isActive: Boolean = false,
     isSelected: Boolean = false,
     readOnly: Boolean = false, // disable delete/edit options
-    isCopyable: Boolean = true // disable copy-option
+    isCopyable: Boolean = true, // disable copy-option
+    hasInfo: Boolean = false
 ) {
     val variantColor = if (isActive)
         MaterialTheme.colorScheme.onSecondaryContainer
@@ -113,7 +127,8 @@ fun EditableListItem(
                 }
             }
             Box {
-                if (readOnly && isCopyable) {
+                val numOptions = numMenuOptions(readOnly, isCopyable, hasInfo)
+                if (numOptions == 1 && isCopyable) {
                     IconButton(
                         onClick = { onOptionsClicked(ListItemTask.Copy) },
                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -124,7 +139,19 @@ fun EditableListItem(
                             tint = variantColor
                         )
                     }
-                } else if (!readOnly) {
+                } else if (numOptions == 1 && hasInfo) {
+                    IconButton(
+                        onClick = { onOptionsClicked(ListItemTask.Info) },
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    ) {
+                        Icon(
+                            Icons.Default.Info,
+                            contentDescription = "details",
+                            tint = variantColor
+                        )
+                    }
+
+                } else if (numOptions > 1) {
                     IconButton(
                         onClick = { menuExpanded = true },
                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -139,14 +166,37 @@ fun EditableListItem(
                         expanded = menuExpanded,
                         onDismissRequest = { menuExpanded = false },
                     ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(id = R.string.edit)) },
-                            leadingIcon = { Icon(Icons.Default.Edit, contentDescription = "edit") },
-                            onClick = {
-                                menuExpanded = false
-                                onOptionsClicked(ListItemTask.Edit)
-                            }
-                        )
+                        if (hasInfo) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(id = R.string.details)) },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Info,
+                                        contentDescription = "details"
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onOptionsClicked(ListItemTask.Info)
+                                }
+                            )
+                            HorizontalDivider()
+                        }
+                        if (!readOnly) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(id = R.string.edit)) },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Edit,
+                                        contentDescription = "edit"
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onOptionsClicked(ListItemTask.Edit)
+                                }
+                            )
+                        }
                         if (isCopyable) {
                             DropdownMenuItem(
                                 text = { Text(stringResource(id = R.string.copy)) },
@@ -162,20 +212,22 @@ fun EditableListItem(
                                 }
                             )
                         }
-                        HorizontalDivider()
-                        DropdownMenuItem(
-                            text = { Text(stringResource(id = R.string.delete)) },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = "delete"
-                                )
-                            },
-                            onClick = {
-                                menuExpanded = false
-                                onOptionsClicked(ListItemTask.Delete)
-                            }
-                        )
+                        if (!readOnly) {
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text(stringResource(id = R.string.delete)) },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = "delete"
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onOptionsClicked(ListItemTask.Delete)
+                                }
+                            )
+                        }
                     }
                 }
             }

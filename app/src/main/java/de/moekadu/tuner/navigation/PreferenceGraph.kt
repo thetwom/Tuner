@@ -119,6 +119,7 @@ fun NavGraphBuilder.preferenceGraph(
             ResetDialog(
                 onReset = {
                     preferences.resetAllSettings()
+                    temperaments.resetAllSettings()
                     controller.navigateUp()
                 },
                 onDismiss = { controller.navigateUp() }
