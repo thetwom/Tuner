@@ -227,6 +227,7 @@
     <string name="notation_international">International (A-B-C-…)</string>
     <string name="notation_carnatic">Karnatisch</string>
     <string name="notation_hindustani">Hindustanisch</string>
+    <string name="notation_byzantine">Byzantinisch</string>
     <string name="helmholtz_notation">Helmholtz-Schreibweise (C, … c\')</string>
     <string name="sensitivity">Empfindlichkeit</string>
     <string name="instruments">Instrumente</string>

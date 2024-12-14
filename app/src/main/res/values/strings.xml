@@ -267,6 +267,17 @@
     <string name="ni1_hindustani" translatable="false">Ni₁</string>
     <string name="ni2_hindustani" translatable="false">Ni₂</string>
     <string name="notation_hindustani">Hindustani</string>
+
+    <string name="ni_byzantine" translatable="false">Νη</string>
+    <string name="pa_byzantine" translatable="false">Πα</string>
+    <string name="vou_byzantine" translatable="false">Βου</string>
+    <string name="gha_byzantine" translatable="false">Γα</string>
+    <string name="dhi_byzantine" translatable="false">Δι</string>
+    <string name="ke_byzantine" translatable="false">Κε</string>
+    <string name="zo_byzantine" translatable="false">Ζω</string>
+    <string name="notation_byzantine">Byzantine</string>
+
+
     <string name="helmholtz_notation">Helmholtz notation (C, … c\')</string>
     <string name="extended_quarter_comma_mean_tone">Extended ¼ comma meantone</string>
     <string name="extended_quarter_comma_mean_tone_desc">Pure major 3rds, 15 notes</string>
