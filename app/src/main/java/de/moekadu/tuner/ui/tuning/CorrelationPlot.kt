@@ -18,10 +18,7 @@
 */
 package de.moekadu.tuner.ui.tuning
 
-import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -40,8 +36,8 @@ import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments2.MusicalScale2
-import de.moekadu.tuner.temperaments2.MusicalScale2Factory
+import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.ui.common.Label
 import de.moekadu.tuner.ui.plot.Anchor
 import de.moekadu.tuner.ui.plot.GestureBasedViewPort
@@ -62,7 +58,7 @@ fun CorrelationPlot(
     correlationPlotData: LineCoordinates, // TODO: pass zero position
     correlationPlotDataYZeroPosition: Float,
     targetNote: MusicalNote,
-    musicalScale: MusicalScale2,
+    musicalScale: MusicalScale,
     modifier: Modifier = Modifier,
     gestureBasedViewPort: GestureBasedViewPort = remember { GestureBasedViewPort() },
     plotWindowPadding: DpRect = DpRect(0.dp, 0.dp, 0.dp, 0.dp),
@@ -228,7 +224,7 @@ private fun CorrelationPlotPreview() {
             //CorrelationPlotData(timeShifts.size, { timeShifts[it] }, { correlations[it] })
         }
 
-        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
+        val musicalScale = remember { MusicalScaleFactory.createTestEdo12() }
         val targetNote = musicalScale.referenceNote
 
         CorrelationPlot(

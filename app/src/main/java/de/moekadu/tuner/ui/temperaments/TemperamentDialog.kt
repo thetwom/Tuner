@@ -16,7 +16,7 @@
 * You should have received a copy of the GNU General Public License
 * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
 */
-package de.moekadu.tuner.ui.preferences
+package de.moekadu.tuner.ui.temperaments
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -28,62 +28,41 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.IntState
 import androidx.compose.runtime.State
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments2.NoteNames
-import de.moekadu.tuner.temperaments2.Temperament
-import de.moekadu.tuner.temperaments2.TemperamentWithNoteNames
-import de.moekadu.tuner.temperaments2.getSuitableNoteNames
-import de.moekadu.tuner.temperaments2.temperamentDatabase
+import de.moekadu.tuner.temperaments.NoteNames
+import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
+import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.temperaments.temperamentDatabase
 import de.moekadu.tuner.ui.notes.CentAndRatioTable
 import de.moekadu.tuner.ui.notes.CircleOfFifthTable
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.NoteSelector
 import de.moekadu.tuner.ui.theme.TunerTheme
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlin.math.roundToInt
 
 interface TemperamentDialogState {
     val temperament: State<Temperament>
@@ -118,7 +97,7 @@ fun TemperamentDialog(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(id = R.string.temperaments)) },
+                title = { Text(stringResource(id = R.string.temperament)) },
                 navigationIcon = {
                     IconButton(onClick = { onDismiss() }) {
                         Icon(Icons.Default.Close, "close")
@@ -129,7 +108,7 @@ fun TemperamentDialog(
                         onDone(
                             state.temperament.value,
                             state.noteNames.value,
-                            state.noteNames.value[state.selectedRootNoteIndex.value]
+                            state.noteNames.value[state.selectedRootNoteIndex.intValue]
                         )
                     }) {
                         Text(stringResource(id = R.string.done))
@@ -181,7 +160,7 @@ fun TemperamentDialog(
             )
             Spacer(modifier = Modifier.height(4.dp))
             NoteSelector(
-                selectedIndex = state.selectedRootNoteIndex.value,
+                selectedIndex = state.selectedRootNoteIndex.intValue,
                 notes = state.noteNames.value.notes,
                 notePrintOptions = notePrintOptions,
                 onIndexChanged = { state.selectRootNote(it) }
@@ -215,7 +194,7 @@ fun TemperamentDialog(
             CentAndRatioTable(
                 state.temperament.value,
                 state.noteNames.value,
-                state.selectedRootNoteIndex.value,
+                state.selectedRootNoteIndex.intValue,
                 notePrintOptions = notePrintOptions,
                 modifier = Modifier.fillMaxWidth(),
                 horizontalContentPadding = 16.dp
@@ -234,7 +213,7 @@ fun TemperamentDialog(
                 CircleOfFifthTable(
                     temperament = state.temperament.value,
                     noteNames = state.noteNames.value,
-                    rootNoteIndex = state.selectedRootNoteIndex.value,
+                    rootNoteIndex = state.selectedRootNoteIndex.intValue,
                     notePrintOptions = notePrintOptions,
                     modifier = Modifier.fillMaxWidth(),
                     horizontalContentPadding = 16.dp
@@ -250,64 +229,6 @@ fun TemperamentDialog(
         }
     }
 }
-
-//@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class)
-//@Composable
-//private fun TemperamentChooser(
-//    temperament: Temperament,
-//    temperamentList: ImmutableList<TemperamentWithNoteNames>,
-//    onTemperamentClicked: (temperamentType: TemperamentWithNoteNames) -> Unit,
-//    modifier: Modifier = Modifier
-//) {
-//    val context = LocalContext.current
-//    var expanded by rememberSaveable { mutableStateOf(false) }
-//    ExposedDropdownMenuBox(
-//        expanded = expanded,
-//        onExpandedChange = { expanded = it },
-//        modifier = modifier.fillMaxWidth()
-//    ) {
-//        TextField(
-//            value = temperament.name.value(context),
-//            onValueChange = {},
-//            readOnly = true,
-//            label = { Text(stringResource(id = R.string.temperament)) },
-//            trailingIcon = {
-//                ExposedDropdownMenuDefaults.TrailingIcon(
-//                    expanded = expanded
-//                )
-//            },
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .menuAnchor(MenuAnchorType.PrimaryEditable, enabled = true),
-//            colors = ExposedDropdownMenuDefaults.textFieldColors()
-//        )
-//        ExposedDropdownMenu(
-//            expanded = expanded,
-//            onDismissRequest = { expanded = false }
-//        ) {
-//            temperamentList.forEach { temperament ->
-//                DropdownMenuItem(
-//                    text = {
-//                        Column {
-//                            Text(
-//                                temperament.temperament.name.value(context),
-//                                style = MaterialTheme.typography.labelLarge
-//                            )
-//                            val description = temperament.temperament.description.value(context)
-//                            if (description.isNotEmpty()) {
-//                                Text(description, style = MaterialTheme.typography.labelSmall)
-//                            }
-//                        }
-//                    },
-//                    onClick = {
-//                        onTemperamentClicked(temperament)
-//                        expanded = false
-//                    }
-//                )
-//            }
-//        }
-//    }
-//}
 
 private class TemperamentDialogTestState : TemperamentDialogState {
     override var temperament = mutableStateOf(temperamentDatabase[0])

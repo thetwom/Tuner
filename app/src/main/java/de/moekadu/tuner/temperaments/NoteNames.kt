@@ -1,10 +1,6 @@
-package de.moekadu.tuner.temperaments2
+package de.moekadu.tuner.temperaments
 
 import androidx.compose.runtime.Immutable
-import de.moekadu.tuner.misc.StringOrResId
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
 import kotlinx.serialization.Serializable
 
 /** Class containing the notes of one octave.

@@ -18,14 +18,6 @@
 */
 package de.moekadu.tuner.instruments
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import androidx.activity.result.contract.ActivityResultContract
-import androidx.core.content.FileProvider
-import de.moekadu.tuner.R
-import java.io.File
-
 
 //object ShareInstruments {
 //    class Contract : ActivityResultContract<Intent, Unit>() {

@@ -19,8 +19,6 @@
 package de.moekadu.tuner.ui.plot
 
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.unit.IntOffset
-import kotlin.math.roundToInt
 
 
 enum class Anchor {

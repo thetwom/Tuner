@@ -1,6 +1,5 @@
 package de.moekadu.tuner.ui.common
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -199,7 +197,7 @@ fun EditableListItem(
                         }
                         if (isCopyable) {
                             DropdownMenuItem(
-                                text = { Text(stringResource(id = R.string.copy)) },
+                                text = { Text(stringResource(id = R.string.copy_)) },
                                 leadingIcon = {
                                     Icon(
                                         ImageVector.vectorResource(id = R.drawable.ic_copy),

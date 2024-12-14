@@ -1,28 +1,8 @@
-package de.moekadu.tuner.temperaments2
+package de.moekadu.tuner.temperaments
 
 import androidx.compose.runtime.Immutable
 import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.StringOrResId
-import de.moekadu.tuner.temperaments.RationalNumber
-import de.moekadu.tuner.temperaments.TemperamentCircleOfFifths
-import de.moekadu.tuner.temperaments.circleOfFifthsEDO12
-import de.moekadu.tuner.temperaments.circleOfFifthsFifthCommaMeanTone
-import de.moekadu.tuner.temperaments.circleOfFifthsKirnberger1
-import de.moekadu.tuner.temperaments.circleOfFifthsKirnberger2
-import de.moekadu.tuner.temperaments.circleOfFifthsKirnberger3
-import de.moekadu.tuner.temperaments.circleOfFifthsNeidhardt1
-import de.moekadu.tuner.temperaments.circleOfFifthsNeidhardt2
-import de.moekadu.tuner.temperaments.circleOfFifthsNeidhardt3
-import de.moekadu.tuner.temperaments.circleOfFifthsPythagorean
-import de.moekadu.tuner.temperaments.circleOfFifthsQuarterCommaMeanTone
-import de.moekadu.tuner.temperaments.circleOfFifthsThirdCommaMeanTone
-import de.moekadu.tuner.temperaments.circleOfFifthsValotti
-import de.moekadu.tuner.temperaments.circleOfFifthsWerckmeisterIII
-import de.moekadu.tuner.temperaments.circleOfFifthsWerckmeisterIV
-import de.moekadu.tuner.temperaments.circleOfFifthsWerckmeisterV
-import de.moekadu.tuner.temperaments.circleOfFifthsYoung2
-import de.moekadu.tuner.temperaments.extendedQuarterCommaMeantone
-import de.moekadu.tuner.temperaments.rationalNumberTemperamentWerckmeisterVI
 import kotlinx.serialization.Serializable
 import kotlin.math.log
 import kotlin.math.pow
@@ -394,7 +374,7 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
             StringOrResId(R.string.pure_tuning),
             StringOrResId(R.string.pure_tuning_abbr),
             StringOrResId(R.string.pure_tuning_desc),
-            de.moekadu.tuner.temperaments.rationalNumberTemperamentPure,
+            rationalNumberTemperamentPure,
             (-1 - temperaments.size).toLong()
         )
     )

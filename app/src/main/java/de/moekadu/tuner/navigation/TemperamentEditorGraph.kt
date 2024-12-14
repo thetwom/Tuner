@@ -3,7 +3,6 @@ package de.moekadu.tuner.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
@@ -14,12 +13,8 @@ import androidx.navigation.compose.dialog
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.temperaments2.EditableTemperament
-import de.moekadu.tuner.temperaments2.NoteNames
-import de.moekadu.tuner.temperaments2.Temperament
-import de.moekadu.tuner.temperaments2.TemperamentWithNoteNames
-import de.moekadu.tuner.temperaments2.toEditableTemperament
-import de.moekadu.tuner.ui.screens.TemperamentEditor
+import de.moekadu.tuner.temperaments.EditableTemperament
+import de.moekadu.tuner.ui.temperaments.TemperamentEditor
 import de.moekadu.tuner.ui.temperaments.NumberOfNotesDialog
 import de.moekadu.tuner.viewmodels.TemperamentEditorViewModel
 import kotlinx.serialization.Serializable

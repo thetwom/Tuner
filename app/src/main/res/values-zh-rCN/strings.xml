@@ -58,7 +58,6 @@
     <string name="file_invalid">文件无效：%s</string>
     <string name="undo">撤销</string>
     <string name="pick_icon">选取图标</string>
-    <string name="copy_instrument">复制乐器</string>
     <string name="copy_extension">%s（副本）</string>
     <string name="failed_to_archive_items">无法将乐器写入文件</string>
     <string name="database_empty">没有可以保存的乐器</string>
@@ -73,7 +72,6 @@
     <string name="temperament">调律</string>
     <string name="root_note">主音</string>
     <string name="test_tuning">测试调音</string>
-    <string name="test_tuning_abbr">测试</string>
     <string name="details">详细信息</string>
     <string name="circle_of_fifths">五度圈</string>
     <string name="load_from_disk">从文件加载乐器</string>

@@ -52,8 +52,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.temperaments2.MusicalScale2
-import de.moekadu.tuner.temperaments2.MusicalScale2Factory
+import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.ui.misc.rememberNumberFormatter
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.NoteSelector
@@ -78,8 +78,8 @@ private fun DecimalFormat.toFloatOrNull(string: String): Float? {
 
 @Composable
 fun ReferenceNoteDialog(
-    initialState: MusicalScale2,
-    onReferenceNoteChange: (modifiedState: MusicalScale2) -> Unit,
+    initialState: MusicalScale,
+    onReferenceNoteChange: (modifiedState: MusicalScale) -> Unit,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     warning: String? = null,
@@ -191,7 +191,7 @@ fun ReferenceNoteDialog(
 @Composable
 private fun AppearanceDialogTest() {
     TunerTheme {
-        val state = remember { MusicalScale2Factory.createTestEdo12() }
+        val state = remember { MusicalScaleFactory.createTestEdo12() }
         val notePrintOptions = remember { NotePrintOptions() }
         ReferenceNoteDialog(
             state,

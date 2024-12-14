@@ -89,7 +89,7 @@ private fun SliderPreferencePreview() {
                 name = "My preference",
                 onValueChange = { value = it },
                 iconId = R.drawable.ic_harmonic_energy,
-                supporting = "Extra text ${value}"
+                supporting = "Extra text $value"
             )
             HorizontalDivider()
         }

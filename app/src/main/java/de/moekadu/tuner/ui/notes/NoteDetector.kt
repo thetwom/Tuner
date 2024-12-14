@@ -50,12 +50,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
 import androidx.compose.ui.unit.times
-import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments2.MusicalScale2
-import de.moekadu.tuner.temperaments2.MusicalScale2Factory
-import de.moekadu.tuner.temperaments2.StretchTuning
-import de.moekadu.tuner.temperaments2.Temperament
+import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
@@ -113,7 +110,7 @@ class NoteDetectorState {
 @Composable
 fun NoteDetector(
     state: NoteDetectorState,
-    musicalScale: MusicalScale2,
+    musicalScale: MusicalScale,
     modifier: Modifier = Modifier,
     fontSize: TextUnit = TextUnit.Unspecified,
     textStyle: TextStyle? = MaterialTheme.typography.labelLarge,
@@ -201,7 +198,7 @@ fun NoteDetector(
 private fun NoteDetectorPreview() {
     TunerTheme {
         val state = remember { NoteDetectorState() }
-        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
+        val musicalScale = remember { MusicalScaleFactory.createTestEdo12() }
 
         val noteList = remember {
             (20..30).map{ musicalScale.getNote(it) }

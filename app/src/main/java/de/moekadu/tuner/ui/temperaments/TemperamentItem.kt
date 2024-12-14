@@ -18,7 +18,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.misc.StringOrResId
-import de.moekadu.tuner.temperaments2.Temperament
+import de.moekadu.tuner.temperaments.Temperament
 import de.moekadu.tuner.ui.common.EditableListItem
 import de.moekadu.tuner.ui.common.ListItemTask
 import de.moekadu.tuner.ui.theme.TunerTheme
@@ -27,7 +27,7 @@ import de.moekadu.tuner.ui.theme.TunerTheme
 fun TemperamentItem(
     temperament: Temperament,
     modifier: Modifier = Modifier,
-    onOptionsClicked: (temperament: Temperament, task: ListItemTask) -> Unit = {_, _ ->},
+    onOptionsClicked: (temperament: Temperament, task: ListItemTask) -> Unit = { _, _ ->},
     isActive: Boolean = false,
     isSelected: Boolean = false,
     readOnly: Boolean = false, // disable delete/edit options

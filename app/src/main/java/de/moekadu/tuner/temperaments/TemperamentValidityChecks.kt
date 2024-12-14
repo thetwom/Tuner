@@ -1,6 +1,4 @@
-package de.moekadu.tuner.temperaments2
-
-import de.moekadu.tuner.temperaments.MusicalNote
+package de.moekadu.tuner.temperaments
 
 object TemperamentValidityChecks {
     /** Possible errors for the different cent/ratio values of the temperament table. */

@@ -47,7 +47,6 @@ import de.moekadu.tuner.navigation.InstrumentsRoute
 import de.moekadu.tuner.navigation.TemperamentDialogRoute
 import de.moekadu.tuner.navigation.TunerRoute
 import de.moekadu.tuner.navigation.instrumentEditorGraph
-import de.moekadu.tuner.navigation.musicalScalePropertiesGraph
 import de.moekadu.tuner.navigation.preferenceGraph
 import de.moekadu.tuner.navigation.mainGraph
 import de.moekadu.tuner.navigation.temperamentEditorGraph
@@ -56,11 +55,11 @@ import de.moekadu.tuner.navigation.TemperamentsManagerRoute
 import de.moekadu.tuner.preferences.NightMode
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.preferences.migrateFromV6
-import de.moekadu.tuner.temperaments2.EditableTemperament
-import de.moekadu.tuner.temperaments2.TemperamentIO
-import de.moekadu.tuner.temperaments2.TemperamentResources
-import de.moekadu.tuner.temperaments2.hasErrors
-import de.moekadu.tuner.temperaments2.toTemperamentWithNoteNames
+import de.moekadu.tuner.temperaments.EditableTemperament
+import de.moekadu.tuner.temperaments.TemperamentIO
+import de.moekadu.tuner.temperaments.TemperamentResources
+import de.moekadu.tuner.temperaments.hasErrors
+import de.moekadu.tuner.temperaments.toTemperamentWithNoteNames
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -162,29 +161,18 @@ class MainActivity : ComponentActivity() {
                         temperamentResources = temperaments,
                         onLoadInstruments = {
                             loadInstruments(it, instruments, this@MainActivity)
+                        },
+                        onLoadTemperaments = { temperamentList ->
+                            loadTemperaments(
+                                controller, temperamentList, temperaments, this@MainActivity
+                            )
                         }
                     )
                     preferenceGraph(
                         controller = controller,
                         onNavigateUpClicked = { controller.navigateUp() },
                         preferences = pref,
-                        temperaments = temperaments,
-                        onLoadTemperaments = { temperamentList ->
-                            loadTemperaments(
-                                controller, temperamentList, temperaments, this@MainActivity
-                            )
-                        }
-                    )
-                    // provides TemperamentDialogRoute and ReferenceNoteDialog
-                    musicalScalePropertiesGraph(
-                        controller = controller,
-                        preferences = pref,
-                        temperaments = temperaments,
-                        onLoadTemperaments = { temperamentList ->
-                            loadTemperaments(
-                                controller, temperamentList, temperaments, this@MainActivity
-                            )
-                        }
+                        temperaments = temperaments
                     )
 
                     instrumentEditorGraph(

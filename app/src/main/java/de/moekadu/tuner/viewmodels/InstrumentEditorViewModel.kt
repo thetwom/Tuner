@@ -31,18 +31,16 @@ import de.moekadu.tuner.notedetection.FrequencyDetectionCollectedResults
 import de.moekadu.tuner.notedetection.FrequencyEvaluationResult
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments2.TemperamentResources
+import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.tuner.Tuner
 import de.moekadu.tuner.ui.instruments.StringWithInfo
-import de.moekadu.tuner.ui.notes.NoteDetectorState
-import de.moekadu.tuner.ui.screens.InstrumentEditorData
 import de.moekadu.tuner.ui.instruments.StringsState
+import de.moekadu.tuner.ui.notes.NoteDetectorState
+import de.moekadu.tuner.ui.instruments.InstrumentEditorData
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import kotlin.math.min
 
 @HiltViewModel(assistedFactory = InstrumentEditorViewModel.Factory::class)

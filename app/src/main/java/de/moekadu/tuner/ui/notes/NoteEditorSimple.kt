@@ -1,22 +1,16 @@
 package de.moekadu.tuner.ui.notes
 
-import android.util.Log
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,7 +19,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -37,53 +30,6 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
-
-@Composable
-private fun rememberMaxNoteSizeForNoteEditor(
-    notePrintOptions: NotePrintOptions,
-    fontSize: TextUnit
-) : DpSize {
-    val baseNotes = remember {
-        BaseNote.entries.filter { it != BaseNote.None }.map {
-            MusicalNote(base = it, modifier = NoteModifier.None)
-        }.toTypedArray()
-    }
-    val modifiedNotes = remember {
-        NoteModifier.entries.map {
-            MusicalNote(
-                base = BaseNote.None,
-                modifier = it
-            )
-        }.toTypedArray()
-    }
-    val noNote = remember {
-        arrayOf(MusicalNote(BaseNote.None, NoteModifier.None))
-    }
-    val maxBaseSize = rememberMaxNoteSize(
-        notes = baseNotes,
-        notePrintOptions = notePrintOptions,
-        fontSize = fontSize,
-        octaveRange = null
-    )
-    val maxModifierSize = rememberMaxNoteSize(
-        notes = modifiedNotes,
-        notePrintOptions = notePrintOptions,
-        fontSize = fontSize,
-        octaveRange = null
-    )
-    val maxNoNoteSize = rememberMaxNoteSize(
-        notes = noNote,
-        notePrintOptions = notePrintOptions,
-        fontSize = fontSize,
-        octaveRange = null
-    )
-    return DpSize(
-        maxBaseSize.width - maxNoNoteSize.width + maxModifierSize.width,
-        maxModifierSize.height
-        )
-}
-
-
 
 @Composable
 fun NoteEditorSimple(
@@ -181,7 +127,7 @@ fun NoteEditorSimple(
 
 @Preview(widthDp = 200, heightDp = 200, showBackground = true)
 @Composable
-private fun NoteEditorSiimplePreview() {
+private fun NoteEditorSimplePreview() {
     var baseNote by remember { mutableStateOf(BaseNote.A) }
     var noteModifier by remember { mutableStateOf(NoteModifier.None) }
     var octaveOffset by remember { mutableIntStateOf(0) }

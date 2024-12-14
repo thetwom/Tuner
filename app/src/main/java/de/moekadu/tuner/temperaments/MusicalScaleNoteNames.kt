@@ -16,12 +16,9 @@
 * You should have received a copy of the GNU General Public License
 * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
 */
-package de.moekadu.tuner.temperaments2
+package de.moekadu.tuner.temperaments
 
 import androidx.compose.runtime.Stable
-import de.moekadu.tuner.temperaments.MusicalNote
-import kotlin.math.min
-import kotlin.math.roundToInt
 
 /** Note names, which can map indices between musical notes and via verse.
  * @param noteNames Note names of one octave.

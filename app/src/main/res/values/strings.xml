@@ -45,7 +45,6 @@
     <string name="autocorrelation">autocorrelation</string>
     <string name="pitch_history">pitch history</string>
     <string name="spectrum">spectrum</string>
-    <string name="cent_symbol">&#162;</string>
     <string name="cent" translatable="false">%+d&#x200A;&#162;</string>
     <string name="cent_nosign" translatable="false">%d&#x200A;&#162;</string>
     <string name="keep_screen_on">Keep screen on</string>
@@ -105,17 +104,12 @@
     <string name="custom_item">Custom</string>
     <string name="file_empty">File is empty: %s</string>
     <string name="file_invalid">File is invalid: %s</string>
-    <plurals name="instruments_deleted">
-        <item quantity="one">%d instrument deleted</item>
-        <item quantity="other">%d instruments deleted</item>
-    </plurals>
     <plurals name="items_deleted">
         <item quantity="one">%d item deleted</item>
         <item quantity="other">%d items deleted</item>
     </plurals>
     <string name="undo">Undo</string>
     <string name="pick_icon">Pick icon</string>
-    <string name="copy_instrument">Copy instrument</string>
     <string name="copy_extension">%s (copy)</string>
     <string name="failed_to_archive_items">Failed to write items to file</string>
     <plurals name="database_num_saved">
@@ -228,7 +222,6 @@
     <string name="temperament">Temperament</string>
     <string name="root_note">Key note</string>
     <string name="test_tuning">Test tuning</string>
-    <string name="test_tuning_abbr">Test</string>
     <string name="details">Details</string>
     <string name="pythagorean_comma">%d\u2044%d&#x200A;pC</string>
     <string name="syntonic_comma">%d\u2044%d&#x200A;sC</string>
@@ -279,7 +272,6 @@
     <string name="extended_quarter_comma_mean_tone_desc">Pure major 3rds, 15 notes</string>
     <string name="extended_quarter_comma_mean_tone_abbr">Extended ¼ comma meantone</string>
     <string name="sensitivity">Sensitivity</string>
-    <string name="delete_instrument">Delete instrument</string>
     <string name="delete_items">Delete items</string>
     <string name="database_empty_share">There are no items to share.</string>
     <string name="audio_record_permission_rationale">Grant microphone access to start tuning.</string>
@@ -287,23 +279,14 @@
     <string name="failed_writing_wave_file">Did not write wave file.</string>
     <string name="instruments">Instruments</string>
     <string name="edit">Edit</string>
-    <string name="copy">Copy</string>
+    <string name="copy_">Copy</string>
     <string name="delete">Delete</string>
     <string name="temperaments">Temperaments</string>
-    <string name="list_of_cents">Cent list</string>
-    <string name="list_of_ratios">Ratio list</string>
-    <string name="hide_details">Hide details</string>
     <string name="save">Save</string>
-    <string name="current_selection">Current selection</string>
     <string name="temperament_editor">Edit temperament</string>
     <string name="note_number">Number of notes</string>
-    <string name="description">Description</string>
-    <string name="default_reference_note">Default reference note</string>
     <string name="cent_str">cent</string>
-    <string name="note_name">Note name</string>
-    <string name="enharmonic_note_name">Enharmonic</string>
     <string name="octave_offset">Octave offset</string>
-    <string name="octave">Octave</string>
     <string name="ratio">ratio</string>
     <string name="temperament_name">Temperament name</string>
     <string name="temperament_abbreviation">Abbreviation</string>
@@ -314,6 +297,4 @@
     <string name="duplicate_note_name">Duplicate note name.</string>
     <string name="invalid_value">Invalid value.</string>
     <string name="maximum_value_exceeded">Maximum value of %d exceeded.</string>
-    <string name="file_contains_no_temperaments">File contains no temperaments: %s</string>
-    <string name="manage_temperaments">Manage temperaments</string>
 </resources>

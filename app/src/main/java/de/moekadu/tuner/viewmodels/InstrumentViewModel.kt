@@ -27,7 +27,7 @@ import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIO
 import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.ui.common.EditableListData
-import de.moekadu.tuner.ui.screens.InstrumentsData
+import de.moekadu.tuner.ui.instruments.InstrumentsData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -16,7 +16,7 @@
 * You should have received a copy of the GNU General Public License
 * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
 */
-package de.moekadu.tuner.ui.screens
+package de.moekadu.tuner.ui.instruments
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
@@ -51,22 +51,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.InstrumentIcon
-import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments2.MusicalScale2
-import de.moekadu.tuner.temperaments2.MusicalScale2Factory
-import de.moekadu.tuner.temperaments2.StretchTuning
-import de.moekadu.tuner.temperaments2.Temperament
-import de.moekadu.tuner.ui.instruments.StringWithInfo
-import de.moekadu.tuner.ui.instruments.Strings
-import de.moekadu.tuner.ui.instruments.StringsScrollMode
-import de.moekadu.tuner.ui.instruments.StringsSidebarPosition
-import de.moekadu.tuner.ui.instruments.StringsState
+import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.ui.notes.NoteDetector
 import de.moekadu.tuner.ui.notes.NoteDetectorState
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.NoteSelector
+import de.moekadu.tuner.ui.screens.TunerPlotStyle
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.mutate
@@ -104,7 +97,7 @@ interface InstrumentEditorData {
 @Composable
 fun InstrumentEditor(
     state: InstrumentEditorData,
-    musicalScale: MusicalScale2,
+    musicalScale: MusicalScale,
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create(),
@@ -138,7 +131,7 @@ fun InstrumentEditor(
 @Composable
 fun InstrumentEditorPortrait(
     state: InstrumentEditorData,
-    musicalScale: MusicalScale2,
+    musicalScale: MusicalScale,
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create(),
@@ -280,7 +273,7 @@ fun InstrumentEditorPortrait(
 @Composable
 fun InstrumentEditorLandscape(
     state: InstrumentEditorData,
-    musicalScale: MusicalScale2,
+    musicalScale: MusicalScale,
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create(),
@@ -450,7 +443,7 @@ fun InstrumentEditorLandscape(
 }
 
 private class InstrumentEditorDataTest : InstrumentEditorData {
-    val musicalScale = MusicalScale2Factory.createTestEdo12()
+    val musicalScale = MusicalScaleFactory.createTestEdo12()
 
     override val icon = MutableStateFlow(InstrumentIcon.piano)
     override val name = MutableStateFlow("Test name")

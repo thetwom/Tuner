@@ -1,18 +1,9 @@
-package de.moekadu.tuner.temperaments2
+package de.moekadu.tuner.temperaments
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
-import android.widget.Toast
 import de.moekadu.tuner.BuildConfig
-import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.FileCheck
-import de.moekadu.tuner.misc.StringOrResId
-import de.moekadu.tuner.misc.getFilenameFromUri
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.RationalNumber
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.StringWriter
@@ -46,7 +37,7 @@ object TemperamentIO {
         }
     }
     fun writeVersion(writer: BufferedWriter) {
-        writer.writeLine("! ${VERSION_KEY}=${BuildConfig.VERSION_NAME}")
+        writer.writeLine("! $VERSION_KEY=${BuildConfig.VERSION_NAME}")
     }
 
     fun writeTemperament(
@@ -87,13 +78,13 @@ object TemperamentIO {
                 writer.write(" %.2f".format(c))
             }
             noteNames?.getOrNull(i % numberOfNotes)?.let { note ->
-                writer.write("    ${NOTE_KEY}=${noteToString(note)}")
+                writer.write("    $NOTE_KEY=${noteToString(note)}")
             }
             writer.newLine()
         }
     }
 
-    fun readTemperamentsFromFile(context: Context, uri: Uri): TemperamentAndFileCheckResult  {
+    fun readTemperamentsFromFile(context: Context, uri: Uri): TemperamentAndFileCheckResult {
         return context.contentResolver?.openInputStream(uri)?.use { reader ->
             parseTemperaments(reader.bufferedReader())
         } ?: TemperamentAndFileCheckResult(FileCheck.Invalid, listOf())
@@ -342,11 +333,13 @@ object TemperamentIO {
         }
         if (note.enharmonicBase != BaseNote.None) {
             builder.append("/")
-            builder.append(noteToString(
+            builder.append(
+                noteToString(
                 note.enharmonicBase,
                 note.enharmonicModifier,
                 note.enharmonicOctaveOffset
-            ))
+            )
+            )
         }
         return builder.toString()
     }

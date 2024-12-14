@@ -44,12 +44,11 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.temperaments2.TemperamentResources
+import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.ui.instruments.InstrumentIconPicker
-import de.moekadu.tuner.ui.misc.TunerScaffold
 import de.moekadu.tuner.ui.misc.TunerScaffoldWithoutBottomBar
 import de.moekadu.tuner.ui.misc.rememberTunerAudioPermission
-import de.moekadu.tuner.ui.screens.InstrumentEditor
+import de.moekadu.tuner.ui.instruments.InstrumentEditor
 import de.moekadu.tuner.viewmodels.InstrumentEditorViewModel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString

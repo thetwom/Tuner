@@ -68,13 +68,10 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
-import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments2.MusicalScale2
-import de.moekadu.tuner.temperaments2.MusicalScale2Factory
-import de.moekadu.tuner.temperaments2.StretchTuning
-import de.moekadu.tuner.temperaments2.Temperament
+import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.rememberMaxNoteSize
 import de.moekadu.tuner.ui.plot.PlotWindowOutline
@@ -127,7 +124,7 @@ private fun findIndexOfClosestScrollableHighlightedString(
     strings: List<StringWithInfo>?,
     highlightedStringKey: Int?,
     highlightedStringNote: MusicalNote?,
-    musicalScale: MusicalScale2,
+    musicalScale: MusicalScale,
     listState: LazyListState
 ): Int {
     return if (highlightedStringKey == null && highlightedStringNote == null) {
@@ -307,7 +304,7 @@ private fun StringsSidebar(
 @Composable
 fun Strings(
     strings: ImmutableList<StringWithInfo>?, // if null, we assume chromatic
-    musicalScale: MusicalScale2,
+    musicalScale: MusicalScale,
     modifier: Modifier = Modifier,
     tuningState: TuningState = TuningState.Unknown,
     highlightedNoteKey: Int? = null,
@@ -583,10 +580,10 @@ fun Strings(
 @Composable
 private fun StringsPreview() {
     TunerTheme {
-        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
+        val musicalScale = remember { MusicalScaleFactory.createTestEdo12() }
         val noteNameScale = musicalScale.noteNames
         val strings = remember(noteNameScale) {
-            listOf<MusicalNote>(
+            listOf(
                 noteNameScale.notes[0].copy(octave = 2),
                 noteNameScale.notes[1].copy(octave = 3),
                 noteNameScale.notes[4].copy(octave = 3),
@@ -646,7 +643,7 @@ private fun StringsPreview() {
 @Composable
 private fun StringsPreview2() {
     TunerTheme {
-        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
+        val musicalScale = remember { MusicalScaleFactory.createTestEdo12() }
         val noteNameScale = musicalScale.noteNames
         val strings = remember(noteNameScale) {
             listOf(

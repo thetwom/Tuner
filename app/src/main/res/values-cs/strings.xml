@@ -66,7 +66,6 @@
     <string name="file_invalid">Soubor je neplatný: %s</string>
     <string name="undo">Zpět</string>
     <string name="pick_icon">Vybrat ikonu</string>
-    <string name="copy_instrument">Kopírovat nástroj</string>
     <string name="copy_extension">%s (kopie)</string>
     <string name="failed_to_archive_items">Nepodařilo se uložit nástroj do souboru</string>
     <string name="database_empty">Neexistují žádné nástroje, které by bylo možné uložit.</string>
@@ -152,7 +151,6 @@
     <string name="circle_of_fifths">"Kvintový kruh "</string>
     <string name="young2_abbr">Young 2</string>
     <string name="valotti_abbr">Valotti</string>
-    <string name="test_tuning_abbr">Testovací</string>
     <string name="neidhardt3_abbr">Neidhardt 3</string>
     <string name="neidhardt2_abbr">Neidhardt 2</string>
     <string name="neidhardt1_abbr">Neidhardt 1</string>

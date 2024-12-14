@@ -53,14 +53,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIcon
-import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.notedetection.SortedAndDistinctInstrumentStrings
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments2.MusicalScale2
-import de.moekadu.tuner.temperaments2.MusicalScale2Factory
-import de.moekadu.tuner.temperaments2.StretchTuning
-import de.moekadu.tuner.temperaments2.Temperament
+import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.ui.instruments.InstrumentButton
 import de.moekadu.tuner.ui.instruments.StringWithInfo
 import de.moekadu.tuner.ui.instruments.Strings
@@ -83,7 +80,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 interface InstrumentTunerData {
-    val musicalScale: StateFlow<MusicalScale2>
+    val musicalScale: StateFlow<MusicalScale>
     val notePrintOptions: StateFlow<NotePrintOptions>
     val toleranceInCents: StateFlow<Int>
 
@@ -116,7 +113,7 @@ interface InstrumentTunerData {
 }
 
 private fun checkInstrumentCompatibility(
-    musicalScale: MusicalScale2,
+    musicalScale: MusicalScale,
     instrument: Instrument): Boolean {
     if (instrument.isChromatic)
         return true
@@ -501,8 +498,8 @@ fun InstrumentTunerLandscape(
 }
 
 class TestInstrumentTunerData : InstrumentTunerData {
-    override val musicalScale: StateFlow<MusicalScale2> = MutableStateFlow(
-        MusicalScale2Factory.createTestEdo12()
+    override val musicalScale: StateFlow<MusicalScale> = MutableStateFlow(
+        MusicalScaleFactory.createTestEdo12()
     )
 
     override val notePrintOptions: StateFlow<NotePrintOptions>

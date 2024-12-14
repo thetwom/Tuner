@@ -26,11 +26,9 @@ import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
-import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.max
-import kotlin.math.roundToInt
 
 class NumberFormatter(
     locale: Locale,
