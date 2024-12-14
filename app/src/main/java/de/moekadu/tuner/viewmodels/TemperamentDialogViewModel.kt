@@ -32,8 +32,7 @@ class TemperamentDialogViewModel  @Inject constructor(
     private val _noteNames = mutableStateOf(initialMusicalScale.noteNames)
     override val noteNames: State<NoteNames> get() = _noteNames
 
-    override val defaultTemperament: TemperamentWithNoteNames
-        get() = pref.predefinedTemperaments[0]
+    override val defaultTemperament: TemperamentWithNoteNames get() = pref.defaultTemperament
 
     private val _selectedRootNoteIndex = mutableIntStateOf(
         initialMusicalScale.noteNames.getNoteIndex(initialMusicalScale.rootNote)

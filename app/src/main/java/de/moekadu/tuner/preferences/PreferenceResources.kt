@@ -71,27 +71,6 @@ class PreferenceResources @Inject constructor (
         val useSystemColorAccents: Boolean = true
     )
 
-//    @Serializable
-//    @Parcelize
-//    data class MusicalScaleProperties(
-//        val temperamentType: TemperamentType,
-//        val rootNote: MusicalNote,
-//        val referenceNote: MusicalNote,
-//        val referenceFrequency: Float
-//    ) : Parcelable {
-//        fun toMusicalScale() = MusicalScaleFactory.create(
-//            temperamentType, referenceNote, rootNote, referenceFrequency
-//        )
-//        companion object {
-//            fun create(musicalScale: MusicalScale) = MusicalScaleProperties(
-//                musicalScale.temperamentType,
-//                musicalScale.rootNote,
-//                musicalScale.referenceNote,
-//                musicalScale.referenceFrequency
-//            )
-//        }
-//    }
-
     val sampleRate = 44100
 
     // migrations

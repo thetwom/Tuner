@@ -38,7 +38,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.preferences.NightMode
 import de.moekadu.tuner.ui.misc.rememberNumberFormatter
-import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.asAnnotatedString
 import de.moekadu.tuner.ui.preferences.Section
 import de.moekadu.tuner.ui.preferences.SimplePreference
@@ -128,6 +127,32 @@ fun Preferences(
             )
         }
         item {
+            SimplePreference(
+                name = stringResource(id = R.string.temperament),
+                supporting = {
+                    val resources = LocalContext.current.resources
+                    val textStyle = LocalTextStyle.current
+                    val summary = remember(musicalScale, resources, textStyle) {
+                        buildAnnotatedString {
+                            //append(resources.getString(getTuningNameResourceId(musicalScale.temperamentType)))
+                            append(musicalScale.temperament.name.value(context))
+                            append(resources.getString(R.string.comma_separator))
+                            append(musicalScale.rootNote.asAnnotatedString(
+                                notePrintOptions,
+                                textStyle.fontSize,
+                                textStyle.fontWeight,
+                                withOctave = false,
+                                resources = resources
+                            ))
+                        }
+                    }
+                    Text(summary)
+                },
+                iconId = R.drawable.ic_temperament,
+                modifier = Modifier.clickable { onTemperamentClicked() }
+            )
+        }
+        item {
             val toleranceInCents by pref.toleranceInCents.collectAsStateWithLifecycle()
 
             SliderPreference(
@@ -184,32 +209,6 @@ fun Preferences(
                 checked = scientificMode,
                 onCheckChange = { pref.writeScientificMode(it) },
                 iconId = R.drawable.ic_baseline_developer_board
-            )
-        }
-        item {
-            SimplePreference(
-                name = stringResource(id = R.string.temperament),
-                supporting = {
-                    val resources = LocalContext.current.resources
-                    val textStyle = LocalTextStyle.current
-                    val summary = remember(musicalScale, resources, textStyle) {
-                        buildAnnotatedString {
-                            //append(resources.getString(getTuningNameResourceId(musicalScale.temperamentType)))
-                            append(musicalScale.temperament.name.value(context))
-                            append(resources.getString(R.string.comma_separator))
-                            append(musicalScale.rootNote.asAnnotatedString(
-                                notePrintOptions,
-                                textStyle.fontSize,
-                                textStyle.fontWeight,
-                                withOctave = false,
-                                resources = resources
-                            ))
-                        }
-                    }
-                    Text(summary)
-                },
-                iconId = R.drawable.ic_temperament,
-                modifier = Modifier.clickable { onTemperamentClicked() }
             )
         }
         item {

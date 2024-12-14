@@ -7,35 +7,24 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -62,7 +51,6 @@ import de.moekadu.tuner.temperaments2.TemperamentIO
 import de.moekadu.tuner.temperaments2.TemperamentWithNoteNames
 import de.moekadu.tuner.ui.common.EditableList
 import de.moekadu.tuner.ui.common.EditableListData
-import de.moekadu.tuner.ui.common.ImportExportOverflowMenu
 import de.moekadu.tuner.ui.common.OverflowMenu
 import de.moekadu.tuner.ui.common.OverflowMenuCallbacks
 import de.moekadu.tuner.ui.misc.TunerScaffoldWithoutBottomBar
@@ -173,8 +161,6 @@ private fun rememberImportExportCallbacks(
     }
 }
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Temperaments2(
     state: Temperaments2Data,
@@ -182,6 +168,7 @@ fun Temperaments2(
     onEditTemperamentClicked: (temperament: TemperamentWithNoteNames, copy: Boolean) -> Unit = { _, _ ->},
     onTemperamentClicked: (temperament: TemperamentWithNoteNames) -> Unit = { },
     onLoadTemperaments: (temperaments: List<EditableTemperament>) -> Unit = { },
+    onTemperamentInfoClicked: (temperament: TemperamentWithNoteNames) -> Unit = { },
     onNavigateUp: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -297,10 +284,12 @@ fun Temperaments2(
                 }
             },
             isItemCopyable = { true },
+            hasItemInfo = { true },
             state = state.listData,
             modifier = modifier.padding(paddingValues).fillMaxSize(),
             onActivateItemClicked = { onTemperamentClicked(it) },
             onEditItemClicked = onEditTemperamentClicked,
+            onItemInfoClicked = onTemperamentInfoClicked,
             snackbarHostState = snackbarHostState,
             listState = listState
         )

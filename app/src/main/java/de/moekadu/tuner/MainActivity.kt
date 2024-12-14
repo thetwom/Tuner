@@ -52,6 +52,7 @@ import de.moekadu.tuner.navigation.preferenceGraph
 import de.moekadu.tuner.navigation.mainGraph
 import de.moekadu.tuner.navigation.temperamentEditorGraph
 import de.moekadu.tuner.navigation.TemperamentEditorGraphRoute
+import de.moekadu.tuner.navigation.TemperamentsManagerRoute
 import de.moekadu.tuner.preferences.NightMode
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.preferences.migrateFromV6
@@ -132,6 +133,7 @@ class MainActivity : ComponentActivity() {
 //                        Log.v("Tuner", "MainActivity2: Loading file ...")
                         controller.popBackStack(TunerRoute, inclusive = false)
                         controller.navigate(TemperamentDialogRoute)
+                        controller.navigate(TemperamentsManagerRoute(temperaments.musicalScale.value.temperament.stableId))
                         loadTemperaments(
                             controller, temperamentList, temperaments, this@MainActivity
                         )

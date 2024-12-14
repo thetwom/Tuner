@@ -261,6 +261,7 @@ fun Instruments(
                 )
             },
             isItemCopyable = { !it.isChromatic },
+            hasItemInfo = { false },
             state = state.listData,
             modifier = Modifier.padding(paddingValues = paddingValues),
             onActivateItemClicked = onInstrumentClicked,

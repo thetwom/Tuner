@@ -182,10 +182,12 @@ fun <T>EditableList(
     itemDescription: @Composable (T) -> Unit,
     itemIcon: @Composable (T) -> Unit,
     isItemCopyable: (T) -> Boolean,
+    hasItemInfo: (T) -> Boolean,
     state: EditableListData<T>,
     modifier: Modifier = Modifier,
     onActivateItemClicked: (T) -> Unit = { },
     onEditItemClicked: (T, copy: Boolean) -> Unit = {_, _ -> },
+    onItemInfoClicked: (T) -> Unit = { },
     snackbarHostState: SnackbarHostState? = null,
     listState: LazyListState = rememberLazyListState()
 ) {
@@ -284,12 +286,14 @@ fun <T>EditableList(
                                 persistentSetOf(state.getStableId(listItem)
                                 )
                             )
+                            ListItemTask.Info -> onItemInfoClicked(listItem)
                         }
                     },
                     isActive = (state.getStableId(listItem) == activeItemId),
                     isSelected = selectedItems.contains(state.getStableId(listItem)),
                     readOnly = false,
-                    isCopyable = isItemCopyable(listItem)
+                    isCopyable = isItemCopyable(listItem),
+                    hasInfo = hasItemInfo(listItem)
                 )
             }
         }
@@ -318,12 +322,15 @@ fun <T>EditableList(
                     onOptionsClicked = { task ->
                         if (task == ListItemTask.Copy) {
                             onEditItemClicked(listItem, true)
+                        } else if (task == ListItemTask.Info) {
+                            onItemInfoClicked(listItem)
                         }
                     },
                     isActive = (state.getStableId(listItem) == activeItemId),
                     isSelected = false,
                     readOnly = true,
-                    isCopyable = isItemCopyable(listItem)
+                    isCopyable = isItemCopyable(listItem),
+                    hasInfo = hasItemInfo(listItem)
                 )
             }
         }
@@ -384,6 +391,7 @@ private fun EditableListTest() {
             itemDescription = {Text(it.title)} ,
             itemIcon = {Icon(Icons.Default.Edit, null)},
             isItemCopyable = { true },
+            hasItemInfo = { true },
             state = listData,
             onActivateItemClicked = { activeItem.value = it },
             onEditItemClicked = {_,_ -> }
