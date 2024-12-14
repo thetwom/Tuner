@@ -1,4 +1,4 @@
-package de.moekadu.tuner.ui.screens
+package de.moekadu.tuner.ui.temperaments
 
 import android.content.Context
 import android.net.Uri
@@ -45,10 +45,10 @@ import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.misc.toastPotentialFileCheckError
 import de.moekadu.tuner.temperaments.RationalNumber
-import de.moekadu.tuner.temperaments2.EditableTemperament
-import de.moekadu.tuner.temperaments2.Temperament
-import de.moekadu.tuner.temperaments2.TemperamentIO
-import de.moekadu.tuner.temperaments2.TemperamentWithNoteNames
+import de.moekadu.tuner.temperaments.EditableTemperament
+import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.TemperamentIO
+import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
 import de.moekadu.tuner.ui.common.EditableList
 import de.moekadu.tuner.ui.common.EditableListData
 import de.moekadu.tuner.ui.common.OverflowMenu
@@ -59,7 +59,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
-interface Temperaments2Data {
+interface TemperamentsManagerData {
     val listData: EditableListData<TemperamentWithNoteNames>
     fun saveTemperaments(
         context: Context,
@@ -70,7 +70,7 @@ interface Temperaments2Data {
 
 @Composable
 private fun rememberImportExportCallbacks(
-    state: Temperaments2Data,
+    state: TemperamentsManagerData,
     onLoadTemperaments: (temperaments: List<EditableTemperament>) -> Unit
 ): OverflowMenuCallbacks {
     val context = LocalContext.current
@@ -162,8 +162,8 @@ private fun rememberImportExportCallbacks(
 }
 
 @Composable
-fun Temperaments2(
-    state: Temperaments2Data,
+fun TemperamentsManager(
+    state: TemperamentsManagerData,
     modifier: Modifier = Modifier,
     onEditTemperamentClicked: (temperament: TemperamentWithNoteNames, copy: Boolean) -> Unit = { _, _ ->},
     onTemperamentClicked: (temperament: TemperamentWithNoteNames) -> Unit = { },
@@ -296,7 +296,7 @@ fun Temperaments2(
     }
 }
 
-private class TestTemperament2Data : Temperaments2Data {
+private class TestTemperamentManagerData : TemperamentsManagerData {
     private val testTemperament1 = Temperament.create(
         StringOrResId("Test 1"),
         StringOrResId("T1"),
@@ -357,9 +357,9 @@ private class TestTemperament2Data : Temperaments2Data {
 @Composable
 private fun Temperaments2Preview() {
     TunerTheme {
-        val temperamentData = remember { TestTemperament2Data() }
+        val temperamentData = remember { TestTemperamentManagerData() }
 
-        Temperaments2(
+        TemperamentsManager(
             state = temperamentData
         )
     }

@@ -1,6 +1,5 @@
-package de.moekadu.tuner.temperaments2
+package de.moekadu.tuner.temperaments
 
-import android.util.Log
 import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable
 import kotlin.math.floor

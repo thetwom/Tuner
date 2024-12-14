@@ -1,4 +1,4 @@
-package de.moekadu.tuner.temperaments2
+package de.moekadu.tuner.temperaments
 
 import kotlinx.serialization.Serializable
 

@@ -16,7 +16,7 @@
 * You should have received a copy of the GNU General Public License
 * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
 */
-package de.moekadu.tuner.ui.screens
+package de.moekadu.tuner.ui.instruments
 
 import android.content.Context
 import android.net.Uri
@@ -58,13 +58,10 @@ import de.moekadu.tuner.misc.toastPotentialFileCheckError
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments2.MusicalScale2
-import de.moekadu.tuner.temperaments2.MusicalScale2Factory
 import de.moekadu.tuner.ui.common.EditableList
 import de.moekadu.tuner.ui.common.EditableListData
 import de.moekadu.tuner.ui.common.OverflowMenu
 import de.moekadu.tuner.ui.common.OverflowMenuCallbacks
-import de.moekadu.tuner.ui.misc.TunerScaffold
 import de.moekadu.tuner.ui.misc.TunerScaffoldWithoutBottomBar
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.theme.TunerTheme

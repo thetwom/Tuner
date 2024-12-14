@@ -18,7 +18,6 @@
 */
 package de.moekadu.tuner.ui.tuning
 
-import android.util.Log
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -45,14 +44,13 @@ import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments2.MusicalScale2
-import de.moekadu.tuner.temperaments2.MusicalScale2Factory
+import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.ui.common.Label
 import de.moekadu.tuner.ui.notes.Note
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.rememberMaxNoteSize
 import de.moekadu.tuner.ui.plot.Anchor
-import de.moekadu.tuner.ui.plot.TickLevelExplicitRanges
 import de.moekadu.tuner.ui.plot.GestureBasedViewPort
 import de.moekadu.tuner.ui.plot.HorizontalMark
 import de.moekadu.tuner.ui.plot.LineCoordinates
@@ -60,6 +58,7 @@ import de.moekadu.tuner.ui.plot.Plot
 import de.moekadu.tuner.ui.plot.PlotWindowOutline
 import de.moekadu.tuner.ui.plot.PointMark
 import de.moekadu.tuner.ui.plot.PointShape
+import de.moekadu.tuner.ui.plot.TickLevelExplicitRanges
 import de.moekadu.tuner.ui.theme.TunerTheme
 import de.moekadu.tuner.ui.theme.tunerColors
 import kotlinx.collections.immutable.persistentListOf
@@ -158,7 +157,7 @@ class PitchHistoryState(
 @Composable
 fun PitchHistory(
     state: PitchHistoryState,
-    musicalScale: MusicalScale2,
+    musicalScale: MusicalScale,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     gestureBasedViewPort: GestureBasedViewPort = remember { GestureBasedViewPort() },
@@ -447,7 +446,7 @@ fun PitchHistory2Preview() {
         val notePrintOptions = remember {
             NotePrintOptions()
         }
-        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
+        val musicalScale = remember { MusicalScaleFactory.createTestEdo12() }
         val state = remember {
             PitchHistoryState(
                 capacity = 9

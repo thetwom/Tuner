@@ -55,7 +55,7 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments2.getSuitableNoteNames
+import de.moekadu.tuner.temperaments.getSuitableNoteNames
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlin.math.max

@@ -19,12 +19,9 @@
 package de.moekadu.tuner.preferences
 
 import android.content.Context
-import android.util.Log
 import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.instruments.InstrumentResourcesOld
-import de.moekadu.tuner.temperaments2.TemperamentResources
-import de.moekadu.tuner.ui.notes.NotePrintOptions
-import de.moekadu.tuner.ui.notes.NotePrintOptionsOld
+import de.moekadu.tuner.temperaments.TemperamentResources
 import kotlin.math.roundToInt
 
 fun migrateFromV6(

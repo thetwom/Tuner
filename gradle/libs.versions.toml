@@ -1,28 +1,28 @@
 [versions]
-accompanistPermissions = "0.36.0"
+accompanistPermissions = "0.37.0"
 agp = "8.5.2"
 hiltNavigationCompose = "1.2.0"
-kotlin = "2.0.20"
+kotlin = "2.1.0"
 
-activityKtx = "1.9.2"
+activityKtx = "1.9.3"
 appcompat = "1.7.0"
-composeBom = "2024.09.03"
-coreKtx = "1.13.1"
+composeBom = "2024.12.01"
+coreKtx = "1.15.0"
 coreTesting = "1.1.1"
 datastore = "1.1.1"
 espressoCore = "3.6.1"
-hilt = "2.49"
+hilt = "2.53.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 kotlinxCollectionsImmutable = "0.3.7"
 kotlinxCoroutinesCore = "1.7.3"
 kotlinxSerializationJson = "1.6.3"
-ksp = "2.0.20-1.0.25"  # https://github.com/google/ksp/releases
-lifecycle = "2.8.6"
+ksp = "2.1.0-1.0.29"  # https://github.com/google/ksp/releases
+lifecycle = "2.8.7"
 material = "1.12.0"
-navigationCompose = "2.8.2"
+navigationCompose = "2.8.5"
 preferenceKtx = "1.2.1"
-runtimeTracing = "1.7.3"
+runtimeTracing = "1.7.6"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }

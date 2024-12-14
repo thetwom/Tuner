@@ -46,18 +46,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
-import de.moekadu.tuner.misc.StringOrResId
-import de.moekadu.tuner.temperaments2.MusicalScale2
-import de.moekadu.tuner.temperaments2.MusicalScale2Factory
-import de.moekadu.tuner.temperaments2.StretchTuning
-import de.moekadu.tuner.temperaments2.Temperament
+import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.ui.notes.Note
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.theme.TunerTheme
 
 @Composable
 fun QuickSettingsBar(
-    musicalScale: MusicalScale2,
+    musicalScale: MusicalScale,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     onSharpFlatClicked: () -> Unit = {},
@@ -159,7 +156,7 @@ fun QuickSettingsBar(
 private fun QuickSettingsBarPreview() {
     TunerTheme {
         var notePrintOptions by remember { mutableStateOf(NotePrintOptions()) }
-        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
+        val musicalScale = remember { MusicalScaleFactory.createTestEdo12() }
 
         QuickSettingsBar(
             musicalScale = musicalScale,

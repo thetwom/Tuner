@@ -1,12 +1,7 @@
-package de.moekadu.tuner.temperaments2
+package de.moekadu.tuner.temperaments
 
 import android.content.Context
-import android.util.Log
 import de.moekadu.tuner.misc.StringOrResId
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.RationalNumber
 import kotlinx.serialization.Serializable
 
 /** Temperament with note names, which can be incomplete, but is allowed for editing. */

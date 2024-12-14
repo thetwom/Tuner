@@ -1,15 +1,13 @@
-package de.moekadu.tuner.temperaments2
+package de.moekadu.tuner.temperaments
 
 import android.content.Context
 import android.util.Log
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dagger.hilt.android.qualifiers.ApplicationContext
-import de.moekadu.tuner.R
 import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.misc.ResourcesDataStoreBase
-import de.moekadu.tuner.temperaments.MusicalNote
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -47,7 +45,7 @@ class TemperamentResources @Inject constructor(
 
     val musicalScale = store.getSerializablePreferenceFlow(
         MUSICAL_SCALE_KEY,
-        MusicalScale2Factory.create(
+        MusicalScaleFactory.create(
             defaultTemperament.temperament,
             noteNames = getSuitableNoteNames(defaultTemperament.temperament.numberOfNotesPerOctave),
             referenceNote = null,
@@ -92,7 +90,7 @@ class TemperamentResources @Inject constructor(
         }
     }
 
-    fun writeMusicalScale(musicalScale: MusicalScale2) {
+    fun writeMusicalScale(musicalScale: MusicalScale) {
         applicationScope.launch {
             store.writeSerializablePreference(MUSICAL_SCALE_KEY, musicalScale)
         }
@@ -129,7 +127,7 @@ class TemperamentResources @Inject constructor(
             null
         }
 //        Log.v("Tuner", "TemperamentResources:writeMusicalScale: ofmin=${currentMusicalScale.frequencyMin}, ofmax=${currentMusicalScale.frequencyMax}")
-        val newMusicalScale = MusicalScale2Factory.create(
+        val newMusicalScale = MusicalScaleFactory.create(
             temperament = temperamentResolved,
             noteNames = noteNamesResolved,
             referenceNote = referenceNoteResolved,

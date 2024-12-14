@@ -19,33 +19,72 @@
 package de.moekadu.tuner.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
+import androidx.navigation.toRoute
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.temperaments2.TemperamentResources
+import de.moekadu.tuner.temperaments.EditableTemperament
+import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.TemperamentResources
+import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
+import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.temperaments.toEditableTemperament
 import de.moekadu.tuner.ui.screens.InstrumentTuner
-import de.moekadu.tuner.ui.screens.Instruments
+import de.moekadu.tuner.ui.instruments.Instruments
+import de.moekadu.tuner.ui.preferences.ReferenceNoteDialog
 import de.moekadu.tuner.ui.screens.ScientificTuner
+import de.moekadu.tuner.ui.temperaments.TemperamentDetailsDialog
+import de.moekadu.tuner.ui.temperaments.TemperamentDialog
+import de.moekadu.tuner.ui.temperaments.TemperamentsManager
 import de.moekadu.tuner.viewmodels.InstrumentTunerViewModel
 import de.moekadu.tuner.viewmodels.InstrumentViewModel
 import de.moekadu.tuner.viewmodels.ScientificTunerViewModel
+import de.moekadu.tuner.viewmodels.TemperamentDialogViewModel
+import de.moekadu.tuner.viewmodels.TemperamentsManagerViewModel
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+
+@Composable
+private fun createTemperamentDialogViewModel(
+    controller: NavController, backStackEntry: NavBackStackEntry
+): TemperamentDialogViewModel? {
+    val parentEntry = remember(backStackEntry) {
+        try {
+            controller.getBackStackEntry<TemperamentDialogRoute>()
+        } catch (ex: IllegalArgumentException) {
+            null
+        }
+    }
+    return if (parentEntry == null)
+        null
+    else
+        hiltViewModel<TemperamentDialogViewModel>(parentEntry)
+}
+
 
 fun NavGraphBuilder.mainGraph(
     controller: NavController,
     onNavigateUpClicked: () -> Unit,
     preferences: PreferenceResources,
     temperamentResources: TemperamentResources,
-    onLoadInstruments: (List<Instrument>) -> Unit
+    onLoadInstruments: (List<Instrument>) -> Unit,
+    onLoadTemperaments: (List<EditableTemperament>) -> Unit
 ) {
     composable<TunerRoute> {
         val isScientificTuner by preferences.scientificMode.collectAsStateWithLifecycle()
@@ -144,6 +183,139 @@ fun NavGraphBuilder.mainGraph(
         )
     }
 
+    dialog<ReferenceFrequencyDialogRoute> {
+        val state = it.toRoute<ReferenceFrequencyDialogRoute>()
+        val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
+        ReferenceNoteDialog(
+            initialState = state.musicalScale,
+            onReferenceNoteChange = { newState ->
+                temperamentResources.writeMusicalScale(newState)
+                controller.navigateUp()
+            },
+            notePrintOptions = notePrintOptions,
+            warning = state.warning,
+            onDismiss = { controller.navigateUp() }
+        )
+    }
+
+    composable<TemperamentDialogRoute> {
+        val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
+        val resources = LocalContext.current.resources
+//        val viewModel: TemperamentViewModel = hiltViewModel()
+        val viewModel: TemperamentDialogViewModel = createTemperamentDialogViewModel(
+            controller = controller,
+            backStackEntry = it
+        )!!
+//        val context = LocalContext.current
+
+        TemperamentDialog(
+            state = viewModel,
+            notePrintOptions = notePrintOptions,
+            modifier = Modifier.fillMaxSize(),
+            onDismiss = { controller.navigateUp() },
+            onDone = { temperament, noteNames, rootNote ->
+                val predefinedNoteNames = getSuitableNoteNames(temperament.numberOfNotesPerOctave)
+                val noteNamesResolved =
+                    if (predefinedNoteNames?.notes?.contentEquals(noteNames.notes) == true)
+                        null
+                    else
+                        noteNames
+                val temperamentWithNoteNames = TemperamentWithNoteNames(
+                    temperament, noteNamesResolved
+                )
+                val currentReferenceNote = temperamentResources.musicalScale.value.referenceNote
+                if (noteNames.hasNote(currentReferenceNote)) {
+                    temperamentResources.writeMusicalScale(
+                        temperament = temperamentWithNoteNames,
+                        rootNote = rootNote
+                    )
+                    controller.navigateUp()
+                } else {
+                    val oldScale = temperamentResources.musicalScale.value
+                    val proposedScale = MusicalScaleFactory.create(
+                        temperament = temperament,
+                        noteNames = noteNamesResolved,
+                        referenceNote = null,
+                        rootNote = rootNote,
+                        referenceFrequency = oldScale.referenceFrequency,
+                        frequencyMin = oldScale.frequencyMin,
+                        frequencyMax = oldScale.frequencyMax,
+                        stretchTuning = oldScale.stretchTuning
+                    )
+                    controller.navigate(
+                        ReferenceFrequencyDialogRoute(
+                            proposedScale,
+                            resources.getString(R.string.new_temperament_requires_adapting_reference_note)
+                        )
+                    ) {
+                        popUpTo(TemperamentDialogRoute) { inclusive = true }
+                    }
+                }
+            },
+            onChooseTemperaments = { controller.navigate(TemperamentsManagerRoute(
+                viewModel.temperament.value.stableId
+            )) }
+        )
+    }
+
+    composable<TemperamentsManagerRoute> {
+        val context = LocalContext.current
+        val resources = context.resources
+        val initialTemperamentKey = it.toRoute<TemperamentsManagerRoute>().currentTemperamentKey
+        val viewModel = hiltViewModel<TemperamentsManagerViewModel, TemperamentsManagerViewModel.Factory>{ factory ->
+            factory.create(initialTemperamentKey)
+        }
+        val viewModelParentDialog = createTemperamentDialogViewModel(
+            controller = controller,
+            backStackEntry = it
+        )
+        TemperamentsManager(
+            state = viewModel,
+            modifier = Modifier.fillMaxSize(),
+            onTemperamentClicked = { temperament ->
+                if (viewModelParentDialog != null) {
+                    viewModelParentDialog.setNewTemperament(temperament)
+                    controller.navigateUp()
+                } else {
+                    viewModel.activateTemperament(temperament.stableId)
+                }
+            },
+            onEditTemperamentClicked = { temperament, copy ->
+                val name = temperament.temperament.name.value(context)
+                controller.navigate(
+                    TemperamentEditorGraphRoute(
+                        temperament.toEditableTemperament(
+                            context = context,
+                            name = when {
+                                copy && name == "" -> ""
+                                copy -> "$name (${resources.getString(R.string.copy_)})"
+                                else -> null // i.e. use name from temperament
+                            },
+                            stableId = if (copy) Temperament.NO_STABLE_ID else null // null means use stable from temperament
+                        )
+                    )
+                )
+            },
+            onLoadTemperaments = onLoadTemperaments,
+            onTemperamentInfoClicked = { temperament ->
+                controller.navigate(TemperamentInfoDialogRoute(temperament))
+            },
+            onNavigateUp = { controller.navigateUp() }
+        )
+    }
+
+    dialog<TemperamentInfoDialogRoute> {
+        val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
+        val temperament = it.toRoute<TemperamentInfoDialogRoute>().obtainTemperament()
+        TemperamentDetailsDialog(
+            temperament = temperament.temperament,
+            noteNames = temperament.noteNames
+                ?: getSuitableNoteNames(temperament.temperament.numberOfNotesPerOctave)!!,
+            notePrintOptions = notePrintOptions,
+            onDismiss = { controller.navigateUp() }
+        )
+    }
+
 
 //    dialog<TestRoute>(
 //        deepLinks = listOf(
@@ -168,5 +340,37 @@ data object TunerRoute
 @Serializable
 data object InstrumentsRoute
 
+// it seems that we cannot use complex arguments, so we must serialize ...
+@Serializable
+data class ReferenceFrequencyDialogRoute(
+    val serializedString: String,
+    val warning: String?
+) {
+    constructor(musicalScale: MusicalScale, warning: String?) : this(
+        Json.encodeToString(musicalScale),
+        warning
+    )
+    val musicalScale get() = Json.decodeFromString<MusicalScale>(serializedString)
+}
+
+@Serializable
+data object TemperamentDialogRoute
+
+@Serializable
+data class TemperamentsManagerRoute(
+    val currentTemperamentKey: Long
+)
+
+@Serializable
+data class TemperamentInfoDialogRoute(
+    val serializedTemperament: String
+) {
+    constructor(temperament: TemperamentWithNoteNames) : this(
+        Json.encodeToString(temperament)
+    )
+    fun obtainTemperament(): TemperamentWithNoteNames {
+        return Json.decodeFromString<TemperamentWithNoteNames>(serializedTemperament)
+    }
+}
 //@Serializable
 //data object TestRoute

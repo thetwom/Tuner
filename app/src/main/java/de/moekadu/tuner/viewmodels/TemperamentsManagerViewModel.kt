@@ -8,26 +8,25 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.moekadu.tuner.hilt.ApplicationScope
-import de.moekadu.tuner.temperaments2.TemperamentIO
-import de.moekadu.tuner.temperaments2.TemperamentResources
-import de.moekadu.tuner.temperaments2.TemperamentWithNoteNames
+import de.moekadu.tuner.temperaments.TemperamentIO
+import de.moekadu.tuner.temperaments.TemperamentResources
+import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
 import de.moekadu.tuner.ui.common.EditableListData
-import de.moekadu.tuner.ui.screens.Temperaments2Data
+import de.moekadu.tuner.ui.temperaments.TemperamentsManagerData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel(assistedFactory = Temperaments2ViewModel.Factory::class)
-class Temperaments2ViewModel @AssistedInject constructor(
+@HiltViewModel(assistedFactory = TemperamentsManagerViewModel.Factory::class)
+class TemperamentsManagerViewModel @AssistedInject constructor(
     @Assisted initialTemperamentKey: Long,
     val pref: TemperamentResources,
     @ApplicationScope val applicationScope: CoroutineScope
-) : Temperaments2Data, ViewModel() {
+) : TemperamentsManagerData, ViewModel() {
     @AssistedFactory
     interface Factory {
-        fun create(initialTemperamentKey: Long): Temperaments2ViewModel
+        fun create(initialTemperamentKey: Long): TemperamentsManagerViewModel
     }
 
     private val activeTemperament = MutableStateFlow(

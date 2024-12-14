@@ -20,12 +20,6 @@ package de.moekadu.tuner
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
-import de.moekadu.tuner.instruments.InstrumentResources
-import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.preferences.migrateFromV6
-import de.moekadu.tuner.temperaments2.TemperamentResources
-import kotlinx.coroutines.runBlocking
-import javax.inject.Inject
 
 @HiltAndroidApp
 class TunerApplication : Application()

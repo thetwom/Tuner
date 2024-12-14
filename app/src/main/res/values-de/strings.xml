@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Tuner</string>
-    <string name="delete_instrument">Instrument löschen</string>
     <string name="delete_items">Einträge löschen</string>
     <string name="database_empty_share">Keine Einträge zum Teilen.</string>
     <string name="audio_record_permission_rationale">Erlaube Verwendung des Mikrofons um zu stimmen.</string>
@@ -76,13 +75,12 @@
     <string name="custom_item">Benutzerdefiniert</string>
         <string name="file_empty">Datei ist leer: %s</string>
     <string name="file_invalid">Datei ist ungültig: %s</string>
-    <plurals name="instruments_deleted">
-        <item quantity="one">%d Instrument gelöscht</item>
-        <item quantity="other">%d Instrumente gelöscht</item>
+    <plurals name="items_deleted">
+        <item quantity="one">%d Eintrag gelöscht</item>
+        <item quantity="other">%d Einträge gelöscht</item>
     </plurals>
     <string name="undo">Rückgängig</string>
     <string name="pick_icon">Icon auswählen</string>
-    <string name="copy_instrument">Instrument kopieren</string>
     <string name="copy_extension">%s (Kopie)</string>
     <string name="failed_to_archive_items">Speichern der Einträge fehlgeschlagen</string>
     <plurals name="database_num_saved">
@@ -101,8 +99,8 @@
         <item quantity="other">Lade %d Instrumente</item>
     </plurals>
     <plurals name="load_temperaments">
-        <item quantity="one">Lade %d Temperament</item>
-        <item quantity="other">Lade %d Temperamente</item>
+        <item quantity="one">Lade %d Stimmung</item>
+        <item quantity="other">Lade %d Stimmngen</item>
     </plurals>
     <plurals name="sharing_num_items">
         <item quantity="one">Teile %d Eintrag</item>
@@ -168,9 +166,9 @@
     <string name="equal_temperament_19_desc">19 Noten pro Oktave</string>
     <string name="equal_temperament_41">Gleichstufige Stimmung 41</string>
     <string name="equal_temperament_41_desc">41 Noten pro Oktave</string>
-    <string name="incorrect_temperament">Temperament inkompatibel!</string>
+    <string name="incorrect_temperament">Stimmung inkompatibel!</string>
     <string name="ok">OK</string>
-    <string name="new_temperament_requires_adapting_reference_note">Neues Temperament verlangt Anpassung der Referenznote!</string>
+    <string name="new_temperament_requires_adapting_reference_note">Neue Stimmung verlangt Anpassung der Referenznote!</string>
     <string name="comma_separator">,\ </string>
     <string name="equal_temperament_17">Gleichstufige Stimmung 17</string>
     <string name="equal_temperament_17_desc">17 Noten pro Oktave</string>
@@ -191,7 +189,6 @@
     <string name="no_capture_duration">Keine Aufnahme</string>
     <string name="young2_abbr">Young 2</string>
     <string name="valotti_abbr">Valotti</string>
-    <string name="test_tuning_abbr">Test</string>
     <string name="neidhardt3_abbr">Neidhardt 3</string>
     <string name="neidhardt2_abbr">Neidhardt 2</string>
     <string name="neidhardt1_abbr">Neidhardt 1</string>
@@ -232,5 +229,25 @@
     <string name="notation_hindustani">Hindustanisch</string>
     <string name="helmholtz_notation">Helmholtz-Schreibweise (C, … c\')</string>
     <string name="sensitivity">Empfindlichkeit</string>
+    <string name="instruments">Instrumente</string>
+    <string name="edit">Bearbeiten</string>
+    <string name="copy_">Kopieren</string>
+    <string name="delete">Löschen</string>
+    <string name="temperaments">Stimmungen</string>
+    <string name="save">Speichern</string>
+    <string name="temperament_editor">Stimmung bearbeiten</string>
+    <string name="note_number">Anzahl Noten</string>
+    <string name="cent_str">cent</string>
+    <string name="octave_offset">Oktavenoffset</string>
+    <string name="ratio">Verhältnis</string>
+    <string name="temperament_name">Name der Stimmung</string>
+    <string name="temperament_abbreviation">Abkürzung</string>
+    <string name="temperament_description">Beschreibung</string>
+    <string name="decreasing_value_error">Wert muss größer sein als der Vorherige.</string>
+    <string name="missing_note_name">Fehlender Notenname</string>
+    <string name="missing_value">Fehlender Wert für Cent oder Verhältnis</string>
+    <string name="duplicate_note_name">Notenname wird bereits verwendet.</string>
+    <string name="invalid_value">Ungültiger Wert.</string>
+    <string name="maximum_value_exceeded">Maximaler Wert von %d überschritten.</string>
 
 </resources>

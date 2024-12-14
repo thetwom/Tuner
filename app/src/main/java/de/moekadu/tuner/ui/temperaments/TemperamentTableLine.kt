@@ -46,9 +46,9 @@ import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
 import de.moekadu.tuner.temperaments.RationalNumber
-import de.moekadu.tuner.temperaments2.centsToFrequency
-import de.moekadu.tuner.temperaments2.getSuitableNoteNames
-import de.moekadu.tuner.temperaments2.ratioToCents
+import de.moekadu.tuner.temperaments.centsToFrequency
+import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.temperaments.ratioToCents
 import de.moekadu.tuner.ui.notes.NotationType
 import de.moekadu.tuner.ui.notes.Note
 import de.moekadu.tuner.ui.notes.NoteEditorSimple

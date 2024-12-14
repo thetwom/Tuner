@@ -41,14 +41,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments2.MusicalScale2
-import de.moekadu.tuner.temperaments2.MusicalScale2Factory
-import de.moekadu.tuner.temperaments2.NoteNames
-import de.moekadu.tuner.temperaments2.Temperament
-import de.moekadu.tuner.temperaments2.createTestTemperamentEdo12
-import de.moekadu.tuner.temperaments2.createTestTemperamentWerckmeisterVI
-import de.moekadu.tuner.temperaments2.getSuitableNoteNames
-import de.moekadu.tuner.temperaments2.ratioToCents
+import de.moekadu.tuner.temperaments.NoteNames
+import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.createTestTemperamentWerckmeisterVI
+import de.moekadu.tuner.temperaments.getSuitableNoteNames
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlin.math.roundToInt
 

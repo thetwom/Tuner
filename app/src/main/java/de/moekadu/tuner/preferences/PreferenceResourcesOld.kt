@@ -26,8 +26,8 @@ import de.moekadu.tuner.notedetection.WindowingFunction
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.TemperamentTypeOld
 import de.moekadu.tuner.temperaments.resourceId
-import de.moekadu.tuner.temperaments2.TemperamentWithNoteNames
-import de.moekadu.tuner.temperaments2.temperamentDatabase
+import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
+import de.moekadu.tuner.temperaments.temperamentDatabase
 import de.moekadu.tuner.ui.notes.NotationType
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.NotePrintOptionsOld
@@ -121,12 +121,11 @@ class PreferenceResourcesOld @Inject constructor (
             else -> NotationType.Standard
         }
         val hH = nP?.helmholtzEnabled ?: def.helmholtzNotation
-        val sharpFlatPreference = if (pF == null)
-            def.sharpFlatPreference
-        else if (pF == true)
-            NotePrintOptionsOld.SharpFlatPreference.Flat
-        else
-            NotePrintOptionsOld.SharpFlatPreference.Sharp
+        val sharpFlatPreference = when (pF) {
+            null -> def.sharpFlatPreference
+            true -> NotePrintOptionsOld.SharpFlatPreference.Flat
+            else -> NotePrintOptionsOld.SharpFlatPreference.Sharp
+        }
         return NotePrintOptions(
             sharpFlatPreference == NotePrintOptionsOld.SharpFlatPreference.Flat,
             hH,
