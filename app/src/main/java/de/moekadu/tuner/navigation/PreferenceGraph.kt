@@ -18,7 +18,9 @@
 */
 package de.moekadu.tuner.navigation
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -61,10 +63,11 @@ fun NavGraphBuilder.preferenceGraph(
 //                showBottomBar = false,
 //                musicalScale = musicalScale,
 //                notePrintOptions = notePrintOptions
-            ) {
+            ) { paddingValues ->
                 val viewModel: PreferencesViewModel = hiltViewModel()
                 Preferences(
                     viewModel = viewModel,
+                    modifier = Modifier.padding(paddingValues),
                     onAppearanceClicked = { controller.navigate(AppearanceDialogRoute) },
                     onReferenceFrequencyClicked = {
                         controller.navigate(

@@ -234,8 +234,8 @@ private fun TunerScaffoldPreview() {
             actionModeTitle = "Edit",
             onActionModeFinishedClicked = { actionMode = false },
             showBottomBar = showBottomBar
-        ) {
-            Column(modifier = Modifier.padding(it)) {
+        ) { paddingValues ->
+            Column(modifier = Modifier.padding(paddingValues)) {
                 Button(onClick = { actionMode = !actionMode }) {
                     Text(
                         "EnableAction",
