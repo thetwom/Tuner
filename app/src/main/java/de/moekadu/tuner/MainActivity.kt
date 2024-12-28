@@ -25,6 +25,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
@@ -82,6 +83,7 @@ class MainActivity : ComponentActivity() {
     private val loadTemperamentIntentChannel = Channel<List<EditableTemperament>>(Channel.CONFLATED)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 //        Log.v("Tuner", "MainActivity2.onCreate: savedInstanceState = $savedInstanceState")
 
@@ -177,8 +179,6 @@ class MainActivity : ComponentActivity() {
 
                     instrumentEditorGraph(
                         controller = controller,
-                        canNavigateUp = true,
-                        onNavigateUpClicked = {},
                         preferences = pref,
                         instruments = instruments,
                         temperaments = temperaments

@@ -1,8 +1,32 @@
+/*
+* Copyright 2024 Michael Moessner
+*
+* This file is part of Tuner.
+*
+* Tuner is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Tuner is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package de.moekadu.tuner.ui.temperaments
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
@@ -88,102 +112,106 @@ fun TemperamentEditor(
             )
         }
     ) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues)) {
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                item {
-                    TextField(
-                        value = state.name.value,
-                        onValueChange = { state.modifyName(it) },
-                        label = { Text(stringResource(id = R.string.temperament_name)) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        trailingIcon = {
-                            IconButton(onClick = { state.modifyName("") }) {
-                                Icon(Icons.Default.Clear, contentDescription = "clear text")
-                            }
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
-                    )
-                }
-                item {
-                    TextField(
-                        value = state.abbreviation.value,
-                        onValueChange = { state.modifyAbbreviation(it) },
-                        label = { Text(stringResource(id = R.string.temperament_abbreviation)) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .padding(top = 8.dp),
-                        trailingIcon = {
-                            IconButton(onClick = { state.modifyAbbreviation("") }) {
-                                Icon(Icons.Default.Clear, contentDescription = "clear text")
-                            }
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
-                    )
-                }
-                item {
-                    TextField(
-                        value = state.description.value,
-                        onValueChange = { state.modifyDescription(it) },
-                        label = { Text(stringResource(id = R.string.temperament_description)) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .padding(top = 8.dp),
-                        trailingIcon = {
-                            IconButton(onClick = { state.modifyDescription("") }) {
-                                Icon(Icons.Default.Clear, contentDescription = "clear text")
-                            }
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    )
-                }
-                item {
-                    Card(
-                        onClick = onNumberOfNotesClicked,
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                            .fillMaxWidth()
-                    ) {
-                        Column {
-                            Text(
-                                stringResource(id = R.string.note_number),
-                                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                            Text(
-                                "${state.numberOfValues.value}",
-                                modifier = Modifier
-                                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                                    .fillMaxWidth(),
-                                style = MaterialTheme.typography.titleLarge,
-                                textAlign = TextAlign.Center
-                            )
+        LazyColumn(
+            modifier = modifier.imePadding().consumeWindowInsets(paddingValues),
+            contentPadding = paddingValues
+        ) {
+            item {
+                TextField(
+                    value = state.name.value,
+                    onValueChange = { state.modifyName(it) },
+                    label = { Text(stringResource(id = R.string.temperament_name)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    trailingIcon = {
+                        IconButton(onClick = { state.modifyName("") }) {
+                            Icon(Icons.Default.Clear, contentDescription = "clear text")
                         }
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+                )
+            }
+            item {
+                TextField(
+                    value = state.abbreviation.value,
+                    onValueChange = { state.modifyAbbreviation(it) },
+                    label = { Text(stringResource(id = R.string.temperament_abbreviation)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 8.dp),
+                    trailingIcon = {
+                        IconButton(onClick = { state.modifyAbbreviation("") }) {
+                            Icon(Icons.Default.Clear, contentDescription = "clear text")
+                        }
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+                )
+            }
+            item {
+                TextField(
+                    value = state.description.value,
+                    onValueChange = { state.modifyDescription(it) },
+                    label = { Text(stringResource(id = R.string.temperament_description)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 8.dp),
+                    trailingIcon = {
+                        IconButton(onClick = { state.modifyDescription("") }) {
+                            Icon(Icons.Default.Clear, contentDescription = "clear text")
+                        }
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                )
+            }
+            item {
+                Card(
+                    onClick = onNumberOfNotesClicked,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .fillMaxWidth()
+                ) {
+                    Column {
+                        Text(
+                            stringResource(id = R.string.note_number),
+                            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                        Text(
+                            "${state.numberOfValues.value}",
+                            modifier = Modifier
+                                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                                .fillMaxWidth(),
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
+            }
 
-                itemsIndexed(state.temperamentValues.value) { index, line ->
-                    val keyboardController = LocalSoftwareKeyboardController.current
-                    TemperamentTableLine(
-                        lineNumber = if (line.isOctaveLine) 0 else index,
-                        state = line,
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                        notePrintOptions = notePrintOptions,
-                        onValueChange = { state.onCentValueChanged(index, it) },
-                        onNoteNameClicked = { enharmonic ->
-                            state.onNoteNameClicked(index, enharmonic)
-                            keyboardController?.hide()
-                        },
-                        onChangeNote = { it?.let { n -> state.modifyNote(index, n) } },
-                        onNoteEditorCloseClicked = { state.onCloseNoteEditorClicked(index) }
-                    )
-                }
+            itemsIndexed(state.temperamentValues.value) { index, line ->
+                val keyboardController = LocalSoftwareKeyboardController.current
+                TemperamentTableLine(
+                    lineNumber = if (line.isOctaveLine) 0 else index,
+                    state = line,
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                    notePrintOptions = notePrintOptions,
+                    onValueChange = { state.onCentValueChanged(index, it) },
+                    onNoteNameClicked = { enharmonic ->
+                        state.onNoteNameClicked(index, enharmonic)
+                        keyboardController?.hide()
+                    },
+                    onChangeNote = { it?.let { n -> state.modifyNote(index, n) } },
+                    onNoteEditorCloseClicked = { state.onCloseNoteEditorClicked(index) }
+                )
+            }
+            item {
+                Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.systemBars))
             }
         }
     }

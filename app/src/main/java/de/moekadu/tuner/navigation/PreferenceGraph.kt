@@ -18,10 +18,7 @@
 */
 package de.moekadu.tuner.navigation
 
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -29,11 +26,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.navigation
-import de.moekadu.tuner.R
 import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.temperaments.EditableTemperament
 import de.moekadu.tuner.temperaments.TemperamentResources
-import de.moekadu.tuner.ui.misc.TunerScaffoldWithoutBottomBar
 import de.moekadu.tuner.ui.preferences.AboutDialog
 import de.moekadu.tuner.ui.preferences.AppearanceDialog
 import de.moekadu.tuner.ui.preferences.NotationDialog
@@ -53,38 +47,27 @@ fun NavGraphBuilder.preferenceGraph(
         startDestination = PreferencesRoute,
     ) {
         composable<PreferencesRoute> {
-//            val musicalScale by temperaments.musicalScale.collectAsStateWithLifecycle()
-//            val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
-            TunerScaffoldWithoutBottomBar(
-                canNavigateUp = true,
+            val viewModel: PreferencesViewModel = hiltViewModel()
+            Preferences(
+                viewModel = viewModel,
                 onNavigateUpClicked = onNavigateUpClicked,
-                title = stringResource(id = R.string.settings),
-                showPreferenceButton = false,
-//                showBottomBar = false,
-//                musicalScale = musicalScale,
-//                notePrintOptions = notePrintOptions
-            ) { paddingValues ->
-                val viewModel: PreferencesViewModel = hiltViewModel()
-                Preferences(
-                    viewModel = viewModel,
-                    modifier = Modifier.padding(paddingValues),
-                    onAppearanceClicked = { controller.navigate(AppearanceDialogRoute) },
-                    onReferenceFrequencyClicked = {
-                        controller.navigate(
-                            ReferenceFrequencyDialogRoute(
-                                temperaments.musicalScale.value,
-                                null
-                            )
+                onAppearanceClicked = { controller.navigate(AppearanceDialogRoute) },
+                onReferenceFrequencyClicked = {
+                    controller.navigate(
+                        ReferenceFrequencyDialogRoute(
+                            temperaments.musicalScale.value,
+                            null
                         )
-                    },
-                    onNotationClicked = { controller.navigate(NotationDialogRoute) },
-                    onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
-                    onWindowingFunctionClicked = { controller.navigate(WindowingFunctionDialogRoute) },
-                    onResetClicked = { controller.navigate(ResetDialogRoute) },
-                    onAboutClicked = { controller.navigate(AboutDialogRoute) }
-                )
-            }
+                    )
+                },
+                onNotationClicked = { controller.navigate(NotationDialogRoute) },
+                onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
+                onWindowingFunctionClicked = { controller.navigate(WindowingFunctionDialogRoute) },
+                onResetClicked = { controller.navigate(ResetDialogRoute) },
+                onAboutClicked = { controller.navigate(AboutDialogRoute) }
+            )
         }
+
         dialog<AppearanceDialogRoute> {
             val appearance by preferences.appearance.collectAsStateWithLifecycle()
             AppearanceDialog(

@@ -18,18 +18,10 @@
 */
 package de.moekadu.tuner.navigation
 
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,15 +32,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
-import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentResources
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.TemperamentResources
-import de.moekadu.tuner.ui.instruments.InstrumentIconPicker
-import de.moekadu.tuner.ui.misc.TunerScaffoldWithoutBottomBar
-import de.moekadu.tuner.ui.misc.rememberTunerAudioPermission
 import de.moekadu.tuner.ui.instruments.InstrumentEditor
+import de.moekadu.tuner.ui.instruments.InstrumentIconPicker
+import de.moekadu.tuner.ui.misc.rememberTunerAudioPermission
 import de.moekadu.tuner.viewmodels.InstrumentEditorViewModel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -70,8 +60,6 @@ private fun createViewModel(controller: NavController, backStackEntry: NavBackSt
 
 fun NavGraphBuilder.instrumentEditorGraph(
     controller: NavController,
-    canNavigateUp: Boolean,
-    onNavigateUpClicked: () -> Unit,
     preferences: PreferenceResources,
     instruments: InstrumentResources,
     temperaments: TemperamentResources
@@ -93,45 +81,19 @@ fun NavGraphBuilder.instrumentEditorGraph(
                     viewModel.startTuner()
                 onPauseOrDispose { viewModel.stopTuner() }
             }
-            TunerScaffoldWithoutBottomBar(
-                canNavigateUp = canNavigateUp,
-                onNavigateUpClicked = onNavigateUpClicked,
-                showPreferenceButton = false,
-                onPreferenceButtonClicked = { controller.navigate(PreferencesGraphRoute) },
-//                showBottomBar = true,
-//                onSharpFlatClicked = { preferences.switchEnharmonicPreference() },
-//                onReferenceNoteClicked = { // provided by musicalScalePropertiesGraph
-//                    controller.navigate(
-//                        ReferenceFrequencyDialogRoute(
-//                            temperaments.musicalScale.value, null
-//                        )
-//                    )
-//                },
-//                onTemperamentClicked = { controller.navigate(TemperamentDialogRoute) },
-//                musicalScale = musicalScale,
-//                notePrintOptions = notePrintOptions,
-                actionModeActive = true,
-                actionModeTitle = stringResource(id = R.string.edit_instrument),
-                actionModeTools = {
-                    IconButton(onClick = {
-                        val newInstrument = viewModel.getInstrument()
-                        instruments.addNewOrReplaceInstrument(newInstrument)
-                        controller.navigateUp()
-                    }) {
-                        Icon(Icons.Default.Done, contentDescription = stringResource(id = R.string.done))
-                    }
+            InstrumentEditor(
+                state = viewModel,
+                musicalScale = musicalScale,
+                notePrintOptions = notePrintOptions,
+                onIconButtonClicked = { controller.navigate(IconPickerRoute) },
+                onNavigateUpClicked = { controller.navigateUp() },
+                onSaveNewInstrumentClicked = {
+                    val newInstrument = viewModel.getInstrument()
+                    instruments.addNewOrReplaceInstrument(newInstrument)
+                    controller.navigateUp()
                 },
-                onActionModeFinishedClicked = { controller.navigateUp() },
-                snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-            ) { paddingValues ->
-                InstrumentEditor(
-                    state = viewModel,
-                    modifier = Modifier.padding(paddingValues),
-                    musicalScale = musicalScale,
-                    notePrintOptions = notePrintOptions,
-                    onIconButtonClicked = { controller.navigate(IconPickerRoute) }
-                )
-            }
+                snackbarHostState = snackbarHostState
+            )
         }
         dialog<IconPickerRoute> {
             val viewModel = createViewModel(controller = controller, backStackEntry = it)

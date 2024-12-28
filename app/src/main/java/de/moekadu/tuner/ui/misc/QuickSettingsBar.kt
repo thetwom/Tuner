@@ -18,18 +18,15 @@
 */
 package de.moekadu.tuner.ui.misc
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -64,49 +61,42 @@ fun QuickSettingsBar(
     val context = LocalContext.current
     val decimalFormat = rememberNumberFormatter()
 
-    Row(
-        modifier = modifier
-            .height(48.dp)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
+    BottomAppBar(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.background
     ) {
-        Surface(
-            onClick = onReferenceNoteClicked,
+        Column(
             modifier = Modifier
-                .weight(1f)
                 .fillMaxHeight()
+                .weight(1f)
+                .clickable { onReferenceNoteClicked() },
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Note(
-                    musicalNote = musicalScale.referenceNote,
-                    notePrintOptions = notePrintOptions,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    stringResource(id = R.string.hertz_str, decimalFormat.format(musicalScale.referenceFrequency)),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Note(
+                musicalNote = musicalScale.referenceNote,
+                notePrintOptions = notePrintOptions,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                stringResource(
+                    id = R.string.hertz_str,
+                    decimalFormat.format(musicalScale.referenceFrequency)
+                ),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-
-        Surface(
-            onClick = onTemperamentClicked,
+        Box(
             modifier = Modifier
-                .weight(1f)
                 .fillMaxHeight()
+                .weight(1f)
+                .clickable { onTemperamentClicked() },
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                val abbreviation = musicalScale.temperament.abbreviation.value(context).let { abbr ->
+            val abbreviation =
+                musicalScale.temperament.abbreviation.value(context).let { abbr ->
                     if (abbr == "")
                         musicalScale.temperament.name.value(context).let { nme ->
                             if (nme == "") "-" else nme
@@ -115,40 +105,34 @@ fun QuickSettingsBar(
                         abbr
                 }
 
-                Text(
-                    abbreviation,
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text(
+                abbreviation,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
-        Surface(
-            onClick = onSharpFlatClicked,
+        Box(
             modifier = Modifier
-                .weight(1f)
                 .fillMaxHeight()
+                .weight(1f)
+                .clickable { onSharpFlatClicked() },
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    ImageVector.vectorResource(
-                        if (notePrintOptions.useEnharmonic)
-                            R.drawable.ic_prefer_flat_isflat
-                        else
-                            R.drawable.ic_prefer_flat_issharp
-                    ),
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Icon(
+                ImageVector.vectorResource(
+                    if (notePrintOptions.useEnharmonic)
+                        R.drawable.ic_prefer_flat_isflat
+                    else
+                        R.drawable.ic_prefer_flat_issharp
+                ),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
-
 }
 
 @Preview(widthDp = 300, heightDp = 48)

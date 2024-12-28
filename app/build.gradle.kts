@@ -17,7 +17,7 @@ android {
         minSdk = 23
         targetSdk = 35
         versionCode = 40
-        versionName = "7.0.1"
+        versionName = "7.1.0"
         testInstrumentationRunner =  "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         resourceConfigurations += listOf("cs", "de", "en", "fr", "zh-rCN")

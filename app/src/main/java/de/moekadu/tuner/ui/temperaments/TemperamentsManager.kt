@@ -1,3 +1,21 @@
+/*
+* Copyright 2024 Michael Moessner
+*
+* This file is part of Tuner.
+*
+* Tuner is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Tuner is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package de.moekadu.tuner.ui.temperaments
 
 import android.content.Context
@@ -7,8 +25,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -286,7 +304,8 @@ fun TemperamentsManager(
             isItemCopyable = { true },
             hasItemInfo = { true },
             state = state.listData,
-            modifier = modifier.padding(paddingValues).fillMaxSize(),
+            modifier = modifier.consumeWindowInsets(paddingValues).fillMaxSize(),
+            contentPadding = paddingValues,
             onActivateItemClicked = { onTemperamentClicked(it) },
             onEditItemClicked = onEditTemperamentClicked,
             onItemInfoClicked = onTemperamentInfoClicked,

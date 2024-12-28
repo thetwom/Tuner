@@ -30,13 +30,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -94,6 +101,7 @@ interface InstrumentEditorData {
     fun deleteNote()
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InstrumentEditor(
     state: InstrumentEditorData,
@@ -101,29 +109,52 @@ fun InstrumentEditor(
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create(),
-    onIconButtonClicked: () -> Unit = {}
+    onIconButtonClicked: () -> Unit = {},
+    onNavigateUpClicked: () -> Unit = {},
+    onSaveNewInstrumentClicked: () -> Unit = {},
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
-    val configuration = LocalConfiguration.current
-    when (configuration.orientation) {
-        Configuration.ORIENTATION_LANDSCAPE -> {
-            InstrumentEditorLandscape(
-                state = state,
-                musicalScale = musicalScale,
-                modifier = modifier,
-                notePrintOptions = notePrintOptions,
-                tunerPlotStyle = tunerPlotStyle,
-                onIconButtonClicked = onIconButtonClicked
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(id = R.string.edit_instrument)) },
+                navigationIcon = {
+                    IconButton(onClick = { onNavigateUpClicked() }) {
+                        Icon(Icons.Default.Close, "close")
+                    }
+                },
+                actions = {
+                    TextButton(onClick = { onSaveNewInstrumentClicked() }) {
+                        Text(stringResource(id = R.string.save))
+                    }
+                }
             )
-        }
-        else -> {
-            InstrumentEditorPortrait(
-                state = state,
-                musicalScale = musicalScale,
-                modifier = modifier,
-                notePrintOptions = notePrintOptions,
-                tunerPlotStyle = tunerPlotStyle,
-                onIconButtonClicked = onIconButtonClicked
-            )
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { paddingValues ->
+        val configuration = LocalConfiguration.current
+        when (configuration.orientation) {
+            Configuration.ORIENTATION_LANDSCAPE -> {
+                InstrumentEditorLandscape(
+                    state = state,
+                    musicalScale = musicalScale,
+                    modifier = modifier.padding(paddingValues),
+                    notePrintOptions = notePrintOptions,
+                    tunerPlotStyle = tunerPlotStyle,
+                    onIconButtonClicked = onIconButtonClicked
+                )
+            }
+            else -> {
+                InstrumentEditorPortrait(
+                    state = state,
+                    musicalScale = musicalScale,
+                    modifier = modifier.padding(paddingValues),
+                    notePrintOptions = notePrintOptions,
+                    tunerPlotStyle = tunerPlotStyle,
+                    onIconButtonClicked = onIconButtonClicked
+                )
+            }
         }
     }
 }

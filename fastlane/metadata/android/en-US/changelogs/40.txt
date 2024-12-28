@@ -3,5 +3,7 @@ v7.0.0:
 - (Hopefully) improved note detection for some edge cases.
 - User defined temperaments.
 
-v7.0.1:
-- Fix displaying preferences correctly on Android 15
+v7.1.0:
+- Fix displaying preferences correctly on Android 15.
+- Enable edge-to-edge mode (meaning that e.g. lists are displayed
+  down to the bottem behind navigation bar).

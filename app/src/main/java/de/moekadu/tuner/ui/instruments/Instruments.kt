@@ -23,8 +23,8 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -77,16 +77,12 @@ interface InstrumentsData {
 @Composable
 fun Instruments(
     state: InstrumentsData,
-//    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
     onInstrumentClicked: (instrument: Instrument) -> Unit = { },
     onEditInstrumentClicked: (instrument: Instrument, copy: Boolean) -> Unit = {_,_ -> },
     onCreateNewInstrumentClicked: () -> Unit = {},
     onNavigateUpClicked: () -> Unit = {},
-//    onReferenceNoteClicked: () -> Unit = {},
-//    onTemperamentClicked: () -> Unit = {},
-//    onSharpFlatClicked: () -> Unit = {},
     onLoadInstruments: (instruments: List<Instrument>) -> Unit = {},
     onPreferenceButtonClicked: () -> Unit = {}
 ) {
@@ -120,7 +116,6 @@ fun Instruments(
     }
     val shareInstrumentLauncher = rememberLauncherForActivityResult(
         contract = ShareData.Contract()
-        //contract = ShareInstruments.Contract()
     ) {
         state.listData.clearSelectedItems()
     }
@@ -219,11 +214,6 @@ fun Instruments(
             state.listData.clearSelectedItems()
         },
         onNavigateUpClicked = onNavigateUpClicked,
-//        onTemperamentClicked = onTemperamentClicked,
-//        onReferenceNoteClicked = onReferenceNoteClicked,
-//        onSharpFlatClicked = onSharpFlatClicked,
-//        musicalScale = musicalScale,
-//        notePrintOptions = notePrintOptions,
         showPreferenceButton = false,
         floatingActionButton = {
             FloatingActionButton(
@@ -260,7 +250,9 @@ fun Instruments(
             isItemCopyable = { !it.isChromatic },
             hasItemInfo = { false },
             state = state.listData,
-            modifier = Modifier.padding(paddingValues = paddingValues),
+            //modifier = Modifier.padding(paddingValues = paddingValues),
+            modifier = Modifier.consumeWindowInsets(paddingValues),
+            contentPadding = paddingValues,
             onActivateItemClicked = onInstrumentClicked,
             onEditItemClicked = onEditInstrumentClicked,
             snackbarHostState = snackbarHostState,
@@ -347,10 +339,6 @@ private class TestInstrumentsData : InstrumentsData {
 private fun InstrumentsPreview() {
     TunerTheme {
         val data = remember{ TestInstrumentsData() }
-//        val musicalScale = remember { MusicalScale2Factory.createTestEdo12() }
-        Instruments(
-            state = data,
-//            musicalScale = musicalScale
-        )
+        Instruments(state = data)
     }
 }

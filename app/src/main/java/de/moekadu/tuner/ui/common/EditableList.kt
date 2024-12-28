@@ -1,3 +1,21 @@
+/*
+* Copyright 2024 Michael Moessner
+*
+* This file is part of Tuner.
+*
+* Tuner is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Tuner is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package de.moekadu.tuner.ui.common
 
 import androidx.activity.compose.BackHandler
@@ -6,8 +24,13 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -189,6 +212,7 @@ fun <T>EditableList(
     onEditItemClicked: (T, copy: Boolean) -> Unit = {_, _ -> },
     onItemInfoClicked: (T) -> Unit = { },
     snackbarHostState: SnackbarHostState? = null,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
     listState: LazyListState = rememberLazyListState()
 ) {
     val selectedItems by state.selectedItems.collectAsStateWithLifecycle()
@@ -235,7 +259,8 @@ fun <T>EditableList(
     }
 
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.imePadding(),
+        contentPadding = contentPadding,
         state = listState
     ) {
         if ( editableItems.size > 0 && state.predefinedItems.size > 0) {
@@ -335,10 +360,14 @@ fun <T>EditableList(
             }
         }
 
+        item {
+            Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.systemBars))
+        }
+
         // extra space to allow scrolling up a bit more, such that the last item
         // doesn't collide with the fab
         item {
-            Spacer(modifier.height(80.dp))
+            Spacer(Modifier.height(80.dp))
         }
     }
 }
