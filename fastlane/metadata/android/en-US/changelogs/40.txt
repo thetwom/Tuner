@@ -6,4 +6,4 @@ v7.0.0:
 v7.1.0:
 - Fix displaying preferences correctly on Android 15.
 - Enable edge-to-edge mode (meaning that e.g. lists are displayed
-  down to the bottem behind navigation bar).
+  down to the bottom behind navigation bar).
