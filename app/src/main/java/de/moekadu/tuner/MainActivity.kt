@@ -86,7 +86,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 //        Log.v("Tuner", "MainActivity2.onCreate: savedInstanceState = $savedInstanceState")
-
+//        if (Build.VERSION.SDK_INT >= 27)
+//            setShowWhenLocked(true)
         runBlocking {
             migrateFromV6(this@MainActivity, pref, temperaments, instruments)
         }

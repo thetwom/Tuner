@@ -43,10 +43,11 @@ class MusicalScaleFrequencies(
 
     /** Obtain frequency of given index.
      * @param index Note index (indexStart <= index < indexEnd)
-     * @return Frequency at given index.
+     * @return Frequency at given index. If index is out of bounds, we return the index of the
+     *    the lower/upper bound.
      */
     operator fun get(index: Int): Float {
-        return frequencies[index + indexOfReferenceNote]
+        return frequencies[(index + indexOfReferenceNote).coerceIn(0, frequencies.size-1)]
     }
 
     /** Obtain frequency by float index.

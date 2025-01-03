@@ -18,6 +18,7 @@
 */
 package de.moekadu.tuner.notedetection
 
+import android.util.Log
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.temperaments.MusicalNote
@@ -128,8 +129,9 @@ class TargetNoteAutoDetection(
                 return floatArrayOf(Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY)
             }
             instrument.isChromatic -> {
-//                Log.v("Tuner", "TargetNoteAutoDetection: instrument.isChrmoatic")
+//                Log.v("Tuner", "TargetNoteAutoDetection: instrument.isChromatic")
                 val noteIndex = musicalScale.getNoteIndex(note)
+//                Log.v("Tuner", "TargetNoteAutoDetection.getFrequencyRangeWithinWhichWeReturnTheInputNote: note=$note, noteIndex=$noteIndex")
                 return setFrequencyRangeForChromaticTarget(noteIndex)
             }
             numDifferentNotes <= 1 -> { // always return the input note
