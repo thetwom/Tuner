@@ -340,7 +340,8 @@ lilyglyphlist = [
 #("sesquiflat",   "accidentals.M3",         0, 0,'hy', 1,'hy'),
 #("sesquiflat",   "accidentals.mirroredflat.flat", 0, 0,'hy', 1,'hy'),
 #("doubleflat",   "accidentals.M4",         0, 'ox','hy', 1,'hy'),
-#("doubleflat",   "accidentals.flatflat",   0, 'ox','hy', 1,'hy'),
+("doubleflat",   "accidentals.flatflat",   0, 'ox','hy', 1,'hy'),
+("tripleflat",   "accidentals.tripleflat",   0, 'ox','hy', 1,'hy'),
 #("doubleflatslash",   "accidentals.flatflat.slash", 0, 'ox','hy', 1,'hy'),
 #("harmart",      "noteheads.s0harmonic",   0, 0,0.5, 1,'ay'),
 #("harmartfilled", "noteheads.s2harmonic",  0, 0,0.5, 1,'ay'),
@@ -417,7 +418,14 @@ lilyglyphlist = [
 #("sesquisharp",  "accidentals.3",          0, 0,0.5, 1,0.5),
 #("sesquisharp",  "accidentals.sharp.slashslash.stemstemstem", 0, 0,0.5, 1,0.5),
 #("doublesharp",  "accidentals.4",          0, 0,0.5, 1,0.5),
-#("doublesharp",  "accidentals.doublesharp", 0, 0,0.5, 1,0.5),
+#  1. 0??
+#  2. where should the letter be left a aligned? 0 means start at 0, 1 means start at end
+#  3. where is baseline? 0 means baseline at bottom, means baseline at top
+#  4. attachment x ... seems to be always 1
+#  5. attachment y ... seems to be always the same as 3.
+("doublesharp",  "accidentals.doublesharp",  0, 0,'cy', 1,'cy' ),
+("triplesharp",  "accidentals.triplesharp",  0, 'ox','cy', 1,'cy'),   
+#("doublesharp",  "accidentals.doublesharp",  0, 0,0.5, 1,0.5),   
 #("staccatissup", "scripts.dstaccatissimo", 0, 0.5,1, 1,1),
 #("staccatissdn", "scripts.ustaccatissimo", 0, 0.5,0, 1,0),
 #("staccato",     "scripts.staccato",       0, 0.5,0.5, 1,0.5),
@@ -449,8 +457,10 @@ lilyglyphlist = [
 #("turnhaydn",    "scripts.haydnturn",      0, 0.5,0.5, 1,0.5),
 ("openarrowdownnew",  "arrowheads.open.down",     0, 0,'cy', 1,'cy'),
 ("opendoublearrowdownnew",  "arrowheads.open.doubledown",     0, 0,'cy', 1,'cy'),
+("opentriplearrowdownnew",  "arrowheads.open.tripledown",     0, 0,'cy', 1,'cy'),
 ("openarrowupnew",  "arrowheads.open.up",     0, 0,'cy', 1,'cy'),
 ("opendoublearrowupnew",  "arrowheads.open.doubleup",     0, 0,'cy', 1,'cy'),
+("opentriplearrowupnew",  "arrowheads.open.tripleup",     0, 0,'cy', 1,'cy'),
 #("openarrowup",  "arrowheads.open.11",     0, 'cx','cy', 1,'cy'),
 #("openarrowdown", "arrowheads.open.1M1",   0, 'cx','cy', 1,'cy'),
 #("openarrowleft", "arrowheads.open.0M1",   0, 'cx','cy', 1,'cy'),

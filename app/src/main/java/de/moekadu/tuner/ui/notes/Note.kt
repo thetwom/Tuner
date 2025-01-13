@@ -21,6 +21,7 @@ package de.moekadu.tuner.ui.notes
 import android.content.res.Resources
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -62,38 +63,106 @@ import kotlin.math.max
 
 private val modifierPostfixStrings = mapOf(
     NoteModifier.None to "",
-    NoteModifier.Sharp to "\uE10A",
-    NoteModifier.SharpUp to "\uE10A",
-    NoteModifier.SharpUpUp to "\uE10A",
-    NoteModifier.SharpDown to "\uE10A",
-    NoteModifier.SharpDownDown to "\uE10A",
+    NoteModifier.Sharp to "\uE10C",
+    NoteModifier.SharpUp to "\uE10C",
+    NoteModifier.SharpUpUp to "\uE10C",
+    NoteModifier.SharpUpUpUp to "\uE10C",
+    NoteModifier.SharpDown to "\uE10C",
+    NoteModifier.SharpDownDown to "\uE10C",
+    NoteModifier.SharpDownDownDown to "\uE10C",
+    NoteModifier.SharpSharp to "\uE111",
+    NoteModifier.SharpSharpUp to "\uE111",
+    NoteModifier.SharpSharpUpUp to "\uE111",
+    NoteModifier.SharpSharpUpUpUp to "\uE111",
+    NoteModifier.SharpSharpDown to "\uE111",
+    NoteModifier.SharpSharpDownDown to "\uE111",
+    NoteModifier.SharpSharpDownDownDown to "\uE111",
+    NoteModifier.SharpSharpSharp to "\uE112",
+    NoteModifier.SharpSharpSharpUp to "\uE112",
+    NoteModifier.SharpSharpSharpUpUp to "\uE112",
+    NoteModifier.SharpSharpSharpUpUpUp to "\uE112",
+    NoteModifier.SharpSharpSharpDown to "\uE112",
+    NoteModifier.SharpSharpSharpDownDown to "\uE112",
+    NoteModifier.SharpSharpSharpDownDownDown to "\uE112",
     NoteModifier.Flat to "\uE100",
     NoteModifier.FlatUp to "\uE100",
     NoteModifier.FlatUpUp to "\uE100",
+    NoteModifier.FlatUpUpUp to "\uE100",
     NoteModifier.FlatDown to "\uE100",
     NoteModifier.FlatDownDown to "\uE100",
+    NoteModifier.FlatDownDownDown to "\uE100",
+    NoteModifier.FlatFlat to "\uE105",
+    NoteModifier.FlatFlatUp to "\uE105",
+    NoteModifier.FlatFlatUpUp to "\uE105",
+    NoteModifier.FlatFlatUpUpUp to "\uE105",
+    NoteModifier.FlatFlatDown to "\uE105",
+    NoteModifier.FlatFlatDownDown to "\uE105",
+    NoteModifier.FlatFlatDownDownDown to "\uE105",
+    NoteModifier.FlatFlatFlat to "\uE106",
+    NoteModifier.FlatFlatFlatUp to "\uE106",
+    NoteModifier.FlatFlatFlatUpUp to "\uE106",
+    NoteModifier.FlatFlatFlatUpUpUp to "\uE106",
+    NoteModifier.FlatFlatFlatDown to "\uE106",
+    NoteModifier.FlatFlatFlatDownDown to "\uE106",
+    NoteModifier.FlatFlatFlatDownDownDown to "\uE106",
     NoteModifier.NaturalUp to "",
     NoteModifier.NaturalUpUp to "",
+    NoteModifier.NaturalUpUpUp to "",
     NoteModifier.NaturalDown to "",
     NoteModifier.NaturalDownDown to "",
+    NoteModifier.NaturalDownDownDown to "",
 )
 
 private val modifierPrefixStrings = mapOf(
     NoteModifier.None to "",
     NoteModifier.Sharp to "",
-    NoteModifier.SharpUp to "\uE111",
-    NoteModifier.SharpUpUp to "\uE112",
-    NoteModifier.SharpDown to "\uE10F",
-    NoteModifier.SharpDownDown to "\uE110",
+    NoteModifier.SharpUp to "\uE116",
+    NoteModifier.SharpUpUp to "\uE117",
+    NoteModifier.SharpUpUpUp to "\uE118",
+    NoteModifier.SharpDown to "\uE113",
+    NoteModifier.SharpDownDown to "\uE114",
+    NoteModifier.SharpDownDownDown to "\uE115",
+    NoteModifier.SharpSharp to "",
+    NoteModifier.SharpSharpUp to "\uE116",
+    NoteModifier.SharpSharpUpUp to "\uE117",
+    NoteModifier.SharpSharpUpUpUp to "\uE118",
+    NoteModifier.SharpSharpDown to "\uE113",
+    NoteModifier.SharpSharpDownDown to "\uE114",
+    NoteModifier.SharpSharpDownDownDown to "\uE115",
+    NoteModifier.SharpSharpSharp to "",
+    NoteModifier.SharpSharpSharpUp to "\uE116",
+    NoteModifier.SharpSharpSharpUpUp to "\uE117",
+    NoteModifier.SharpSharpSharpUpUpUp to "\uE118",
+    NoteModifier.SharpSharpSharpDown to "\uE113",
+    NoteModifier.SharpSharpSharpDownDown to "\uE114",
+    NoteModifier.SharpSharpSharpDownDownDown to "\uE115",
     NoteModifier.Flat to "",
-    NoteModifier.FlatUp to "\uE111",
-    NoteModifier.FlatUpUp to "\uE112",
-    NoteModifier.FlatDown to "\uE10F",
-    NoteModifier.FlatDownDown to "\uE110",
-    NoteModifier.NaturalUp to "\uE111",
-    NoteModifier.NaturalUpUp to "\uE112",
-    NoteModifier.NaturalDown to "\uE10F",
-    NoteModifier.NaturalDownDown to "\uE110",
+    NoteModifier.FlatUp to "\uE116",
+    NoteModifier.FlatUpUp to "\uE117",
+    NoteModifier.FlatUpUpUp to "\uE118",
+    NoteModifier.FlatDown to "\uE113",
+    NoteModifier.FlatDownDown to "\uE114",
+    NoteModifier.FlatDownDownDown to "\uE115",
+    NoteModifier.FlatFlat to "",
+    NoteModifier.FlatFlatUp to "\uE116",
+    NoteModifier.FlatFlatUpUp to "\uE117",
+    NoteModifier.FlatFlatUpUpUp to "\uE118",
+    NoteModifier.FlatFlatDown to "\uE113",
+    NoteModifier.FlatFlatDownDown to "\uE114",
+    NoteModifier.FlatFlatDownDownDown to "\uE115",
+    NoteModifier.FlatFlatFlat to "",
+    NoteModifier.FlatFlatFlatUp to "\uE116",
+    NoteModifier.FlatFlatFlatUpUp to "\uE117",
+    NoteModifier.FlatFlatFlatUpUpUp to "\uE118",
+    NoteModifier.FlatFlatFlatDown to "\uE113",
+    NoteModifier.FlatFlatFlatDownDown to "\uE114",
+    NoteModifier.FlatFlatFlatDownDownDown to "\uE115",
+    NoteModifier.NaturalUp to "\uE116",
+    NoteModifier.NaturalUpUp to "\uE117",
+    NoteModifier.NaturalUpUpUp to "\uE118",
+    NoteModifier.NaturalDown to "\uE113",
+    NoteModifier.NaturalDownDown to "\uE114",
+    NoteModifier.NaturalDownDownDown to "\uE115",
 )
 
 /** Stem of note name, which is the not including enharmonic info but no octave info.
@@ -493,11 +562,9 @@ fun rememberMaxNoteSize(
     }
 }
 
-@Preview(showBackground = true, widthDp = 500, heightDp = 300)
+@Preview(showBackground = true, widthDp = 500, heightDp = 1000)
 @Composable
 private fun NotePreview() {
-    val noteNameScale = remember { getSuitableNoteNames(53) }
-    val musicalNote = noteNameScale!!.notes[12].copy(octave = 9)
     val fontSize = 100.sp
     val fontWeight = null // FontWeight.Bold
     val notePrintOptions = remember {
@@ -508,27 +575,84 @@ private fun NotePreview() {
         )
     }
     val maxLabelSize = rememberMaxNoteSize(
-        notes = noteNameScale.notes,
+        notes = arrayOf(MusicalNote(BaseNote.A, NoteModifier.None)),
         notePrintOptions = notePrintOptions,
         fontSize = fontSize,
         fontWeight = fontWeight,
         octaveRange = 0 .. 12
     )
 
-    Box(
-        contentAlignment = Alignment.Center
-    ) {
-        Box(
-            modifier = Modifier.size(maxLabelSize).background(MaterialTheme.colorScheme.surfaceVariant),
-        ) {
+    Column(
+        modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
+    ){
+//        Box(
+//            modifier = Modifier.size(maxLabelSize).background(MaterialTheme.colorScheme.surfaceVariant),
+//        ) {
             Note(
-                musicalNote,
+                MusicalNote(BaseNote.A, NoteModifier.NaturalUp),
                 withOctave = true,
                 notePrintOptions = notePrintOptions,
                 fontSize = fontSize,
                 fontWeight = fontWeight,
                 //style = MaterialTheme.typography.displayLarge
             )
-        }
+        Note(
+            MusicalNote(BaseNote.A, NoteModifier.FlatDown),
+            withOctave = true,
+            notePrintOptions = notePrintOptions,
+            fontSize = fontSize,
+            fontWeight = fontWeight,
+            //style = MaterialTheme.typography.displayLarge
+        )
+        Note(
+            MusicalNote(BaseNote.A, NoteModifier.FlatDownDown),
+            withOctave = true,
+            notePrintOptions = notePrintOptions,
+            fontSize = fontSize,
+            fontWeight = fontWeight,
+            //style = MaterialTheme.typography.displayLarge
+        )
+        Note(
+            MusicalNote(BaseNote.A, NoteModifier.SharpUp),
+            withOctave = true,
+            notePrintOptions = notePrintOptions,
+            fontSize = fontSize,
+            fontWeight = fontWeight,
+            //style = MaterialTheme.typography.displayLarge
+        )
+        Note(
+            MusicalNote(BaseNote.A, NoteModifier.SharpSharpSharpUpUp),
+            withOctave = true,
+            notePrintOptions = notePrintOptions,
+            fontSize = fontSize,
+            fontWeight = fontWeight,
+            //style = MaterialTheme.typography.displayLarge
+        )
+        Note(
+            MusicalNote(BaseNote.A, NoteModifier.SharpSharpUpUpUp),
+            withOctave = true,
+            notePrintOptions = notePrintOptions,
+            fontSize = fontSize,
+            fontWeight = fontWeight,
+            //style = MaterialTheme.typography.displayLarge
+        )
+        Note(
+            MusicalNote(BaseNote.A, NoteModifier.FlatFlatDownDownDown),
+            withOctave = true,
+            notePrintOptions = notePrintOptions,
+            fontSize = fontSize,
+            fontWeight = fontWeight,
+            //style = MaterialTheme.typography.displayLarge
+        )
+
+        Note(
+            MusicalNote(BaseNote.A, NoteModifier.FlatFlatFlatDownDown),
+            withOctave = true,
+            notePrintOptions = notePrintOptions,
+            fontSize = fontSize,
+            fontWeight = fontWeight,
+            //style = MaterialTheme.typography.displayLarge
+        )
+//        }
     }
 }

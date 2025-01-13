@@ -9,7 +9,7 @@ The present modification only generates a few symbols.
 - The definition of the glyphs can be found in font.py
 - To preview a glyph use
   ./glyphs.py --test openarrowupnew | gs -sDEVICE=pngmono -sOutputFile=out.png -r72 -g1000x1000 -dBATCH -dNOPAUSE -q -
-  where "openarrowupnew" msut be the name of the glyph and out.png is the previe2.
+  where "openarrowupnew" must be the name of the glyph and out.png is the previe2.
 
 ---- What comes is the original readme -------
 

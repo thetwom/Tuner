@@ -34,9 +34,13 @@ enum class BaseNote {
  * is more sharp than SharpDownDown.
  */
 enum class NoteModifier {
-    FlatDownDown, FlatDown, Flat, FlatUp, FlatUpUp,
-    NaturalDownDown, NaturalDown, None, NaturalUp, NaturalUpUp,
-    SharpDownDown, SharpDown, Sharp, SharpUp, SharpUpUp,
+    FlatFlatFlatDownDownDown, FlatFlatFlatDownDown, FlatFlatFlatDown, FlatFlatFlat, FlatFlatFlatUp, FlatFlatFlatUpUp, FlatFlatFlatUpUpUp,
+    FlatFlatDownDownDown, FlatFlatDownDown, FlatFlatDown, FlatFlat, FlatFlatUp, FlatFlatUpUp, FlatFlatUpUpUp,
+    FlatDownDownDown, FlatDownDown, FlatDown, Flat, FlatUp, FlatUpUp, FlatUpUpUp,
+    NaturalDownDownDown, NaturalDownDown, NaturalDown, None, NaturalUp, NaturalUpUp, NaturalUpUpUp,
+    SharpDownDownDown, SharpDownDown, SharpDown, Sharp, SharpUp, SharpUpUp, SharpUpUpUp,
+    SharpSharpDownDownDown, SharpSharpDownDown, SharpSharpDown, SharpSharp, SharpSharpUp, SharpSharpUpUp, SharpSharpUpUpUp,
+    SharpSharpSharpDownDownDown, SharpSharpSharpDownDown, SharpSharpSharpDown, SharpSharpSharp, SharpSharpSharpUp, SharpSharpSharpUpUp, SharpSharpSharpUpUpUp
 }
 
 //fun NoteModifier.flatSharpIndex(): Int {

@@ -3127,6 +3127,13 @@ def _(cont):
     cont.cy = font.openarrowdownnew.cy
     cont.extra = font.openarrowdownnew, "gsave 0 {} translate".format(-arrow_distance), font.openarrowdownnew, "grestore"
 
+@define_glyph("opentriplearrowdownnew")
+def _(cont):
+    arrow_distance = 70
+    cont.ox = font.openarrowdownnew.ox
+    cont.cy = font.openarrowdownnew.cy
+    cont.extra = font.opendoublearrowdownnew, "gsave 0 {} translate".format(-2*arrow_distance), font.openarrowdownnew, "grestore"
+
 @define_glyph("openarrowupnew")
 def _(cont):
     # my comments:
@@ -3165,6 +3172,14 @@ def _(cont):
     cont.cy = font.openarrowupnew.cy
 
     cont.extra = font.openarrowupnew, "gsave 0 {} translate".format(arrow_distance), font.openarrowupnew, "grestore"
+
+@define_glyph("opentriplearrowupnew")
+def _(cont):
+    arrow_distance = 70
+    cont.ox = font.openarrowupnew.ox
+    cont.cy = font.openarrowupnew.cy
+
+    cont.extra = font.opendoublearrowupnew, "gsave 0 {} translate".format(2*arrow_distance), font.openarrowupnew, "grestore"
 
 @define_glyph("openarrowright", args=(0,1))
 @define_glyph("closearrowright", args=(0,0))
@@ -3407,6 +3422,15 @@ def _(cont):
     cont.ox = font.flat.ox - 90
     cont.hy = font.flat.hy
 
+@define_glyph("tripleflat")
+def _(cont):
+    cont.extra = (font.flat, "gsave -75 0 translate",
+                  font.flat, "gsave -75 0 translate",
+                  font.flat, "grestore")
+    cont.ox = font.flat.ox - 150
+    cont.hy = font.flat.hy
+
+    
 @define_glyph("semiflat")
 def _(cont):
     reflectpt = font.flat.ox - 20
@@ -3765,6 +3789,14 @@ def _(cont):
     "newpath 409 521 24 square " + \
     "newpath 504 426 24 square " + \
     "newpath 504 521 24 square "
+    cont.cy = font.sharp.cy
+
+@define_glyph("triplesharp")
+def _(cont):
+    cont.extra = (font.doublesharp, "gsave -160 0 translate",
+                  font.sharp, "grestore")
+    cont.ox = font.sharp.ox - 160
+    cont.cy = font.sharp.cy
 
 # ----------------------------------------------------------------------
 # Arpeggio mark and friends.
