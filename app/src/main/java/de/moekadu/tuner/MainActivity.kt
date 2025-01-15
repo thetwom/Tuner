@@ -20,6 +20,7 @@ package de.moekadu.tuner
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import android.widget.Toast
@@ -86,14 +87,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 //        Log.v("Tuner", "MainActivity2.onCreate: savedInstanceState = $savedInstanceState")
-//        if (Build.VERSION.SDK_INT >= 27)
-//            setShowWhenLocked(true)
+
         runBlocking {
             migrateFromV6(this@MainActivity, pref, temperaments, instruments)
         }
 
         if (savedInstanceState == null)
             handleFileLoadingIntent(intent)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            this.setShowWhenLocked(pref.displayOnLockScreen.value)
+        }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {

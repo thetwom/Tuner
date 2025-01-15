@@ -349,6 +349,15 @@ fun Preferences(
                 Section(title = stringResource(id = R.string.others))
             }
             item {
+                val displayOnLockScreen by pref.displayOnLockScreen.collectAsStateWithLifecycle()
+                SwitchPreference(
+                    name = stringResource(id = R.string.display_on_lock_screen),
+                    checked = displayOnLockScreen,
+                    onCheckChange = { pref.writeDisplayOnLockScreen(it) },
+                    iconId = R.drawable.ic_screen_on
+                )
+            }
+            item {
                 SimplePreference(
                     name = stringResource(id = R.string.reset_all_settings),
                     iconId = R.drawable.ic_reset,
