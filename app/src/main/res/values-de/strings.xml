@@ -39,6 +39,7 @@
     <string name="pitch_history">Tonverlauf</string>
     <string name="spectrum">Spektrum</string>
     <string name="keep_screen_on">Bildschirm immer an</string>
+    <string name="display_on_lock_screen">Anzeige auf dem Sperrbildschirm</string>
     <string name="samples">Samples</string>
     <plurals name="num_moving_average_summary">
         <item quantity="one">Keine Mittelung</item>

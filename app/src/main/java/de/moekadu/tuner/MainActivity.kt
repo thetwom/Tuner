@@ -20,7 +20,9 @@ package de.moekadu.tuner
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -31,6 +33,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -86,8 +89,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 //        Log.v("Tuner", "MainActivity2.onCreate: savedInstanceState = $savedInstanceState")
-//        if (Build.VERSION.SDK_INT >= 27)
-//            setShowWhenLocked(true)
+
         runBlocking {
             migrateFromV6(this@MainActivity, pref, temperaments, instruments)
         }
@@ -141,16 +143,21 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
-
-//                DisposableEffect(controller) {
-//                    val listener = NavController.OnDestinationChangedListener { controller, _, _ ->
-//                        canNavigateUp = controller.previousBackStackEntry != null
-//                    }
-//                    controller.addOnDestinationChangedListener(listener)
-//                    onDispose {
-//                        controller.removeOnDestinationChangedListener(listener)
-//                    }
-//                }
+                DisposableEffect(controller) {
+                    val listener = NavController.OnDestinationChangedListener { _, _, _ ->
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                            if (controller.previousBackStackEntry == null) {
+                                setShowWhenLocked(pref.displayOnLockScreen.value)
+                            } else {
+                                setShowWhenLocked(false)
+                            }
+                        }
+                    }
+                    controller.addOnDestinationChangedListener(listener)
+                    onDispose {
+                        controller.removeOnDestinationChangedListener(listener)
+                    }
+                }
 
                 NavHost(
                     modifier = Modifier.fillMaxSize(),
