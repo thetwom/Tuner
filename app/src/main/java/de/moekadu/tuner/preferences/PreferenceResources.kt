@@ -98,6 +98,12 @@ class PreferenceResources @Inject constructor (
         writePreference(SCREEN_ALWAYS_ON, screenAlwaysOn)
     }
 
+    // display on lock screen
+    val displayOnLockScreen = getPreferenceFlow(DISPLAY_ON_LOCK_SCREEN, DisplayOnLockScreenDefault)
+    fun writeDisplayOnLockScreen(displayOnLockScreen: Boolean) {
+        writePreference(DISPLAY_ON_LOCK_SCREEN, displayOnLockScreen)
+    }
+
     // note print options
     val notePrintOptions = getSerializablePreferenceFlow(
         NOTE_PRINT_OPTIONS_KEY, NotePrintOptionsDefault)
@@ -287,6 +293,7 @@ class PreferenceResources @Inject constructor (
 
         private val AppearanceDefault = Appearance()
         private const val ScreenAlwaysOnDefault = false
+        private const val DisplayOnLockScreenDefault = false
         private val NotePrintOptionsDefault = NotePrintOptions()
         private const val ScientificModeDefault = false
 //        private val MusicalScaleDefault = MusicalScaleFactory.create(TemperamentType.EDO12)
@@ -305,6 +312,7 @@ class PreferenceResources @Inject constructor (
 
         private val APPEARANCE_KEY = stringPreferencesKey("appearance")
         private val SCREEN_ALWAYS_ON = booleanPreferencesKey("screenon")
+        private val DISPLAY_ON_LOCK_SCREEN =  booleanPreferencesKey("onlockscreen")
         private val NOTE_PRINT_OPTIONS_KEY = stringPreferencesKey("note_print_options")
 //        const val PREFER_FLAT_KEY = "prefer_flat"
 //        const val SOLFEGE_KEY = "solfege"

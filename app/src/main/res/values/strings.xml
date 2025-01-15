@@ -48,6 +48,7 @@
     <string name="cent" translatable="false">%+d&#x200A;&#162;</string>
     <string name="cent_nosign" translatable="false">%d&#x200A;&#162;</string>
     <string name="keep_screen_on">Keep screen on</string>
+    <string name="display_on_lock_screen">Display on lock screen</string>
     <string name="samples">samples</string>
     <string name="scientific_mode">Scientific mode</string>
     <string name="tolerance_in_cents">Tolerance</string>
