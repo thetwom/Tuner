@@ -112,7 +112,8 @@ fun ReferenceNoteDialog(
                     onReferenceNoteChange(
                         initialState.copy(
                             referenceNote = note,
-                            referenceFrequency = frequencyAsString.toFloatOrNull() ?: initialState.referenceFrequency
+                            referenceFrequency = numberFormat.toFloatOrNull(frequencyAsString)
+                                ?: initialState.referenceFrequency
                         )
                     )
                 },
