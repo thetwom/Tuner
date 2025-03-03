@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -339,6 +340,8 @@ fun InstrumentTunerPortrait(
                 else
                     tunerPlotStyle.plotWindowOutline
             )
+            Text("Raw Frequency: " + (data.pitchHistoryState.current?.let { "%.2f hz".format(it) } ?: "..."))
+            Spacer(Modifier.height(tunerPlotStyle.margin))
         }
     }
 }
@@ -445,55 +448,59 @@ fun InstrumentTunerLandscape(
         }
         Spacer(modifier = Modifier.width(tunerPlotStyle.margin))
 
-        PitchHistory(
-            state = data.pitchHistoryState,
-            musicalScale = musicalScaleAsState,
-            notePrintOptions = notePrintOptionsAsState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.5f)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    scope.launch { data.pitchHistoryGestureBasedViewPort.finish() }
-                },
-            gestureBasedViewPort = data.pitchHistoryGestureBasedViewPort,
-            tuningState = data.tuningState,
-            targetNote = data.targetNote,
-            toleranceInCents = toleranceInCentsAsState,
-            plotWindowPadding = DpRect(
-                bottom = tunerPlotStyle.margin,
-                top = tunerPlotStyle.margin,
-                left = 0.dp,
-                right = noteWidthDp
-            ),
-            lineWidth = tunerPlotStyle.plotLineWidth,
-            lineColor = tunerPlotStyle.plotLineColor,
-            lineWidthInactive = tunerPlotStyle.plotLineWidthInactive,
-            lineColorInactive = tunerPlotStyle.inactiveColor,
-            pointSize = tunerPlotStyle.plotPointSize,
-            pointSizeInactive = tunerPlotStyle.plotPointSizeInactive,
-            colorInTune = tunerPlotStyle.positiveColor,
-            colorOutOfTune = tunerPlotStyle.negativeColor,
-            colorInactive = tunerPlotStyle.inactiveColor,
-            centDeviationStyle = tunerPlotStyle.toleranceTickFontStyle,
-            //centDeviationColor = ,
-            targetNoteLineWidth = tunerPlotStyle.targetNoteLineWith,
-            colorOnInTune = tunerPlotStyle.onPositiveColor,
-            colorOnOutOfTune = tunerPlotStyle.onNegativeColor,
-            colorOnInactive = tunerPlotStyle.onInactiveColor,
-            toleranceLineColor = tunerPlotStyle.toleranceColor,
-            toleranceLabelStyle = tunerPlotStyle.toleranceTickFontStyle,
-            toleranceLabelColor = tunerPlotStyle.toleranceColor,
-            tickLineWidth = tunerPlotStyle.tickLineWidth,
-            tickLineColor = tunerPlotStyle.tickLineColor,
-            tickLabelStyle = tunerPlotStyle.stringFontStyle,
-            plotWindowOutline = if (data.pitchHistoryGestureBasedViewPort.isActive)
-                tunerPlotStyle.plotWindowOutlineDuringGesture
-            else
-                tunerPlotStyle.plotWindowOutline
-        )
+        Column(modifier = Modifier.fillMaxWidth().weight(0.5f)) {
+            PitchHistory(
+                state = data.pitchHistoryState,
+                musicalScale = musicalScaleAsState,
+                notePrintOptions = notePrintOptionsAsState,
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        scope.launch { data.pitchHistoryGestureBasedViewPort.finish() }
+                    },
+                gestureBasedViewPort = data.pitchHistoryGestureBasedViewPort,
+                tuningState = data.tuningState,
+                targetNote = data.targetNote,
+                toleranceInCents = toleranceInCentsAsState,
+                plotWindowPadding = DpRect(
+                    bottom = tunerPlotStyle.margin,
+                    top = tunerPlotStyle.margin,
+                    left = 0.dp,
+                    right = noteWidthDp
+                ),
+                lineWidth = tunerPlotStyle.plotLineWidth,
+                lineColor = tunerPlotStyle.plotLineColor,
+                lineWidthInactive = tunerPlotStyle.plotLineWidthInactive,
+                lineColorInactive = tunerPlotStyle.inactiveColor,
+                pointSize = tunerPlotStyle.plotPointSize,
+                pointSizeInactive = tunerPlotStyle.plotPointSizeInactive,
+                colorInTune = tunerPlotStyle.positiveColor,
+                colorOutOfTune = tunerPlotStyle.negativeColor,
+                colorInactive = tunerPlotStyle.inactiveColor,
+                centDeviationStyle = tunerPlotStyle.toleranceTickFontStyle,
+                //centDeviationColor = ,
+                targetNoteLineWidth = tunerPlotStyle.targetNoteLineWith,
+                colorOnInTune = tunerPlotStyle.onPositiveColor,
+                colorOnOutOfTune = tunerPlotStyle.onNegativeColor,
+                colorOnInactive = tunerPlotStyle.onInactiveColor,
+                toleranceLineColor = tunerPlotStyle.toleranceColor,
+                toleranceLabelStyle = tunerPlotStyle.toleranceTickFontStyle,
+                toleranceLabelColor = tunerPlotStyle.toleranceColor,
+                tickLineWidth = tunerPlotStyle.tickLineWidth,
+                tickLineColor = tunerPlotStyle.tickLineColor,
+                tickLabelStyle = tunerPlotStyle.stringFontStyle,
+                plotWindowOutline = if (data.pitchHistoryGestureBasedViewPort.isActive)
+                    tunerPlotStyle.plotWindowOutlineDuringGesture
+                else
+                    tunerPlotStyle.plotWindowOutline
+            )
+
+            Text("Raw Frequency: " + (data.pitchHistoryState.current?.let { "%.2f hz".format(it) } ?: "..."))
+            Spacer(Modifier.height(tunerPlotStyle.margin))
+        }
     }
 }
 

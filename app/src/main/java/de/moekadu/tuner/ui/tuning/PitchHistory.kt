@@ -127,6 +127,9 @@ class PitchHistoryState(
     var capacity by mutableIntStateOf(capacity)
         private set
 
+    val current: Float?
+        get() = history.values.coordinates.lastOrNull()?.y
+
     fun resize(newCapacity: Int) {
         capacity = newCapacity
         history.resize(newCapacity)
