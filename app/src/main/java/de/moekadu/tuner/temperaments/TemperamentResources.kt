@@ -65,7 +65,7 @@ class TemperamentResources @Inject constructor(
         MUSICAL_SCALE_KEY,
         MusicalScaleFactory.create(
             defaultTemperament.temperament,
-            noteNames = getSuitableNoteNames(defaultTemperament.temperament.numberOfNotesPerOctave),
+            noteNames = generateNoteNames(defaultTemperament.temperament.numberOfNotesPerOctave),
             referenceNote = null,
             rootNote = null,
             referenceFrequency = DefaultValues.REFERENCE_FREQUENCY,
@@ -82,7 +82,7 @@ class TemperamentResources @Inject constructor(
     fun resetAllSettings() {
         applicationScope.launch {
              val noteNames = defaultTemperament.noteNames
-                 ?: getSuitableNoteNames(defaultTemperament.temperament.numberOfNotesPerOctave)!!
+                 ?: generateNoteNames(defaultTemperament.temperament.numberOfNotesPerOctave)!!
             writeMusicalScale(
                 temperament = defaultTemperament,
                 referenceNote = noteNames.defaultReferenceNote,
@@ -128,7 +128,7 @@ class TemperamentResources @Inject constructor(
         } else if (currentMusicalScale.numberOfNotesPerOctave == temperamentResolved.numberOfNotesPerOctave) {
             currentMusicalScale.noteNames
         } else {
-            getSuitableNoteNames(temperamentResolved.numberOfNotesPerOctave)
+            generateNoteNames(temperamentResolved.numberOfNotesPerOctave)
         }
         val referenceNoteResolved = if (referenceNote != null) {
             referenceNote

@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.temperaments.NoteNames
 import de.moekadu.tuner.temperaments.Temperament
 import de.moekadu.tuner.temperaments.createTestTemperamentEdo12
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.ui.theme.TunerTheme
 
 /** Visualize the circle of fifths distances within a musical scale.
@@ -162,7 +162,7 @@ private fun CircleOfFifthTable2Preview() {
         }
         val temperament = remember { createTestTemperamentEdo12() }
         val noteNames = remember {
-            getSuitableNoteNames(temperament.numberOfNotesPerOctave)!!
+            generateNoteNames(temperament.numberOfNotesPerOctave)!!
         }
         CircleOfFifthTable(
             temperament,

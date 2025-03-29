@@ -19,7 +19,7 @@ import de.moekadu.tuner.temperaments.Temperament
 import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.temperaments.TemperamentValidityChecks
 import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.ui.temperaments.TemperamentEditorState
 import de.moekadu.tuner.ui.temperaments.TemperamentTableLineState
 import kotlinx.collections.immutable.PersistentList
@@ -36,7 +36,7 @@ private fun temperamentToTable(temperament: EditableTemperament)
     val numberOfNotesPerOctave = temperament.noteLines.size - 1
     // use default note names if there is no note name given for any line (and if default notes are available)
     val defaultNoteNames = if (temperament.noteLines.firstOrNull { it?.note != null } == null)
-        getSuitableNoteNames(numberOfNotesPerOctave)
+        generateNoteNames(numberOfNotesPerOctave)
     else
         null
 
@@ -94,7 +94,7 @@ private fun checkAndSetNoteNameErrors(values: PersistentList<TemperamentTableLin
  */
 private fun checkIfDefaultNoteNames(noteNameList: List<MusicalNote>): Boolean {
     var useDefaultNoteNames = true
-    val predefinedNoteNames = getSuitableNoteNames(noteNameList.size)
+    val predefinedNoteNames = generateNoteNames(noteNameList.size)
     if (predefinedNoteNames == null) {
         useDefaultNoteNames = false
     } else {
@@ -193,7 +193,7 @@ class TemperamentEditorViewModel @AssistedInject constructor(
                 mutated.subList(numberOfValues + 1, oldNumValues + 1).clear()
                 mutated[numberOfValues] = octaveLine
             } else {
-                val newNoteNames = getSuitableNoteNames(numberOfValues)
+                val newNoteNames = generateNoteNames(numberOfValues)
 
                 for (i in oldNumValues until numberOfValues) {
                     mutated.add(i, TemperamentTableLineState(
@@ -249,7 +249,7 @@ class TemperamentEditorViewModel @AssistedInject constructor(
         val noteNameList = values.dropLast(1).map {
             it.note ?: return false
         }
-        val predefinedNoteNames = getSuitableNoteNames(values.size - 1)
+        val predefinedNoteNames = generateNoteNames(values.size - 1)
         val useDefaultNoteNames = checkIfDefaultNoteNames(noteNameList)
 
         val defaultReferenceNote = values.firstOrNull {

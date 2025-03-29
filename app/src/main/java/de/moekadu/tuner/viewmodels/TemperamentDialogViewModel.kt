@@ -12,7 +12,7 @@ import de.moekadu.tuner.temperaments.NoteNames
 import de.moekadu.tuner.temperaments.Temperament
 import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.ui.temperaments.TemperamentDialogState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -43,7 +43,7 @@ class TemperamentDialogViewModel  @Inject constructor(
         val oldRootNoteIndex = selectedRootNoteIndex.intValue
         val oldRootNote = noteNames.value[oldRootNoteIndex]
         val newNoteNames = temperamentWithNoteNames.noteNames
-            ?: getSuitableNoteNames(temperamentWithNoteNames.temperament.numberOfNotesPerOctave)!!
+            ?: generateNoteNames(temperamentWithNoteNames.temperament.numberOfNotesPerOctave)!!
 
         _selectedRootNoteIndex.intValue =
             newNoteNames.getNoteIndex(oldRootNote).coerceAtLeast(0)

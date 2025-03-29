@@ -61,7 +61,7 @@ import androidx.compose.ui.unit.takeOrElse
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlin.math.absoluteValue
 
@@ -289,7 +289,7 @@ fun NoteSelector(
 @Composable
 private fun NoteSelectorPreview() {
     TunerTheme {
-        val noteNameScale = remember { getSuitableNoteNames(53) }
+        val noteNameScale = remember { generateNoteNames(53) }
 
         val notePrintOptions = remember {
             NotePrintOptions(

@@ -56,7 +56,7 @@ import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteNames
 import de.moekadu.tuner.temperaments.Temperament
 import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.temperaments.temperamentDatabase
 import de.moekadu.tuner.ui.notes.CentAndRatioTable
 import de.moekadu.tuner.ui.notes.CircleOfFifthTable
@@ -238,7 +238,7 @@ fun TemperamentDialog(
 private class TemperamentDialogTestState : TemperamentDialogState {
     override var temperament = mutableStateOf(temperamentDatabase[0])
     override var noteNames
-            = mutableStateOf(getSuitableNoteNames(temperamentDatabase[0].numberOfNotesPerOctave)!!)
+            = mutableStateOf(generateNoteNames(temperamentDatabase[0].numberOfNotesPerOctave)!!)
 
     override val defaultTemperament = TemperamentWithNoteNames(
         temperamentDatabase[0], null
@@ -250,7 +250,7 @@ private class TemperamentDialogTestState : TemperamentDialogState {
         val oldRootNoteIndex = selectedRootNoteIndex.intValue
         val oldRootNote = noteNames.value[oldRootNoteIndex]
         val newNoteNames = temperamentWithNoteNames.noteNames
-            ?: getSuitableNoteNames(temperamentWithNoteNames.temperament.numberOfNotesPerOctave)!!
+            ?: generateNoteNames(temperamentWithNoteNames.temperament.numberOfNotesPerOctave)!!
         val rootNoteIndexInNewScale = newNoteNames.getNoteIndex(oldRootNote)
         selectedRootNoteIndex.intValue = if (rootNoteIndexInNewScale == -1) {
             0

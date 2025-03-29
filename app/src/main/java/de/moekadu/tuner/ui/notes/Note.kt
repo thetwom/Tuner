@@ -20,16 +20,13 @@ package de.moekadu.tuner.ui.notes
 
 import android.content.res.Resources
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.takeOrElse
@@ -56,7 +53,6 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlin.math.max

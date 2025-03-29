@@ -44,7 +44,7 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.NoteNames
 import de.moekadu.tuner.temperaments.Temperament
 import de.moekadu.tuner.temperaments.createTestTemperamentWerckmeisterVI
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlin.math.roundToInt
 
@@ -215,7 +215,7 @@ private fun CentTablePreview() {
         )
         val temperament = remember { createTestTemperamentWerckmeisterVI() }
         val noteNames = remember {
-            getSuitableNoteNames(temperament.numberOfNotesPerOctave)!!
+            generateNoteNames(temperament.numberOfNotesPerOctave)!!
         }
 
         CentAndRatioTable(

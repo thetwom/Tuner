@@ -83,7 +83,7 @@ object TemperamentIO {
         writer.writeLine("!")
 
         val numberOfNotes = temperament.temperament.numberOfNotesPerOctave
-        val noteNames = temperament.noteNames ?: getSuitableNoteNames(numberOfNotes)
+        val noteNames = temperament.noteNames ?: generateNoteNames(numberOfNotes)
         val ratios = temperament.temperament.rationalNumbers
         val cents = temperament.temperament.cents
 

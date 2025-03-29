@@ -62,7 +62,7 @@ fun TemperamentWithNoteNames.toEditableTemperament(
     stableId: Long? = null
     ): EditableTemperament {
     val numberOfNotesPerOctave = temperament.numberOfNotesPerOctave
-    val noteNamesResolved = noteNames ?: getSuitableNoteNames(numberOfNotesPerOctave)
+    val noteNamesResolved = noteNames ?: generateNoteNames(numberOfNotesPerOctave)
     val noteLines = Array<EditableTemperament.NoteLineContents?>(numberOfNotesPerOctave + 1) {
         val octave = 4 + it / numberOfNotesPerOctave
         val noteIndex = it % numberOfNotesPerOctave
@@ -102,7 +102,7 @@ fun EditableTemperament.hasErrors(): Boolean {
     if (orderingError != TemperamentValidityChecks.ValueOrdering.Increasing)
         return true
     // check if we can use predefined notes
-    val predefinedNotes = getSuitableNoteNames(noteLines.size - 1)
+    val predefinedNotes = generateNoteNames(noteLines.size - 1)
 
     if (predefinedNotes != null)
         return false
@@ -139,7 +139,7 @@ fun EditableTemperament.toTemperamentWithNoteNames(): TemperamentWithNoteNames? 
     }
 
     // resolve note names, we try to use predefined note names
-    val predefinedNotes = getSuitableNoteNames(numberOfNotesPerOctave)
+    val predefinedNotes = generateNoteNames(numberOfNotesPerOctave)
     if (notes.contains(null) && predefinedNotes == null)
         return null
 

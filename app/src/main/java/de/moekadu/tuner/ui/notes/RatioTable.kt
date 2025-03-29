@@ -37,7 +37,7 @@ import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.temperaments.RationalNumber
 import de.moekadu.tuner.temperaments.NoteNames
 import de.moekadu.tuner.temperaments.Temperament
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.ui.theme.TunerTheme
 
 /** Table showing cents between musical scale notes.
@@ -111,7 +111,7 @@ private fun RatioTablePreview() {
         }
 
         val noteNames = remember {
-            getSuitableNoteNames(temperament.numberOfNotesPerOctave)!!
+            generateNoteNames(temperament.numberOfNotesPerOctave)!!
         }
         RatioTable(
             temperament,

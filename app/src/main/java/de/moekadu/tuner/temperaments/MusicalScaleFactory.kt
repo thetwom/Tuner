@@ -30,7 +30,7 @@ class MusicalScaleFactory {
             frequencyMax: Float,
             stretchTuning: StretchTuning
         ): MusicalScale {
-            val noteNamesResolved = noteNames ?: getSuitableNoteNames(temperament.numberOfNotesPerOctave)!! // TODO: this might be risky?
+            val noteNamesResolved = noteNames ?: generateNoteNames(temperament.numberOfNotesPerOctave)!!
 //            Log.v("Tuner", "MusicalScale2Factory: numberOfNotesPerOctave=${temperament.numberOfNotesPerOctave}, noteNames size=${noteNamesResolved.size}")
             assert(temperament.numberOfNotesPerOctave == noteNamesResolved.size)
             val rootNoteResolved = rootNote ?: noteNamesResolved[0]

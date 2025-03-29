@@ -39,7 +39,7 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.NoteNames
 import de.moekadu.tuner.temperaments.Temperament
 import de.moekadu.tuner.temperaments.createTestTemperamentEdo12
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlin.math.roundToInt
 
@@ -105,7 +105,7 @@ private fun CentTablePreview() {
 
         val temperament = remember { createTestTemperamentEdo12() }
         val noteNames = remember {
-            getSuitableNoteNames(temperament.numberOfNotesPerOctave)!!
+            generateNoteNames(temperament.numberOfNotesPerOctave)!!
         }
         CentTable(
             temperament,

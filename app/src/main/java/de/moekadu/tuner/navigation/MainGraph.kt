@@ -42,7 +42,7 @@ import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.temperaments.Temperament
 import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.temperaments.toEditableTemperament
 import de.moekadu.tuner.ui.screens.InstrumentTuner
 import de.moekadu.tuner.ui.instruments.Instruments
@@ -214,7 +214,7 @@ fun NavGraphBuilder.mainGraph(
             modifier = Modifier.fillMaxSize(),
             onDismiss = { controller.navigateUp() },
             onDone = { temperament, noteNames, rootNote ->
-                val predefinedNoteNames = getSuitableNoteNames(temperament.numberOfNotesPerOctave)
+                val predefinedNoteNames = generateNoteNames(temperament.numberOfNotesPerOctave)
                 val noteNamesResolved =
                     if (predefinedNoteNames?.notes?.contentEquals(noteNames.notes) == true)
                         null
@@ -310,7 +310,7 @@ fun NavGraphBuilder.mainGraph(
         TemperamentDetailsDialog(
             temperament = temperament.temperament,
             noteNames = temperament.noteNames
-                ?: getSuitableNoteNames(temperament.temperament.numberOfNotesPerOctave)!!,
+                ?: generateNoteNames(temperament.temperament.numberOfNotesPerOctave)!!,
             notePrintOptions = notePrintOptions,
             onDismiss = { controller.navigateUp() }
         )

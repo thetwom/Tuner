@@ -101,7 +101,7 @@ data class NoteNames(
     }
 }
 
-fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
+private fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
     return when (numberOfNotesPerOctave) {
         // 12 tones
         12 -> {

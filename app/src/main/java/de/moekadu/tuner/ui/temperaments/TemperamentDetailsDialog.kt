@@ -43,7 +43,7 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.NoteNames
 import de.moekadu.tuner.temperaments.Temperament
 import de.moekadu.tuner.temperaments.createTestTemperamentWerckmeisterVI
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.ui.notes.CentAndRatioTable
 import de.moekadu.tuner.ui.notes.CircleOfFifthTable
 import de.moekadu.tuner.ui.notes.NotePrintOptions
@@ -122,7 +122,7 @@ fun TemperamentDetailsDialog(
 private fun TemperamentDetailsDialogPreview() {
     TunerTheme {
         val temperament = remember { createTestTemperamentWerckmeisterVI() }
-        val noteNames = remember { getSuitableNoteNames(temperament.numberOfNotesPerOctave)!! }
+        val noteNames = remember { generateNoteNames(temperament.numberOfNotesPerOctave)!! }
         TemperamentDetailsDialog(
             temperament,
             noteNames,
