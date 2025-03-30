@@ -23,6 +23,7 @@
     <string name="pitch_history">音高历史记录</string>
     <string name="spectrum">频谱</string>
     <string name="keep_screen_on">保持屏幕打开</string>
+    <string name="display_on_lock_screen">锁屏上显示</string>
     <string name="samples">采样</string>
     <string name="expert">专家</string>
     <string name="basic">基础</string>
