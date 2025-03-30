@@ -65,12 +65,15 @@ import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
 import de.moekadu.tuner.ui.common.EditableList
 import de.moekadu.tuner.ui.common.EditableListData
+import de.moekadu.tuner.ui.common.EditableListItem
+import de.moekadu.tuner.ui.common.ListItemTask
 import de.moekadu.tuner.ui.common.OverflowMenu
 import de.moekadu.tuner.ui.common.OverflowMenuCallbacks
 import de.moekadu.tuner.ui.misc.TunerScaffoldWithoutBottomBar
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -234,30 +237,7 @@ fun Instruments(
     ) { paddingValues ->
         val layoutDirection = LocalLayoutDirection.current
         EditableList(
-            itemTitle = { Text(it.getNameString(context)) },
-            itemDescription = { instrument ->
-                val style = LocalTextStyle.current
-                val stringsString = remember(context, style, instrument, notePrintOptions) {
-                    instrument.getStringsString(
-                        context = context,
-                        notePrintOptions = notePrintOptions,
-                        fontSize = style.fontSize,
-                        fontWeight = style.fontWeight
-                    )
-                }
-                Text(stringsString)
-            },
-            itemIcon = { instrument ->
-                Icon(
-                    ImageVector.vectorResource(id = instrument.icon.resourceId),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize()
-                )
-            },
-            isItemCopyable = { !it.isChromatic },
-            hasItemInfo = { false },
             state = state.listData,
-            //modifier = Modifier.padding(paddingValues = paddingValues),
             modifier = Modifier.consumeWindowInsets(paddingValues),
             contentPadding = PaddingValues(
                 start = paddingValues.calculateStartPadding(layoutDirection),
@@ -266,9 +246,47 @@ fun Instruments(
                 bottom = paddingValues.calculateBottomPadding() + maxExpectedHeightForFab
             ),
             onActivateItemClicked = onInstrumentClicked,
-            onEditItemClicked = onEditInstrumentClicked,
             snackbarHostState = snackbarHostState
-        )
+        ) { item ,itemInfo, itemModifier ->
+            EditableListItem(
+                title = { Text(item.getNameString(context)) },
+                description = {
+                    val style = LocalTextStyle.current
+                    val stringsString = remember(context, style, item, notePrintOptions) {
+                        item.getStringsString(
+                            context = context,
+                            notePrintOptions = notePrintOptions,
+                            fontSize = style.fontSize,
+                            fontWeight = style.fontWeight
+                        )
+                    }
+                    Text(stringsString)
+                },
+                icon = {
+                    Icon(
+                        ImageVector.vectorResource(id = item.icon.resourceId),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                },
+                modifier = itemModifier,
+                onOptionsClicked = {
+                    when (it) {
+                        ListItemTask.Edit -> onEditInstrumentClicked(item, false)
+                        ListItemTask.Copy -> onEditInstrumentClicked(item, true)
+                        ListItemTask.Delete -> {
+                            state.listData.deleteItems(persistentSetOf(item.stableId))
+                        }
+                        ListItemTask.Info -> {}
+                    }
+                },
+                isActive = itemInfo.isActive,
+                isSelected = itemInfo.isSelected,
+                readOnly = itemInfo.readOnly,
+                isCopyable = !item.isChromatic,
+                hasInfo = false
+            )
+        }
 
     }
 }

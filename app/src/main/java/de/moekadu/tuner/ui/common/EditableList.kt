@@ -26,6 +26,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,10 +36,8 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -262,7 +261,6 @@ data class EditableListItemInfo(
     val listIndex: Int
 )
 
-
 private suspend fun LazyListState.niceAnimatedScroll(index1: Int, index2: Int, overScroll: Int) {
     val indexMin = min(index1, index2)
     val indexMax = max(index1, index2)
@@ -356,19 +354,13 @@ private suspend fun LazyListState.niceAnimatedScroll(index1: Int, index2: Int, o
 
 @Composable
 fun <T>EditableList(
-    itemTitle: @Composable (T) -> Unit,
-    itemDescription: @Composable (T) -> Unit,
-    itemIcon: @Composable (T) -> Unit,
-    isItemCopyable: (T) -> Boolean,
-    hasItemInfo: (T) -> Boolean,
     state: EditableListData<T>,
     modifier: Modifier = Modifier,
     onActivateItemClicked: (T) -> Unit = { },
-    onEditItemClicked: (T, copy: Boolean) -> Unit = {_, _ -> },
-    onItemInfoClicked: (T) -> Unit = { },
     snackbarHostState: SnackbarHostState? = null,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     noItemsMessage: (@Composable () -> Unit)? = null,
+    drawItem: @Composable (T, EditableListItemInfo, Modifier) -> Unit
 ) {
     val selectedItems by state.selectedItems.collectAsStateWithLifecycle()
     val editableItems by state.editableItems.collectAsStateWithLifecycle()
@@ -433,6 +425,7 @@ fun <T>EditableList(
         state.clearSelectedItems()
     }
 
+//    Log.v("Metronome", "EditableList: contentPadding: top=${contentPadding.calculateTopPadding()}, bottom=${contentPadding.calculateBottomPadding()}")
     LazyColumn(
         modifier = modifier.imePadding(),
         contentPadding = contentPadding,
@@ -459,12 +452,16 @@ fun <T>EditableList(
             }
         }
         if (editableItemsExpanded && editableItems.size > 0) {
-            items(editableItems, { state.getStableId(it) }, { 2 }) { listItem ->
+            itemsIndexed(editableItems, { _, key -> state.getStableId(key) }, { _,_ -> 2 }) { index, listItem ->
                 val interactionSource = remember { MutableInteractionSource() }
-                EditableListItem(
-                    title = { itemTitle(listItem) },
-                    description = { itemDescription(listItem) },
-                    icon = { itemIcon(listItem) },
+                drawItem(
+                    listItem,
+                    EditableListItemInfo(
+                        isActive = (state.getStableId(listItem) == activeItemId),
+                        isSelected = selectedItems.contains(state.getStableId(listItem)),
+                        readOnly = false,
+                        listIndex = index
+                    ),
                     Modifier
                         .animateItem()
                         .indication(
@@ -487,23 +484,7 @@ fun <T>EditableList(
                                     interactionSource.tryEmit(PressInteraction.Release(press))
                                 }
                             )
-                        },
-                    onOptionsClicked = { task ->
-                        when (task) {
-                            ListItemTask.Copy -> onEditItemClicked(listItem, true)
-                            ListItemTask.Edit -> onEditItemClicked(listItem, false)
-                            ListItemTask.Delete -> state.deleteItems(
-                                persistentSetOf(state.getStableId(listItem)
-                                )
-                            )
-                            ListItemTask.Info -> onItemInfoClicked(listItem)
                         }
-                    },
-                    isActive = (state.getStableId(listItem) == activeItemId),
-                    isSelected = selectedItems.contains(state.getStableId(listItem)),
-                    readOnly = false,
-                    isCopyable = isItemCopyable(listItem),
-                    hasInfo = hasItemInfo(listItem)
                 )
             }
         }
@@ -519,28 +500,20 @@ fun <T>EditableList(
         }
 
         if (predefinedItemsExpanded || editableItems.isEmpty()) {
-            items(state.predefinedItems, { state.getStableId(it) }, { 3 }) { listItem ->
-                EditableListItem(
-                    title = { itemTitle(listItem) },
-                    description = { itemDescription(listItem) },
-                    icon = { itemIcon(listItem) },
+            itemsIndexed(state.predefinedItems, { _, key -> state.getStableId(key) }, { _, _ -> 3 }) { index, listItem ->
+                drawItem(
+                    listItem,
+                    EditableListItemInfo(
+                        isActive = (state.getStableId(listItem) == activeItemId),
+                        isSelected = false,
+                        readOnly = true,
+                        listIndex = index
+                    ),
                     Modifier
                         .animateItem()
                         .clickable {
                             onActivateItemClicked(listItem)
-                        },
-                    onOptionsClicked = { task ->
-                        if (task == ListItemTask.Copy) {
-                            onEditItemClicked(listItem, true)
-                        } else if (task == ListItemTask.Info) {
-                            onItemInfoClicked(listItem)
                         }
-                    },
-                    isActive = (state.getStableId(listItem) == activeItemId),
-                    isSelected = false,
-                    readOnly = true,
-                    isCopyable = isItemCopyable(listItem),
-                    hasInfo = hasItemInfo(listItem)
                 )
             }
         }
@@ -601,14 +574,15 @@ private fun EditableListTest() {
     )
     TunerTheme {
         EditableList(
-            itemTitle = {Text(it.title)},
-            itemDescription = {Text(it.title)} ,
-            itemIcon = {Icon(Icons.Default.Edit, null)},
-            isItemCopyable = { true },
-            hasItemInfo = { true },
             state = listData,
             onActivateItemClicked = { activeItem.value = it },
-            onEditItemClicked = {_,_ -> }
-        )
+        ) { item, info, modifier ->
+            Row(modifier.padding(12.dp)) {
+                Text(
+                    item.title,
+                    color = if (info.isSelected) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                    )
+            }
+        }
     }
 }

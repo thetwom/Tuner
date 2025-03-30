@@ -42,6 +42,7 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -73,11 +74,14 @@ import de.moekadu.tuner.temperaments.TemperamentIO
 import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
 import de.moekadu.tuner.ui.common.EditableList
 import de.moekadu.tuner.ui.common.EditableListData
+import de.moekadu.tuner.ui.common.EditableListItem
+import de.moekadu.tuner.ui.common.ListItemTask
 import de.moekadu.tuner.ui.common.OverflowMenu
 import de.moekadu.tuner.ui.common.OverflowMenuCallbacks
 import de.moekadu.tuner.ui.misc.TunerScaffoldWithoutBottomBar
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -287,28 +291,6 @@ fun TemperamentsManager(
         val iconTextSize = with(LocalDensity.current) { 18.dp.toSp() }
         val layoutDirection = LocalLayoutDirection.current
         EditableList(
-            itemTitle = { Text(it.temperament.name.value(context)) },
-            itemDescription = { Text(it.temperament.description.value(context)) },
-            itemIcon = {
-                Surface(
-                    shape = CircleShape,
-                    modifier = Modifier.fillMaxSize(),
-                    color = Color.Transparent,
-                    border = BorderStroke(1.dp, LocalContentColor.current)
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "${it.temperament.name.value(context).getOrNull(0) ?: ""}",
-                            fontSize = iconTextSize
-                        )
-                    }
-                }
-            },
-            isItemCopyable = { true },
-            hasItemInfo = { true },
             state = state.listData,
             modifier = modifier.consumeWindowInsets(paddingValues).fillMaxSize(),
             contentPadding = PaddingValues(
@@ -318,10 +300,47 @@ fun TemperamentsManager(
                 bottom = paddingValues.calculateBottomPadding() + maxExpectedHeightForFab
             ),
             onActivateItemClicked = { onTemperamentClicked(it) },
-            onEditItemClicked = onEditTemperamentClicked,
-            onItemInfoClicked = onTemperamentInfoClicked,
             snackbarHostState = snackbarHostState
-        )
+        ) { item, itemInfo, itemModifier ->
+            EditableListItem(
+                title = { Text(item.temperament.name.value(context)) },
+                description = { Text(item.temperament.description.value(context)) },
+                icon = {
+                    Surface(
+                        shape = CircleShape,
+                        modifier = Modifier.fillMaxSize(),
+                        color = Color.Transparent,
+                        border = BorderStroke(1.dp, LocalContentColor.current)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "${item.temperament.name.value(context).getOrNull(0) ?: ""}",
+                                fontSize = iconTextSize
+                            )
+                        }
+                    }
+                },
+                modifier = itemModifier,
+                onOptionsClicked = {
+                    when (it) {
+                        ListItemTask.Edit -> onEditTemperamentClicked(item, false)
+                        ListItemTask.Copy -> onEditTemperamentClicked(item, true)
+                        ListItemTask.Delete -> {
+                            state.listData.deleteItems(persistentSetOf(item.stableId))
+                        }
+                        ListItemTask.Info -> onTemperamentInfoClicked(item)
+                    }
+                },
+                isActive = itemInfo.isActive,
+                isSelected = itemInfo.isSelected,
+                readOnly = itemInfo.readOnly,
+                isCopyable = true,
+                hasInfo = true
+            )
+        }
     }
 }
 
