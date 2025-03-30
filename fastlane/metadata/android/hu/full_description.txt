@@ -1,0 +1,9 @@
+    Hangszerhangoló alkalmazás a következő funckiókkal:
+    * Hangmagasság észlelése autokorreláció és FFT spektrum alapján.
+    * Pontosságjavítás a spektrum fázisinformációinak és a polinomiális illesztése alapján.
+    * Hangmagasság időbeli változásának megjelenítése.
+    * Alapvető hangszer-adatbázis (kromatikus, gitár, basszusgitár, hegedű, …)
+    * Egyéni hangszerek támogatása
+    * Számos hangolási mód: kiegyenlített, pontos, tiszta, Werckmeister, Kirnberger, …
+    * Nem 12 tónusú hangolások (EDO 17, 19, …, 41, 53)
+    * Tudományos beállítások: FFT ablak mérete és típusa, átlapolás és egyebek.
