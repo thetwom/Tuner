@@ -1,0 +1,304 @@
+<resources>
+    <string name="app_name">Tuner</string>
+
+    <string name="windowing_function">Ablakozási függvény</string>
+    <string name="window_hamming">Hamming ablak</string>
+    <string name="window_hann">Hann ablak</string>
+    <string name="no_window">Nincs ablakozási függvény</string>
+
+    <string name="appearance">Megjelenés</string>
+    <string name="dark_appearance">Sötét megjelenés</string>
+    <string name="light_appearance">Világos megjelenés</string>
+    <string name="system_appearance">Rendszert követő megjelenés</string>
+
+    <string name="dark_appearance_short">Sötét</string>
+    <string name="light_appearance_short">Világos</string>
+    <string name="system_appearance_short">Automatikus</string>
+    <string name="settings">Beállítások</string>
+    <string name="overlap">Ablakok átlapolása</string>
+    <string name="window_size">Ablakok mérete</string>
+    <string name="minimum_frequency">"Legkisebb frekvencia: "</string>
+    <string name="pitch_history_duration">Hangmagasság-előzmények hossza</string>
+    <string name="pitch_history_num_faulty_values">Új hangmagasságra ugrás</string>
+    <plurals name="pitch_history_num_faulty_values_summary">
+        <item quantity="one">Ugrás közvetlenül az új hangmagasság-eredményre</item>
+        <item quantity="other">%d hasonló hangmagasság-eredmény után</item>
+    </plurals>
+    <string name="num_moving_average">Mozgóátlag</string>
+    <plurals name="num_moving_average_summary">
+        <item quantity="one">Nincs átlagolás</item>
+        <item quantity="other">%d hangmagasság-eredmény átlagolása</item>
+    </plurals>
+    <string name="about">Névjegy</string>
+    <string name="about_message">Hangoló alkalmazás\nVerzió: %s\nLicenc: GPLv3\nhttps://github.com/thetwom/Tuner</string>
+    <string name="reset_all_settings">Összes beállítás alaphelyzetbe állítása</string>
+    <string name="reset_settings_prompt">Biztos, hogy alaphelyzetbe állítja az összes beállítást?</string>
+    <string name="yes">Igen</string>
+    <string name="no">Nem</string>
+    <string name="autocorrelation">autokorreláció</string>
+    <string name="pitch_history">hangmagasság-előzmények</string>
+    <string name="spectrum">spektrum</string>
+    <string name="cent" translatable="false">%+d&#x200A;&#162;</string>
+    <string name="cent_nosign" translatable="false">%d&#x200A;&#162;</string>
+    <string name="keep_screen_on">Képernyő bekapcsolva tartása</string>
+    <string name="samples">minták</string>
+    <string name="scientific_mode">Tudományos mód</string>
+    <string name="tolerance_in_cents">Tűrés</string>
+    <string name="tolerance_summary" translatable="false">&#177;%d&#x200A;&#162;</string>
+    <string name="expert">Szakértő</string>
+    <string name="basic">Alapvetők</string>
+    <string name="others">Egyebek</string>
+
+    <string name="chromatic">Kromatikus</string>
+    <string name="guitar_eadgbe">6 húros gitár</string>
+    <string name="bass_eadg">4 húros basszusgitár</string>
+    <string name="bass_beadg">5 húros basszusgitár</string>
+    <string name="ukulele_gcea">Ukulele</string>
+
+    <string name="c_note_name">C</string>
+    <string name="d_note_name">D</string>
+    <string name="e_note_name">E</string>
+    <string name="f_note_name">F</string>
+    <string name="g_note_name">G</string>
+    <string name="a_note_name">A</string>
+    <string name="b_note_name">H</string>
+    <string name="asharp_bflat_note_name">B</string>
+
+    <string name="c_solfege">dó</string>
+    <string name="d_solfege">ré</string>
+    <string name="e_solfege">mi</string>
+    <string name="f_solfege">fá</string>
+    <string name="g_solfege">szó</string>
+    <string name="a_solfege">lá</string>
+    <string name="b_solfege">ti</string>
+
+    <string name="c_note_international" translatable="false">C</string>
+    <string name="d_note_international" translatable="false">D</string>
+    <string name="e_note_international" translatable="false">E</string>
+    <string name="f_note_international" translatable="false">F</string>
+    <string name="g_note_international" translatable="false">G</string>
+    <string name="a_note_international" translatable="false">A</string>
+    <string name="b_note_international" translatable="false">B</string>
+
+    <string name="notation">Jelölés</string>
+    <string name="notation_standard">Alapértelmezett (A-H-C-…)</string>
+    <string name="notation_solfege">Szolfézs</string>
+    <string name="notation_international">Nemzetközi (A-B-C-…)</string>
+
+    <string name="violin_gdae">Hegedű</string>
+    <string name="abort">Megszakítás</string>
+    <string name="instrument_name">Hangszer neve</string>
+    <string name="add_note">Hangjegy hozzáadása</string>
+    <string name="delete_note">Hangjegy törlése</string>
+    <string name="lately_detected_notes">Nemrég észlelt hangjegyek</string>
+    <string name="done">Kész</string>
+    <string name="edit_instrument">Hangszer szerkesztése</string>
+    <string name="predefined_items">Alapértelmezett</string>
+    <string name="custom_item">Egyéni</string>
+    <string name="file_empty">A fájl üres: %s</string>
+    <string name="file_invalid">A fájl érvénytelen: %s</string>
+    <plurals name="items_deleted">
+        <item quantity="one">%d elem észlelve</item>
+        <item quantity="other">%d elem észlelve</item>
+    </plurals>
+    <string name="undo">Visszavonás</string>
+    <string name="pick_icon">Válasszon ikont</string>
+    <string name="copy_extension">%s (másolat)</string>
+    <string name="failed_to_archive_items">Az elemek fájlba írása sikertelen</string>
+    <plurals name="database_num_saved">
+        <item quantity="one">%d elem írása ide: „%s”.</item>
+        <item quantity="other">%d elem írása ide: „%s”.</item>
+    </plurals>
+    <string name="database_empty">Nincsenek mentendő elemek.</string>
+    <plurals name="load_instruments">
+        <item quantity="one">%d hangszer betöltése</item>
+        <item quantity="other">%d hangszer betöltése</item>
+    </plurals>
+    <plurals name="load_temperaments">
+        <item quantity="one">%d hangolás betöltése</item>
+        <item quantity="other">%d hangolás betöltése</item>
+    </plurals>
+    <string name="replace_current_list">Jelenlegi lista lecserélése</string>
+    <string name="prepend_current_list">Jelenlegi lista elé fűzés</string>
+    <string name="append_current_list">Jelenlegi lista mögé fűzés</string>
+    <string name="share">Elemek megosztása</string>
+    <plurals name="sharing_num_items">
+        <item quantity="one">%d elem megosztása</item>
+        <item quantity="other">%d elem megosztása</item>
+    </plurals>
+    <string name="load_from_disk">Elemek betöltése fájlból</string>
+    <string name="save_to_disk">Elemek fájlba mentése</string>
+    <string name="prefer_flat">\u266D előnyben részesítése a \u266F-tel szemben</string>
+    <string name="viola_cgda">Brácsa</string>
+    <string name="cello_cgda">Cselló</string>
+    <string name="double_bass_eadg">Nagybőgő</string>
+    <string name="equal_temperament_12">Kiegyenlített hangolás</string>
+    <string name="equal_temperament_12_desc">12 hangjegy oktávonként</string>
+    <string name="equal_temperament_12_abbr">EDO 12</string>
+    <string name="equal_temperament_17">17 hangjegyes kiegyenlített hangolás</string>
+    <string name="equal_temperament_17_desc">17 hangjegy oktávonként</string>
+    <string name="equal_temperament_17_abbr">EDO 17</string>
+    <string name="equal_temperament_19">19 hangjegyes kiegyenlített hangolás</string>
+    <string name="equal_temperament_19_desc">19 hangjegy oktávonként</string>
+    <string name="equal_temperament_19_abbr">EDO 19</string>
+    <string name="equal_temperament_22">22 hangjegyes kiegyenlített hangolás</string>
+    <string name="equal_temperament_22_desc">22 hangjegy oktávonként</string>
+    <string name="equal_temperament_22_abbr">EDO 22</string>
+    <string name="equal_temperament_24">24 hangjegyes kiegyenlített hangolás</string>
+    <string name="equal_temperament_24_desc">Negyed hangjegyes hangolás</string>
+    <string name="equal_temperament_24_abbr">EDO 24</string>
+    <string name="equal_temperament_27">27 hangjegyes kiegyenlített hangolás</string>
+    <string name="equal_temperament_27_desc">27 hangjegy oktávonként</string>
+    <string name="equal_temperament_27_abbr">EDO 27</string>
+    <string name="equal_temperament_29">29 hangjegyes kiegyenlített hangolás</string>
+    <string name="equal_temperament_29_desc">29 hangjegy oktávonként</string>
+    <string name="equal_temperament_29_abbr">EDO 29</string>
+    <string name="equal_temperament_31">31 hangjegyes kiegyenlített hangolás</string>
+    <string name="equal_temperament_31_desc">31 hangjegy oktávonként</string>
+    <string name="equal_temperament_31_abbr">EDO 31</string>
+    <string name="equal_temperament_41">41 hangjegyes kiegyenlített hangolás</string>
+    <string name="equal_temperament_41_desc">41 hangjegy oktávonként</string>
+    <string name="equal_temperament_41_abbr">EDO 41</string>
+    <string name="equal_temperament_53">53 hangjegyes kiegyenlített hangolás</string>
+    <string name="equal_temperament_53_desc">53 hangjegy oktávonként</string>
+    <string name="equal_temperament_53_abbr">EDO 53</string>
+    <string name="pythagorean_tuning">Püthagoraszi hangolás</string>
+    <string name="pythagorean_tuning_abbr">Püthagoraszi</string>
+    <string name="pure_tuning">Tiszta hangolás</string>
+    <string name="pure_tuning_desc">Ötfokú, asszimetrikus skála</string>
+    <string name="pure_tuning_abbr">Kiegyenlített</string>
+    <string name="quarter_comma_mean_tone">¼ kommás középhang</string>
+    <string name="quarter_comma_mean_tone_desc">Tiszta nagytercek</string>
+    <string name="quarter_comma_mean_tone_abbr">¼ kommás középhang</string>
+    <string name="third_comma_mean_tone">⅓ kommás középhang</string>
+    <string name="third_comma_mean_tone_desc">Tiszta kistercek</string>
+    <string name="third_comma_mean_tone_abbr">⅓ kommás középhang</string>
+    <string name="fifth_comma_mean_tone">⅕ kommás középhang</string>
+    <string name="fifth_comma_mean_tone_desc">Tiszta diatónikus félhangok</string>
+    <string name="fifth_comma_mean_tone_abbr">⅕ kommás középhang</string>
+    <string name="werckmeister_iii">Werckmeister III</string>
+    <string name="werckmeister_iii_desc">¼ kommás kommás osztások</string>
+    <string name="werckmeister_iii_abbr">Werckmeister III</string>
+    <string name="werckmeister_iv">Werckmeister IV</string>
+    <string name="werckmeister_iv_desc">⅓ kommás felosztások</string>
+    <string name="werckmeister_iv_abbr">Werckmeister IV</string>
+    <string name="werckmeister_v">Werckmeister V</string>
+    <string name="werckmeister_v_desc">Egyéb ¼ kommás felosztások</string>
+    <string name="werckmeister_v_abbr">Werckmeister V</string>
+    <string name="werckmeister_vi">Werckmeister VI</string>
+    <string name="werckmeister_vi_desc">Septenarius</string>
+    <string name="werckmeister_vi_abbr">Werckmeister VI</string>
+    <string name="kirnberger1">Kirnberger I</string>
+    <string name="kirnberger1_desc">Egy szintonikus komma</string>
+    <string name="kirnberger1_abbr">Kirnberger I</string>
+    <string name="kirnberger2">Kirnberger II</string>
+    <string name="kirnberger2_desc">½ szintonikus kommás felosztások</string>
+    <string name="kirnberger2_abbr">Kirnberger II</string>
+    <string name="kirnberger3">Kirnberger III</string>
+    <string name="kirnberger3_desc">¼ szintonikus kommás felosztások</string>
+    <string name="kirnberger3_abbr">Kirnberger III</string>
+    <string name="neidhardt1">Neidhardt 1</string>
+    <string name="neidhardt1_desc">Faluhoz, 1732</string>
+    <string name="neidhardt1_abbr">Neidhardt 1</string>
+    <string name="neidhardt2">Neidhardt 2</string>
+    <string name="neidhardt2_desc">Kisvároshoz, 1732</string>
+    <string name="neidhardt2_abbr">Neidhardt 2</string>
+    <string name="neidhardt3">Neidhardt 3</string>
+    <string name="neidhardt3_desc">Nagyvároshoz, 1732</string>
+    <string name="neidhardt3_abbr">Neidhardt 3</string>
+    <string name="valotti">Valotti</string>
+    <string name="valotti_abbr">Valotti</string>
+    <string name="young2">Young 2</string>
+    <string name="young2_abbr">Young 2</string>
+    <string name="reference_frequency">Referenciafrekvencia</string>
+    <string name="frequency">Frekvencia</string>
+    <string name="temperament">Hangolás</string>
+    <string name="root_note">Kulcshangjegy</string>
+    <string name="test_tuning">Teszthangolás</string>
+    <string name="details">Részletek</string>
+    <string name="pythagorean_comma">%d\u2044%d&#x200A;pC</string>
+    <string name="syntonic_comma">%d\u2044%d&#x200A;sC</string>
+    <string name="schisma">%d\u2044%d&#x200A;sch</string>
+    <string name="plus_correction" translatable="false">" + "</string>
+    <string name="minus_correction" translatable="false">" - "</string>
+    <string name="pythagorean_comma_desc">pC: püthagoraszi komma, 531441\u2044524288\nsC: szintonikus komma, 81\u204480\nsch: szkizma, 32805\u204432768</string>
+    <string name="circle_of_fifths">Kvintkör</string>
+    <string name="set_default">Alaphelyzetbe állítás</string>
+    <string name="acknowledged">Értettem</string>
+    <string name="black_night_mode">Fekete háttér sötét módban</string>
+    <string name="system_color_accents">Rendszer kiemelőszínei</string>
+    <string name="incorrect_temperament">Nem kompatibilis hangolás!</string>
+    <string name="ok">Rendben</string>
+    <string name="new_temperament_requires_adapting_reference_note">Az új hangoláshoz a referenciahang módosítása szükséges!</string>
+    <string name="comma_separator">,\ </string>
+    <string name="capture">Felvétel</string>
+    <string name="capture_duration">Felvétel hossza: %d&#x200A;s</string>
+    <string name="no_capture_duration">Felvétel letiltása</string>
+    <string name="sa_carnatic">Sza</string>
+    <string name="ri1_carnatic" translatable="false">Ri₁</string>
+    <string name="ri2_carnatic" translatable="false">Ri₂</string>
+    <string name="ga1_carnatic" translatable="false">Ga₁</string>
+    <string name="ga2_carnatic" translatable="false">Ga₂</string>
+    <string name="ma1_carnatic" translatable="false">Ma₁</string>
+    <string name="ma2_carnatic" translatable="false">Ma₂</string>
+    <string name="pa_carnatic" translatable="false">Pa</string>
+    <string name="dha1_carnatic" translatable="false">Dha₁</string>
+    <string name="dha2_carnatic" translatable="false">Dha₂</string>
+    <string name="ni1_carnatic" translatable="false">Ni₁</string>
+    <string name="ni2_carnatic" translatable="false">Ni₂</string>
+    <string name="notation_carnatic">Karnátikus</string>
+    <string name="sa_hindustani" translatable="false">Sza</string>
+    <string name="re1_hindustani" translatable="false">Re₁</string>
+    <string name="re2_hindustani" translatable="false">Re₂</string>
+    <string name="ga1_hindustani" translatable="false">Ga₁</string>
+    <string name="ga2_hindustani" translatable="false">Ga₂</string>
+    <string name="ma1_hindustani" translatable="false">Ma₁</string>
+    <string name="ma2_hindustani" translatable="false">Ma₂</string>
+    <string name="pa_hindustani" translatable="false">Pa</string>
+    <string name="dha1_hindustani" translatable="false">Dha₁</string>
+    <string name="dha2_hindustani" translatable="false">Dha₂</string>
+    <string name="ni1_hindustani" translatable="false">Ni₁</string>
+    <string name="ni2_hindustani" translatable="false">Ni₂</string>
+    <string name="notation_hindustani">Hindusztáni</string>
+
+    <string name="ni_byzantine" translatable="false">Νη</string>
+    <string name="pa_byzantine" translatable="false">Πα</string>
+    <string name="vou_byzantine" translatable="false">Βου</string>
+    <string name="gha_byzantine" translatable="false">Γα</string>
+    <string name="dhi_byzantine" translatable="false">Δι</string>
+    <string name="ke_byzantine" translatable="false">Κε</string>
+    <string name="zo_byzantine" translatable="false">Ζω</string>
+    <string name="notation_byzantine">Bizánci</string>
+
+
+    <string name="helmholtz_notation">Helmholtz jelölés (C, … c\')</string>
+    <string name="extended_quarter_comma_mean_tone">Bővített ¼ kommás középhang</string>
+    <string name="extended_quarter_comma_mean_tone_desc">Tiszta nagytercek, 15 hangjegy</string>
+    <string name="extended_quarter_comma_mean_tone_abbr">Bővített ¼ kommás középhang</string>
+    <string name="sensitivity">Érzékenység</string>
+    <string name="delete_items">Elemek törlése</string>
+    <string name="database_empty_share">Nincsenek megosztandó elemek.</string>
+    <string name="audio_record_permission_rationale">Adjon mikrofon-hozzáférést a hangolás megkezdéséhez.</string>
+    <string name="writing_wave_file">Hangfájl írása: %s</string>
+    <string name="failed_writing_wave_file">Nem lett hangfájl írva.</string>
+    <string name="instruments">Hangszerek</string>
+    <string name="edit">Szerkestés</string>
+    <string name="copy_">Másolás</string>
+    <string name="delete">Törlés</string>
+    <string name="temperaments">Hangolások</string>
+    <string name="save">Mentés</string>
+    <string name="temperament_editor">Hangolás szerkesztése</string>
+    <string name="note_number">Hangjegyek száma</string>
+    <string name="cent_str">cent</string>
+    <string name="octave_offset">Oktáveltolás</string>
+    <string name="ratio">arány</string>
+    <string name="temperament_name">hangolás neve</string>
+    <string name="temperament_abbreviation">Rövidítés</string>
+    <string name="temperament_description">Leírás</string>
+    <string name="decreasing_value_error">Az értéknek nagyobbnak kell lennie az előzőnél.</string>
+    <string name="missing_note_name">Hiányzó hangjegynév.</string>
+    <string name="missing_value">Hiányzó cent- vagy arányérték.</string>
+    <string name="duplicate_note_name">Ismétlődő hangjegynév.</string>
+    <string name="invalid_value">Érvénytelen érték.</string>
+    <string name="maximum_value_exceeded">Legnagyobb érték túllépve: %d.</string>
+</resources>
