@@ -23,6 +23,9 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -44,9 +47,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
@@ -90,6 +95,7 @@ fun Instruments(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val maxExpectedHeightForFab = 72.dp
     val listState = rememberLazyListState()
 
     val saveInstrumentLauncher = rememberLauncherForActivityResult(
@@ -226,6 +232,7 @@ fun Instruments(
             SnackbarHost(hostState = snackbarHostState)
         }
     ) { paddingValues ->
+        val layoutDirection = LocalLayoutDirection.current
         EditableList(
             itemTitle = { Text(it.getNameString(context)) },
             itemDescription = { instrument ->
@@ -252,11 +259,15 @@ fun Instruments(
             state = state.listData,
             //modifier = Modifier.padding(paddingValues = paddingValues),
             modifier = Modifier.consumeWindowInsets(paddingValues),
-            contentPadding = paddingValues,
+            contentPadding = PaddingValues(
+                start = paddingValues.calculateStartPadding(layoutDirection),
+                end = paddingValues.calculateEndPadding(layoutDirection),
+                top = paddingValues.calculateTopPadding(),
+                bottom = paddingValues.calculateBottomPadding() + maxExpectedHeightForFab
+            ),
             onActivateItemClicked = onInstrumentClicked,
             onEditItemClicked = onEditInstrumentClicked,
-            snackbarHostState = snackbarHostState,
-            listState = listState
+            snackbarHostState = snackbarHostState
         )
 
     }
