@@ -22,12 +22,15 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.moekadu.tuner.R
 import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIO
 import de.moekadu.tuner.instruments.InstrumentResources
+import de.moekadu.tuner.ui.common.EditableListPredefinedSectionImmutable
 import de.moekadu.tuner.ui.common.EditableListData
 import de.moekadu.tuner.ui.instruments.InstrumentsData
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,15 +42,20 @@ class InstrumentViewModel @Inject constructor(
     @ApplicationScope val applicationScope: CoroutineScope
 ): ViewModel(), InstrumentsData {
     override val listData = EditableListData(
-        instruments.predefinedInstruments,
-        instruments.customInstruments,
-        { it.stableId },
-        instruments.predefinedInstrumentsExpanded,
-        instruments.customInstrumentsExpanded,
-        instruments.currentInstrument,
+        predefinedItemSections = persistentListOf(
+            EditableListPredefinedSectionImmutable(
+                R.string.predefined_items,
+                instruments.predefinedInstruments,
+                instruments.predefinedInstrumentsExpanded,
+                { instruments.writePredefinedInstrumentsExpanded(it) }
+            )
+        ),
+        editableItems = instruments.customInstruments,
+        editableItemsExpanded = instruments.customInstrumentsExpanded,
+        toggleEditableItemsExpanded = { instruments.writeCustomInstrumentsExpanded(it) },
+        getStableId = { it.stableId },
+        activeItem = instruments.currentInstrument,
         setNewItems = { instruments.writeCustomInstruments(it) },
-        togglePredefinedItemsExpanded = { instruments.writePredefinedInstrumentsExpanded(it) },
-        toggleEditableItemsExpanded = { instruments.writeCustomInstrumentsExpanded(it) }
     )
 
     fun setCurrentInstrument(instrument: Instrument) {

@@ -63,6 +63,7 @@ import de.moekadu.tuner.misc.toastPotentialFileCheckError
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
+import de.moekadu.tuner.ui.common.EditableListPredefinedSectionImmutable
 import de.moekadu.tuner.ui.common.EditableList
 import de.moekadu.tuner.ui.common.EditableListData
 import de.moekadu.tuner.ui.common.EditableListItem
@@ -348,15 +349,20 @@ private class TestInstrumentsData : InstrumentsData {
     val customInstrumentsExpanded = MutableStateFlow(true)
 
     override val listData = EditableListData(
+        predefinedItemSections = persistentListOf(
+            EditableListPredefinedSectionImmutable(
+                R.string.predefined_items,
+                predefinedInstruments,
+                predefinedInstrumentsExpanded,
+                { predefinedInstrumentsExpanded.value = it }
+            )
+        ),
         getStableId = { it.stableId },
-        predefinedItems = predefinedInstruments,
         editableItems = customInstruments,
-        predefinedItemsExpanded = predefinedInstrumentsExpanded,
         editableItemsExpanded = customInstrumentsExpanded,
-        activeItem = activeInstrument,
+        toggleEditableItemsExpanded = { customInstrumentsExpanded.value = it },
         setNewItems = { customInstruments.value = it },
-        togglePredefinedItemsExpanded = { predefinedInstrumentsExpanded.value = it },
-        toggleEditableItemsExpanded = { customInstrumentsExpanded.value = it }
+        activeItem = activeInstrument
     )
 
     override fun saveInstruments(context: Context, uri: Uri, instruments: List<Instrument>) {}

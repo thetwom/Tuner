@@ -19,6 +19,7 @@
 package de.moekadu.tuner.ui.common
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.indication
@@ -27,13 +28,9 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -71,21 +68,39 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.min
 
+interface EditableListPredefinedSection<T> {
+    val sectionStringResourceId: Int
+    val size: Int
+    val isExpanded: StateFlow<Boolean>
+
+    operator fun get(index: Int): T
+    val toggleExpanded: (isExpanded: Boolean) -> Unit
+}
+
+class EditableListPredefinedSectionImmutable<T>(
+    @StringRes override val sectionStringResourceId: Int,
+    private val items: ImmutableList<T>,
+    override val isExpanded: StateFlow<Boolean>,
+    override val toggleExpanded: (isExpanded: Boolean) -> Unit
+) : EditableListPredefinedSection<T> {
+    override val size get() = items.size
+    override operator fun get(index: Int) = items[index]
+}
+
 @Stable
 class EditableListData<T>(
-    val predefinedItems: ImmutableList<T>,
+    val predefinedItemSections: ImmutableList<EditableListPredefinedSection<T>>,
     val editableItems: StateFlow<PersistentList<T>>,
-    val getStableId: (T) -> Long,
-    val predefinedItemsExpanded: StateFlow<Boolean>,
     val editableItemsExpanded: StateFlow<Boolean>,
+    val toggleEditableItemsExpanded: (Boolean) -> Unit,
+    val getStableId: (T) -> Long,
     val activeItem: StateFlow<T?>,
-    val setNewItems: (PersistentList<T>) -> Unit,
-    val togglePredefinedItemsExpanded: (Boolean) -> Unit,
-    val toggleEditableItemsExpanded: (Boolean) -> Unit
+    val setNewItems: (PersistentList<T>) -> Unit
 ) {
     private val _selectedItems = MutableStateFlow(persistentSetOf<Long>())
     val selectedItems get() = _selectedItems.asStateFlow()
@@ -103,11 +118,16 @@ class EditableListData<T>(
      * When predefined items are on, we will show header lines, in this case the
      * editable list starts at index 1 (since the header line is at index 0) .
      */
-    val editableListStartIndex get() = if (predefinedItems.isEmpty()) 0 else 1
+    val editableListStartIndex = if (predefinedItemSections.sumOf { it.size } == 0) 0 else 1
 
     val lazyListState = LazyListState()
     //val initiateScrollChannel = Channel<Int>(Channel.CONFLATED)
     val initiateScrollChannel = Channel<Pair<Int, Int>>(Channel.CONFLATED)
+
+    val numNonEmptyPredefinedLists = predefinedItemSections.count { it.size > 0 }
+
+    /** Here we collect the info for all predefined sections if it is expanded. */
+    val predefinedSectionsExpanded = combine(predefinedItemSections.map { it.isExpanded }) { it }
 
     fun selectItem(id: Long) {
         _selectedItems.value = selectedItems.value.add(id)
@@ -213,8 +233,9 @@ class EditableListData<T>(
         setNewItems(modified)
 
         _selectedItems.value = selectedItems.value.clear()
-        if (modified.isEmpty())
-            togglePredefinedItemsExpanded(true)
+        if (modified.isEmpty() && predefinedItemSections.size == 1)
+            predefinedItemSections[0].toggleExpanded(true)
+
         if (backup.size != modified.size) {
             editableItemsBackup.trySend(
                 ItemsDeletedInfo(backup = backup, numDeleted = backup.size - modified.size)
@@ -229,7 +250,8 @@ class EditableListData<T>(
         val backup = editableItems.value
         setNewItems(persistentListOf())
         _selectedItems.value = selectedItems.value.clear()
-        togglePredefinedItemsExpanded(true)
+        if (predefinedItemSections.size == 1)
+            predefinedItemSections[0].toggleExpanded(true)
 
         if (backup.size > 0) {
             editableItemsBackup.trySend(ItemsDeletedInfo(backup = backup, numDeleted = backup.size))
@@ -350,6 +372,9 @@ private suspend fun LazyListState.niceAnimatedScroll(index1: Int, index2: Int, o
     // - both elements partly visible
 }
 
+private const val CONTENT_TYPE_SECTION = 1
+private const val CONTENT_TYPE_EMPTY_MESSAGE = 2
+private const val CONTENT_TYPE_ITEM = 3
 
 
 @Composable
@@ -365,12 +390,14 @@ fun <T>EditableList(
     val selectedItems by state.selectedItems.collectAsStateWithLifecycle()
     val editableItems by state.editableItems.collectAsStateWithLifecycle()
     val editableItemsExpanded by state.editableItemsExpanded.collectAsStateWithLifecycle()
-    val predefinedItemsExpanded by state.predefinedItemsExpanded.collectAsStateWithLifecycle()
     val activeItem by state.activeItem.collectAsStateWithLifecycle()
     val activeItemId = activeItem?.let { state.getStableId(it) }
     val resources = LocalContext.current.resources
     val snackbarHostStateUpdated by rememberUpdatedState(newValue = snackbarHostState)
     val overScrollPx = with(LocalDensity.current) { 4.dp.roundToPx() }
+    val predefinedExpanded by state.predefinedSectionsExpanded.collectAsStateWithLifecycle(
+        Array(state.predefinedItemSections.size){ false }
+    )
 
     LaunchedEffect(state.initiateScrollChannel) {
 //        Log.v("Tuner", "EditableList: Launching effect for initiate scroll channel")
@@ -431,8 +458,12 @@ fun <T>EditableList(
         contentPadding = contentPadding,
         state = state.lazyListState
     ) {
-        if ( editableItems.isEmpty() && state.predefinedItems.isEmpty() && noItemsMessage != null) {
-            item(contentType = 99) {
+        val showSections = (
+                (editableItems.size + state.numNonEmptyPredefinedLists) > 1 ||
+                        state.numNonEmptyPredefinedLists > 1
+                )
+        if (editableItems.isEmpty() && state.numNonEmptyPredefinedLists == 0 && noItemsMessage != null) {
+            item(contentType = CONTENT_TYPE_EMPTY_MESSAGE) {
                 Box(
                     Modifier.fillMaxWidth().padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center
@@ -441,8 +472,8 @@ fun <T>EditableList(
                 }
             }
         }
-        if ( editableItems.size > 0 && state.predefinedItems.size > 0) {
-            item(contentType = 1) {
+        if (showSections) {
+            item(contentType = CONTENT_TYPE_SECTION) {
                 EditableListSection(
                     title = stringResource(id = R.string.custom_item),
                     expanded = editableItemsExpanded
@@ -452,7 +483,11 @@ fun <T>EditableList(
             }
         }
         if (editableItemsExpanded && editableItems.size > 0) {
-            itemsIndexed(editableItems, { _, key -> state.getStableId(key) }, { _,_ -> 2 }) { index, listItem ->
+            itemsIndexed(
+                editableItems,
+                { _, key -> state.getStableId(key) },
+                { _, _ -> CONTENT_TYPE_ITEM }
+            ) { index, listItem ->
                 val interactionSource = remember { MutableInteractionSource() }
                 drawItem(
                     listItem,
@@ -488,46 +523,57 @@ fun <T>EditableList(
                 )
             }
         }
-        if (editableItems.size > 0 && state.predefinedItems.size > 0) {
-            item(contentType = 1) {
-                EditableListSection(
-                    title = stringResource(id = R.string.predefined_items),
-                    expanded = predefinedItemsExpanded
-                ) {
-                    state.togglePredefinedItemsExpanded(it)
+
+        state.predefinedItemSections.forEachIndexed { predefinedListIndex, predefinedList ->
+            if (showSections && predefinedList.size > 0) {
+                item(contentType = CONTENT_TYPE_SECTION) {
+                    EditableListSection(
+                        title = stringResource(id = predefinedList.sectionStringResourceId),
+                        expanded = predefinedExpanded[predefinedListIndex]
+                    ) {
+                        predefinedList.toggleExpanded(it)
+                    }
                 }
             }
-        }
 
-        if (predefinedItemsExpanded || editableItems.isEmpty()) {
-            itemsIndexed(state.predefinedItems, { _, key -> state.getStableId(key) }, { _, _ -> 3 }) { index, listItem ->
-                drawItem(
-                    listItem,
-                    EditableListItemInfo(
-                        isActive = (state.getStableId(listItem) == activeItemId),
-                        isSelected = false,
-                        readOnly = true,
-                        listIndex = index
-                    ),
-                    Modifier
-                        .animateItem()
-                        .clickable {
-                            onActivateItemClicked(listItem)
-                        }
-                )
+            if (predefinedExpanded[predefinedListIndex]
+                || (predefinedList.size > 0 && editableItems.isEmpty() && state.numNonEmptyPredefinedLists == 1)
+            ) {
+                items(
+                    count = predefinedList.size,
+                    key = { state.getStableId(predefinedList[it]) },
+                    contentType = { CONTENT_TYPE_ITEM }
+                ) {
+                    val listItem = predefinedList[it]
+                    drawItem(
+                        listItem,
+                        EditableListItemInfo(
+                            isActive = (state.getStableId(listItem) == activeItemId),
+                            isSelected = false,
+                            readOnly = true,
+                            listIndex = it
+                        ),
+                        Modifier
+                            .animateItem()
+                            .clickable {
+                                onActivateItemClicked(listItem)
+                            }
+                    )
+                }
+
             }
         }
+    }
 
-        item {
-            Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.systemBars))
-        }
+//        item {
+//            Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.systemBars))
+//        }
 
 //        // extra space to allow scrolling up a bit more, such that the last item
 //        // doesn't collide with the fab
 //        item {
 //            Spacer(Modifier.height(80.dp))
 //        }
-    }
 }
 
 private data class TestItem(val title: String, val key: Long)
@@ -535,11 +581,22 @@ private data class TestItem(val title: String, val key: Long)
 @Preview(widthDp = 300, heightDp = 700, showBackground = true)
 @Composable
 private fun EditableListTest() {
-    val predefinedItems = remember {
+    val predefinedItemsExpanded = remember {
+        MutableStateFlow(true)
+    }
+    val predefinedItemsList = remember {
         persistentListOf(
-            TestItem("P", -1L)
+            EditableListPredefinedSectionImmutable(
+                R.string.predefined_items,
+                persistentListOf(
+                    TestItem("P", -1L)
+                ),
+                predefinedItemsExpanded,
+                { predefinedItemsExpanded.value = it }
+            )
         )
     }
+
     val editableItems = remember {
         MutableStateFlow(
             persistentListOf(
@@ -551,9 +608,7 @@ private fun EditableListTest() {
             )
         )
     }
-    val predefinedItemsExpanded = remember {
-        MutableStateFlow(true)
-    }
+
     val editableItemsExpanded = remember {
         MutableStateFlow(true)
     }
@@ -562,15 +617,13 @@ private fun EditableListTest() {
     }
 
     val listData = EditableListData(
+        predefinedItemsList,
         getStableId = {it.key},
-        predefinedItems = predefinedItems,
         editableItems = editableItems,
-        predefinedItemsExpanded = predefinedItemsExpanded,
         editableItemsExpanded = editableItemsExpanded,
+        toggleEditableItemsExpanded = { editableItemsExpanded.value = it },
         activeItem = activeItem,
-        setNewItems = { editableItems.value = it },
-        togglePredefinedItemsExpanded = { predefinedItemsExpanded.value = it },
-        toggleEditableItemsExpanded = { editableItemsExpanded.value = it }
+        setNewItems = { editableItems.value = it }
     )
     TunerTheme {
         EditableList(

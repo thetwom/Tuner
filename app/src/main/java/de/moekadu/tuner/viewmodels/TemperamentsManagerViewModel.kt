@@ -7,12 +7,15 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.moekadu.tuner.R
 import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.temperaments.TemperamentIO
 import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
+import de.moekadu.tuner.ui.common.EditableListPredefinedSectionImmutable
 import de.moekadu.tuner.ui.common.EditableListData
 import de.moekadu.tuner.ui.temperaments.TemperamentsManagerData
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,14 +41,19 @@ class TemperamentsManagerViewModel @AssistedInject constructor(
     )
 
     override val listData = EditableListData(
-        predefinedItems = pref.predefinedTemperaments,
+        predefinedItemSections = persistentListOf(
+            EditableListPredefinedSectionImmutable(
+                sectionStringResourceId = R.string.predefined_items,
+                items = pref.predefinedTemperaments,
+                isExpanded = pref.predefinedTemperamentsExpanded,
+                toggleExpanded = { pref.writePredefinedTemperamentsExpanded(it) }
+            )
+        ),
         editableItems = pref.customTemperaments,
         getStableId = { it.stableId },
-        predefinedItemsExpanded = pref.predefinedTemperamentsExpanded,
         editableItemsExpanded = pref.customTemperamentsExpanded,
         activeItem = activeTemperament,
         setNewItems = { pref.writeCustomTemperaments(it) },
-        togglePredefinedItemsExpanded = { pref.writePredefinedTemperamentsExpanded(it) },
         toggleEditableItemsExpanded = { pref.writeCustomTemperamentsExpanded(it) }
     )
 

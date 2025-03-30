@@ -42,7 +42,6 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -382,14 +381,12 @@ private class TestTemperamentManagerData : TemperamentsManagerData {
     val activeTemperament = MutableStateFlow<TemperamentWithNoteNames?>(customTemperaments.value[1])
 
     override val listData = EditableListData(
+        predefinedItemSections = persistentListOf(),
         getStableId = { it.stableId },
-        predefinedItems = persistentListOf(),
         editableItems = customTemperaments,
-        predefinedItemsExpanded = predefinedTemperamentsExpanded,
         editableItemsExpanded = customTemperamentsExpanded,
         activeItem = activeTemperament,
         setNewItems = { customTemperaments.value = it },
-        togglePredefinedItemsExpanded = { predefinedTemperamentsExpanded.value = it },
         toggleEditableItemsExpanded = { customTemperamentsExpanded.value = it }
     )
 
