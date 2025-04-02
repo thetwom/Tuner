@@ -312,4 +312,6 @@
     <string name="invalid_value">Invalid value.</string>
     <string name="maximum_value_exceeded">Maximum value of %d exceeded.</string>
     <string name="edo_temperaments">Equal temperaments</string>
+    <string name="other_temperaments">Other temperaments</string>
+    <string name="custom_temperaments">Custom temperaments</string>
 </resources>

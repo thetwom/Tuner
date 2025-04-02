@@ -44,12 +44,13 @@ class TemperamentsManagerViewModel @AssistedInject constructor(
         predefinedItemSections = persistentListOf(
             pref.edoTemperaments,
             EditableListPredefinedSectionImmutable(
-                sectionStringResourceId = R.string.predefined_items,
+                sectionStringResourceId = R.string.other_temperaments,
                 items = pref.predefinedTemperaments,
                 isExpanded = pref.predefinedTemperamentsExpanded,
                 toggleExpanded = { pref.writePredefinedTemperamentsExpanded(it) }
             )
         ),
+        editableItemsSectionResId = R.string.custom_temperaments,
         editableItems = pref.customTemperaments,
         getStableId = { it.stableId },
         editableItemsExpanded = pref.customTemperamentsExpanded,

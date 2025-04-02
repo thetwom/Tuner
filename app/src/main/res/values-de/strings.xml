@@ -113,6 +113,7 @@
     <string name="double_bass_eadg">Kontrabass</string>
     <string name="equal_temperament_12">Gleichstufige Stimmung</string>
     <string name="equal_temperament_12_desc">12 Noten pro Oktave</string>
+    <string name="equal_temperament_x_abbr">EDO %d</string>
     <string name="pythagorean_tuning">Pythagoreische Stimmung</string>
     <string name="pure_tuning">Reine Stimmung</string>
     <string name="pure_tuning_desc">5-Limit, Asymmetrische Skala</string>
@@ -250,5 +251,10 @@
     <string name="duplicate_note_name">Notenname wird bereits verwendet.</string>
     <string name="invalid_value">Ungültiger Wert.</string>
     <string name="maximum_value_exceeded">Maximaler Wert von %d überschritten.</string>
+    <string name="equal_temperament_x">Gleichstufige Stimmung %d</string>
+    <string name="equal_temperament_x_desc">%d Noten pro Oktave</string>
+    <string name="edo_temperaments">Gleichstufige Stimmungen</string>
+    <string name="other_temperaments">Weitere Stimmungen</string>
+    <string name="custom_temperaments">Benutzerdefinierte Stimmungen</string>
 
 </resources>

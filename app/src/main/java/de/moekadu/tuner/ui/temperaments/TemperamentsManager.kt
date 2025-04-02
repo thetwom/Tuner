@@ -385,6 +385,7 @@ private class TestTemperamentManagerData : TemperamentsManagerData {
 
     override val listData = EditableListData(
         predefinedItemSections = persistentListOf(),
+        editableItemsSectionResId = R.string.custom_temperaments,
         getStableId = { it.stableId },
         editableItems = customTemperaments,
         editableItemsExpanded = customTemperamentsExpanded,

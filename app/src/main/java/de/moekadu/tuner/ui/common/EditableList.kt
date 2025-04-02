@@ -95,6 +95,7 @@ class EditableListPredefinedSectionImmutable<T>(
 @Stable
 class EditableListData<T>(
     val predefinedItemSections: ImmutableList<EditableListPredefinedSection<T>>,
+    @StringRes val editableItemsSectionResId: Int,
     val editableItems: StateFlow<PersistentList<T>>,
     val editableItemsExpanded: StateFlow<Boolean>,
     val toggleEditableItemsExpanded: (Boolean) -> Unit,
@@ -472,55 +473,58 @@ fun <T>EditableList(
                 }
             }
         }
-        if (showSections) {
-            item(contentType = CONTENT_TYPE_SECTION) {
-                EditableListSection(
-                    title = stringResource(id = R.string.custom_item),
-                    expanded = editableItemsExpanded
-                ) {
-                    state.toggleEditableItemsExpanded(it)
+
+        if (editableItems.size > 0) {
+            if (showSections) {
+                item(contentType = CONTENT_TYPE_SECTION) {
+                    EditableListSection(
+                        title = stringResource(id = state.editableItemsSectionResId),
+                        expanded = editableItemsExpanded
+                    ) {
+                        state.toggleEditableItemsExpanded(it)
+                    }
                 }
             }
-        }
-        if (editableItemsExpanded && editableItems.size > 0) {
-            itemsIndexed(
-                editableItems,
-                { _, key -> state.getStableId(key) },
-                { _, _ -> CONTENT_TYPE_ITEM }
-            ) { index, listItem ->
-                val interactionSource = remember { MutableInteractionSource() }
-                drawItem(
-                    listItem,
-                    EditableListItemInfo(
-                        isActive = (state.getStableId(listItem) == activeItemId),
-                        isSelected = selectedItems.contains(state.getStableId(listItem)),
-                        readOnly = false,
-                        listIndex = index
-                    ),
-                    Modifier
-                        .animateItem()
-                        .indication(
-                            interactionSource = interactionSource,
-                            indication = ripple()
-                        )
-                        .pointerInput(Unit) {
-                            detectTapGestures(
-                                onLongPress = { state.toggleSelection(state.getStableId(listItem)) },
-                                onTap = {
-                                    if (selectedItems.size >= 1)
-                                        state.toggleSelection(state.getStableId(listItem))
-                                    else
-                                        onActivateItemClicked(listItem)
-                                },
-                                onPress = {
-                                    val press = PressInteraction.Press(it)
-                                    interactionSource.tryEmit(press)
-                                    tryAwaitRelease()
-                                    interactionSource.tryEmit(PressInteraction.Release(press))
-                                }
+            if (editableItemsExpanded) {
+                itemsIndexed(
+                    editableItems,
+                    { _, key -> state.getStableId(key) },
+                    { _, _ -> CONTENT_TYPE_ITEM }
+                ) { index, listItem ->
+                    val interactionSource = remember { MutableInteractionSource() }
+                    drawItem(
+                        listItem,
+                        EditableListItemInfo(
+                            isActive = (state.getStableId(listItem) == activeItemId),
+                            isSelected = selectedItems.contains(state.getStableId(listItem)),
+                            readOnly = false,
+                            listIndex = index
+                        ),
+                        Modifier
+                            .animateItem()
+                            .indication(
+                                interactionSource = interactionSource,
+                                indication = ripple()
                             )
-                        }
-                )
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onLongPress = { state.toggleSelection(state.getStableId(listItem)) },
+                                    onTap = {
+                                        if (selectedItems.size >= 1)
+                                            state.toggleSelection(state.getStableId(listItem))
+                                        else
+                                            onActivateItemClicked(listItem)
+                                    },
+                                    onPress = {
+                                        val press = PressInteraction.Press(it)
+                                        interactionSource.tryEmit(press)
+                                        tryAwaitRelease()
+                                        interactionSource.tryEmit(PressInteraction.Release(press))
+                                    }
+                                )
+                            }
+                    )
+                }
             }
         }
 
@@ -619,6 +623,7 @@ private fun EditableListTest() {
     val listData = EditableListData(
         predefinedItemsList,
         getStableId = {it.key},
+        editableItemsSectionResId = R.string.custom_item,
         editableItems = editableItems,
         editableItemsExpanded = editableItemsExpanded,
         toggleEditableItemsExpanded = { editableItemsExpanded.value = it },

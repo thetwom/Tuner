@@ -50,6 +50,7 @@ class InstrumentViewModel @Inject constructor(
                 { instruments.writePredefinedInstrumentsExpanded(it) }
             )
         ),
+        editableItemsSectionResId = R.string.custom_item,
         editableItems = instruments.customInstruments,
         editableItemsExpanded = instruments.customInstrumentsExpanded,
         toggleEditableItemsExpanded = { instruments.writeCustomInstrumentsExpanded(it) },

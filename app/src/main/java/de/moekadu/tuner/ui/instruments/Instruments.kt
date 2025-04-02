@@ -358,6 +358,7 @@ private class TestInstrumentsData : InstrumentsData {
             )
         ),
         getStableId = { it.stableId },
+        editableItemsSectionResId = R.string.custom_item,
         editableItems = customInstruments,
         editableItemsExpanded = customInstrumentsExpanded,
         toggleEditableItemsExpanded = { customInstrumentsExpanded.value = it },

@@ -273,104 +273,104 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament2> {
         )
     )
 
-    // edo17
-    temperaments.add(
-        Temperament2(
-            GetTextFromResId(R.string.equal_temperament_17),
-            GetTextFromResId(R.string.equal_temperament_17_abbr),
-            GetTextFromResId(R.string.equal_temperament_17_desc),
-            17,
-            (-1 - temperaments.size).toLong()
-        )
-    )
-
-    // edo19
-    temperaments.add(
-        Temperament2(
-            GetTextFromResId(R.string.equal_temperament_19),
-            GetTextFromResId(R.string.equal_temperament_19_abbr),
-            GetTextFromResId(R.string.equal_temperament_19_desc),
-            19,
-            (-1 - temperaments.size).toLong()
-        )
-    )
-
-    // edo22
-    temperaments.add(
-        Temperament2(
-            GetTextFromResId(R.string.equal_temperament_22),
-            GetTextFromResId(R.string.equal_temperament_22_abbr),
-            GetTextFromResId(R.string.equal_temperament_22_desc),
-            22,
-            (-1 - temperaments.size).toLong()
-        )
-    )
-
-    // edo24
-    temperaments.add(
-        Temperament2(
-            GetTextFromResId(R.string.equal_temperament_24),
-            GetTextFromResId(R.string.equal_temperament_24_abbr),
-            GetTextFromResId(R.string.equal_temperament_24_desc),
-            24,
-            (-1 - temperaments.size).toLong()
-        )
-    )
-
-    // edo27
-    temperaments.add(
-        Temperament2(
-            GetTextFromResId(R.string.equal_temperament_27),
-            GetTextFromResId(R.string.equal_temperament_27_abbr),
-            GetTextFromResId(R.string.equal_temperament_27_desc),
-            27,
-            (-1 - temperaments.size).toLong()
-        )
-    )
-
-    // edo29
-    temperaments.add(
-        Temperament2(
-            GetTextFromResId(R.string.equal_temperament_29),
-            GetTextFromResId(R.string.equal_temperament_29_abbr),
-            GetTextFromResId(R.string.equal_temperament_29_desc),
-            29,
-            (-1 - temperaments.size).toLong()
-        )
-    )
-
-    // edo31
-    temperaments.add(
-        Temperament2(
-            GetTextFromResId(R.string.equal_temperament_31),
-            GetTextFromResId(R.string.equal_temperament_31_abbr),
-            GetTextFromResId(R.string.equal_temperament_31_desc),
-            31,
-            (-1 - temperaments.size).toLong()
-        )
-    )
-
-    // edo41
-    temperaments.add(
-        Temperament2(
-            GetTextFromResId(R.string.equal_temperament_41),
-            GetTextFromResId(R.string.equal_temperament_41_abbr),
-            GetTextFromResId(R.string.equal_temperament_41_desc),
-            41,
-            (-1 - temperaments.size).toLong()
-        )
-    )
-
-    // edo53
-    temperaments.add(
-        Temperament2(
-            GetTextFromResId(R.string.equal_temperament_53),
-            GetTextFromResId(R.string.equal_temperament_53_abbr),
-            GetTextFromResId(R.string.equal_temperament_53_desc),
-            53,
-            (-1 - temperaments.size).toLong()
-        )
-    )
+//    // edo17
+//    temperaments.add(
+//        Temperament2(
+//            GetTextFromResId(R.string.equal_temperament_17),
+//            GetTextFromResId(R.string.equal_temperament_17_abbr),
+//            GetTextFromResId(R.string.equal_temperament_17_desc),
+//            17,
+//            (-1 - temperaments.size).toLong()
+//        )
+//    )
+//
+//    // edo19
+//    temperaments.add(
+//        Temperament2(
+//            GetTextFromResId(R.string.equal_temperament_19),
+//            GetTextFromResId(R.string.equal_temperament_19_abbr),
+//            GetTextFromResId(R.string.equal_temperament_19_desc),
+//            19,
+//            (-1 - temperaments.size).toLong()
+//        )
+//    )
+//
+//    // edo22
+//    temperaments.add(
+//        Temperament2(
+//            GetTextFromResId(R.string.equal_temperament_22),
+//            GetTextFromResId(R.string.equal_temperament_22_abbr),
+//            GetTextFromResId(R.string.equal_temperament_22_desc),
+//            22,
+//            (-1 - temperaments.size).toLong()
+//        )
+//    )
+//
+//    // edo24
+//    temperaments.add(
+//        Temperament2(
+//            GetTextFromResId(R.string.equal_temperament_24),
+//            GetTextFromResId(R.string.equal_temperament_24_abbr),
+//            GetTextFromResId(R.string.equal_temperament_24_desc),
+//            24,
+//            (-1 - temperaments.size).toLong()
+//        )
+//    )
+//
+//    // edo27
+//    temperaments.add(
+//        Temperament2(
+//            GetTextFromResId(R.string.equal_temperament_27),
+//            GetTextFromResId(R.string.equal_temperament_27_abbr),
+//            GetTextFromResId(R.string.equal_temperament_27_desc),
+//            27,
+//            (-1 - temperaments.size).toLong()
+//        )
+//    )
+//
+//    // edo29
+//    temperaments.add(
+//        Temperament2(
+//            GetTextFromResId(R.string.equal_temperament_29),
+//            GetTextFromResId(R.string.equal_temperament_29_abbr),
+//            GetTextFromResId(R.string.equal_temperament_29_desc),
+//            29,
+//            (-1 - temperaments.size).toLong()
+//        )
+//    )
+//
+//    // edo31
+//    temperaments.add(
+//        Temperament2(
+//            GetTextFromResId(R.string.equal_temperament_31),
+//            GetTextFromResId(R.string.equal_temperament_31_abbr),
+//            GetTextFromResId(R.string.equal_temperament_31_desc),
+//            31,
+//            (-1 - temperaments.size).toLong()
+//        )
+//    )
+//
+//    // edo41
+//    temperaments.add(
+//        Temperament2(
+//            GetTextFromResId(R.string.equal_temperament_41),
+//            GetTextFromResId(R.string.equal_temperament_41_abbr),
+//            GetTextFromResId(R.string.equal_temperament_41_desc),
+//            41,
+//            (-1 - temperaments.size).toLong()
+//        )
+//    )
+//
+//    // edo53
+//    temperaments.add(
+//        Temperament2(
+//            GetTextFromResId(R.string.equal_temperament_53),
+//            GetTextFromResId(R.string.equal_temperament_53_abbr),
+//            GetTextFromResId(R.string.equal_temperament_53_desc),
+//            53,
+//            (-1 - temperaments.size).toLong()
+//        )
+//    )
 
     // pythagorean
     temperaments.add(
