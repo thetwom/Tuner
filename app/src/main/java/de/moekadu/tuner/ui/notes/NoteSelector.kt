@@ -59,7 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScale2
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.ui.theme.TunerTheme
@@ -223,7 +223,7 @@ fun NoteSelector(
 @Composable
 fun NoteSelector(
     selectedIndex: Int,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     fontSize: TextUnit = TextUnit.Unspecified,

@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScale2
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.ui.common.Label
 import de.moekadu.tuner.ui.plot.Anchor
@@ -66,7 +66,7 @@ import kotlinx.collections.immutable.persistentListOf
 fun FrequencyPlot(
     frequencyPlotData: LineCoordinates,
     targetNote: MusicalNote,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
     gestureBasedViewPort: GestureBasedViewPort = remember { GestureBasedViewPort() },
     plotWindowPadding: DpRect = DpRect(0.dp, 0.dp, 0.dp, 0.dp),

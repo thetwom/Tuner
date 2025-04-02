@@ -70,7 +70,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScale2
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.rememberMaxNoteSize
@@ -124,7 +124,7 @@ private fun findIndexOfClosestScrollableHighlightedString(
     strings: List<StringWithInfo>?,
     highlightedStringKey: Int?,
     highlightedStringNote: MusicalNote?,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     listState: LazyListState
 ): Int {
     return if (highlightedStringKey == null && highlightedStringNote == null) {
@@ -304,7 +304,7 @@ private fun StringsSidebar(
 @Composable
 fun Strings(
     strings: ImmutableList<StringWithInfo>?, // if null, we assume chromatic
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
     tuningState: TuningState = TuningState.Unknown,
     highlightedNoteKey: Int? = null,

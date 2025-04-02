@@ -32,7 +32,7 @@ import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.notedetection.checkTuning
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScale2
 import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.tuner.Tuner
 import de.moekadu.tuner.ui.instruments.StringWithInfo
@@ -53,7 +53,7 @@ class InstrumentTunerViewModel @Inject constructor (
     val instruments: InstrumentResources,
     val temperaments: TemperamentResources
 ) : ViewModel(), InstrumentTunerData {
-    override val musicalScale: StateFlow<MusicalScale> get() = temperaments.musicalScale
+    override val musicalScale: StateFlow<MusicalScale2> get() = temperaments.musicalScale
     override val notePrintOptions: StateFlow<NotePrintOptions> get() = pref.notePrintOptions
     override val toleranceInCents: StateFlow<Int> get() = pref.toleranceInCents
 

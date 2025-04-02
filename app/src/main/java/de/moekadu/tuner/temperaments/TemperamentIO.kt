@@ -37,7 +37,7 @@ object TemperamentIO {
         val instruments: List<EditableTemperament>
     )
 
-    fun temperamentsListToString(context: Context, temperaments: List<TemperamentWithNoteNames>)
+    fun temperamentsListToString(context: Context, temperaments: List<TemperamentWithNoteNames2>)
     : String {
         val writer = StringWriter()
         writeTemperaments(temperaments, writer.buffered(), context)
@@ -45,7 +45,7 @@ object TemperamentIO {
     }
 
     fun writeTemperaments(
-        temperaments: List<TemperamentWithNoteNames>,
+        temperaments: List<TemperamentWithNoteNames2>,
         writer: BufferedWriter,
         context: Context) {
         writeVersion(writer)
@@ -59,7 +59,7 @@ object TemperamentIO {
     }
 
     fun writeTemperament(
-        temperament: TemperamentWithNoteNames,
+        temperament: TemperamentWithNoteNames2,
         writer: BufferedWriter,
         context: Context
     ) {
@@ -171,7 +171,7 @@ object TemperamentIO {
                             abbreviation ?: "",
                             description ?: "",
                             noteLines.toTypedArray(),
-                            Temperament.NO_STABLE_ID
+                            Temperament2.NO_STABLE_ID
                         )
                     )
                 }

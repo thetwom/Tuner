@@ -35,17 +35,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import de.moekadu.tuner.misc.StringOrResId
-import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.misc.GetTextFromString
+import de.moekadu.tuner.temperaments.Temperament2
 import de.moekadu.tuner.ui.common.EditableListItem
 import de.moekadu.tuner.ui.common.ListItemTask
 import de.moekadu.tuner.ui.theme.TunerTheme
 
 @Composable
 fun TemperamentItem(
-    temperament: Temperament,
+    temperament: Temperament2,
     modifier: Modifier = Modifier,
-    onOptionsClicked: (temperament: Temperament, task: ListItemTask) -> Unit = { _, _ ->},
+    onOptionsClicked: (temperament: Temperament2, task: ListItemTask) -> Unit = { _, _ ->},
     isActive: Boolean = false,
     isSelected: Boolean = false,
     readOnly: Boolean = false, // disable delete/edit options
@@ -93,19 +93,19 @@ fun TemperamentItem(
 private fun TemperamentItemPreview() {
     TunerTheme {
         val temperament1 = remember {
-            Temperament.create(
-                StringOrResId("Name 1"),
-                StringOrResId("Abbr"),
-                StringOrResId("The description of the first"),
+            Temperament2(
+                GetTextFromString("Name 1"),
+                GetTextFromString("Abbr"),
+                GetTextFromString("The description of the first"),
                 12,
                 1L
             )
         }
         val temperament2 = remember {
-            Temperament.create(
-                StringOrResId("Name 2"),
-                StringOrResId("Abbr"),
-                StringOrResId("The description of the second"),
+            Temperament2(
+                GetTextFromString("Name 2"),
+                GetTextFromString("Abbr"),
+                GetTextFromString("The description of the second"),
                 12,
                 1L
             )

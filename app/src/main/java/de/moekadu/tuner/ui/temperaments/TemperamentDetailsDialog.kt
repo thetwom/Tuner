@@ -41,7 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.NoteNames
-import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.Temperament2
 import de.moekadu.tuner.temperaments.createTestTemperamentWerckmeisterVI
 import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.ui.notes.CentAndRatioTable
@@ -51,7 +51,7 @@ import de.moekadu.tuner.ui.theme.TunerTheme
 
 @Composable
 fun TemperamentDetailsDialog(
-    temperament: Temperament,
+    temperament: Temperament2,
     noteNames: NoteNames,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,

@@ -20,6 +20,9 @@ package de.moekadu.tuner.temperaments
 
 import androidx.compose.runtime.Immutable
 import de.moekadu.tuner.R
+import de.moekadu.tuner.misc.GetText
+import de.moekadu.tuner.misc.GetTextFromResId
+import de.moekadu.tuner.misc.GetTextFromString
 import de.moekadu.tuner.misc.StringOrResId
 import kotlinx.serialization.Serializable
 import kotlin.math.log
@@ -49,6 +52,33 @@ private fun centsToRatio(cents: Double): Double {
     return (2.0.pow(cents / 1200.0))
 }
 
+/** Old temperament class. */
+@Serializable
+@Immutable
+data class Temperament(
+    val name: StringOrResId,
+    val abbreviation: StringOrResId,
+    val description: StringOrResId,
+    val cents: DoubleArray,
+    val rationalNumbers: Array<RationalNumber>?,
+    val circleOfFifths: TemperamentCircleOfFifths?,
+    val equalOctaveDivision: Int?,
+    val stableId: Long
+) {
+    fun toNew(): Temperament2 {
+        return Temperament2(
+            name = name.toGetText(),
+            abbreviation = abbreviation.toGetText(),
+            description = description.toGetText(),
+            cents = cents,
+            rationalNumbers = rationalNumbers,
+            circleOfFifths = circleOfFifths,
+            equalOctaveDivision = equalOctaveDivision,
+            stableId = stableId
+        )
+    }
+}
+
 /** Temperament class which divides octaves into single notes.
  * @param name Name of temperament.
  * @param abbreviation Short name for temperament.
@@ -69,10 +99,10 @@ private fun centsToRatio(cents: Double): Double {
  */
 @Serializable
 @Immutable
-data class Temperament(
-    val name: StringOrResId,
-    val abbreviation: StringOrResId,
-    val description: StringOrResId,
+data class Temperament2(
+    val name: GetText,
+    val abbreviation: GetText,
+    val description: GetText,
     val cents: DoubleArray,
     val rationalNumbers: Array<RationalNumber>?,
     val circleOfFifths: TemperamentCircleOfFifths?,
@@ -82,125 +112,92 @@ data class Temperament(
     /** Number of notes per octave. */
     val numberOfNotesPerOctave get() = cents.size - 1
 
+    /** Create temperament if cents are known.
+     * @param name Name of temperament.
+     * @param abbreviation Short name for temperament.
+     * @param description Temperament description.
+     * @param cents Cents, including 1200 as the octave value.
+     * @param stableId Unique id to identify the temperament.
+     */
+    constructor(
+        name: GetText,
+        abbreviation: GetText,
+        description: GetText,
+        cents: DoubleArray,
+        stableId: Long
+    ): this(
+        name, abbreviation, description, cents,
+        null, null, null, stableId
+    )
+
+
+    /** Create temperament if rational numbers are known.
+     * @param name Name of temperament.
+     * @param abbreviation Short name for temperament.
+     * @param description Temperament description.
+     * @param rationalNumbers Rational numbers including 2 for the octave value.
+     * @param stableId Unique id to identify the temperament.
+     */
+    constructor(
+        name: GetText,
+        abbreviation: GetText,
+        description: GetText,
+        rationalNumbers: Array<RationalNumber>,
+        stableId: Long
+    ) : this(
+        name, abbreviation, description,
+        rationalNumbers.map { ratioToCents(it.toDouble()) }.toDoubleArray(),
+        rationalNumbers,null, null, stableId
+    )
+
+    /** Create temperament if circle of fifths definition is known.
+     * @param name Name of temperament.
+     * @param abbreviation Short name for temperament.
+     * @param description Temperament description.
+     * @param circleOfFifths Circle of fifths.
+     * @param stableId Unique id to identify the temperament.
+     */
+    constructor(
+        name: GetText,
+        abbreviation: GetText,
+        description: GetText,
+        circleOfFifths: TemperamentCircleOfFifths,
+        stableId: Long
+    ) : this(
+        name, abbreviation, description,
+        circleOfFifths.getRatios().map { ratioToCents(it) }.toDoubleArray(),
+        null, circleOfFifths, null, stableId
+    )
+
+    /** Create equally divided octave temperament.
+     * @param name Name of temperament.
+     * @param abbreviation Short name for temperament.
+     * @param description Temperament description.
+     * @param equalOctaveDivision Number of notes within octave (So the classical scale with
+     *    12 notes per octave would require the number 12)
+     * @param stableId Unique id to identify the temperament.
+     */
+    constructor(
+        name: GetText,
+        abbreviation: GetText,
+        description: GetText,
+        equalOctaveDivision: Int,
+        stableId: Long
+    ) : this(
+        name, abbreviation, description,
+        DoubleArray(equalOctaveDivision + 1) {
+            it * 1200.0 / equalOctaveDivision.toDouble()
+        },
+        null,
+        if (equalOctaveDivision == 12)
+            circleOfFifthsEDO12
+        else
+            null,
+        equalOctaveDivision,
+        stableId
+    )
+
     companion object {
-        /** Create temperament if cents are known.
-         * @param name Name of temperament.
-         * @param abbreviation Short name for temperament.
-         * @param description Temperament description.
-         * @param cents Cents, including 1200 as the octave value.
-         * @param stableId Unique id to identify the temperament.
-         * @return Temperament.
-         */
-        fun create(
-            name: StringOrResId,
-            abbreviation: StringOrResId,
-            description: StringOrResId,
-            cents: DoubleArray,
-            stableId: Long
-        )
-                : Temperament {
-            return Temperament(
-                name,
-                abbreviation,
-                description,
-                cents,
-                null,
-                null,
-                null,
-                stableId
-            )
-        }
-
-        /** Create temperament if rational numbers are known.
-         * @param name Name of temperament.
-         * @param abbreviation Short name for temperament.
-         * @param description Temperament description.
-         * @param rationalNumbers Rational numbers including 2 for the octave value.
-         * @param stableId Unique id to identify the temperament.
-         * @return Temperament.
-         */
-        fun create(
-            name: StringOrResId,
-            abbreviation: StringOrResId,
-            description: StringOrResId,
-            rationalNumbers: Array<RationalNumber>,
-            stableId: Long
-        )
-                : Temperament {
-            return Temperament(
-                name,
-                abbreviation,
-                description,
-                rationalNumbers.map { ratioToCents(it.toDouble()) }.toDoubleArray(),
-                rationalNumbers,
-                null,
-                null,
-                stableId
-            )
-        }
-
-        /** Create temperament if circle of fifths definition is known.
-         * @param name Name of temperament.
-         * @param abbreviation Short name for temperament.
-         * @param description Temperament description.
-         * @param circleOfFifths Circle of fifths.
-         * @param stableId Unique id to identify the temperament.
-         * @return Temperament.
-         */
-        fun create(
-            name: StringOrResId,
-            abbreviation: StringOrResId,
-            description: StringOrResId,
-            circleOfFifths: TemperamentCircleOfFifths,
-            stableId: Long
-        ): Temperament {
-            return Temperament(
-                name,
-                abbreviation,
-                description,
-                circleOfFifths.getRatios().map { ratioToCents(it) }.toDoubleArray(),
-                null,
-                circleOfFifths,
-                null,
-                stableId
-            )
-        }
-
-        /** Create equally divided octave temperament.
-         * @param name Name of temperament.
-         * @param abbreviation Short name for temperament.
-         * @param description Temperament description.
-         * @param equalOctaveDivision Number of notes within octave (So the classical scale with
-         *    12 notes per octave would require the number 12)
-         * @param stableId Unique id to identify the temperament.
-         * @return Temperament.
-         */
-        fun create(
-            name: StringOrResId,
-            abbreviation: StringOrResId,
-            description: StringOrResId,
-            equalOctaveDivision: Int,
-            stableId: Long
-        ): Temperament {
-            val circleOfFifths = if (equalOctaveDivision == 12)
-                circleOfFifthsEDO12
-            else
-                null
-            val cents = DoubleArray(equalOctaveDivision + 1) {
-                it * 1200.0 / equalOctaveDivision.toDouble()
-            }
-            return Temperament(
-                name,
-                abbreviation,
-                description,
-                cents,
-                null,
-                circleOfFifths,
-                equalOctaveDivision,
-                stableId
-            )
-        }
-
         const val NO_STABLE_ID = Long.MAX_VALUE
     }
 
@@ -208,7 +205,7 @@ data class Temperament(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Temperament
+        other as Temperament2
 
         if (name != other.name) return false
         if (abbreviation != other.abbreviation) return false
@@ -241,36 +238,36 @@ data class Temperament(
 val temperamentDatabase = createPredefinedTemperaments()
 
 /** Create test temperament */
-fun createTestTemperamentEdo12(): Temperament {
-    return Temperament.create(
-        StringOrResId(R.string.equal_temperament_12),
-        StringOrResId(R.string.equal_temperament_12_abbr),
-        StringOrResId(R.string.equal_temperament_12_desc),
+fun createTestTemperamentEdo12(): Temperament2 {
+    return Temperament2(
+        GetTextFromResId(R.string.equal_temperament_12),
+        GetTextFromResId(R.string.equal_temperament_12_abbr),
+        GetTextFromResId(R.string.equal_temperament_12_desc),
         12,
         1L
     )
 }
 
 /** Create test temperament */
-fun createTestTemperamentWerckmeisterVI(): Temperament {
-    return Temperament.create(
-        StringOrResId(R.string.werckmeister_vi),
-        StringOrResId(R.string.werckmeister_vi_abbr),
-        StringOrResId(R.string.werckmeister_vi_desc),
+fun createTestTemperamentWerckmeisterVI(): Temperament2 {
+    return Temperament2(
+        GetTextFromResId(R.string.werckmeister_vi),
+        GetTextFromResId(R.string.werckmeister_vi_abbr),
+        GetTextFromResId(R.string.werckmeister_vi_desc),
         rationalNumberTemperamentWerckmeisterVI,
         1L
     )
 }
 
-private fun createPredefinedTemperaments(): ArrayList<Temperament> {
-    val temperaments = ArrayList<Temperament>()
+private fun createPredefinedTemperaments(): ArrayList<Temperament2> {
+    val temperaments = ArrayList<Temperament2>()
 
     // edo12
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.equal_temperament_12),
-            StringOrResId(R.string.equal_temperament_12_abbr),
-            StringOrResId(R.string.equal_temperament_12_desc),
+        Temperament2(
+            GetTextFromResId(R.string.equal_temperament_12),
+            GetTextFromResId(R.string.equal_temperament_12_abbr),
+            GetTextFromResId(R.string.equal_temperament_12_desc),
             12,
             (-1 - temperaments.size).toLong()
         )
@@ -278,10 +275,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // edo17
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.equal_temperament_17),
-            StringOrResId(R.string.equal_temperament_17_abbr),
-            StringOrResId(R.string.equal_temperament_17_desc),
+        Temperament2(
+            GetTextFromResId(R.string.equal_temperament_17),
+            GetTextFromResId(R.string.equal_temperament_17_abbr),
+            GetTextFromResId(R.string.equal_temperament_17_desc),
             17,
             (-1 - temperaments.size).toLong()
         )
@@ -289,10 +286,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // edo19
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.equal_temperament_19),
-            StringOrResId(R.string.equal_temperament_19_abbr),
-            StringOrResId(R.string.equal_temperament_19_desc),
+        Temperament2(
+            GetTextFromResId(R.string.equal_temperament_19),
+            GetTextFromResId(R.string.equal_temperament_19_abbr),
+            GetTextFromResId(R.string.equal_temperament_19_desc),
             19,
             (-1 - temperaments.size).toLong()
         )
@@ -300,10 +297,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // edo22
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.equal_temperament_22),
-            StringOrResId(R.string.equal_temperament_22_abbr),
-            StringOrResId(R.string.equal_temperament_22_desc),
+        Temperament2(
+            GetTextFromResId(R.string.equal_temperament_22),
+            GetTextFromResId(R.string.equal_temperament_22_abbr),
+            GetTextFromResId(R.string.equal_temperament_22_desc),
             22,
             (-1 - temperaments.size).toLong()
         )
@@ -311,10 +308,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // edo24
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.equal_temperament_24),
-            StringOrResId(R.string.equal_temperament_24_abbr),
-            StringOrResId(R.string.equal_temperament_24_desc),
+        Temperament2(
+            GetTextFromResId(R.string.equal_temperament_24),
+            GetTextFromResId(R.string.equal_temperament_24_abbr),
+            GetTextFromResId(R.string.equal_temperament_24_desc),
             24,
             (-1 - temperaments.size).toLong()
         )
@@ -322,10 +319,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // edo27
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.equal_temperament_27),
-            StringOrResId(R.string.equal_temperament_27_abbr),
-            StringOrResId(R.string.equal_temperament_27_desc),
+        Temperament2(
+            GetTextFromResId(R.string.equal_temperament_27),
+            GetTextFromResId(R.string.equal_temperament_27_abbr),
+            GetTextFromResId(R.string.equal_temperament_27_desc),
             27,
             (-1 - temperaments.size).toLong()
         )
@@ -333,10 +330,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // edo29
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.equal_temperament_29),
-            StringOrResId(R.string.equal_temperament_29_abbr),
-            StringOrResId(R.string.equal_temperament_29_desc),
+        Temperament2(
+            GetTextFromResId(R.string.equal_temperament_29),
+            GetTextFromResId(R.string.equal_temperament_29_abbr),
+            GetTextFromResId(R.string.equal_temperament_29_desc),
             29,
             (-1 - temperaments.size).toLong()
         )
@@ -344,10 +341,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // edo31
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.equal_temperament_31),
-            StringOrResId(R.string.equal_temperament_31_abbr),
-            StringOrResId(R.string.equal_temperament_31_desc),
+        Temperament2(
+            GetTextFromResId(R.string.equal_temperament_31),
+            GetTextFromResId(R.string.equal_temperament_31_abbr),
+            GetTextFromResId(R.string.equal_temperament_31_desc),
             31,
             (-1 - temperaments.size).toLong()
         )
@@ -355,10 +352,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // edo41
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.equal_temperament_41),
-            StringOrResId(R.string.equal_temperament_41_abbr),
-            StringOrResId(R.string.equal_temperament_41_desc),
+        Temperament2(
+            GetTextFromResId(R.string.equal_temperament_41),
+            GetTextFromResId(R.string.equal_temperament_41_abbr),
+            GetTextFromResId(R.string.equal_temperament_41_desc),
             41,
             (-1 - temperaments.size).toLong()
         )
@@ -366,10 +363,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // edo53
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.equal_temperament_53),
-            StringOrResId(R.string.equal_temperament_53_abbr),
-            StringOrResId(R.string.equal_temperament_53_desc),
+        Temperament2(
+            GetTextFromResId(R.string.equal_temperament_53),
+            GetTextFromResId(R.string.equal_temperament_53_abbr),
+            GetTextFromResId(R.string.equal_temperament_53_desc),
             53,
             (-1 - temperaments.size).toLong()
         )
@@ -377,10 +374,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // pythagorean
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.pythagorean_tuning),
-            StringOrResId(R.string.pythagorean_tuning_abbr),
-            StringOrResId(""),
+        Temperament2(
+            GetTextFromResId(R.string.pythagorean_tuning),
+            GetTextFromResId(R.string.pythagorean_tuning_abbr),
+            GetTextFromString(""),
             circleOfFifthsPythagorean,
             (-1 - temperaments.size).toLong()
         )
@@ -388,10 +385,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // pure
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.pure_tuning),
-            StringOrResId(R.string.pure_tuning_abbr),
-            StringOrResId(R.string.pure_tuning_desc),
+        Temperament2(
+            GetTextFromResId(R.string.pure_tuning),
+            GetTextFromResId(R.string.pure_tuning_abbr),
+            GetTextFromResId(R.string.pure_tuning_desc),
             rationalNumberTemperamentPure,
             (-1 - temperaments.size).toLong()
         )
@@ -399,10 +396,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // quarter-comma mean
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.quarter_comma_mean_tone),
-            StringOrResId(R.string.quarter_comma_mean_tone_abbr),
-            StringOrResId(R.string.quarter_comma_mean_tone_desc),
+        Temperament2(
+            GetTextFromResId(R.string.quarter_comma_mean_tone),
+            GetTextFromResId(R.string.quarter_comma_mean_tone_abbr),
+            GetTextFromResId(R.string.quarter_comma_mean_tone_desc),
             circleOfFifthsQuarterCommaMeanTone,
             (-1 - temperaments.size).toLong()
         )
@@ -410,10 +407,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // extended quarter-comma mean
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.extended_quarter_comma_mean_tone),
-            StringOrResId(R.string.extended_quarter_comma_mean_tone_abbr),
-            StringOrResId(R.string.extended_quarter_comma_mean_tone_desc),
+        Temperament2(
+            GetTextFromResId(R.string.extended_quarter_comma_mean_tone),
+            GetTextFromResId(R.string.extended_quarter_comma_mean_tone_abbr),
+            GetTextFromResId(R.string.extended_quarter_comma_mean_tone_desc),
             extendedQuarterCommaMeantone,
             (-1 - temperaments.size).toLong()
         )
@@ -421,10 +418,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // third-comma mean
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.third_comma_mean_tone),
-            StringOrResId(R.string.third_comma_mean_tone_abbr),
-            StringOrResId(R.string.third_comma_mean_tone_desc),
+        Temperament2(
+            GetTextFromResId(R.string.third_comma_mean_tone),
+            GetTextFromResId(R.string.third_comma_mean_tone_abbr),
+            GetTextFromResId(R.string.third_comma_mean_tone_desc),
             circleOfFifthsThirdCommaMeanTone,
             (-1 - temperaments.size).toLong()
         )
@@ -432,10 +429,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // fifth-comma mean
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.fifth_comma_mean_tone),
-            StringOrResId(R.string.fifth_comma_mean_tone_abbr),
-            StringOrResId(R.string.fifth_comma_mean_tone_desc),
+        Temperament2(
+            GetTextFromResId(R.string.fifth_comma_mean_tone),
+            GetTextFromResId(R.string.fifth_comma_mean_tone_abbr),
+            GetTextFromResId(R.string.fifth_comma_mean_tone_desc),
             circleOfFifthsFifthCommaMeanTone,
             (-1 - temperaments.size).toLong()
         )
@@ -443,10 +440,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // Werckmeister III
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.werckmeister_iii),
-            StringOrResId(R.string.werckmeister_iii_abbr),
-            StringOrResId(R.string.werckmeister_iii_desc),
+        Temperament2(
+            GetTextFromResId(R.string.werckmeister_iii),
+            GetTextFromResId(R.string.werckmeister_iii_abbr),
+            GetTextFromResId(R.string.werckmeister_iii_desc),
             circleOfFifthsWerckmeisterIII,
             (-1 - temperaments.size).toLong()
         )
@@ -454,10 +451,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // Werckmeister IV
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.werckmeister_iv),
-            StringOrResId(R.string.werckmeister_iv_abbr),
-            StringOrResId(R.string.werckmeister_iv_desc),
+        Temperament2(
+            GetTextFromResId(R.string.werckmeister_iv),
+            GetTextFromResId(R.string.werckmeister_iv_abbr),
+            GetTextFromResId(R.string.werckmeister_iv_desc),
             circleOfFifthsWerckmeisterIV,
             (-1 - temperaments.size).toLong()
         )
@@ -465,10 +462,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // Werckmeister V
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.werckmeister_v),
-            StringOrResId(R.string.werckmeister_v_abbr),
-            StringOrResId(R.string.werckmeister_v_desc),
+        Temperament2(
+            GetTextFromResId(R.string.werckmeister_v),
+            GetTextFromResId(R.string.werckmeister_v_abbr),
+            GetTextFromResId(R.string.werckmeister_v_desc),
             circleOfFifthsWerckmeisterV,
             (-1 - temperaments.size).toLong()
         )
@@ -476,10 +473,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // Werckmeister VI
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.werckmeister_vi),
-            StringOrResId(R.string.werckmeister_vi_abbr),
-            StringOrResId(R.string.werckmeister_vi_desc),
+        Temperament2(
+            GetTextFromResId(R.string.werckmeister_vi),
+            GetTextFromResId(R.string.werckmeister_vi_abbr),
+            GetTextFromResId(R.string.werckmeister_vi_desc),
             rationalNumberTemperamentWerckmeisterVI,
             (-1 - temperaments.size).toLong()
         )
@@ -487,10 +484,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // Kirnberger 1
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.kirnberger1),
-            StringOrResId(R.string.kirnberger1_abbr),
-            StringOrResId(R.string.kirnberger1_desc),
+        Temperament2(
+            GetTextFromResId(R.string.kirnberger1),
+            GetTextFromResId(R.string.kirnberger1_abbr),
+            GetTextFromResId(R.string.kirnberger1_desc),
             circleOfFifthsKirnberger1,
             (-1 - temperaments.size).toLong()
         )
@@ -498,10 +495,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // Kirnberger 2
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.kirnberger2),
-            StringOrResId(R.string.kirnberger2_abbr),
-            StringOrResId(R.string.kirnberger2_desc),
+        Temperament2(
+            GetTextFromResId(R.string.kirnberger2),
+            GetTextFromResId(R.string.kirnberger2_abbr),
+            GetTextFromResId(R.string.kirnberger2_desc),
             circleOfFifthsKirnberger2,
             (-1 - temperaments.size).toLong()
         )
@@ -509,10 +506,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // Kirnberger 3
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.kirnberger3),
-            StringOrResId(R.string.kirnberger3_abbr),
-            StringOrResId(R.string.kirnberger3_desc),
+        Temperament2(
+            GetTextFromResId(R.string.kirnberger3),
+            GetTextFromResId(R.string.kirnberger3_abbr),
+            GetTextFromResId(R.string.kirnberger3_desc),
             circleOfFifthsKirnberger3,
             (-1 - temperaments.size).toLong()
         )
@@ -520,10 +517,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // Neidhardt 1
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.neidhardt1),
-            StringOrResId(R.string.neidhardt1_abbr),
-            StringOrResId(R.string.neidhardt1_desc),
+        Temperament2(
+            GetTextFromResId(R.string.neidhardt1),
+            GetTextFromResId(R.string.neidhardt1_abbr),
+            GetTextFromResId(R.string.neidhardt1_desc),
             circleOfFifthsNeidhardt1,
             (-1 - temperaments.size).toLong()
         )
@@ -531,10 +528,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // Neidhardt 2
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.neidhardt2),
-            StringOrResId(R.string.neidhardt2_abbr),
-            StringOrResId(R.string.neidhardt2_desc),
+        Temperament2(
+            GetTextFromResId(R.string.neidhardt2),
+            GetTextFromResId(R.string.neidhardt2_abbr),
+            GetTextFromResId(R.string.neidhardt2_desc),
             circleOfFifthsNeidhardt2,
             (-1 - temperaments.size).toLong()
         )
@@ -542,10 +539,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // Neidhardt 3
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.neidhardt3),
-            StringOrResId(R.string.neidhardt3_abbr),
-            StringOrResId(R.string.neidhardt3_desc),
+        Temperament2(
+            GetTextFromResId(R.string.neidhardt3),
+            GetTextFromResId(R.string.neidhardt3_abbr),
+            GetTextFromResId(R.string.neidhardt3_desc),
             circleOfFifthsNeidhardt3,
             (-1 - temperaments.size).toLong()
         )
@@ -553,10 +550,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // Valotti
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.valotti),
-            StringOrResId(R.string.valotti_abbr),
-            StringOrResId(""),
+        Temperament2(
+            GetTextFromResId(R.string.valotti),
+            GetTextFromResId(R.string.valotti_abbr),
+            GetTextFromString(""),
             circleOfFifthsValotti,
             (-1 - temperaments.size).toLong()
         )
@@ -564,10 +561,10 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament> {
 
     // Young 2
     temperaments.add(
-        Temperament.create(
-            StringOrResId(R.string.young2),
-            StringOrResId(R.string.young2_abbr),
-            StringOrResId(""),
+        Temperament2(
+            GetTextFromResId(R.string.young2),
+            GetTextFromResId(R.string.young2_abbr),
+            GetTextFromString(""),
             circleOfFifthsYoung2,
             (-1 - temperaments.size).toLong()
         )

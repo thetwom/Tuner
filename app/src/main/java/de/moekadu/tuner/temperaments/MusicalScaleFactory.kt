@@ -21,7 +21,7 @@ package de.moekadu.tuner.temperaments
 class MusicalScaleFactory {
     companion object {
         fun create(
-            temperament: Temperament,
+            temperament: Temperament2,
             noteNames: NoteNames?,
             referenceNote: MusicalNote?,
             rootNote: MusicalNote?,
@@ -29,14 +29,14 @@ class MusicalScaleFactory {
             frequencyMin: Float,
             frequencyMax: Float,
             stretchTuning: StretchTuning
-        ): MusicalScale {
+        ): MusicalScale2 {
             val noteNamesResolved = noteNames ?: generateNoteNames(temperament.numberOfNotesPerOctave)!!
 //            Log.v("Tuner", "MusicalScale2Factory: numberOfNotesPerOctave=${temperament.numberOfNotesPerOctave}, noteNames size=${noteNamesResolved.size}")
             assert(temperament.numberOfNotesPerOctave == noteNamesResolved.size)
             val rootNoteResolved = rootNote ?: noteNamesResolved[0]
             val referenceNoteResolved = referenceNote ?: noteNamesResolved.defaultReferenceNote
 //            Log.v("Tuner", "MusicalScale2Factory: $temperament")
-            return MusicalScale(
+            return MusicalScale2(
                 temperament,
                 noteNamesResolved,
                 rootNoteResolved,
@@ -49,7 +49,7 @@ class MusicalScaleFactory {
         }
 
         /** Create simple test temperament. */
-        fun createTestEdo12(referenceFrequency: Float = 440f): MusicalScale {
+        fun createTestEdo12(referenceFrequency: Float = 440f): MusicalScale2 {
             return create(
                 createTestTemperamentEdo12(),
                 null,
@@ -62,7 +62,7 @@ class MusicalScaleFactory {
             )
         }
 
-        fun createTestWerckmeisterVI(referenceFrequency: Float = 440f): MusicalScale {
+        fun createTestWerckmeisterVI(referenceFrequency: Float = 440f): MusicalScale2 {
             return create(
                 createTestTemperamentWerckmeisterVI(),
                 null,

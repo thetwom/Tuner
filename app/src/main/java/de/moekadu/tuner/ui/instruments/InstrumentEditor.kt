@@ -61,6 +61,7 @@ import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScale2
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.ui.notes.NoteDetector
 import de.moekadu.tuner.ui.notes.NoteDetectorState
@@ -105,7 +106,7 @@ interface InstrumentEditorData {
 @Composable
 fun InstrumentEditor(
     state: InstrumentEditorData,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create(),
@@ -162,7 +163,7 @@ fun InstrumentEditor(
 @Composable
 fun InstrumentEditorPortrait(
     state: InstrumentEditorData,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create(),
@@ -304,7 +305,7 @@ fun InstrumentEditorPortrait(
 @Composable
 fun InstrumentEditorLandscape(
     state: InstrumentEditorData,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
     tunerPlotStyle: TunerPlotStyle = TunerPlotStyle.create(),

@@ -54,8 +54,8 @@ import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteNames
-import de.moekadu.tuner.temperaments.Temperament
-import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
+import de.moekadu.tuner.temperaments.Temperament2
+import de.moekadu.tuner.temperaments.TemperamentWithNoteNames2
 import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.temperaments.temperamentDatabase
 import de.moekadu.tuner.ui.notes.CentAndRatioTable
@@ -65,15 +65,15 @@ import de.moekadu.tuner.ui.notes.NoteSelector
 import de.moekadu.tuner.ui.theme.TunerTheme
 
 interface TemperamentDialogState {
-    val temperament: State<Temperament>
+    val temperament: State<Temperament2>
     val noteNames: State<NoteNames>
     //val predefinedTemperaments: ImmutableList<TemperamentWithNoteNames>
     //val customTemperaments: StateFlow<ImmutableList<TemperamentWithNoteNames>>
     val selectedRootNoteIndex: IntState
 
-    val defaultTemperament: TemperamentWithNoteNames
+    val defaultTemperament: TemperamentWithNoteNames2
 
-    fun setNewTemperament(temperamentWithNoteNames: TemperamentWithNoteNames)
+    fun setNewTemperament(temperamentWithNoteNames: TemperamentWithNoteNames2)
     fun selectRootNote(index: Int)
 }
 
@@ -84,7 +84,7 @@ fun TemperamentDialog(
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit = {},
-    onDone: (Temperament, NoteNames, rootNote: MusicalNote) -> Unit = { _, _, _ -> },
+    onDone: (Temperament2, NoteNames, rootNote: MusicalNote) -> Unit = { _, _, _ -> },
     onChooseTemperaments: () -> Unit = {}
 ) {
 //    val customTemperaments by state.customTemperaments.collectAsStateWithLifecycle()
@@ -240,13 +240,13 @@ private class TemperamentDialogTestState : TemperamentDialogState {
     override var noteNames
             = mutableStateOf(generateNoteNames(temperamentDatabase[0].numberOfNotesPerOctave)!!)
 
-    override val defaultTemperament = TemperamentWithNoteNames(
+    override val defaultTemperament = TemperamentWithNoteNames2(
         temperamentDatabase[0], null
     )
 
     override val selectedRootNoteIndex = mutableIntStateOf(0)
 
-    override fun setNewTemperament(temperamentWithNoteNames: TemperamentWithNoteNames) {
+    override fun setNewTemperament(temperamentWithNoteNames: TemperamentWithNoteNames2) {
         val oldRootNoteIndex = selectedRootNoteIndex.intValue
         val oldRootNote = noteNames.value[oldRootNoteIndex]
         val newNoteNames = temperamentWithNoteNames.noteNames

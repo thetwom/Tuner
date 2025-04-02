@@ -169,6 +169,9 @@
     <string name="equal_temperament_53">Equal temperament 53</string>
     <string name="equal_temperament_53_desc">53 notes per octave</string>
     <string name="equal_temperament_53_abbr">EDO 53</string>
+    <string name="equal_temperament_x">Equal temperament %d</string>
+    <string name="equal_temperament_x_desc">%d notes per octave</string>
+    <string name="equal_temperament_x_abbr">EDO %d</string>
     <string name="pythagorean_tuning">Pythagorean tuning</string>
     <string name="pythagorean_tuning_abbr">Pythagorean</string>
     <string name="pure_tuning">Just tuning</string>
@@ -308,4 +311,5 @@
     <string name="duplicate_note_name">Duplicate note name.</string>
     <string name="invalid_value">Invalid value.</string>
     <string name="maximum_value_exceeded">Maximum value of %d exceeded.</string>
+    <string name="edo_temperaments">Equal temperaments</string>
 </resources>

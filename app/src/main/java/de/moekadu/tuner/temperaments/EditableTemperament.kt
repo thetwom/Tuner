@@ -19,6 +19,7 @@
 package de.moekadu.tuner.temperaments
 
 import android.content.Context
+import de.moekadu.tuner.misc.GetTextFromString
 import de.moekadu.tuner.misc.StringOrResId
 import kotlinx.serialization.Serializable
 
@@ -56,7 +57,7 @@ class EditableTemperament(
  * @param stableId New stable or null to use the name from the input.
  * @return Editable temperament.
  */
-fun TemperamentWithNoteNames.toEditableTemperament(
+fun TemperamentWithNoteNames2.toEditableTemperament(
     context: Context,
     name: String? = null,
     stableId: Long? = null
@@ -117,7 +118,7 @@ fun EditableTemperament.hasErrors(): Boolean {
     return false
 }
 
-fun EditableTemperament.toTemperamentWithNoteNames(): TemperamentWithNoteNames? {
+fun EditableTemperament.toTemperamentWithNoteNames(): TemperamentWithNoteNames2? {
     if (noteLines.isEmpty())
         return null
 
@@ -170,24 +171,24 @@ fun EditableTemperament.toTemperamentWithNoteNames(): TemperamentWithNoteNames? 
 
     // construct the temperament
     return if (!ratios.contains(null)) {
-        TemperamentWithNoteNames(
-            Temperament.create(
-                name = StringOrResId(name),
-                abbreviation = StringOrResId(abbreviation),
-                description = StringOrResId(description),
+        TemperamentWithNoteNames2(
+            Temperament2(
+                name = GetTextFromString(name),
+                abbreviation = GetTextFromString(abbreviation),
+                description = GetTextFromString(description),
                 rationalNumbers = ratios.map { it!! }.toTypedArray(),
-                stableId = Temperament.NO_STABLE_ID
+                stableId = Temperament2.NO_STABLE_ID
             ),
             noteNames = noteNames
         )
     } else {
-        TemperamentWithNoteNames(
-            Temperament.create(
-                name = StringOrResId(name),
-                abbreviation = StringOrResId(abbreviation),
-                description = StringOrResId(description),
+        TemperamentWithNoteNames2(
+            Temperament2(
+                name = GetTextFromString(name),
+                abbreviation = GetTextFromString(abbreviation),
+                description = GetTextFromString(description),
                 cents = cents.toDoubleArray(),
-                stableId = Temperament.NO_STABLE_ID
+                stableId = Temperament2.NO_STABLE_ID
             ),
             noteNames = noteNames
         )

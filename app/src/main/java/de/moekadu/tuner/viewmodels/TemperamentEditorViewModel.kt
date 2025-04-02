@@ -8,17 +8,18 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.moekadu.tuner.misc.StringOrResId
+import de.moekadu.tuner.misc.GetTextFromString
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
 import de.moekadu.tuner.temperaments.RationalNumber
 import de.moekadu.tuner.temperaments.EditableTemperament
 import de.moekadu.tuner.temperaments.NoteNames
-import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.Temperament2
 import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.temperaments.TemperamentValidityChecks
 import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
+import de.moekadu.tuner.temperaments.TemperamentWithNoteNames2
 import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.ui.temperaments.TemperamentEditorState
 import de.moekadu.tuner.ui.temperaments.TemperamentTableLineState
@@ -280,10 +281,10 @@ class TemperamentEditorViewModel @AssistedInject constructor(
             if (2 * cents[i+1] - cents[i] - cents[i+2] > 0.01)
                 hasEqualDivisions = false
 
-        val temperament = Temperament(
-            name = StringOrResId(name.value),
-            abbreviation = StringOrResId(abbreviation.value),
-            description = StringOrResId(description.value),
+        val temperament = Temperament2(
+            name = GetTextFromString(name.value),
+            abbreviation = GetTextFromString(abbreviation.value),
+            description = GetTextFromString(description.value),
             cents = cents.toDoubleArray(),
             rationalNumbers = ratios?.toTypedArray(),
             circleOfFifths = null,
@@ -292,7 +293,7 @@ class TemperamentEditorViewModel @AssistedInject constructor(
         )
 
         pref.addNewOrReplaceTemperament(
-            TemperamentWithNoteNames(temperament, noteNames)
+            TemperamentWithNoteNames2(temperament, noteNames)
         )
         return true
     }

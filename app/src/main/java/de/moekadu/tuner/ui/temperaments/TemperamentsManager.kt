@@ -62,6 +62,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
+import de.moekadu.tuner.misc.GetTextFromString
 import de.moekadu.tuner.misc.ShareData
 import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.misc.getFilenameFromUri
@@ -69,8 +70,10 @@ import de.moekadu.tuner.misc.toastPotentialFileCheckError
 import de.moekadu.tuner.temperaments.RationalNumber
 import de.moekadu.tuner.temperaments.EditableTemperament
 import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.Temperament2
 import de.moekadu.tuner.temperaments.TemperamentIO
 import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
+import de.moekadu.tuner.temperaments.TemperamentWithNoteNames2
 import de.moekadu.tuner.ui.common.EditableList
 import de.moekadu.tuner.ui.common.EditableListData
 import de.moekadu.tuner.ui.common.EditableListItem
@@ -85,11 +88,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 interface TemperamentsManagerData {
-    val listData: EditableListData<TemperamentWithNoteNames>
+    val listData: EditableListData<TemperamentWithNoteNames2>
     fun saveTemperaments(
         context: Context,
         uri: Uri,
-        temperaments: List<TemperamentWithNoteNames>
+        temperaments: List<TemperamentWithNoteNames2>
     )
 }
 
@@ -190,10 +193,10 @@ private fun rememberImportExportCallbacks(
 fun TemperamentsManager(
     state: TemperamentsManagerData,
     modifier: Modifier = Modifier,
-    onEditTemperamentClicked: (temperament: TemperamentWithNoteNames, copy: Boolean) -> Unit = { _, _ ->},
-    onTemperamentClicked: (temperament: TemperamentWithNoteNames) -> Unit = { },
+    onEditTemperamentClicked: (temperament: TemperamentWithNoteNames2, copy: Boolean) -> Unit = { _, _ ->},
+    onTemperamentClicked: (temperament: TemperamentWithNoteNames2) -> Unit = { },
     onLoadTemperaments: (temperaments: List<EditableTemperament>) -> Unit = { },
-    onTemperamentInfoClicked: (temperament: TemperamentWithNoteNames) -> Unit = { },
+    onTemperamentInfoClicked: (temperament: TemperamentWithNoteNames2) -> Unit = { },
     onNavigateUp: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -264,13 +267,13 @@ fun TemperamentsManager(
             FloatingActionButton(
                 onClick = {
                     onEditTemperamentClicked(
-                        TemperamentWithNoteNames(
-                            Temperament.create(
-                                StringOrResId(""),
-                                StringOrResId(""),
-                                StringOrResId(""),
+                        TemperamentWithNoteNames2(
+                            Temperament2(
+                                GetTextFromString(""),
+                                GetTextFromString(""),
+                                GetTextFromString(""),
                                 12,
-                                Temperament.NO_STABLE_ID
+                                Temperament2.NO_STABLE_ID
                             ),
                             null
                         ),
@@ -344,41 +347,41 @@ fun TemperamentsManager(
 }
 
 private class TestTemperamentManagerData : TemperamentsManagerData {
-    private val testTemperament1 = Temperament.create(
-        StringOrResId("Test 1"),
-        StringOrResId("T1"),
-        StringOrResId("Describing Test 1"),
+    private val testTemperament1 = Temperament2(
+        GetTextFromString("Test 1"),
+        GetTextFromString("T1"),
+        GetTextFromString("Describing Test 1"),
         12,
         1L
     )
 
-    private val testTemperament2 = Temperament.create(
-        StringOrResId("Test 2"),
-        StringOrResId("T2"),
-        StringOrResId("Describing Test 2"),
+    private val testTemperament2 = Temperament2(
+        GetTextFromString("Test 2"),
+        GetTextFromString("T2"),
+        GetTextFromString("Describing Test 2"),
         doubleArrayOf(0.0, 12.0, 140.0, 320.0, 410.0, 540.0, 610.0, 720.0, 810.0, 910.0, 1020.0, 1100.0, 1200.0),
         2L
     )
 
-    private val testTemperament3 = Temperament.create(
-        StringOrResId("Test 3"),
-        StringOrResId("T3"),
-        StringOrResId("Describing Test 3, ratios"),
+    private val testTemperament3 = Temperament2(
+        GetTextFromString("Test 3"),
+        GetTextFromString("T3"),
+        GetTextFromString("Describing Test 3, ratios"),
         (0..12).map { RationalNumber(12+it, 12) }.toTypedArray(),
         3L
     )
 
     val customTemperaments = MutableStateFlow(
         persistentListOf(
-            TemperamentWithNoteNames(testTemperament1.copy(stableId = 1), null),
-            TemperamentWithNoteNames(testTemperament2.copy(stableId = 2), null),
-            TemperamentWithNoteNames(testTemperament3.copy(stableId = 3), null),
+            TemperamentWithNoteNames2(testTemperament1.copy(stableId = 1), null),
+            TemperamentWithNoteNames2(testTemperament2.copy(stableId = 2), null),
+            TemperamentWithNoteNames2(testTemperament3.copy(stableId = 3), null),
         )
     )
     val predefinedTemperamentsExpanded = MutableStateFlow(false)
     val customTemperamentsExpanded = MutableStateFlow(true)
 
-    val activeTemperament = MutableStateFlow<TemperamentWithNoteNames?>(customTemperaments.value[1])
+    val activeTemperament = MutableStateFlow<TemperamentWithNoteNames2?>(customTemperaments.value[1])
 
     override val listData = EditableListData(
         predefinedItemSections = persistentListOf(),
@@ -393,7 +396,7 @@ private class TestTemperamentManagerData : TemperamentsManagerData {
     override fun saveTemperaments(
         context: Context,
         uri: Uri,
-        temperaments: List<TemperamentWithNoteNames>
+        temperaments: List<TemperamentWithNoteNames2>
     ) { }
 }
 

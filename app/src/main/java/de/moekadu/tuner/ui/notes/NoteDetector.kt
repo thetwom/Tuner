@@ -51,7 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
 import androidx.compose.ui.unit.times
 import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScale2
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.mutate
@@ -110,7 +110,7 @@ class NoteDetectorState {
 @Composable
 fun NoteDetector(
     state: NoteDetectorState,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
     fontSize: TextUnit = TextUnit.Unspecified,
     textStyle: TextStyle? = MaterialTheme.typography.labelLarge,

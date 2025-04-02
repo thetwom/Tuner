@@ -9,9 +9,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.temperaments.NoteNames
-import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.Temperament2
 import de.moekadu.tuner.temperaments.TemperamentResources
-import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
+import de.moekadu.tuner.temperaments.TemperamentWithNoteNames2
 import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.ui.temperaments.TemperamentDialogState
 import kotlinx.coroutines.CoroutineScope
@@ -26,12 +26,12 @@ class TemperamentDialogViewModel  @Inject constructor(
     private val initialMusicalScale = pref.musicalScale.value
 
     private val _temperament = mutableStateOf(initialMusicalScale.temperament)
-    override val temperament: State<Temperament> get() = _temperament
+    override val temperament: State<Temperament2> get() = _temperament
 
     private val _noteNames = mutableStateOf(initialMusicalScale.noteNames)
     override val noteNames: State<NoteNames> get() = _noteNames
 
-    override val defaultTemperament: TemperamentWithNoteNames get() = pref.defaultTemperament
+    override val defaultTemperament: TemperamentWithNoteNames2 get() = pref.defaultTemperament
 
     private val _selectedRootNoteIndex = mutableIntStateOf(
         initialMusicalScale.noteNames.getNoteIndex(initialMusicalScale.rootNote)
@@ -39,7 +39,7 @@ class TemperamentDialogViewModel  @Inject constructor(
     )
     override val selectedRootNoteIndex: IntState get() = _selectedRootNoteIndex
 
-    override fun setNewTemperament(temperamentWithNoteNames: TemperamentWithNoteNames) {
+    override fun setNewTemperament(temperamentWithNoteNames: TemperamentWithNoteNames2) {
         val oldRootNoteIndex = selectedRootNoteIndex.intValue
         val oldRootNote = noteNames.value[oldRootNoteIndex]
         val newNoteNames = temperamentWithNoteNames.noteNames

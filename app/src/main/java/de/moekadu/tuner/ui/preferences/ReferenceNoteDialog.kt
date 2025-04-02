@@ -52,7 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScale2
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
 import de.moekadu.tuner.ui.misc.rememberNumberFormatter
 import de.moekadu.tuner.ui.notes.NotePrintOptions
@@ -78,8 +78,8 @@ private fun DecimalFormat.toFloatOrNull(string: String): Float? {
 
 @Composable
 fun ReferenceNoteDialog(
-    initialState: MusicalScale,
-    onReferenceNoteChange: (modifiedState: MusicalScale) -> Unit,
+    initialState: MusicalScale2,
+    onReferenceNoteChange: (modifiedState: MusicalScale2) -> Unit,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     warning: String? = null,

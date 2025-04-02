@@ -284,5 +284,5 @@ fun generateNoteNames(notesPerOctave: Int): NoteNames? {
         (it.base == BaseNote.A && it.modifier == NoteModifier.None) ||
                 (it.enharmonicBase == BaseNote.A && it.enharmonicModifier == NoteModifier.None)
     } ?: throw RuntimeException("No note A in note names for $notesPerOctave notes per octave")
-    return NoteNames(names, defaultReferenceNote)
+    return NoteNames(names, defaultReferenceNote.copy(octave = 4))
 }

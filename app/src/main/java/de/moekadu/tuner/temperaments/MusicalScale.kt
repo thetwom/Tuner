@@ -22,10 +22,37 @@ import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
+/** Old musical scale class. */
 @Serializable
 @Immutable
 data class MusicalScale(
     val temperament: Temperament,
+    val noteNames: NoteNames,
+    val rootNote: MusicalNote,
+    val referenceNote: MusicalNote,
+    val referenceFrequency: Float,
+    val frequencyMin: Float,
+    val frequencyMax: Float,
+    val stretchTuning: StretchTuning
+) {
+    fun toNew(): MusicalScale2 {
+        return MusicalScale2(
+            temperament = temperament.toNew(),
+            noteNames = noteNames,
+            rootNote = rootNote,
+            referenceNote = referenceNote,
+            referenceFrequency = referenceFrequency,
+            frequencyMin = frequencyMin,
+            frequencyMax = frequencyMax,
+            stretchTuning = stretchTuning
+        )
+    }
+}
+
+@Serializable
+@Immutable
+data class MusicalScale2(
+    val temperament: Temperament2,
     val noteNames: NoteNames,
     val rootNote: MusicalNote,
     val referenceNote: MusicalNote,

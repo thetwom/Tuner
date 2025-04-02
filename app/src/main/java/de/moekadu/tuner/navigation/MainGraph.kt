@@ -37,11 +37,11 @@ import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.EditableTemperament
-import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.temperaments.MusicalScale2
 import de.moekadu.tuner.temperaments.MusicalScaleFactory
-import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.Temperament2
 import de.moekadu.tuner.temperaments.TemperamentResources
-import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
+import de.moekadu.tuner.temperaments.TemperamentWithNoteNames2
 import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.temperaments.toEditableTemperament
 import de.moekadu.tuner.ui.screens.InstrumentTuner
@@ -220,7 +220,7 @@ fun NavGraphBuilder.mainGraph(
                         null
                     else
                         noteNames
-                val temperamentWithNoteNames = TemperamentWithNoteNames(
+                val temperamentWithNoteNames = TemperamentWithNoteNames2(
                     temperament, noteNamesResolved
                 )
                 val currentReferenceNote = temperamentResources.musicalScale.value.referenceNote
@@ -291,7 +291,7 @@ fun NavGraphBuilder.mainGraph(
                                 copy -> "$name (${resources.getString(R.string.copy_)})"
                                 else -> null // i.e. use name from temperament
                             },
-                            stableId = if (copy) Temperament.NO_STABLE_ID else null // null means use stable from temperament
+                            stableId = if (copy) Temperament2.NO_STABLE_ID else null // null means use stable from temperament
                         )
                     )
                 )
@@ -346,11 +346,11 @@ data class ReferenceFrequencyDialogRoute(
     val serializedString: String,
     val warning: String?
 ) {
-    constructor(musicalScale: MusicalScale, warning: String?) : this(
+    constructor(musicalScale: MusicalScale2, warning: String?) : this(
         Json.encodeToString(musicalScale),
         warning
     )
-    val musicalScale get() = Json.decodeFromString<MusicalScale>(serializedString)
+    val musicalScale get() = Json.decodeFromString<MusicalScale2>(serializedString)
 }
 
 @Serializable
@@ -365,11 +365,11 @@ data class TemperamentsManagerRoute(
 data class TemperamentInfoDialogRoute(
     val serializedTemperament: String
 ) {
-    constructor(temperament: TemperamentWithNoteNames) : this(
+    constructor(temperament: TemperamentWithNoteNames2) : this(
         Json.encodeToString(temperament)
     )
-    fun obtainTemperament(): TemperamentWithNoteNames {
-        return Json.decodeFromString<TemperamentWithNoteNames>(serializedTemperament)
+    fun obtainTemperament(): TemperamentWithNoteNames2 {
+        return Json.decodeFromString<TemperamentWithNoteNames2>(serializedTemperament)
     }
 }
 //@Serializable

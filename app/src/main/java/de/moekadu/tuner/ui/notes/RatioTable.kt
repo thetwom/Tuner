@@ -33,10 +33,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import de.moekadu.tuner.misc.StringOrResId
+import de.moekadu.tuner.misc.GetTextFromString
 import de.moekadu.tuner.temperaments.RationalNumber
 import de.moekadu.tuner.temperaments.NoteNames
 import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.Temperament2
 import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.ui.theme.TunerTheme
 
@@ -49,7 +50,7 @@ import de.moekadu.tuner.ui.theme.TunerTheme
  */
 @Composable
 fun RatioTable(
-    temperament: Temperament,
+    temperament: Temperament2,
     noteNames: NoteNames,
     rootNoteIndex: Int,
     notePrintOptions: NotePrintOptions,
@@ -101,10 +102,10 @@ private fun RatioTablePreview() {
         }
 
         val temperament = remember {
-            Temperament.create(
-                StringOrResId("Test 1"),
-                StringOrResId("A 1"),
-                StringOrResId("Description 1"),
+            Temperament2(
+                GetTextFromString("Test 1"),
+                GetTextFromString("A 1"),
+                GetTextFromString("Description 1"),
                 (0..12).map { RationalNumber(it + 12, 12) }.toTypedArray(),
                 1
             )

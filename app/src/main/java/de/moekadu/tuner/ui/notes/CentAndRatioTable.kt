@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.temperaments.NoteNames
-import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.Temperament2
 import de.moekadu.tuner.temperaments.createTestTemperamentWerckmeisterVI
 import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.ui.theme.TunerTheme
@@ -137,7 +137,7 @@ import kotlin.math.roundToInt
  */
 @Composable
 fun CentAndRatioTable(
-    temperament: Temperament,
+    temperament: Temperament2,
     noteNames: NoteNames,
     rootNoteIndex: Int,
     notePrintOptions: NotePrintOptions,
