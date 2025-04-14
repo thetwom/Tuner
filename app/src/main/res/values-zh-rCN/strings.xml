@@ -80,10 +80,10 @@
     <string name="reference_frequency">基准频率</string>
     <string name="tolerance_in_cents">容限</string>
     <string name="scientific_mode">科学模式</string>
-    <string name="equal_temperament_12">十二平均律</string>
-    <string name="equal_temperament_12_abbr">十二平均律</string>
-    <string name="equal_temperament_17_abbr">十七平均律</string>
-    <string name="equal_temperament_19_abbr">十九平均律</string>
+<!--    <string name="equal_temperament_12">十二平均律</string>-->
+<!--    <string name="equal_temperament_12_abbr">十二平均律</string>-->
+<!--    <string name="equal_temperament_17_abbr">十七平均律</string>-->
+<!--    <string name="equal_temperament_19_abbr">十九平均律</string>-->
     <string name="set_default">重置为默认</string>
     <string name="acknowledged">知道了</string>
     <string name="black_night_mode">深色模式下启用纯黑背景</string>

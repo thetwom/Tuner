@@ -22,6 +22,7 @@ import androidx.compose.runtime.Immutable
 import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.GetText
 import de.moekadu.tuner.misc.GetTextFromResId
+import de.moekadu.tuner.misc.GetTextFromResIdWithIntArg
 import de.moekadu.tuner.misc.GetTextFromString
 import de.moekadu.tuner.misc.StringOrResId
 import kotlinx.serialization.Serializable
@@ -240,9 +241,9 @@ val temperamentDatabase = createPredefinedTemperaments()
 /** Create test temperament */
 fun createTestTemperamentEdo12(): Temperament2 {
     return Temperament2(
-        GetTextFromResId(R.string.equal_temperament_12),
-        GetTextFromResId(R.string.equal_temperament_12_abbr),
-        GetTextFromResId(R.string.equal_temperament_12_desc),
+        GetTextFromResIdWithIntArg(R.string.equal_temperament_x, 12),
+        GetTextFromResIdWithIntArg(R.string.equal_temperament_x_abbr, 12),
+        GetTextFromResIdWithIntArg(R.string.equal_temperament_x_desc, 12),
         12,
         1L
     )
@@ -265,9 +266,9 @@ private fun createPredefinedTemperaments(): ArrayList<Temperament2> {
     // edo12
     temperaments.add(
         Temperament2(
-            GetTextFromResId(R.string.equal_temperament_12),
-            GetTextFromResId(R.string.equal_temperament_12_abbr),
-            GetTextFromResId(R.string.equal_temperament_12_desc),
+            GetTextFromResIdWithIntArg(R.string.equal_temperament_x, 12),
+            GetTextFromResIdWithIntArg(R.string.equal_temperament_x_abbr, 12),
+            GetTextFromResIdWithIntArg(R.string.equal_temperament_x_desc, 12),
             12,
             (-1 - temperaments.size).toLong()
         )
