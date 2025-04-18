@@ -68,7 +68,7 @@ data class MusicalScale2(
     private val noteNameScale = MusicalScaleNoteNames(noteNames, referenceNote)
 
     @Transient
-    val musicalScaleFrequencies = MusicalScaleFrequencies.create(
+    private val musicalScaleFrequencies = MusicalScaleFrequencies.create(
         temperament.cents,
         computeReferenceNoteIndexWithinOctave(),
         referenceFrequency,

@@ -6,44 +6,22 @@ import kotlin.math.roundToInt
 import kotlin.math.sign
 
 /**
- * Code is based on the logic given here:
+ * Code for edo naming is based on the logic given here:
  * - https://www.tallkite.com/apps/noteNamer.html
  * - https://github.com/thetwom/Tuner/issues/98
  */
-private val log2_32 = log2(3f/2f)
 
-/** Number of steps for a fifth.
- *  @param edo Edo steps per octave.
- *  @return Number of steps for a fifth.
- */
-private fun getFifth(edo: Int): Int {
-    var fifth = (edo * log2_32).roundToInt()
-    if (5 * fifth > 3 * edo)
-        fifth -= 1
-    return fifth
-}
-
-/** Number of steps from e.g. C to C# or Eb to E
- * @param edo Edo steps per octave.
- * @return Number of steps to augment by one half tone.
- */
-private fun getAug1(edo: Int): Int {
-    return (7 * getFifth(edo) - 4 * edo)
+private fun findDefaultReferenceNote(noteNames: Array<MusicalNote>): MusicalNote {
+    return noteNames
+        .firstOrNull {
+            (it.base == BaseNote.A && it.modifier == NoteModifier.None) ||
+                    (it.enharmonicBase == BaseNote.A && it.enharmonicModifier == NoteModifier.None)
+        } ?: noteNames.getOrElse(0){ MusicalNote(BaseNote.A, NoteModifier.None) }
+        .copy(octave = 4)
 }
 
 /** Type of seconds. */
 private enum class Second{Maj, Min}
-
-/** Number of steps for a second.
- * @param edo Edo steps per octave.
- * @return Number of steps for a second.
- */
-private fun Second.toNumSteps(edo: Int): Int {
-    return when(this) {
-        Second.Maj ->  2 * getFifth(edo) - edo
-        Second.Min ->  3 * edo - 5 * getFifth(edo)
-    }
-}
 
 private data class BaseNoteStep(val from: BaseNote, val to: BaseNote, val second: Second)
 private val baseNoteSteps = arrayOf(
@@ -280,9 +258,94 @@ fun generateNoteNames(notesPerOctave: Int): NoteNames? {
     if (notesPerOctave > 72)
         return null
     val names = generateNoteNamesImpl(notesPerOctave)
-    val defaultReferenceNote = names.firstOrNull {
-        (it.base == BaseNote.A && it.modifier == NoteModifier.None) ||
-                (it.enharmonicBase == BaseNote.A && it.enharmonicModifier == NoteModifier.None)
-    } ?: throw RuntimeException("No note A in note names for $notesPerOctave notes per octave")
-    return NoteNames(names, defaultReferenceNote.copy(octave = 4))
+    return NoteNames(names, findDefaultReferenceNote(names))
+}
+
+private data class NoteWithSharpness(val note: BaseNote, val sharpness: Int) {
+    constructor(baseNote: BaseNote, modifier: NoteModifier) : this(
+        baseNote,
+        when (modifier) {
+            NoteModifier.FlatFlatFlat -> -3
+            NoteModifier.FlatFlat -> -2
+            NoteModifier.Flat -> -1
+            NoteModifier.None -> 0
+            NoteModifier.Sharp -> 1
+            NoteModifier.SharpSharp -> 2
+            NoteModifier.SharpSharpSharp -> 3
+            else -> throw RuntimeException("NoteWithSharpness: Only modifiers without ups/downs allowed")
+        }
+    )
+    val modifier get() = when(sharpness) {
+        -3 -> NoteModifier.FlatFlatFlat
+        -2 -> NoteModifier.FlatFlat
+        -1 -> NoteModifier.Flat
+        0 -> NoteModifier.None
+        1 -> NoteModifier.Sharp
+        2 -> NoteModifier.SharpSharp
+        3 -> NoteModifier.SharpSharpSharp
+        else -> null
+    }
+    fun nextFifth(): NoteWithSharpness {
+        return when (note) {
+            BaseNote.C -> NoteWithSharpness(BaseNote.G, sharpness)
+            BaseNote.D -> NoteWithSharpness(BaseNote.A, sharpness)
+            BaseNote.E -> NoteWithSharpness(BaseNote.B, sharpness)
+            BaseNote.F -> NoteWithSharpness(BaseNote.C, sharpness)
+            BaseNote.G -> NoteWithSharpness(BaseNote.D, sharpness)
+            BaseNote.A -> NoteWithSharpness(BaseNote.E, sharpness)
+            BaseNote.B -> NoteWithSharpness(BaseNote.F, sharpness + 1)
+            BaseNote.None -> NoteWithSharpness(BaseNote.None, sharpness)
+        }
+    }
+    fun previousFifth(): NoteWithSharpness {
+        return when (note) {
+            BaseNote.C -> NoteWithSharpness(BaseNote.F, sharpness)
+            BaseNote.D -> NoteWithSharpness(BaseNote.G, sharpness)
+            BaseNote.E -> NoteWithSharpness(BaseNote.A, sharpness)
+            BaseNote.F -> NoteWithSharpness(BaseNote.B, sharpness - 1)
+            BaseNote.G -> NoteWithSharpness(BaseNote.C, sharpness)
+            BaseNote.A -> NoteWithSharpness(BaseNote.D, sharpness)
+            BaseNote.B -> NoteWithSharpness(BaseNote.E, sharpness)
+            BaseNote.None -> NoteWithSharpness(BaseNote.None, sharpness)
+        }
+    }
+
+}
+fun generateNoteNamesForChainOfFifths(
+    chain: TemperamentChainOfFifths,
+    rootNote: MusicalNote
+): NoteNames? {
+    val names = Array(chain.fifths.size + 1){MusicalNote(BaseNote.None, NoteModifier.None)}
+    names[chain.rootIndex] = rootNote
+    var note = NoteWithSharpness(rootNote.base, rootNote.modifier)
+    var noteEnharmonic = NoteWithSharpness(rootNote.enharmonicBase, rootNote.enharmonicModifier)
+
+    for (i in chain.rootIndex until chain.fifths.size) {
+        note = note.nextFifth()
+        noteEnharmonic = noteEnharmonic.nextFifth()
+        names[i + 1] = MusicalNote(
+            note.note, note.modifier ?: return null,
+            enharmonicBase = noteEnharmonic.note,
+            enharmonicModifier = noteEnharmonic.modifier ?: return null
+        )
+    }
+
+    note = NoteWithSharpness(rootNote.base, rootNote.modifier)
+    noteEnharmonic = NoteWithSharpness(rootNote.enharmonicBase, rootNote.enharmonicModifier)
+    for (i in chain.rootIndex-1 downTo  0) {
+        note = note.previousFifth()
+        noteEnharmonic = noteEnharmonic.previousFifth()
+        names[i] = MusicalNote(
+            note.note, note.modifier ?: return null,
+            enharmonicBase = noteEnharmonic.note,
+            enharmonicModifier = noteEnharmonic.modifier ?: return null
+        )
+    }
+    val sortedNames = chain.getRatiosAlongFifths()
+        .zip(names)
+        .sortedBy { it.first }
+        .map { it.second }
+        .toTypedArray()
+
+    return NoteNames(sortedNames, findDefaultReferenceNote(sortedNames))
 }

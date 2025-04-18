@@ -3,7 +3,10 @@ package de.moekadu.tuner
 import de.moekadu.tuner.temperaments.BaseNote
 import de.moekadu.tuner.temperaments.MusicalNote
 import de.moekadu.tuner.temperaments.NoteModifier
+import de.moekadu.tuner.temperaments.chainOfFifthsExtendedQuarterCommaMeantone
+import de.moekadu.tuner.temperaments.chainOfFifthsPythagorean
 import de.moekadu.tuner.temperaments.generateNoteNames
+import de.moekadu.tuner.temperaments.generateNoteNamesForChainOfFifths
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 
@@ -88,7 +91,7 @@ class NoteNamesGeneratorTest {
 
     private fun testNumberOfNotesImpl(numberOfNotesPerOctave: Int) {
         val names = generateNoteNames(numberOfNotesPerOctave)
-        assertEquals(numberOfNotesPerOctave, names.size)
+        assertEquals(numberOfNotesPerOctave, names?.size)
     }
 
     @Test
@@ -96,12 +99,25 @@ class NoteNamesGeneratorTest {
         for (numberOfNotesPerOctave in 5 ..72)
             testNumberOfNotesImpl(numberOfNotesPerOctave)
     }
+
     @Test
     fun testNoteNames() {
         val numberOfNotePerOctave = 20
         val names = generateNoteNames(numberOfNotePerOctave)
-        assertEquals(numberOfNotePerOctave, names.size)
-        names.notes.forEachIndexed { i, n ->
+        assertEquals(numberOfNotePerOctave, names?.size)
+        names?.notes?.forEachIndexed { i, n ->
+            println("$i: ${noteToString(n)}")
+        }
+    }
+
+    @Test
+    fun testNoteNamesChainOfFifths() {
+        val chain = chainOfFifthsExtendedQuarterCommaMeantone
+        val names = generateNoteNamesForChainOfFifths(
+            chain, MusicalNote(BaseNote.C, NoteModifier.None)
+        )
+        assertEquals(chain.fifths.size + 1, names?.size)
+        names?.notes?.forEachIndexed { i, n ->
             println("$i: ${noteToString(n)}")
         }
     }
