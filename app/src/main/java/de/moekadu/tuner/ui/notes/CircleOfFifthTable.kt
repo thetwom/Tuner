@@ -34,10 +34,10 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import de.moekadu.tuner.temperaments.NoteNames
+import de.moekadu.tuner.notenames.NoteNames
 import de.moekadu.tuner.temperaments.Temperament2
 import de.moekadu.tuner.temperaments.createTestTemperamentEdo12
-import de.moekadu.tuner.temperaments.generateNoteNames
+import de.moekadu.tuner.notenames.generateNoteNames
 import de.moekadu.tuner.ui.theme.TunerTheme
 
 /** Visualize the circle of fifths distances within a musical scale.

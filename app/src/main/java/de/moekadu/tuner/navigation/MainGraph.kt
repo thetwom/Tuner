@@ -37,12 +37,12 @@ import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.EditableTemperament
-import de.moekadu.tuner.temperaments.MusicalScale2
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.musicalscale.MusicalScale2
+import de.moekadu.tuner.musicalscale.MusicalScaleFactory
 import de.moekadu.tuner.temperaments.Temperament2
 import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.temperaments.TemperamentWithNoteNames2
-import de.moekadu.tuner.temperaments.generateNoteNames
+import de.moekadu.tuner.notenames.generateNoteNames
 import de.moekadu.tuner.temperaments.toEditableTemperament
 import de.moekadu.tuner.ui.screens.InstrumentTuner
 import de.moekadu.tuner.ui.instruments.Instruments

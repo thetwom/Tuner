@@ -1,24 +1,36 @@
-package de.moekadu.tuner.temperaments
+package de.moekadu.tuner.notenames
 
+import de.moekadu.tuner.temperaments.ChainOfFifths
+import kotlinx.serialization.Serializable
+import java.util.Collections
 import kotlin.math.absoluteValue
 import kotlin.math.log2
 import kotlin.math.roundToInt
 import kotlin.math.sign
 
-/**
- * Code for edo naming is based on the logic given here:
- * - https://www.tallkite.com/apps/noteNamer.html
- * - https://github.com/thetwom/Tuner/issues/98
- */
+@Serializable
+data object NoteNamesEDOGenerator {
+    fun possibleRootNotes(notesPerOctave: Int): Array<MusicalNote> {
+        return generateNoteNamesImpl(notesPerOctave)
+    }
 
-private fun findDefaultReferenceNote(noteNames: Array<MusicalNote>): MusicalNote {
-    return noteNames
-        .firstOrNull {
-            (it.base == BaseNote.A && it.modifier == NoteModifier.None) ||
-                    (it.enharmonicBase == BaseNote.A && it.enharmonicModifier == NoteModifier.None)
-        } ?: noteNames.getOrElse(0){ MusicalNote(BaseNote.A, NoteModifier.None) }
-        .copy(octave = 4)
+    fun getNoteNames(rootNote: MusicalNote, notesPerOctave: Int): NoteNames2? {
+        if (notesPerOctave > 72)
+            return null
+        val noteNames = generateNoteNamesImpl(notesPerOctave)
+        val defaultReferenceNote = NoteNameHelpers.findDefaultReferenceNote(noteNames)
+        val incrementOctaveAt = noteNames[0]
+
+        val shiftLeft = noteNames
+            .indexOfFirst { MusicalNote.notesEqualIgnoreOctave(it, rootNote) }
+            .coerceAtLeast(0) // don't reorder if root note is not found, should not happen
+        Collections.rotate(noteNames.asList(), -shiftLeft)
+
+        return NoteNames2(noteNames, defaultReferenceNote, incrementOctaveAt)
+    }
+
 }
+
 
 /** Type of seconds. */
 private enum class Second{Maj, Min}
@@ -190,7 +202,7 @@ private fun generateNoteNamesImpl(notesPerOctave: Int): Array<MusicalNote> {
     val maj2Items = generateNoteModifiers(maj2, aug1)
 
     var lastBaseNoteStep = baseNoteSteps.last()
-    val names = Array(notesPerOctave) {MusicalNote(BaseNote.A, NoteModifier.None)}
+    val names = Array(notesPerOctave) { MusicalNote(BaseNote.A, NoteModifier.None) }
 
     var count = 0
     baseNoteSteps.forEach { baseNoteStep ->
@@ -258,94 +270,6 @@ fun generateNoteNames(notesPerOctave: Int): NoteNames? {
     if (notesPerOctave > 72)
         return null
     val names = generateNoteNamesImpl(notesPerOctave)
-    return NoteNames(names, findDefaultReferenceNote(names))
+    return NoteNames(names, NoteNameHelpers.findDefaultReferenceNote(names))
 }
 
-private data class NoteWithSharpness(val note: BaseNote, val sharpness: Int) {
-    constructor(baseNote: BaseNote, modifier: NoteModifier) : this(
-        baseNote,
-        when (modifier) {
-            NoteModifier.FlatFlatFlat -> -3
-            NoteModifier.FlatFlat -> -2
-            NoteModifier.Flat -> -1
-            NoteModifier.None -> 0
-            NoteModifier.Sharp -> 1
-            NoteModifier.SharpSharp -> 2
-            NoteModifier.SharpSharpSharp -> 3
-            else -> throw RuntimeException("NoteWithSharpness: Only modifiers without ups/downs allowed")
-        }
-    )
-    val modifier get() = when(sharpness) {
-        -3 -> NoteModifier.FlatFlatFlat
-        -2 -> NoteModifier.FlatFlat
-        -1 -> NoteModifier.Flat
-        0 -> NoteModifier.None
-        1 -> NoteModifier.Sharp
-        2 -> NoteModifier.SharpSharp
-        3 -> NoteModifier.SharpSharpSharp
-        else -> null
-    }
-    fun nextFifth(): NoteWithSharpness {
-        return when (note) {
-            BaseNote.C -> NoteWithSharpness(BaseNote.G, sharpness)
-            BaseNote.D -> NoteWithSharpness(BaseNote.A, sharpness)
-            BaseNote.E -> NoteWithSharpness(BaseNote.B, sharpness)
-            BaseNote.F -> NoteWithSharpness(BaseNote.C, sharpness)
-            BaseNote.G -> NoteWithSharpness(BaseNote.D, sharpness)
-            BaseNote.A -> NoteWithSharpness(BaseNote.E, sharpness)
-            BaseNote.B -> NoteWithSharpness(BaseNote.F, sharpness + 1)
-            BaseNote.None -> NoteWithSharpness(BaseNote.None, sharpness)
-        }
-    }
-    fun previousFifth(): NoteWithSharpness {
-        return when (note) {
-            BaseNote.C -> NoteWithSharpness(BaseNote.F, sharpness)
-            BaseNote.D -> NoteWithSharpness(BaseNote.G, sharpness)
-            BaseNote.E -> NoteWithSharpness(BaseNote.A, sharpness)
-            BaseNote.F -> NoteWithSharpness(BaseNote.B, sharpness - 1)
-            BaseNote.G -> NoteWithSharpness(BaseNote.C, sharpness)
-            BaseNote.A -> NoteWithSharpness(BaseNote.D, sharpness)
-            BaseNote.B -> NoteWithSharpness(BaseNote.E, sharpness)
-            BaseNote.None -> NoteWithSharpness(BaseNote.None, sharpness)
-        }
-    }
-
-}
-fun generateNoteNamesForChainOfFifths(
-    chain: TemperamentChainOfFifths,
-    rootNote: MusicalNote
-): NoteNames? {
-    val names = Array(chain.fifths.size + 1){MusicalNote(BaseNote.None, NoteModifier.None)}
-    names[chain.rootIndex] = rootNote
-    var note = NoteWithSharpness(rootNote.base, rootNote.modifier)
-    var noteEnharmonic = NoteWithSharpness(rootNote.enharmonicBase, rootNote.enharmonicModifier)
-
-    for (i in chain.rootIndex until chain.fifths.size) {
-        note = note.nextFifth()
-        noteEnharmonic = noteEnharmonic.nextFifth()
-        names[i + 1] = MusicalNote(
-            note.note, note.modifier ?: return null,
-            enharmonicBase = noteEnharmonic.note,
-            enharmonicModifier = noteEnharmonic.modifier ?: return null
-        )
-    }
-
-    note = NoteWithSharpness(rootNote.base, rootNote.modifier)
-    noteEnharmonic = NoteWithSharpness(rootNote.enharmonicBase, rootNote.enharmonicModifier)
-    for (i in chain.rootIndex-1 downTo  0) {
-        note = note.previousFifth()
-        noteEnharmonic = noteEnharmonic.previousFifth()
-        names[i] = MusicalNote(
-            note.note, note.modifier ?: return null,
-            enharmonicBase = noteEnharmonic.note,
-            enharmonicModifier = noteEnharmonic.modifier ?: return null
-        )
-    }
-    val sortedNames = chain.getRatiosAlongFifths()
-        .zip(names)
-        .sortedBy { it.first }
-        .map { it.second }
-        .toTypedArray()
-
-    return NoteNames(sortedNames, findDefaultReferenceNote(sortedNames))
-}

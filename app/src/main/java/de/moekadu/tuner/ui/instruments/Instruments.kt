@@ -60,9 +60,9 @@ import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.misc.ShareData
 import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.misc.toastPotentialFileCheckError
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
+import de.moekadu.tuner.notenames.BaseNote
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteModifier
 import de.moekadu.tuner.ui.common.EditableListPredefinedSectionImmutable
 import de.moekadu.tuner.ui.common.EditableList
 import de.moekadu.tuner.ui.common.EditableListData

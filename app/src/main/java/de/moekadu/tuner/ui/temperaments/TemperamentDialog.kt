@@ -52,11 +52,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteNames
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteNames
 import de.moekadu.tuner.temperaments.Temperament2
 import de.moekadu.tuner.temperaments.TemperamentWithNoteNames2
-import de.moekadu.tuner.temperaments.generateNoteNames
+import de.moekadu.tuner.notenames.generateNoteNames
 import de.moekadu.tuner.temperaments.temperamentDatabase
 import de.moekadu.tuner.ui.notes.CentAndRatioTable
 import de.moekadu.tuner.ui.notes.CircleOfFifthTable

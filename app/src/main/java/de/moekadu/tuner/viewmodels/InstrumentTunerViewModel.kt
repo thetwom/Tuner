@@ -31,8 +31,8 @@ import de.moekadu.tuner.notedetection.FrequencyEvaluationResult
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.notedetection.checkTuning
 import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale2
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
 import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.tuner.Tuner
 import de.moekadu.tuner.ui.instruments.StringWithInfo

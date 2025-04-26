@@ -27,6 +27,12 @@ import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.misc.ResourcesDataStoreBase
 import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.GetTextFromResIdWithIntArg
+import de.moekadu.tuner.musicalscale.MusicalScale
+import de.moekadu.tuner.musicalscale.MusicalScale2
+import de.moekadu.tuner.musicalscale.MusicalScaleFactory
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.generateNoteNames
+import de.moekadu.tuner.stretchtuning.StretchTuning
 import de.moekadu.tuner.ui.common.EditableListPredefinedSection
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf

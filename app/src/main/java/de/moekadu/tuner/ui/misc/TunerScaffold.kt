@@ -45,8 +45,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.MusicalScale2
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.musicalscale.MusicalScale2
+import de.moekadu.tuner.musicalscale.MusicalScaleFactory
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.theme.TunerTheme
 

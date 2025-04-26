@@ -24,10 +24,9 @@ import androidx.preference.PreferenceManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import de.moekadu.tuner.misc.GetTextFromResId
 import de.moekadu.tuner.notedetection.WindowingFunction
-import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.temperaments.TemperamentTypeOld
 import de.moekadu.tuner.temperaments.resourceId
-import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
 import de.moekadu.tuner.temperaments.TemperamentWithNoteNames2
 import de.moekadu.tuner.temperaments.temperamentDatabase
 import de.moekadu.tuner.ui.notes.NotationType

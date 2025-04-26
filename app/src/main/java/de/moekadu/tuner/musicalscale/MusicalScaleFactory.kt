@@ -16,7 +16,15 @@
 * You should have received a copy of the GNU General Public License
 * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
 */
-package de.moekadu.tuner.temperaments
+package de.moekadu.tuner.musicalscale
+
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteNames
+import de.moekadu.tuner.notenames.generateNoteNames
+import de.moekadu.tuner.stretchtuning.StretchTuning
+import de.moekadu.tuner.temperaments.Temperament2
+import de.moekadu.tuner.temperaments.createTestTemperamentEdo12
+import de.moekadu.tuner.temperaments.createTestTemperamentWerckmeisterVI
 
 class MusicalScaleFactory {
     companion object {

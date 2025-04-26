@@ -1,12 +1,11 @@
 package de.moekadu.tuner
 
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.chainOfFifthsExtendedQuarterCommaMeantone
-import de.moekadu.tuner.temperaments.chainOfFifthsPythagorean
-import de.moekadu.tuner.temperaments.generateNoteNames
-import de.moekadu.tuner.temperaments.generateNoteNamesForChainOfFifths
+import de.moekadu.tuner.notenames.BaseNote
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteModifier
+import de.moekadu.tuner.notenames.generateNoteNames
+import de.moekadu.tuner.notenames.generateNoteNamesForChainOfFifths
+import de.moekadu.tuner.temperaments.predefinedTemperamentExtendedQuarterCommaMeanTone
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 
@@ -112,9 +111,9 @@ class NoteNamesGeneratorTest {
 
     @Test
     fun testNoteNamesChainOfFifths() {
-        val chain = chainOfFifthsExtendedQuarterCommaMeantone
+        val chain = predefinedTemperamentExtendedQuarterCommaMeanTone(0L).chainOfFifths()
         val names = generateNoteNamesForChainOfFifths(
-            chain, MusicalNote(BaseNote.C, NoteModifier.None)
+            chain, MusicalNote(BaseNote.C, NoteModifier.Sharp)
         )
         assertEquals(chain.fifths.size + 1, names?.size)
         names?.notes?.forEachIndexed { i, n ->

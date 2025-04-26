@@ -60,12 +60,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.ConfigurationCompat
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
+import de.moekadu.tuner.notenames.BaseNote
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteModifier
 import de.moekadu.tuner.temperaments.RationalNumber
 import de.moekadu.tuner.temperaments.centsToFrequency
-import de.moekadu.tuner.temperaments.generateNoteNames
+import de.moekadu.tuner.notenames.generateNoteNames
 import de.moekadu.tuner.temperaments.ratioToCents
 import de.moekadu.tuner.ui.notes.NotationType
 import de.moekadu.tuner.ui.notes.Note

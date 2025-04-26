@@ -8,11 +8,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.moekadu.tuner.hilt.ApplicationScope
-import de.moekadu.tuner.temperaments.NoteNames
+import de.moekadu.tuner.notenames.NoteNames
 import de.moekadu.tuner.temperaments.Temperament2
 import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.temperaments.TemperamentWithNoteNames2
-import de.moekadu.tuner.temperaments.generateNoteNames
+import de.moekadu.tuner.notenames.generateNoteNames
 import de.moekadu.tuner.ui.temperaments.TemperamentDialogState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

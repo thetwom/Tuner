@@ -1,7 +1,7 @@
 package de.moekadu.tuner
 
-import de.moekadu.tuner.temperaments.MusicalScaleFrequencies
-import de.moekadu.tuner.temperaments.StretchTuning
+import de.moekadu.tuner.musicalscale.MusicalScaleFrequencies
+import de.moekadu.tuner.stretchtuning.StretchTuning
 import de.moekadu.tuner.temperaments.centsToFrequency
 import org.junit.Assert.assertEquals
 import org.junit.Test

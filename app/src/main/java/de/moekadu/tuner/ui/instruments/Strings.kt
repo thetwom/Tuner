@@ -69,9 +69,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
 import de.moekadu.tuner.notedetection.TuningState
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale2
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
+import de.moekadu.tuner.musicalscale.MusicalScaleFactory
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.rememberMaxNoteSize
 import de.moekadu.tuner.ui.plot.PlotWindowOutline
@@ -324,7 +324,7 @@ fun Strings(
     outerLabelPadding: Dp = 4.dp,
     outline: PlotWindowOutline = PlotWindowOutline(),
     state: StringsState = remember { StringsState(0) },
-    onStringClicked: (key: Int, note: MusicalNote) -> Unit = {_, _ -> }
+    onStringClicked: (key: Int, note: MusicalNote) -> Unit = { _, _ -> }
 ) {
     val scope = rememberCoroutineScope()
     val fontSizeResolved = fontSize.takeOrElse {

@@ -16,7 +16,7 @@
 * You should have received a copy of the GNU General Public License
 * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
 */
-package de.moekadu.tuner.temperaments
+package de.moekadu.tuner.notenames
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

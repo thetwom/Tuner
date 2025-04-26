@@ -50,9 +50,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
 import androidx.compose.ui.unit.times
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale2
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
+import de.moekadu.tuner.musicalscale.MusicalScaleFactory
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf

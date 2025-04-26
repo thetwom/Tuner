@@ -55,9 +55,9 @@ import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.notedetection.SortedAndDistinctInstrumentStrings
 import de.moekadu.tuner.notedetection.TuningState
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale2
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
+import de.moekadu.tuner.musicalscale.MusicalScaleFactory
 import de.moekadu.tuner.ui.instruments.InstrumentButton
 import de.moekadu.tuner.ui.instruments.StringWithInfo
 import de.moekadu.tuner.ui.instruments.Strings

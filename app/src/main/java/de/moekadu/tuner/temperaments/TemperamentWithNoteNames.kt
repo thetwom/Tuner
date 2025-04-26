@@ -18,6 +18,7 @@
 */
 package de.moekadu.tuner.temperaments
 
+import de.moekadu.tuner.notenames.NoteNames
 import kotlinx.serialization.Serializable
 
 @Serializable

@@ -18,6 +18,8 @@
 */
 package de.moekadu.tuner.temperaments
 
+import de.moekadu.tuner.notenames.MusicalNote
+
 object TemperamentValidityChecks {
     /** Possible errors for the different cent/ratio values of the temperament table. */
     enum class ValueOrdering {

@@ -20,7 +20,11 @@ package de.moekadu.tuner.temperaments
 
 import android.content.Context
 import de.moekadu.tuner.misc.GetTextFromString
-import de.moekadu.tuner.misc.StringOrResId
+import de.moekadu.tuner.notenames.BaseNote
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteModifier
+import de.moekadu.tuner.notenames.NoteNames
+import de.moekadu.tuner.notenames.generateNoteNames
 import kotlinx.serialization.Serializable
 
 /** Temperament with note names, which can be incomplete, but is allowed for editing. */

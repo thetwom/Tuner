@@ -1,9 +1,9 @@
 package de.moekadu.tuner
 
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.NoteNames
+import de.moekadu.tuner.notenames.BaseNote
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteModifier
+import de.moekadu.tuner.notenames.NoteNames
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

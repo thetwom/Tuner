@@ -20,8 +20,8 @@ package de.moekadu.tuner.notedetection
 
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.misc.DefaultValues
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale2
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
 import kotlin.math.log10
 
 data class FrequencyEvaluationResult(

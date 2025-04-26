@@ -25,9 +25,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
+import de.moekadu.tuner.notenames.BaseNote
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteModifier
 
 @Composable
 fun NoteEditorSimple(
@@ -36,7 +36,7 @@ fun NoteEditorSimple(
     octaveOffset: Int,
     modifier: Modifier = Modifier,
     notePrintOptions: NotePrintOptions = NotePrintOptions(),
-    onNoteChange: (BaseNote, NoteModifier, octaveOffset: Int) -> Unit = {_, _, _ ->}
+    onNoteChange: (BaseNote, NoteModifier, octaveOffset: Int) -> Unit = { _, _, _ ->}
 ) {
 //    Log.v("Tuner ", "NoteEditorSimple: base=$base, modifier = $noteModifier")
     val baseNotes = remember {

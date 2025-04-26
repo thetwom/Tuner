@@ -16,9 +16,14 @@
 * You should have received a copy of the GNU General Public License
 * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
 */
-package de.moekadu.tuner.temperaments
+package de.moekadu.tuner.musicalscale
 
 import androidx.compose.runtime.Immutable
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteNames
+import de.moekadu.tuner.stretchtuning.StretchTuning
+import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.Temperament2
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
