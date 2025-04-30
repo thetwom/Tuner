@@ -12,14 +12,16 @@ import de.moekadu.tuner.misc.GetTextFromString
 import de.moekadu.tuner.notenames.BaseNote
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.notenames.NoteModifier
+import de.moekadu.tuner.notenames.NoteNameHelpers
 import de.moekadu.tuner.temperaments.RationalNumber
 import de.moekadu.tuner.temperaments.EditableTemperament
 import de.moekadu.tuner.notenames.NoteNames
-import de.moekadu.tuner.temperaments.Temperament2
+import de.moekadu.tuner.notenames.NoteNames2
+import de.moekadu.tuner.notenames.NoteNamesEDOGenerator
 import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.temperaments.TemperamentValidityChecks
-import de.moekadu.tuner.temperaments.TemperamentWithNoteNames2
 import de.moekadu.tuner.notenames.generateNoteNames
+import de.moekadu.tuner.temperaments.Temperament3Custom
 import de.moekadu.tuner.ui.temperaments.TemperamentEditorState
 import de.moekadu.tuner.ui.temperaments.TemperamentTableLineState
 import kotlinx.collections.immutable.PersistentList
@@ -90,16 +92,19 @@ private fun checkAndSetNoteNameErrors(values: PersistentList<TemperamentTableLin
 
 /** Check if list of notes is the same as the default note names.
  * @param noteNameList List of notes to be checked.
- * @return True if the list ist the same as the default note names, else false
+ * @param defaultNames Default names against which we do the chek.
+ * @return True if the list is the same as the default note names, else false
  */
-private fun checkIfDefaultNoteNames(noteNameList: List<MusicalNote>): Boolean {
+private fun checkIfDefaultNoteNames(
+    noteNameList: List<MusicalNote>, defaultNames: Array<MusicalNote>?
+): Boolean {
     var useDefaultNoteNames = true
-    val predefinedNoteNames = generateNoteNames(noteNameList.size)
-    if (predefinedNoteNames == null) {
+
+    if (defaultNames == null || defaultNames.size != noteNameList.size) {
         useDefaultNoteNames = false
     } else {
-        for (i in 0 until predefinedNoteNames.size) {
-            if (!MusicalNote.notesEqualIgnoreOctave(predefinedNoteNames[i], noteNameList[i])) {
+        for (i in noteNameList.indices) {
+            if (!MusicalNote.notesEqualIgnoreOctave(defaultNames[i], noteNameList[i])) {
                 useDefaultNoteNames = false
                 break
             }
@@ -249,51 +254,56 @@ class TemperamentEditorViewModel @AssistedInject constructor(
         val noteNameList = values.dropLast(1).map {
             it.note ?: return false
         }
-        val predefinedNoteNames = generateNoteNames(values.size - 1)
-        val useDefaultNoteNames = checkIfDefaultNoteNames(noteNameList)
+        val predefinedNoteNames = NoteNamesEDOGenerator.getNoteNames(
+            values.size - 1, null
+        )
+        val useDefaultNoteNames = checkIfDefaultNoteNames(
+            noteNameList, predefinedNoteNames?.notes
+        )
 
-        val defaultReferenceNote = values.firstOrNull {
-            (it.note?.base == BaseNote.A && it.note?.modifier == NoteModifier.None)
-                    || (it.note?.enharmonicBase == BaseNote.A && it.note?.enharmonicModifier == NoteModifier.None)
-        }?.note ?: values.firstOrNull{ it.note != null }?.note ?: return false
+//        val defaultReferenceNote = values.firstOrNull {
+//            (it.note?.base == BaseNote.A && it.note?.modifier == NoteModifier.None)
+//                    || (it.note?.enharmonicBase == BaseNote.A && it.note?.enharmonicModifier == NoteModifier.None)
+//        }?.note ?: values.firstOrNull{ it.note != null }?.note ?: return false
 
         val noteNames = if (useDefaultNoteNames) {
-            predefinedNoteNames
+            predefinedNoteNames!!.notes
         } else {
-            NoteNames(
-                notes = noteNameList.toTypedArray(),
-                defaultReferenceNote =  defaultReferenceNote
-            )
+            noteNameList.toTypedArray()
+            //NoteNames2(
+//                notes = noteNameList.toTypedArray(),
+//                defaultReferenceNote =  defaultReferenceNote,
+//                firstNoteOfOctave = noteNameList[0]
+//            )
         }
 
-        val possibleRatios = values.map { it.obtainRatio() }
-        val hasRatios = !possibleRatios.contains(null)
-        val ratios = if (hasRatios) {
-            possibleRatios.map { it ?: RationalNumber(1,1) }
-        } else {
-            null
-        }
+        val ratios = values.map { it.obtainRatio() }
+//        val hasRatios = !possibleRatios.contains(null)
+//        val ratios = if (hasRatios) {
+//            possibleRatios.map { it ?: RationalNumber(1,1) }
+//        } else {
+//            null
+//        }
         val cents = values.map { it.obtainCent() ?: return false }
 
-        var hasEqualDivisions = true
-        for (i in 0 until cents.size - 2)
-            if (2 * cents[i+1] - cents[i] - cents[i+2] > 0.01)
-                hasEqualDivisions = false
+//        var hasEqualDivisions = true
+//        for (i in 0 until cents.size - 2)
+//            if (2 * cents[i+1] - cents[i] - cents[i+2] > 0.01)
+//                hasEqualDivisions = false
 
-        val temperament = Temperament2(
-            name = GetTextFromString(name.value),
-            abbreviation = GetTextFromString(abbreviation.value),
-            description = GetTextFromString(description.value),
+        val temperament = Temperament3Custom(
+            _name = name.value,
+            _abbreviation = abbreviation.value,
+            _description = description.value,
             cents = cents.toDoubleArray(),
-            rationalNumbers = ratios?.toTypedArray(),
-            circleOfFifths = null,
-            equalOctaveDivision = if (hasEqualDivisions) cents.size - 1 else null,
+            _rationalNumbers = ratios.toTypedArray(),
+            //equalOctaveDivision = if (hasEqualDivisions) cents.size - 1 else null,
+            _noteNames = noteNames,
             stableId = stableId
         )
 
-        pref.addNewOrReplaceTemperament(
-            TemperamentWithNoteNames2(temperament, noteNames)
-        )
+        pref.addNewOrReplaceTemperament(temperament)
+
         return true
     }
 

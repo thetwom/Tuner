@@ -61,7 +61,7 @@ import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.musicalscale.MusicalScale2
-import de.moekadu.tuner.musicalscale.MusicalScaleFactory
+import de.moekadu.tuner.temperaments.predefinedTemperamentEDO
 import de.moekadu.tuner.ui.notes.NoteDetector
 import de.moekadu.tuner.ui.notes.NoteDetectorState
 import de.moekadu.tuner.ui.notes.NotePrintOptions
@@ -474,7 +474,7 @@ fun InstrumentEditorLandscape(
 }
 
 private class InstrumentEditorDataTest : InstrumentEditorData {
-    val musicalScale = MusicalScaleFactory.createTestEdo12()
+    val musicalScale = MusicalScale2.createTestEdo12()
 
     override val icon = MutableStateFlow(InstrumentIcon.piano)
     override val name = MutableStateFlow("Test name")

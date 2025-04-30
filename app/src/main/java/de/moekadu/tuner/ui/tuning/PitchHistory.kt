@@ -45,7 +45,6 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.musicalscale.MusicalScale2
-import de.moekadu.tuner.musicalscale.MusicalScaleFactory
 import de.moekadu.tuner.ui.common.Label
 import de.moekadu.tuner.ui.notes.Note
 import de.moekadu.tuner.ui.notes.NotePrintOptions
@@ -262,8 +261,12 @@ fun PitchHistory(
         )
     }
 
+    val noteNames = remember(musicalScale.temperament, musicalScale.rootNote) {
+        musicalScale.temperament.noteNames(musicalScale.rootNote)
+    }
+
     val maxNoteHeight = rememberMaxNoteSize(
-        musicalScale.noteNames.notes,
+        noteNames.notes,
         notePrintOptions = notePrintOptions,
         fontSize = tickLabelStyle.fontSize,
         fontWeight = null,
@@ -446,7 +449,7 @@ fun PitchHistory2Preview() {
         val notePrintOptions = remember {
             NotePrintOptions()
         }
-        val musicalScale = remember { MusicalScaleFactory.createTestEdo12() }
+        val musicalScale = remember { MusicalScale2.createTestEdo12() }
         val state = remember {
             PitchHistoryState(
                 capacity = 9

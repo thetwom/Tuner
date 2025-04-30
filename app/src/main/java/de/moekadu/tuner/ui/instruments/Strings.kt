@@ -71,7 +71,6 @@ import androidx.compose.ui.unit.takeOrElse
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.musicalscale.MusicalScale2
-import de.moekadu.tuner.musicalscale.MusicalScaleFactory
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.rememberMaxNoteSize
 import de.moekadu.tuner.ui.plot.PlotWindowOutline
@@ -366,8 +365,12 @@ fun Strings(
             strings?.count { it.note == highlightedNote } ?: 1
     }
 
+    val noteNames = remember(musicalScale.temperament) {
+        musicalScale.temperament.noteNames(musicalScale.rootNote)
+    }
+
     val labelSize = rememberMaxNoteSize(
-        notes = musicalScale.noteNames.notes,
+        notes = noteNames.notes,
         notePrintOptions = notePrintOptions,
         fontSize = fontSizeResolved,
         octaveRange = minOctave..maxOctave
@@ -580,8 +583,10 @@ fun Strings(
 @Composable
 private fun StringsPreview() {
     TunerTheme {
-        val musicalScale = remember { MusicalScaleFactory.createTestEdo12() }
-        val noteNameScale = musicalScale.noteNames
+        val musicalScale = remember { MusicalScale2.createTestEdo12() }
+        val noteNameScale = remember(musicalScale.temperament, musicalScale.rootNote) {
+            musicalScale.temperament.noteNames(musicalScale.rootNote)
+        }
         val strings = remember(noteNameScale) {
             listOf(
                 noteNameScale.notes[0].copy(octave = 2),
@@ -643,8 +648,10 @@ private fun StringsPreview() {
 @Composable
 private fun StringsPreview2() {
     TunerTheme {
-        val musicalScale = remember { MusicalScaleFactory.createTestEdo12() }
-        val noteNameScale = musicalScale.noteNames
+        val musicalScale = remember { MusicalScale2.createTestEdo12() }
+        val noteNameScale = remember(musicalScale.temperament, musicalScale.rootNote) {
+            musicalScale.temperament.noteNames(musicalScale.rootNote)
+        }
         val strings = remember(noteNameScale) {
             listOf(
                 noteNameScale.notes[0].copy(octave = 2),

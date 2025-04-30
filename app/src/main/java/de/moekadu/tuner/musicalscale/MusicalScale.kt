@@ -23,7 +23,8 @@ import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.notenames.NoteNames
 import de.moekadu.tuner.stretchtuning.StretchTuning
 import de.moekadu.tuner.temperaments.Temperament
-import de.moekadu.tuner.temperaments.Temperament2
+import de.moekadu.tuner.temperaments.Temperament3
+import de.moekadu.tuner.temperaments.predefinedTemperamentEDO
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
@@ -42,14 +43,13 @@ data class MusicalScale(
 ) {
     fun toNew(): MusicalScale2 {
         return MusicalScale2(
-            temperament = temperament.toNew(),
-            noteNames = noteNames,
-            rootNote = rootNote,
-            referenceNote = referenceNote,
+            temperament = temperament.toNew(noteNames),
+            _rootNote = rootNote,
+            _referenceNote = referenceNote,
             referenceFrequency = referenceFrequency,
             frequencyMin = frequencyMin,
             frequencyMax = frequencyMax,
-            stretchTuning = stretchTuning
+            _stretchTuning = stretchTuning
         )
     }
 }
@@ -57,25 +57,32 @@ data class MusicalScale(
 @Serializable
 @Immutable
 data class MusicalScale2(
-    val temperament: Temperament2,
-    val noteNames: NoteNames,
-    val rootNote: MusicalNote,
-    val referenceNote: MusicalNote,
+    val temperament: Temperament3,
+    val _rootNote: MusicalNote?,
+    val _referenceNote: MusicalNote?,
     val referenceFrequency: Float,
     val frequencyMin: Float,
     val frequencyMax: Float,
-    val stretchTuning: StretchTuning
+    val _stretchTuning: StretchTuning?
 ) {
     @Transient
-    val numberOfNotesPerOctave: Int = temperament.cents.size - 1
+    val numberOfNotesPerOctave = temperament.size
 
     @Transient
-    private val noteNameScale = MusicalScaleNoteNames(noteNames, referenceNote)
+    private val noteNameScale
+            = MusicalScaleNoteNames2(temperament.noteNames(_rootNote), _referenceNote)
+
+    val rootNote get() = noteNameScale.noteNames[0]
+
+    val referenceNote get() = noteNameScale.referenceNote
+
+    @Transient
+    val stretchTuning = _stretchTuning ?: StretchTuning()
 
     @Transient
     private val musicalScaleFrequencies = MusicalScaleFrequencies.create(
-        temperament.cents,
-        computeReferenceNoteIndexWithinOctave(),
+        temperament.cents(),
+        noteNameScale.referenceNoteIndexWithinOctave,
         referenceFrequency,
         frequencyMin,
         frequencyMax,
@@ -88,10 +95,6 @@ data class MusicalScale2(
     /** Last note index (excluded). */
     @Transient
     val noteIndexEnd: Int = musicalScaleFrequencies.indexEnd
-
-    init {
-        assert(numberOfNotesPerOctave == noteNames.size)
-    }
 
     /** Obtain note representation based on class internal note index.
      * @param noteIndex Local index of note (noteIndexBegin <= noteIndex < noteIndexEnd).
@@ -146,12 +149,18 @@ data class MusicalScale2(
         return noteNameScale.getIndexOfNote(note)
     }
 
-    private fun computeReferenceNoteIndexWithinOctave(): Int {
-        val rootNoteIndex = noteNameScale.getIndexOfNote(rootNote.copy(octave = referenceNote.octave))
-        return if (rootNoteIndex <= 0) {
-            -rootNoteIndex
-        } else {
-            numberOfNotesPerOctave - rootNoteIndex
+    companion object {
+        fun createTestEdo12(): MusicalScale2 {
+            return MusicalScale2(
+                predefinedTemperamentEDO(12, 1L),
+                _rootNote = null,
+                _referenceNote = null,
+                referenceFrequency = 440f,
+                frequencyMin = 30f,
+                frequencyMax = 18000f,
+                _stretchTuning = null
+            )
         }
     }
 }
+

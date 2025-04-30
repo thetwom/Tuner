@@ -41,7 +41,7 @@ object TemperamentIO {
         val instruments: List<EditableTemperament>
     )
 
-    fun temperamentsListToString(context: Context, temperaments: List<TemperamentWithNoteNames2>)
+    fun temperamentsListToString(context: Context, temperaments: List<Temperament3>)
     : String {
         val writer = StringWriter()
         writeTemperaments(temperaments, writer.buffered(), context)
@@ -49,7 +49,7 @@ object TemperamentIO {
     }
 
     fun writeTemperaments(
-        temperaments: List<TemperamentWithNoteNames2>,
+        temperaments: List<Temperament3>,
         writer: BufferedWriter,
         context: Context) {
         writeVersion(writer)
@@ -63,15 +63,15 @@ object TemperamentIO {
     }
 
     fun writeTemperament(
-        temperament: TemperamentWithNoteNames2,
+        temperament: Temperament3,
         writer: BufferedWriter,
         context: Context
     ) {
-        val name = temperament.temperament.name.value(context)
+        val name = temperament.name.value(context)
             .replace("\n", " ")
-        val abbreviation = temperament.temperament.abbreviation.value(context)
+        val abbreviation = temperament.abbreviation.value(context)
             .replace("\n", " ")
-        val description = temperament.temperament.description.value(context)
+        val description = temperament.description.value(context)
             .replace("\n", " ")
 
         writer.writeLine("! ${name.replace(" ","_")}.scl")
@@ -83,13 +83,13 @@ object TemperamentIO {
 
         writer.writeLine("!")
         writer.writeLine(name)
-        writer.writeLine("${temperament.temperament.numberOfNotesPerOctave}")
+        writer.writeLine("${temperament.size}")
         writer.writeLine("!")
 
-        val numberOfNotes = temperament.temperament.numberOfNotesPerOctave
-        val noteNames = temperament.noteNames ?: generateNoteNames(numberOfNotes)
-        val ratios = temperament.temperament.rationalNumbers
-        val cents = temperament.temperament.cents
+        val numberOfNotes = temperament.size
+        val noteNames = temperament.noteNames(null)
+        val ratios = temperament.rationalNumbers()
+        val cents = temperament.cents()
 
         for (i in 1 .. numberOfNotes) {
             if (ratios != null) {
@@ -99,7 +99,7 @@ object TemperamentIO {
                 val c = cents[i]
                 writer.write(" %.2f".format(c))
             }
-            noteNames?.getOrNull(i % numberOfNotes)?.let { note ->
+            noteNames.getOrNull(i % numberOfNotes)?.let { note ->
                 writer.write("    $NOTE_KEY=${noteToString(note)}")
             }
             writer.newLine()
@@ -175,7 +175,7 @@ object TemperamentIO {
                             abbreviation ?: "",
                             description ?: "",
                             noteLines.toTypedArray(),
-                            Temperament2.NO_STABLE_ID
+                            Temperament3.NO_STABLE_ID
                         )
                     )
                 }

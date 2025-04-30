@@ -101,6 +101,10 @@ data class NoteNames(
     }
 }
 
+fun NoteNames.toNew(): NoteNames2 {
+    return NoteNames2(notes, defaultReferenceNote, notes[0])
+}
+
 private fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
     return when (numberOfNotesPerOctave) {
         // 12 tones

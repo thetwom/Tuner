@@ -1,8 +1,13 @@
 package de.moekadu.tuner.notenames
 
+import android.util.Log
 import de.moekadu.tuner.temperaments.ChainOfFifths
 
+/** Create note names based on the chain of fifths. */
 data object NoteNamesChainOfFifthsGenerator {
+    /** Return the possible root notes (first note of temperament).
+     * @return Possible root notes, which can be used.
+     */
     fun possibleRootNotes(): Array<MusicalNote> {
         return arrayOf(
             MusicalNote(BaseNote.C, NoteModifier.None),
@@ -25,10 +30,19 @@ data object NoteNamesChainOfFifthsGenerator {
         )
     }
 
-    fun getNoteNames(rootNote: MusicalNote, chainOfFifths: ChainOfFifths): NoteNames2? {
-        return generateNoteNamesForChainOfFifths(chainOfFifths, rootNote)
+    /** Generate note names.
+     * @param chainOfFifths The chain of fifth information of the temperament.
+     * @param rootNote Name of first note. Must be a note of array returned by
+     *   possibleRootNotes(). If null is passed, a default root note is used (C).
+     * @return Note for each value of the temperament excluding the name of the octave (i.e. each
+     *   value of the cents array excluding the last one). null, if note names cannot be generated.
+     */
+    fun getNoteNames(chainOfFifths: ChainOfFifths, rootNote: MusicalNote?): NoteNames2? {
+        return generateNoteNamesForChainOfFifths(
+            chainOfFifths,
+            rootNote ?: MusicalNote(BaseNote.C, NoteModifier.None)
+        )
     }
-
 }
 
 fun generateNoteNamesForChainOfFifths(
@@ -92,6 +106,7 @@ fun generateNoteNamesForChainOfFifths(
         else if (indexRelativeToOctave > 0 && noteIndex >= BaseNote.A.toIndex())
             sortedNames[index] = noteInArray.copy(octaveOffset = -1)
     }
+
     return NoteNames2(
         sortedNames,
         NoteNameHelpers.findDefaultReferenceNote(sortedNames),

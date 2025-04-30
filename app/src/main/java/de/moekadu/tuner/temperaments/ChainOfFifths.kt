@@ -2,11 +2,20 @@ package de.moekadu.tuner.temperaments
 
 import kotlinx.serialization.Serializable
 
+/** Chain of fifths definition of a temperament.
+ * @param fifths Array of fifths. Size is expected to be notes per octave - 1.
+ *   This means that you must not include a closing modification to make circle of fifths.
+ * @param rootIndex Index of fifths, where we start the temperament (position of not with ratio 1)
+ */
 @Serializable
 data class ChainOfFifths(
     val fifths: Array<out FifthModification>,
     val rootIndex: Int
 ) {
+    /** If you want to create a circle of fifths, you can close the circle with the returned
+     * modification.
+     * This makes e.g. sense for 12 notes per octave.
+     */
     fun getClosingCircleCorrection(): FifthModification {
         var totalCorrection = FifthModification(
             pythagoreanComma = RationalNumber(-1, 1)
@@ -16,6 +25,13 @@ data class ChainOfFifths(
         return totalCorrection
     }
 
+    /** Return the ratio between the root note and another note.
+     * Ratio are divided/multiplied with a multiple of 2 (2^n) such that it is between 1 and 2.
+     * @return Ratios in the same order as given by the fifths. Note that the size of the returned
+     *   array is fifths.size + 1 since the fifths are always between two notes. So in the end
+     *   the returned size corresponds to number of notes per octave. The ratio of the root note
+     *   (which is always 1) is placed at rootIndex.
+     */
     fun getRatiosAlongFifths(): DoubleArray {
         //               |
         //               v
@@ -49,6 +65,9 @@ data class ChainOfFifths(
         return ratios
     }
 
+    /** Return the ratios sorted according to the ratios value.
+     * See getRatiosAlongFifths for details.
+     */
     fun getSortedRatios(): DoubleArray {
         return getRatiosAlongFifths().sortedArray()
     }

@@ -8,7 +8,7 @@ fun predefinedTemperaments(): ArrayList<Temperament3> {
     val temperaments = ArrayList<Temperament3>()
 
     temperaments.add(
-        predefinedTemperamentsEDO(12, (-temperaments.size - 1).toLong())
+        predefinedTemperamentEDO(12, (-temperaments.size - 1).toLong())
     )
     temperaments.add(
         predefinedTemperamentPythagorean((-temperaments.size - 1).toLong())
@@ -68,7 +68,7 @@ fun predefinedTemperaments(): ArrayList<Temperament3> {
     return temperaments
 }
 
-fun predefinedTemperamentsEDO(notesPerOctave: Int, stableId: Long)
+fun predefinedTemperamentEDO(notesPerOctave: Int, stableId: Long)
         = Temperament3EDO(
     stableId = stableId,
     notesPerOctave = notesPerOctave

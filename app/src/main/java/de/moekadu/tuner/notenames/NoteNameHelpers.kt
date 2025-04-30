@@ -1,5 +1,7 @@
 package de.moekadu.tuner.notenames
 
+import android.util.Log
+
 object NoteNameHelpers {
     /**
      * Code for edo naming is based on the logic given here:
@@ -8,11 +10,12 @@ object NoteNameHelpers {
      */
 
     fun findDefaultReferenceNote(noteNames: Array<MusicalNote>): MusicalNote {
-        return noteNames
+        val note = noteNames
             .firstOrNull {
                 (it.base == BaseNote.A && it.modifier == NoteModifier.None) ||
                         (it.enharmonicBase == BaseNote.A && it.enharmonicModifier == NoteModifier.None)
             } ?: noteNames.getOrElse(0) { MusicalNote(BaseNote.A, NoteModifier.None) }
-            .copy(octave = 4)
+
+        return note.copy(octave = 4)
     }
 }

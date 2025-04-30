@@ -1,6 +1,5 @@
 package de.moekadu.tuner.notenames
 
-import de.moekadu.tuner.temperaments.ChainOfFifths
 import kotlinx.serialization.Serializable
 import java.util.Collections
 import kotlin.math.absoluteValue
@@ -8,24 +7,38 @@ import kotlin.math.log2
 import kotlin.math.roundToInt
 import kotlin.math.sign
 
+/** Create note names for EDO scales. */
 @Serializable
 data object NoteNamesEDOGenerator {
+
+    /** Return the possible root notes (first note of temperament).
+     * @param notesPerOctave Number of notes per octave.
+     * @return Possible root notes, which can be used.
+     */
     fun possibleRootNotes(notesPerOctave: Int): Array<MusicalNote> {
         return generateNoteNamesImpl(notesPerOctave)
     }
 
-    fun getNoteNames(rootNote: MusicalNote, notesPerOctave: Int): NoteNames2? {
+    /** Generate note names.
+     * @param notesPerOctave Number of notes per octave.
+     * @param rootNote Name of first note. Must be a note of array returned by
+     *   possibleRootNotes(). If null is passed, a default root note is used (C).
+     * @return Note for each value of the temperament excluding the name of the octave (i.e. each
+     *   value of the cents array excluding the last one). null, if note names cannot be generated.
+     */
+    fun getNoteNames(notesPerOctave: Int, rootNote: MusicalNote?): NoteNames2? {
         if (notesPerOctave > 72)
             return null
         val noteNames = generateNoteNamesImpl(notesPerOctave)
         val defaultReferenceNote = NoteNameHelpers.findDefaultReferenceNote(noteNames)
         val incrementOctaveAt = noteNames[0]
 
-        val shiftLeft = noteNames
-            .indexOfFirst { MusicalNote.notesEqualIgnoreOctave(it, rootNote) }
-            .coerceAtLeast(0) // don't reorder if root note is not found, should not happen
-        Collections.rotate(noteNames.asList(), -shiftLeft)
-
+        if (rootNote != null) {
+            val shiftLeft = noteNames
+                .indexOfFirst { MusicalNote.notesEqualIgnoreOctave(it, rootNote) }
+                .coerceAtLeast(0) // don't reorder if root note is not found, should not happen
+            Collections.rotate(noteNames.asList(), -shiftLeft)
+        }
         return NoteNames2(noteNames, defaultReferenceNote, incrementOctaveAt)
     }
 

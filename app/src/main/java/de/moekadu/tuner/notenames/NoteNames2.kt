@@ -8,21 +8,18 @@ import kotlinx.serialization.Serializable
  *   importance here.
  * @param defaultReferenceNote The note which normally is used as reference note within tuning. Note
  *   that here, the octave index is important.
- * @param firstNoteOfOctave First note of an octave. In other words, when cycling between note names
- *   and when this note is reached, the octave counter is increased.
+ * @param octaveSwitchIndex Index within notes where the octave is incremented. In other words,
+ *   when cycling between note names and when this note is reached, the octave counter is increased.
  */
 @Serializable
 @Immutable
 data class NoteNames2(
     val notes: Array<MusicalNote>,
     val defaultReferenceNote: MusicalNote,
-    val firstNoteOfOctave: MusicalNote
+    val octaveSwitchIndex: MusicalNote
 ) {
     /** Number of notes. */
     val size get() = notes.size
-
-    /** Index within notes, where the first note of octave is placed. */
-    val indexOfFirstNoteOfOctave = notes.indexOfFirst { it == firstNoteOfOctave }
 
     /** Return note index within the notes-array.
      * @param note Note for which the index. Note that the octave index is ignored.
@@ -60,7 +57,7 @@ data class NoteNames2(
         return NoteNames2(
             notes = notes.map { it.switchEnharmonic() }.toTypedArray(),
             defaultReferenceNote = defaultReferenceNote.switchEnharmonic(),
-            firstNoteOfOctave = firstNoteOfOctave.switchEnharmonic()
+            octaveSwitchIndex = octaveSwitchIndex.switchEnharmonic()
         )
     }
 
@@ -80,7 +77,7 @@ data class NoteNames2(
 
         if (!notes.contentEquals(other.notes)) return false
         if (defaultReferenceNote != other.defaultReferenceNote) return false
-        if (firstNoteOfOctave != other.firstNoteOfOctave) return false
+        if (octaveSwitchIndex != other.octaveSwitchIndex) return false
 
         return true
     }
@@ -88,7 +85,7 @@ data class NoteNames2(
     override fun hashCode(): Int {
         var result = notes.contentHashCode()
         result = 31 * result + defaultReferenceNote.hashCode()
-        result = 31 * result + firstNoteOfOctave.hashCode()
+        result = 31 * result + octaveSwitchIndex.hashCode()
         return result
     }
 }

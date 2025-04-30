@@ -18,34 +18,37 @@
 */
 package de.moekadu.tuner.musicalscale
 
+import android.util.Log
 import androidx.compose.runtime.Stable
 import de.moekadu.tuner.notenames.MusicalNote
-import de.moekadu.tuner.notenames.NoteNames
 import de.moekadu.tuner.notenames.NoteNames2
 
 /** Note names, which can map indices between musical notes and via verse.
  * @param noteNames Note names of one octave.
  * @param referenceNote Reference note of the scale, which refers to noteIndex 0.
- *   This note must be part of the note names.
+ *   This note must be part of the note names. Use null to use the default reference note.
  */
 @Stable
 class MusicalScaleNoteNames2(
     val noteNames: NoteNames2,
-    val referenceNote: MusicalNote
+    referenceNote: MusicalNote?
 ) {
+    /** Reference note. */
+    val referenceNote = referenceNote ?: noteNames.defaultReferenceNote
+
     /** Reference note index within the octave (index in notes). */
-    private val referenceNoteIndexWithinNoteNames = noteNames.getNoteIndex(referenceNote)
+    val referenceNoteIndexWithinOctave = noteNames.getNoteIndex(this.referenceNote)
 
     /** Reference note index within the octave (index in notes). */
     private val octaveSwitchIndexWithinNoteNames
-            = noteNames.getNoteIndex(noteNames.firstNoteOfOctave)
+            = noteNames.getNoteIndex(noteNames.octaveSwitchIndex)
 
     /** Octave of reference note. */
     private val referenceOctave =
-        if (referenceNoteIndexWithinNoteNames < octaveSwitchIndexWithinNoteNames)
-            referenceNote.octave
+        if (referenceNoteIndexWithinOctave < octaveSwitchIndexWithinNoteNames)
+            this.referenceNote.octave
         else
-            referenceNote.octave - 1
+            this.referenceNote.octave - 1
 
     /** Number of notes contained in the scale. */
     val size = noteNames.size
@@ -55,15 +58,15 @@ class MusicalScaleNoteNames2(
      * @return Note which corresponds to the given index.
      */
     fun getNoteOfIndex(noteIndex: Int): MusicalNote {
-        var octave = (noteIndex + referenceNoteIndexWithinNoteNames) / size + referenceOctave
-        var localNoteIndex = (noteIndex + referenceNoteIndexWithinNoteNames) % size
+        var octave = (noteIndex + referenceNoteIndexWithinOctave) / size + referenceOctave
+        var localNoteIndex = (noteIndex + referenceNoteIndexWithinOctave) % size
         if (localNoteIndex < 0) {
             octave -= 1
             localNoteIndex += size
         }
         if (localNoteIndex >= octaveSwitchIndexWithinNoteNames)
             octave += 1
-//        Log.v("StaticLayoutTest", "NoteNameScale.getNoteOfIndex: noteIndex=$noteIndex, octave=$octave, localNoteIndex=$localNoteIndex, referenceNoteIndexWithinOctave=$referenceNoteIndexWithinOctave")
+//        Log.v("Tuner", "MusicalScaleNoteNames.getNoteOfIndex: noteIndex=$noteIndex, octave=$octave, localNoteIndex=$localNoteIndex, referenceNoteIndexWithinOctave=$referenceNoteIndexWithinOctave, referenceNote=$referenceNote")
         return noteNames[localNoteIndex].copy(octave = octave)
     }
 
@@ -80,74 +83,74 @@ class MusicalScaleNoteNames2(
                     musicalNote.octave
             else
                 musicalNote.octave - 1
-            (octave - referenceOctave) * size + localNoteIndex - referenceNoteIndexWithinNoteNames
+            (octave - referenceOctave) * size + localNoteIndex - referenceNoteIndexWithinOctave
         }
     }
 }
 
-/** Note names, which can map indices between musical notes and via verse.
- * @param noteNames Note names of one octave.
- * @param referenceNote Reference note of the scale, which refers to noteIndex 0.
- *   This note must be part of the note names.
- */
-@Stable
-class MusicalScaleNoteNames(
-    val noteNames: NoteNames,
-    val referenceNote: MusicalNote
-) {
-    /** Reference note index within the octave (index in notes). */
-    private val referenceNoteIndexWithinOctave = noteNames.getNoteIndex(referenceNote)
-
-    /** Octave of reference note. */
-    private val referenceNoteOctave = referenceNote.octave
-
-    /** Number of notes contained in the scale. */
-    val size = noteNames.size
-
-    /** Return note which belongs to a given index.
-     * @param noteIndex Index of note, relative to the reference note (reference note has index 0)
-     * @return Note which corresponds to the given index.
-     */
-    fun getNoteOfIndex(noteIndex: Int): MusicalNote {
-        var octave = (noteIndex + referenceNoteIndexWithinOctave) / size + referenceNoteOctave
-        var localNoteIndex = (noteIndex + referenceNoteIndexWithinOctave) % size
-        if (localNoteIndex < 0) {
-            octave -= 1
-            localNoteIndex += size
-        }
-//        Log.v("StaticLayoutTest", "NoteNameScale.getNoteOfIndex: noteIndex=$noteIndex, octave=$octave, localNoteIndex=$localNoteIndex, referenceNoteIndexWithinOctave=$referenceNoteIndexWithinOctave")
-        return noteNames[localNoteIndex].copy(octave = octave)
-    }
-
-    /** Return index of a given note.
-     * @param musicalNote Some musical note.
-     * @return Note index relative to reference note or Int.MAX_VALUE if note is not part of the scale.
-     */
-    fun getIndexOfNote(musicalNote: MusicalNote): Int {
-        val localNoteIndex = noteNames.getNoteIndex(musicalNote)
-        return if (localNoteIndex < 0) {
-            Int.MAX_VALUE
-        } else {
-            (musicalNote.octave - referenceNoteOctave) * size + localNoteIndex - referenceNoteIndexWithinOctave
-        }
-    }
-
-    /** Return a scale where the note names and modifiers are switch with their enharmonics.
-     * @return New note name scale where notes and enharmonics are exchanged.
-     */
-    fun switchEnharmonic(): MusicalScaleNoteNames {
-        return MusicalScaleNoteNames(
-            noteNames.switchEnharmonics(),
-            referenceNote.switchEnharmonic()
-        )
-    }
-
-    /** Check if a note is part this class instance.
-     * @param note Note.
-     * @return True if note is part of this class instance, else false.
-     */
-    fun hasNote(note: MusicalNote): Boolean {
-        return noteNames.hasNote(note)
-    }
-}
-
+///** Note names, which can map indices between musical notes and via verse.
+// * @param noteNames Note names of one octave.
+// * @param referenceNote Reference note of the scale, which refers to noteIndex 0.
+// *   This note must be part of the note names.
+// */
+//@Stable
+//class MusicalScaleNoteNames(
+//    val noteNames: NoteNames,
+//    val referenceNote: MusicalNote
+//) {
+//    /** Reference note index within the octave (index in notes). */
+//    private val referenceNoteIndexWithinOctave = noteNames.getNoteIndex(referenceNote)
+//
+//    /** Octave of reference note. */
+//    private val referenceNoteOctave = referenceNote.octave
+//
+//    /** Number of notes contained in the scale. */
+//    val size = noteNames.size
+//
+//    /** Return note which belongs to a given index.
+//     * @param noteIndex Index of note, relative to the reference note (reference note has index 0)
+//     * @return Note which corresponds to the given index.
+//     */
+//    fun getNoteOfIndex(noteIndex: Int): MusicalNote {
+//        var octave = (noteIndex + referenceNoteIndexWithinOctave) / size + referenceNoteOctave
+//        var localNoteIndex = (noteIndex + referenceNoteIndexWithinOctave) % size
+//        if (localNoteIndex < 0) {
+//            octave -= 1
+//            localNoteIndex += size
+//        }
+////        Log.v("StaticLayoutTest", "NoteNameScale.getNoteOfIndex: noteIndex=$noteIndex, octave=$octave, localNoteIndex=$localNoteIndex, referenceNoteIndexWithinOctave=$referenceNoteIndexWithinOctave")
+//        return noteNames[localNoteIndex].copy(octave = octave)
+//    }
+//
+//    /** Return index of a given note.
+//     * @param musicalNote Some musical note.
+//     * @return Note index relative to reference note or Int.MAX_VALUE if note is not part of the scale.
+//     */
+//    fun getIndexOfNote(musicalNote: MusicalNote): Int {
+//        val localNoteIndex = noteNames.getNoteIndex(musicalNote)
+//        return if (localNoteIndex < 0) {
+//            Int.MAX_VALUE
+//        } else {
+//            (musicalNote.octave - referenceNoteOctave) * size + localNoteIndex - referenceNoteIndexWithinOctave
+//        }
+//    }
+//
+//    /** Return a scale where the note names and modifiers are switch with their enharmonics.
+//     * @return New note name scale where notes and enharmonics are exchanged.
+//     */
+//    fun switchEnharmonic(): MusicalScaleNoteNames {
+//        return MusicalScaleNoteNames(
+//            noteNames.switchEnharmonics(),
+//            referenceNote.switchEnharmonic()
+//        )
+//    }
+//
+//    /** Check if a note is part this class instance.
+//     * @param note Note.
+//     * @return True if note is part of this class instance, else false.
+//     */
+//    fun hasNote(note: MusicalNote): Boolean {
+//        return noteNames.hasNote(note)
+//    }
+//}
+//

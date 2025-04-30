@@ -53,7 +53,6 @@ import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.musicalscale.MusicalScale2
-import de.moekadu.tuner.musicalscale.MusicalScaleFactory
 import de.moekadu.tuner.ui.misc.rememberNumberFormatter
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.NoteSelector
@@ -111,7 +110,7 @@ fun ReferenceNoteDialog(
                     val note = initialState.getNote(selectedNoteIndex + initialState.noteIndexBegin)
                     onReferenceNoteChange(
                         initialState.copy(
-                            referenceNote = note,
+                            _referenceNote = note,
                             referenceFrequency = numberFormat.toFloatOrNull(frequencyAsString)
                                 ?: initialState.referenceFrequency
                         )
@@ -175,7 +174,7 @@ fun ReferenceNoteDialog(
                 )
                 OutlinedButton(
                     onClick = {
-                        val note = initialState.noteNames.defaultReferenceNote
+                        val note = initialState.temperament.noteNames(initialState.rootNote).defaultReferenceNote
                         selectedNoteIndex = initialState.getNoteIndex(note) - initialState.noteIndexBegin
                         frequencyAsString = decimalFormat.format(PreferenceResources.ReferenceFrequencyDefault)
                     },
@@ -192,7 +191,7 @@ fun ReferenceNoteDialog(
 @Composable
 private fun AppearanceDialogTest() {
     TunerTheme {
-        val state = remember { MusicalScaleFactory.createTestEdo12() }
+        val state = remember { MusicalScale2.createTestEdo12() }
         val notePrintOptions = remember { NotePrintOptions() }
         ReferenceNoteDialog(
             state,

@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.musicalscale.MusicalScale2
-import de.moekadu.tuner.musicalscale.MusicalScaleFactory
 import de.moekadu.tuner.ui.common.Label
 import de.moekadu.tuner.ui.plot.Anchor
 import de.moekadu.tuner.ui.plot.GestureBasedViewPort
@@ -224,7 +223,7 @@ private fun CorrelationPlotPreview() {
             //CorrelationPlotData(timeShifts.size, { timeShifts[it] }, { correlations[it] })
         }
 
-        val musicalScale = remember { MusicalScaleFactory.createTestEdo12() }
+        val musicalScale = remember { MusicalScale2.createTestEdo12() }
         val targetNote = musicalScale.referenceNote
 
         CorrelationPlot(

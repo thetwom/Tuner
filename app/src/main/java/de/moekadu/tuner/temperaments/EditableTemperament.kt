@@ -24,6 +24,7 @@ import de.moekadu.tuner.notenames.BaseNote
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.notenames.NoteModifier
 import de.moekadu.tuner.notenames.NoteNames
+import de.moekadu.tuner.notenames.NoteNamesEDOGenerator
 import de.moekadu.tuner.notenames.generateNoteNames
 import kotlinx.serialization.Serializable
 
@@ -61,28 +62,31 @@ class EditableTemperament(
  * @param stableId New stable or null to use the name from the input.
  * @return Editable temperament.
  */
-fun TemperamentWithNoteNames2.toEditableTemperament(
+fun Temperament3.toEditableTemperament(
     context: Context,
     name: String? = null,
     stableId: Long? = null
     ): EditableTemperament {
-    val numberOfNotesPerOctave = temperament.numberOfNotesPerOctave
-    val noteNamesResolved = noteNames ?: generateNoteNames(numberOfNotesPerOctave)
-    val noteLines = Array<EditableTemperament.NoteLineContents?>(numberOfNotesPerOctave + 1) {
-        val octave = 4 + it / numberOfNotesPerOctave
-        val noteIndex = it % numberOfNotesPerOctave
+
+    val rootNoteResolved = possibleRootNotes()[0]
+    val noteNamesResolved = noteNames(rootNoteResolved)
+    val _cents = cents()
+    val _ratios = rationalNumbers()
+    val noteLines = Array<EditableTemperament.NoteLineContents?>(size + 1) {
+        val octave = 4 + it / size
+        val noteIndex = it % size
         EditableTemperament.NoteLineContents(
-            noteNamesResolved?.notes?.get(noteIndex)?.copy(octave = octave),
-            temperament.cents[it],
-            temperament.rationalNumbers?.get(it)
+            noteNamesResolved[noteIndex].copy(octave = octave),
+            _cents[it],
+            _ratios?.getOrNull(it)
         )
     }
     return EditableTemperament(
-        name = name ?: temperament.name.value(context),
-        abbreviation = temperament.abbreviation.value(context),
-        description = temperament.description.value(context),
+        name = name ?: this.name.value(context),
+        abbreviation = this.abbreviation.value(context),
+        description = this.description.value(context),
         noteLines = noteLines,
-        stableId = stableId ?: temperament.stableId
+        stableId = stableId ?: this.stableId
     )
 }
 
@@ -99,6 +103,7 @@ fun EditableTemperament.hasErrors(): Boolean {
     val orderingError = TemperamentValidityChecks.checkValueOrderingErrors(
         noteLines.size,
         {
+            byteArrayOf()
             val ratio = noteLines[it]?.ratio?.toDouble()
             if (ratio != null) ratioToCents(ratio.toDouble()) else noteLines[it]?.cent
         },
@@ -122,7 +127,7 @@ fun EditableTemperament.hasErrors(): Boolean {
     return false
 }
 
-fun EditableTemperament.toTemperamentWithNoteNames(): TemperamentWithNoteNames2? {
+fun EditableTemperament.toTemperament3Custom(): Temperament3Custom? {
     if (noteLines.isEmpty())
         return null
 
@@ -144,7 +149,7 @@ fun EditableTemperament.toTemperamentWithNoteNames(): TemperamentWithNoteNames2?
     }
 
     // resolve note names, we try to use predefined note names
-    val predefinedNotes = generateNoteNames(numberOfNotesPerOctave)
+    val predefinedNotes = NoteNamesEDOGenerator.getNoteNames(numberOfNotesPerOctave, null)
     if (notes.contains(null) && predefinedNotes == null)
         return null
 
@@ -163,40 +168,39 @@ fun EditableTemperament.toTemperamentWithNoteNames(): TemperamentWithNoteNames2?
         if (usePredefined) null else notes
     }
 
-    val noteNames = if (resolvedNotes == null) {
-        null
-    } else {
-        val referenceNote = detectReferenceNote(resolvedNotes) ?: return null
-        NoteNames(
-            resolvedNotes.map { it!! }.toTypedArray(),
-            referenceNote
-        )
-    }
-
-    // construct the temperament
-    return if (!ratios.contains(null)) {
-        TemperamentWithNoteNames2(
-            Temperament2(
-                name = GetTextFromString(name),
-                abbreviation = GetTextFromString(abbreviation),
-                description = GetTextFromString(description),
-                rationalNumbers = ratios.map { it!! }.toTypedArray(),
-                stableId = Temperament2.NO_STABLE_ID
-            ),
-            noteNames = noteNames
-        )
-    } else {
-        TemperamentWithNoteNames2(
-            Temperament2(
-                name = GetTextFromString(name),
-                abbreviation = GetTextFromString(abbreviation),
-                description = GetTextFromString(description),
-                cents = cents.toDoubleArray(),
-                stableId = Temperament2.NO_STABLE_ID
-            ),
-            noteNames = noteNames
-        )
-    }
+    return Temperament3Custom(
+        _name = name,
+        _abbreviation = abbreviation,
+        _description = description,
+        cents = cents.toDoubleArray(),
+        _rationalNumbers = ratios.toTypedArray(),
+        _noteNames = resolvedNotes?.toTypedArray()?.requireNoNulls(),
+        stableId = Temperament3.NO_STABLE_ID
+    )
+//    // construct the temperament
+//    return if (!ratios.contains(null)) {
+//        TemperamentWithNoteNames2(
+//            Temperament2(
+//                name = GetTextFromString(name),
+//                abbreviation = GetTextFromString(abbreviation),
+//                description = GetTextFromString(description),
+//                rationalNumbers = ratios.map { it!! }.toTypedArray(),
+//                stableId = Temperament2.NO_STABLE_ID
+//            ),
+//            noteNames = noteNames
+//        )
+//    } else {
+//        TemperamentWithNoteNames2(
+//            Temperament2(
+//                name = GetTextFromString(name),
+//                abbreviation = GetTextFromString(abbreviation),
+//                description = GetTextFromString(description),
+//                cents = cents.toDoubleArray(),
+//                stableId = Temperament2.NO_STABLE_ID
+//            ),
+//            noteNames = noteNames
+//        )
+//    }
 }
 
 // TODO: this should be be somehow be part of the MusicalNote class itself!
@@ -210,9 +214,9 @@ private fun notesEqualCheck(note: MusicalNote?, other: MusicalNote?): Boolean {
             )
 }
 
-private fun detectReferenceNote(notes: List<MusicalNote?>): MusicalNote? {
-    return notes.firstOrNull{
-        (it?.base == BaseNote.A && it.modifier == NoteModifier.None) ||
-                (it?.enharmonicBase == BaseNote.A && it.enharmonicModifier == NoteModifier.None)
-    } ?: notes.firstOrNull { it != null }
-}
+//private fun detectReferenceNote(notes: List<MusicalNote?>): MusicalNote? {
+//    return notes.firstOrNull{
+//        (it?.base == BaseNote.A && it.modifier == NoteModifier.None) ||
+//                (it?.enharmonicBase == BaseNote.A && it.enharmonicModifier == NoteModifier.None)
+//    } ?: notes.firstOrNull { it != null }
+//}

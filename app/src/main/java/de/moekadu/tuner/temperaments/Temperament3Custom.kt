@@ -28,10 +28,10 @@ data class Temperament3Custom(
     @Transient
     override val description = GetTextFromString(_description)
     @Transient
-    private val notesPerOctave = max(_rationalNumbers.size, cents.size)
+    override val size = max(_rationalNumbers.size, cents.size)
 
     override fun cents(): DoubleArray {
-        return DoubleArray(notesPerOctave + 1) {
+        return DoubleArray(size + 1) {
             val ratio = _rationalNumbers.getOrNull(it)
             if (ratio != null)
                 ratioToCents(ratio.toDouble())
@@ -44,18 +44,18 @@ data class Temperament3Custom(
 
     override fun equalOctaveDivision(): Int? = null
     override fun rationalNumbers(): Array<RationalNumber>? {
-        return if (_rationalNumbers.size != notesPerOctave || _rationalNumbers.contains(null))
+        return if (_rationalNumbers.size != size || _rationalNumbers.contains(null))
             null
         else
             _rationalNumbers.requireNoNulls()
     }
 
     override fun possibleRootNotes(): Array<MusicalNote>
-            = _noteNames ?: NoteNamesEDOGenerator.possibleRootNotes(notesPerOctave)
+            = _noteNames ?: NoteNamesEDOGenerator.possibleRootNotes(size)
 
-    override fun noteNames(rootNote: MusicalNote): NoteNames2 {
-        return if (_noteNames.isNullOrEmpty() || _noteNames.size != notesPerOctave) {
-            NoteNamesEDOGenerator.getNoteNames(rootNote, notesPerOctave)!!
+    override fun noteNames(rootNote: MusicalNote?): NoteNames2 {
+        return if (_noteNames.isNullOrEmpty() || _noteNames.size != size) {
+            NoteNamesEDOGenerator.getNoteNames(size, rootNote)!!
         } else {
             val referenceNote = NoteNameHelpers.findDefaultReferenceNote(_noteNames)
             val octaveSwitchAt = _noteNames[0]
