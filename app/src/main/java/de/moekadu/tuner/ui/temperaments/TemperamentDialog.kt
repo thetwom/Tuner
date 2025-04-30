@@ -55,7 +55,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.notenames.MusicalNote
-import de.moekadu.tuner.notenames.generateNoteNames
 import de.moekadu.tuner.temperaments.Temperament3
 import de.moekadu.tuner.temperaments.predefinedTemperamentEDO
 import de.moekadu.tuner.ui.notes.CentAndRatioTable

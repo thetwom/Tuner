@@ -25,7 +25,6 @@ import de.moekadu.tuner.misc.FileCheck
 import de.moekadu.tuner.notenames.BaseNote
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.notenames.NoteModifier
-import de.moekadu.tuner.notenames.generateNoteNames
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.StringWriter

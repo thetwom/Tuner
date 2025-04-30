@@ -35,7 +35,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import de.moekadu.tuner.misc.GetTextFromString
 import de.moekadu.tuner.temperaments.Temperament3
 import de.moekadu.tuner.temperaments.Temperament3Custom
 import de.moekadu.tuner.ui.common.EditableListItem

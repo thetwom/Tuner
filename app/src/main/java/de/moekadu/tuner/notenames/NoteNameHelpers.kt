@@ -1,7 +1,5 @@
 package de.moekadu.tuner.notenames
 
-import android.util.Log
-
 object NoteNameHelpers {
     /**
      * Code for edo naming is based on the logic given here:

@@ -1,15 +1,13 @@
 package de.moekadu.tuner.temperaments
 
-import de.moekadu.tuner.misc.GetText
 import de.moekadu.tuner.misc.GetTextFromString
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.notenames.NoteNameHelpers
 import de.moekadu.tuner.notenames.NoteNames2
 import de.moekadu.tuner.notenames.NoteNamesEDOGenerator
-import kotlin.math.max
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import java.util.Collections
+import kotlin.math.max
 
 @Serializable
 data class Temperament3Custom(

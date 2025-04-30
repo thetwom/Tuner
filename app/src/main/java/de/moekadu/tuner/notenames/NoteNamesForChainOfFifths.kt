@@ -1,6 +1,5 @@
 package de.moekadu.tuner.notenames
 
-import android.util.Log
 import de.moekadu.tuner.temperaments.ChainOfFifths
 
 /** Create note names based on the chain of fifths. */

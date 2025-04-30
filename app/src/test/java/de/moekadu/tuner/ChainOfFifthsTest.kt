@@ -74,7 +74,7 @@ class ChainOfFifthsTest {
         val chain = predefinedTemperamentFifthCommaMeanTone(0L).chainOfFifths()
 
         chain.getSortedRatios().forEach {
-            println("${it}")
+            println("$it")
         }
         val lastFifth = chain.getClosingCircleCorrection()
         println(lastFifth)

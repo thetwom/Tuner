@@ -161,73 +161,9 @@ fun CircleOfFifthTable(
                 Text("...", fontWeight = FontWeight.Bold, style = noteTypography)
             }
         }
-
-//        if (fifthArray.isNotEmpty()) {
-//            items(2 * fifthArray.size) {
-//                if (it % 2 == 0) {
-//                    val noteIndex = it / 2
-//                    Note(
-//                        noteNames[(rootNoteIndex + 7 * noteIndex) % noteNames.size],
-//                        notePrintOptions = notePrintOptions,
-//                        withOctave = false,
-//                        fontWeight = FontWeight.Bold,
-//                        style = noteTypography
-//                    )
-//                } else {
-//                    val cofIndex = it / 2
-//                    FifthJumpOverArrow(
-//                        fifthModification = fifthArray[cofIndex],
-//                        style = MaterialTheme.typography.labelSmall,
-//                        arrowHeight = noteTypography.fontSize / 5 * 3, // the factor is trial and error, meaning, that for other fonts it could look bad
-//                        modifier = Modifier.padding(bottom = (bottomToBaselineDistance))
-//                    )
-//                }
-//            }
-//        } else {
-//            item {
-//                Note(
-//                    noteNames[rootNoteIndex % noteNames.size],
-//                    notePrintOptions = notePrintOptions,
-//                    withOctave = false,
-//                    fontWeight = FontWeight.Bold,
-//                    style = noteTypography
-//                )
-//            }
-//            item {
-//                FifthJumpOverArrow(
-//                    fifthModification = null,
-//                    style = MaterialTheme.typography.labelSmall,
-//                    arrowHeight = noteTypography.fontSize / 5 * 3, // the factor is trial and error, meaning, that for other fonts it could look bad
-//                    modifier = Modifier.padding(bottom = (bottomToBaselineDistance))
-//                )
-//            }
-//            item {
-//                Text("...", fontWeight = FontWeight.Bold, style = noteTypography)
-//            }
-//        }
     }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//private fun CircleOfFifthTablePreview() {
-//    TunerTheme {
-//        val temperamentType = TemperamentType.ThirdCommaMeanTone
-//        val noteNameScale = NoteNameScaleFactory.create(temperamentType)
-//        val rootNote = noteNameScale.notes[4].copy(octave = 4)
-//        val musicalScale =
-//            MusicalScaleFactory.create(temperamentType, noteNameScale, rootNote = rootNote)
-//        val notePrintOptions = NotePrintOptions(
-//            sharpFlatPreference = NotePrintOptions.SharpFlatPreference.Sharp,
-//            helmholtzNotation = false,
-//            notationType = NotationType.Standard
-//        )
-//        CircleOfFifthTable(
-//            musicalScale,
-//            notePrintOptions = notePrintOptions
-//        )
-//    }
-//}
 
 @Preview(showBackground = true)
 @Composable

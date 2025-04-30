@@ -10,9 +10,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.notenames.MusicalNote
-import de.moekadu.tuner.temperaments.TemperamentResources
-import de.moekadu.tuner.notenames.generateNoteNames
 import de.moekadu.tuner.temperaments.Temperament3
+import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.ui.temperaments.TemperamentDialogState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

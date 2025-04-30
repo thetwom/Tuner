@@ -47,90 +47,11 @@ import de.moekadu.tuner.temperaments.predefinedTemperamentWerckmeisterVI
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlin.math.roundToInt
 
-///** Table showing cents are ratios between musical scale notes.
-// * @param musicalScale Musical scale which defines the notes shown in the table.
-// * @param notePrintOptions How to print the notes.
-// * @param modifier Modifier.
-// */
-//@Composable
-//fun CentAndRatioTable(
-//    musicalScale: MusicalScale,
-//    notePrintOptions: NotePrintOptions,
-//    modifier: Modifier = Modifier) {
-//
-//    val rootNoteIndex = remember(musicalScale) {
-//        val rootNote4 = musicalScale.rootNote.copy(octave = 4)
-//        musicalScale.getNoteIndex(rootNote4)
-//    }
-//    val rootNoteFrequency = remember(rootNoteIndex) {
-//        musicalScale.getNoteFrequency(rootNoteIndex)
-//    }
-//
-//    val centArray = remember(musicalScale) {
-//        IntArray(musicalScale.numberOfNotesPerOctave + 1) {
-//            ratioToCents(
-//                musicalScale.getNoteFrequency(it + rootNoteIndex)
-//                        / rootNoteFrequency
-//            ).roundToInt()
-//        }
-//    }
-//
-//    LazyRow(modifier = modifier) {
-//        items(musicalScale.numberOfNotesPerOctave + 1) {
-//            //val note = musicalScale.noteNameScale.getNoteOfIndex(rootNoteIndex + it)
-//            val note = musicalScale.getNote(rootNoteIndex + it)
-//            Column(
-//                modifier = Modifier.width(IntrinsicSize.Max),
-//                horizontalAlignment = Alignment.CenterHorizontally
-//            ) {
-//                Box(
-//                    modifier = Modifier.height(40.dp),
-//                    contentAlignment = Alignment.Center
-//                ) {
-//                    Note(
-//                        note,
-//                        notePrintOptions = notePrintOptions,
-//                        withOctave = false,
-//                        fontWeight = FontWeight.Bold,
-//                        style = MaterialTheme.typography.bodyMedium,
-//                        modifier = Modifier.padding(horizontal = 16.dp)
-//                    )
-//                }
-//                Spacer(modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(1.dp)
-//                    .background(MaterialTheme.colorScheme.outline))
-//
-//                Text(
-//                    stringResource(id = R.string.cent_nosign, centArray[it]),
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    maxLines = 1,
-//                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-//                )
-//
-//                musicalScale.rationalNumberRatios?.let { rationalNumbers ->
-//                    Fraction(
-//                        rationalNumbers[it].numerator,
-//                        rationalNumbers[it].denominator,
-//                        style = MaterialTheme.typography.bodyMedium,
-//                        modifier = Modifier
-//                            .padding(horizontal = 16.dp)
-//                            .padding(bottom = 8.dp)
-//                    )
-//                }
-//                Spacer(modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(1.dp)
-//                    .background(MaterialTheme.colorScheme.outline))
-//            }
-//        }
-//    }
-//}
 
 /** Table showing cents are ratios between musical scale notes.
-  * @param temperament Temperament.
-    * @param rootNote Root Note.
-  * @param notePrintOptions How to print the notes.
+ * @param temperament Temperament.
+ * @param rootNote Root Note.
+ * @param notePrintOptions How to print the notes.
  * @param modifier Modifier.
  */
 @Composable

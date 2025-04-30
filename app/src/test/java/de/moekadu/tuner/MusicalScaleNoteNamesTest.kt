@@ -4,7 +4,6 @@ import de.moekadu.tuner.musicalscale.MusicalScaleNoteNames2
 import de.moekadu.tuner.notenames.BaseNote
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.notenames.NoteModifier
-import de.moekadu.tuner.notenames.NoteNames
 import de.moekadu.tuner.notenames.NoteNames2
 import org.junit.Assert.assertEquals
 import org.junit.Test

@@ -21,19 +21,6 @@ package de.moekadu.tuner.temperaments
 import de.moekadu.tuner.notenames.NoteNames
 import kotlinx.serialization.Serializable
 
-//@Serializable
-//data class TemperamentWithNoteNames2(
-//    val temperament: Temperament2,
-//    val noteNames: NoteNames?
-//) {
-//    val stableId get() = temperament.stableId
-//    fun clone(newStableId: Long): TemperamentWithNoteNames2 {
-//        return TemperamentWithNoteNames2(
-//            temperament = temperament.copy(stableId = newStableId),
-//            noteNames = noteNames
-//        )
-//    }
-//}
 
 @Serializable
 data class TemperamentWithNoteNames(
