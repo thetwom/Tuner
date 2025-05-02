@@ -63,9 +63,9 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.notenames.BaseNote
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.notenames.NoteModifier
+import de.moekadu.tuner.notenames.NoteNamesEDOGenerator
 import de.moekadu.tuner.temperaments.RationalNumber
 import de.moekadu.tuner.temperaments.centsToFrequency
-import de.moekadu.tuner.notenames.generateNoteNames
 import de.moekadu.tuner.temperaments.ratioToCents
 import de.moekadu.tuner.ui.notes.NotationType
 import de.moekadu.tuner.ui.notes.Note
@@ -524,7 +524,7 @@ fun TemperamentTableLine(
 @Composable
 private fun TemperamentTableLinePreview() {
     TunerTheme {
-        val notes = remember { generateNoteNames(12)!! }
+        val notes = remember { NoteNamesEDOGenerator.getNoteNames(12, null)!! }
 
         Column {
             notes.notes.forEachIndexed { index, note ->

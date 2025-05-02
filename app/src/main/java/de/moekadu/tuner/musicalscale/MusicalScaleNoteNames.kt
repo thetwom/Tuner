@@ -73,7 +73,7 @@ class MusicalScaleNoteNames2(
      * @param musicalNote Some musical note.
      * @return Note index relative to reference note or Int.MAX_VALUE if note is not part of the scale.
      */
-    fun getIndexOfNote(musicalNote: MusicalNote): Int {
+    fun getNoteIndex(musicalNote: MusicalNote): Int {
         val localNoteIndex = noteNames.getNoteIndex(musicalNote)
         return if (localNoteIndex < 0) {
             Int.MAX_VALUE
@@ -84,5 +84,34 @@ class MusicalScaleNoteNames2(
                 musicalNote.octave - 1
             (octave - referenceOctave) * size + localNoteIndex - referenceNoteIndexWithinOctave
         }
+    }
+
+    /** Return indices of all notes which match the given note.
+     * A match means that either a combination of enharmonic or non enharmonic are the
+     * same.
+     * @param musicalNote Some musical note.
+     * @return Note indices relative to reference note, where the note matches.
+     */
+    fun getMatchingNoteIndices(musicalNote: MusicalNote): IntArray {
+        return noteNames.getMatchingNoteIndices(musicalNote).map { localNoteIndex ->
+            val octave = if (localNoteIndex < octaveSwitchIndexWithinNoteNames)
+                musicalNote.octave
+            else
+                musicalNote.octave - 1
+            (octave - referenceOctave) * size + localNoteIndex - referenceNoteIndexWithinOctave
+        }.toIntArray()
+    }
+
+    /** Check if a note matches any of the notes in this class.
+     * A match means that either a combination of enharmonic or non enharmonic are the
+     * same.
+     * @param musicalNote Musical note to be checked.
+     * @return False if note is null, or has not match. Else true.
+     */
+    fun hasMatchingNote(musicalNote: MusicalNote?): Boolean {
+        return if (musicalNote == null)
+            false
+        else
+            noteNames.hasNote(musicalNote)
     }
 }

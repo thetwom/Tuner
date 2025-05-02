@@ -195,7 +195,7 @@ class InstrumentTunerViewModel @Inject constructor (
             && timeSinceThereIsNoFrequencyDetectionResult > DURATION_FOR_MARKING_NOTEDETECTION_AS_INACTIVE) {
             TuningState.Unknown
         } else {
-            val noteIndex = musicalScale.value.getNoteIndex(targetNote)
+            val noteIndex = musicalScale.value.getNoteIndex2(targetNote)
             checkTuning(
                 currentSmoothedFrequency,
                 musicalScale.value.getNoteFrequency(noteIndex),

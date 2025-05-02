@@ -58,7 +58,7 @@ data class Temperament3Custom(
             val referenceNote = NoteNameHelpers.findDefaultReferenceNote(_noteNames)
             val octaveSwitchAt = _noteNames[0]
             val shiftLeft = _noteNames
-                .indexOfFirst { MusicalNote.notesEqualIgnoreOctave(it, rootNote) }
+                .indexOfFirst { it.equalsIgnoreOctave(rootNote) }
                 .coerceAtLeast(0) // don't reorder if root note is not found, should not happen
             // this rotates the array, such that element at shiftLeft is at position 0
             val names = (

@@ -35,15 +35,13 @@ data object NoteNamesEDOGenerator {
 
         if (rootNote != null) {
             val shiftLeft = noteNames
-                .indexOfFirst { MusicalNote.notesEqualIgnoreOctave(it, rootNote) }
+                .indexOfFirst { it.equalsIgnoreOctave(rootNote) }
                 .coerceAtLeast(0) // don't reorder if root note is not found, should not happen
             Collections.rotate(noteNames.asList(), -shiftLeft)
         }
         return NoteNames2(noteNames, defaultReferenceNote, incrementOctaveAt)
     }
-
 }
-
 
 /** Type of seconds. */
 private enum class Second{Maj, Min}
@@ -277,12 +275,12 @@ private fun generateNoteNamesImpl(notesPerOctave: Int): Array<MusicalNote> {
     return names
 }
 
-fun generateNoteNames(notesPerOctave: Int): NoteNames? {
-    // limit since we might not have enough note modifiers
-    // -> did not check, if with the current note modifiers more is possible?
-    if (notesPerOctave > 72)
-        return null
-    val names = generateNoteNamesImpl(notesPerOctave)
-    return NoteNames(names, NoteNameHelpers.findDefaultReferenceNote(names))
-}
+//private fun generateNoteNames(notesPerOctave: Int): NoteNames? {
+//    // limit since we might not have enough note modifiers
+//    // -> did not check, if with the current note modifiers more is possible?
+//    if (notesPerOctave > 72)
+//        return null
+//    val names = generateNoteNamesImpl(notesPerOctave)
+//    return NoteNames(names, NoteNameHelpers.findDefaultReferenceNote(names))
+//}
 

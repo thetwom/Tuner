@@ -214,7 +214,7 @@ fun PitchHistory(
     }
 
     val targetFrequency = remember(musicalScale, targetNote) {
-        val noteIndex = musicalScale.getNoteIndex(targetNote)
+        val noteIndex = musicalScale.getNoteIndex2(targetNote)
         musicalScale.getNoteFrequency(noteIndex)
     }
 
@@ -227,7 +227,7 @@ fun PitchHistory(
         // used to jump the the next target note)
         val visibleRangeInIndices2 = 0.38f
 
-        val targetNoteIndex = musicalScale.getNoteIndex(targetNote)
+        val targetNoteIndex = musicalScale.getNoteIndex2(targetNote)
         val currentFrequency = state.pointCoordinates?.y
 
         val noteIndexRange = if (targetNoteIndex == Int.MAX_VALUE && currentFrequency == null) {

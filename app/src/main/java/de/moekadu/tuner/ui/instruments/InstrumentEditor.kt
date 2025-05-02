@@ -176,11 +176,11 @@ fun InstrumentEditorPortrait(
     val selectedNoteKey = selectedNoteWithInfo?.key ?: 0
     val selectedNote = selectedNoteWithInfo?.note ?: initializerNote
     val noteSelectorPosition = remember(musicalScale, selectedNote) {
-        val noteIndex = musicalScale.getNoteIndex(selectedNote)
-        if (noteIndex == Int.MAX_VALUE)
+        val noteIndices = musicalScale.getMatchingNoteIndices(selectedNote)
+        if (noteIndices.isEmpty())
             -musicalScale.noteIndexBegin
         else
-            noteIndex - musicalScale.noteIndexBegin
+            noteIndices[0] - musicalScale.noteIndexBegin
     }
 
 //    Log.v("Tuner", "InstrumentEditor: strings: $strings")
@@ -318,11 +318,11 @@ fun InstrumentEditorLandscape(
     val selectedNoteKey = selectedNoteWithInfo?.key ?: 0
     val selectedNote = selectedNoteWithInfo?.note ?: initializerNote
     val noteSelectorPosition = remember(musicalScale, selectedNote) {
-        val noteIndex = musicalScale.getNoteIndex(selectedNote)
-        if (noteIndex == Int.MAX_VALUE)
+        val noteIndices = musicalScale.getMatchingNoteIndices(selectedNote)
+        if (noteIndices.isEmpty())
             -musicalScale.noteIndexBegin
         else
-            noteIndex - musicalScale.noteIndexBegin
+            noteIndices[0] - musicalScale.noteIndexBegin
     }
 
     Row(modifier) {

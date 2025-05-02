@@ -43,10 +43,6 @@ enum class NoteModifier {
     SharpSharpSharpDownDownDown, SharpSharpSharpDownDown, SharpSharpSharpDown, SharpSharpSharp, SharpSharpSharpUp, SharpSharpSharpUpUp, SharpSharpSharpUpUpUp
 }
 
-//fun NoteModifier.flatSharpIndex(): Int {
-//    return this.ordinal - NoteModifier.None.ordinal
-//}
-
 /** Representation of a musical note.
  * @param base Base of note (C, D, E, ...).
  * @param modifier Modifier of note (none, sharp, flat, ...).
@@ -84,6 +80,49 @@ data class MusicalNote(val base: BaseNote, val modifier: NoteModifier, val octav
             enharmonicBase = base, enharmonicModifier = modifier,
             enharmonicOctaveOffset = octaveOffset)
     }
+
+    /** Check if two notes match.
+     * "Match" means that we find at least one matching pair between for the note ore the enharmonics.
+     * @param other Other musical for the check
+     * @param ignoreOctave If true, it is not required that the octaves are equal.
+     * @return True, if the note match else false.
+     */
+    fun match(other: MusicalNote?, ignoreOctave: Boolean = false): Boolean {
+        if (other == null)
+            return false
+        if (!ignoreOctave && octave != other.octave)
+            return false
+
+        if (base != BaseNote.None) {
+            if (base == other.base && modifier == other.modifier && octaveOffset == other.octaveOffset)
+                return true
+            else if (base == other.enharmonicBase && modifier == other.enharmonicModifier && octaveOffset == other.enharmonicOctaveOffset)
+                return true
+        }
+        if (enharmonicBase != BaseNote.None) {
+            if (enharmonicBase == other.base && enharmonicModifier == other.modifier && enharmonicOctaveOffset == other.octaveOffset)
+                return true
+            else if (enharmonicBase == other.enharmonicBase && enharmonicModifier == other.enharmonicModifier && enharmonicOctaveOffset == other.enharmonicOctaveOffset)
+                return true
+        }
+        return false
+    }
+
+    /** Check if two notes are the same, while ignoring the octave.
+     * @param other Note used to compare.
+     * @return True if notes are the same (ignoring the octave but not octave offset).
+     */
+    fun equalsIgnoreOctave(other: MusicalNote?): Boolean {
+        return if (other == null) {
+            false
+        } else {
+            (base == other.base && modifier == other.modifier
+                    && octaveOffset == other.octaveOffset
+                    && enharmonicBase == other.enharmonicBase
+                    && enharmonicModifier == other.enharmonicModifier
+                    && enharmonicOctaveOffset == other.enharmonicOctaveOffset)
+        }
+    }
     companion object {
         /** Parse a string (which normally is created with "asString" and return the resulting note. */
         fun fromString(string: String): MusicalNote {
@@ -120,22 +159,22 @@ data class MusicalNote(val base: BaseNote, val modifier: NoteModifier, val octav
                 enharmonicOctaveOffset = enharmonicOctaveOffset)
         }
 
-        /** Check if two notes are the same, while ignoring the octave.
-         * @param first First note to compare.
-         * @param second Second note to compare.
-         * @return True if notes are the same (ignoring the octave but not octave offset). If both
-         *   notes are null, we return false.
-         */
-        fun notesEqualIgnoreOctave(first: MusicalNote?, second: MusicalNote?): Boolean {
-            return if (first == null || second == null) {
-                false
-            } else {
-                (first.base == second.base && first.modifier == second.modifier
-                        && first.octaveOffset == second.octaveOffset
-                        && first.enharmonicBase == second.enharmonicBase
-                        && first.enharmonicModifier == second.enharmonicModifier
-                        && first.enharmonicOctaveOffset == second.enharmonicOctaveOffset)
-            }
-        }
+//        /** Check if two notes are the same, while ignoring the octave.
+//         * @param first First note to compare.
+//         * @param second Second note to compare.
+//         * @return True if notes are the same (ignoring the octave but not octave offset). If both
+//         *   notes are null, we return false.
+//         */
+//        fun notesEqualIgnoreOctave(first: MusicalNote?, second: MusicalNote?): Boolean {
+//            return if (first == null || second == null) {
+//                false
+//            } else {
+//                (first.base == second.base && first.modifier == second.modifier
+//                        && first.octaveOffset == second.octaveOffset
+//                        && first.enharmonicBase == second.enharmonicBase
+//                        && first.enharmonicModifier == second.enharmonicModifier
+//                        && first.enharmonicOctaveOffset == second.enharmonicOctaveOffset)
+//            }
+//        }
     }
 }

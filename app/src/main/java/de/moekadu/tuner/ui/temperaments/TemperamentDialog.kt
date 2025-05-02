@@ -258,7 +258,7 @@ private class TemperamentDialogTestState : TemperamentDialogState {
         val newNoteNames = temperament.possibleRootNotes()
 
         val rootNoteIndexInNewScale = newNoteNames
-            .indexOfFirst { MusicalNote.notesEqualIgnoreOctave(it, oldRootNote) }
+            .indexOfFirst { it.equalsIgnoreOctave(oldRootNote) }
         selectedRootNoteIndex.intValue = if (rootNoteIndexInNewScale == -1) {
             0
         } else {

@@ -85,7 +85,7 @@ fun ReferenceNoteDialog(
     onDismiss: () -> Unit = {}
 ) {
     var selectedNoteIndex by rememberSaveable { mutableIntStateOf(
-        initialState.getNoteIndex(initialState.referenceNote) - initialState.noteIndexBegin
+        initialState.getNoteIndex2(initialState.referenceNote) - initialState.noteIndexBegin
     ) }
     val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         LocalConfiguration.current.locales[0]
@@ -175,7 +175,7 @@ fun ReferenceNoteDialog(
                 OutlinedButton(
                     onClick = {
                         val note = initialState.temperament.noteNames(initialState.rootNote).defaultReferenceNote
-                        selectedNoteIndex = initialState.getNoteIndex(note) - initialState.noteIndexBegin
+                        selectedNoteIndex = initialState.getNoteIndex2(note) - initialState.noteIndexBegin
                         frequencyAsString = decimalFormat.format(PreferenceResources.ReferenceFrequencyDefault)
                     },
                     modifier = Modifier.fillMaxWidth()

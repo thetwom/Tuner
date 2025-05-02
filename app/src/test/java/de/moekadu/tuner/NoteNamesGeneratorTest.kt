@@ -3,8 +3,8 @@ package de.moekadu.tuner
 import de.moekadu.tuner.notenames.BaseNote
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.notenames.NoteModifier
-import de.moekadu.tuner.notenames.generateNoteNames
-import de.moekadu.tuner.notenames.generateNoteNamesForChainOfFifths
+import de.moekadu.tuner.notenames.NoteNamesChainOfFifthsGenerator
+import de.moekadu.tuner.notenames.NoteNamesEDOGenerator
 import de.moekadu.tuner.temperaments.predefinedTemperamentExtendedQuarterCommaMeanTone
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
@@ -89,7 +89,7 @@ private fun noteModifierToString(modifier: NoteModifier) = when (modifier) {
 class NoteNamesGeneratorTest {
 
     private fun testNumberOfNotesImpl(numberOfNotesPerOctave: Int) {
-        val names = generateNoteNames(numberOfNotesPerOctave)
+        val names = NoteNamesEDOGenerator.getNoteNames(numberOfNotesPerOctave, null)
         assertEquals(numberOfNotesPerOctave, names?.size)
     }
 
@@ -102,7 +102,8 @@ class NoteNamesGeneratorTest {
     @Test
     fun testNoteNames() {
         val numberOfNotePerOctave = 20
-        val names = generateNoteNames(numberOfNotePerOctave)
+        val names = NoteNamesEDOGenerator.getNoteNames(numberOfNotePerOctave, null)
+
         assertEquals(numberOfNotePerOctave, names?.size)
         names?.notes?.forEachIndexed { i, n ->
             println("$i: ${noteToString(n)}")
@@ -112,9 +113,11 @@ class NoteNamesGeneratorTest {
     @Test
     fun testNoteNamesChainOfFifths() {
         val chain = predefinedTemperamentExtendedQuarterCommaMeanTone(0L).chainOfFifths()
-        val names = generateNoteNamesForChainOfFifths(
-            chain, MusicalNote(BaseNote.C, NoteModifier.Sharp)
+        val names = NoteNamesChainOfFifthsGenerator.getNoteNames(
+            chain,
+            MusicalNote(BaseNote.C, NoteModifier.Sharp)
         )
+
         assertEquals(chain.fifths.size + 1, names?.size)
         names?.notes?.forEachIndexed { i, n ->
             println("$i: ${noteToString(n)}")

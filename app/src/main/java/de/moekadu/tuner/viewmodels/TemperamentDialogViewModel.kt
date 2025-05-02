@@ -36,7 +36,7 @@ class TemperamentDialogViewModel  @Inject constructor(
 
     private val _selectedRootNoteIndex = mutableIntStateOf(
         rootNotes.value
-            .indexOfFirst { MusicalNote.notesEqualIgnoreOctave(it, initialMusicalScale.rootNote) }
+            .indexOfFirst { it.equalsIgnoreOctave(initialMusicalScale.rootNote) }
             .coerceAtLeast(0)
     )
     override val selectedRootNoteIndex: IntState get() = _selectedRootNoteIndex
@@ -47,7 +47,7 @@ class TemperamentDialogViewModel  @Inject constructor(
         val newNoteNames = temperament.possibleRootNotes()
 
         _selectedRootNoteIndex.intValue = newNoteNames
-            .indexOfFirst { MusicalNote.notesEqualIgnoreOctave(it, oldRootNote) }
+            .indexOfFirst { it.equalsIgnoreOctave(oldRootNote) }
             .coerceAtLeast(0)
 
         _temperament.value = temperament

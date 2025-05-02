@@ -41,7 +41,7 @@ fun frequencyToCents(frequency: Double, referenceFrequency: Double): Double {
     return ratioToCents(frequency / referenceFrequency)
 }
 
-private fun centsToRatio(cents: Float): Float {
+fun centsToRatio(cents: Float): Float {
     return (2.0.pow(cents / 1200.0)).toFloat()
 }
 

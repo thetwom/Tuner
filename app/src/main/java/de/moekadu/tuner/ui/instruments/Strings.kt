@@ -82,6 +82,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.absoluteValue
+import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -116,6 +117,13 @@ private fun LazyListState.itemDistanceBelowCenter(item: LazyListItemInfo): Int {
     return -scrollOffset + item.offset
 }
 
+private fun LazyListState.centerIndex(): Int {
+    val firstItem = this.layoutInfo.visibleItemsInfo.getOrNull(0) ?: return 0
+    val itemHeight = max(firstItem.size, 1)
+    val relativeDistanceBelowCenter = itemDistanceBelowCenter(firstItem) / itemHeight
+    return firstItem.index - relativeDistanceBelowCenter
+}
+
 /** Find closest highlighted string to view port center.
  * @return Index within strings or -1 if there is no string is found.
  */
@@ -129,12 +137,19 @@ private fun findIndexOfClosestScrollableHighlightedString(
     return if (highlightedStringKey == null && highlightedStringNote == null) {
         -1
     } else if (strings == null) { // -> chromatic scale
-        if (highlightedStringKey != null)
+        if (highlightedStringKey != null) {
             highlightedStringKey // in chromatic scale the index in the scale corresponds to the key
-        else if (highlightedStringNote != null)
-            musicalScale.getNoteIndex(highlightedStringNote) - musicalScale.noteIndexBegin
-        else
+        } else if (highlightedStringNote != null) {
+            val centerItemIndex = listState.centerIndex()
+            musicalScale
+                .getMatchingNoteIndices(highlightedStringNote)
+                .minByOrNull {
+                    val noteIndex = it - musicalScale.noteIndexBegin
+                    (noteIndex - centerItemIndex).absoluteValue
+                }?: -1
+        } else {
             -1
+        }
     } else {
         val closestIndex = listState.layoutInfo.visibleItemsInfo
             .filter {
@@ -340,20 +355,13 @@ fun Strings(
     }
     val minNoteIndex = remember(strings, musicalScale) {
         strings?.minOfOrNull {
-            val index = musicalScale.getNoteIndex(it.note)
-            if (index == Int.MAX_VALUE)
-                musicalScale.noteIndexBegin
-            else
-                index
+            musicalScale.getMatchingNoteIndices(it.note).minOrNull() ?: musicalScale.noteIndexBegin
         } ?: musicalScale.noteIndexBegin
     }
     val maxNoteIndex = remember(strings, musicalScale) {
         strings?.maxOfOrNull {
-            val index = musicalScale.getNoteIndex(it.note)
-            if (index == Int.MAX_VALUE)
-                musicalScale.noteIndexEnd - 1
-            else
-                index
+            musicalScale.getMatchingNoteIndices(it.note).maxOrNull()
+                ?: (musicalScale.noteIndexEnd - 1)
         } ?: (musicalScale.noteIndexEnd - 1)
     }
     val numStrings = strings?.size ?: (maxNoteIndex - minNoteIndex)
@@ -506,10 +514,15 @@ fun Strings(
                     val key = strings?.get(index)?.key ?: index
                     val noteInfo = strings?.get(index)
                     val noteNameScaleIndex = remember(noteInfo, musicalScale, index) {
-                        if (noteInfo == null)
+                        if (noteInfo == null) {
                             (musicalScale.noteIndexBegin + index)
-                        else
-                            musicalScale.getNoteIndex(noteInfo.note)
+                        } else {
+                            val indices = musicalScale.getMatchingNoteIndices(noteInfo.note)
+                            when(indices.size) {
+                                0 -> (minNoteIndex + maxNoteIndex) / 2
+                                else -> indices.average().roundToInt()
+                            }
+                        }
                         //noteInfo?.musicalScaleIndex ?: (musicalScale.noteIndexBegin + index)
                     }
 

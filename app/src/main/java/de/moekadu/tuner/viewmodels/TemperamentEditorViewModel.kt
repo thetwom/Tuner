@@ -10,7 +10,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.notenames.NoteNamesEDOGenerator
-import de.moekadu.tuner.notenames.generateNoteNames
 import de.moekadu.tuner.temperaments.EditableTemperament
 import de.moekadu.tuner.temperaments.Temperament3Custom
 import de.moekadu.tuner.temperaments.TemperamentResources
@@ -31,7 +30,7 @@ private fun temperamentToTable(temperament: EditableTemperament)
     val numberOfNotesPerOctave = temperament.noteLines.size - 1
     // use default note names if there is no note name given for any line (and if default notes are available)
     val defaultNoteNames = if (temperament.noteLines.firstOrNull { it?.note != null } == null)
-        generateNoteNames(numberOfNotesPerOctave)
+        NoteNamesEDOGenerator.getNoteNames(numberOfNotesPerOctave, null)
     else
         null
 
@@ -85,7 +84,7 @@ private fun checkAndSetNoteNameErrors(values: PersistentList<TemperamentTableLin
 
 /** Check if list of notes is the same as the default note names.
  * @param noteNameList List of notes to be checked.
- * @param defaultNames Default names against which we do the chek.
+ * @param defaultNames Default names against which we do the check.
  * @return True if the list is the same as the default note names, else false
  */
 private fun checkIfDefaultNoteNames(
@@ -97,7 +96,7 @@ private fun checkIfDefaultNoteNames(
         useDefaultNoteNames = false
     } else {
         for (i in noteNameList.indices) {
-            if (!MusicalNote.notesEqualIgnoreOctave(defaultNames[i], noteNameList[i])) {
+            if (!noteNameList[i].equalsIgnoreOctave(defaultNames[i])) {
                 useDefaultNoteNames = false
                 break
             }
@@ -191,7 +190,7 @@ class TemperamentEditorViewModel @AssistedInject constructor(
                 mutated.subList(numberOfValues + 1, oldNumValues + 1).clear()
                 mutated[numberOfValues] = octaveLine
             } else {
-                val newNoteNames = generateNoteNames(numberOfValues)
+                val newNoteNames = NoteNamesEDOGenerator.getNoteNames(numberOfValues, null)
 
                 for (i in oldNumValues until numberOfValues) {
                     mutated.add(i, TemperamentTableLineState(

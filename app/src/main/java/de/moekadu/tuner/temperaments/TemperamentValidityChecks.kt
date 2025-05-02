@@ -108,7 +108,7 @@ object TemperamentValidityChecks {
             } else {
                 for (j in i + 1 until numberOfNotes - 1) {
                     val noteNext = obtainNote(j)
-                    if (noteNext != null && MusicalNote.notesEqualIgnoreOctave(note, noteNext)) {
+                    if (noteNext != null && note.match(noteNext, ignoreOctave = true)) {
                         duplicateNoteErrors[i] = true
                         duplicateNoteErrors[j] = true
                         if (error != NoteNameError.Undefined)

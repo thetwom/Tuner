@@ -21,7 +21,6 @@ package de.moekadu.tuner.temperaments
 import android.content.Context
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.notenames.NoteNamesEDOGenerator
-import de.moekadu.tuner.notenames.generateNoteNames
 import kotlinx.serialization.Serializable
 
 /** Temperament with note names, which can be incomplete, but is allowed for editing. */
@@ -108,7 +107,9 @@ fun EditableTemperament.hasErrors(): Boolean {
     if (orderingError != TemperamentValidityChecks.ValueOrdering.Increasing)
         return true
     // check if we can use predefined notes
-    val predefinedNotes = generateNoteNames(noteLines.size - 1)
+    val predefinedNotes = NoteNamesEDOGenerator.getNoteNames(
+        noteLines.size - 1, null
+    )
 
     if (predefinedNotes != null)
         return false

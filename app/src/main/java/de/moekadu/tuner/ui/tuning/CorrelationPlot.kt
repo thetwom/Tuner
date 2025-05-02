@@ -78,7 +78,7 @@ fun CorrelationPlot(
     plotWindowOutline: PlotWindowOutline = PlotWindowOutline()
 ) {
     val viewPort = remember(targetNote, musicalScale) {
-        val noteIndex = musicalScale.getNoteIndex(targetNote)
+        val noteIndex = musicalScale.getNoteIndex2(targetNote)
         val frequency = musicalScale.getNoteFrequency(noteIndex)
         Rect(
             left = 0f,

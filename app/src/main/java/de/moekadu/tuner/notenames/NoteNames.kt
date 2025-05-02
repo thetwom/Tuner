@@ -42,7 +42,7 @@ data class NoteNames(
      */
     fun getNoteIndex(note: MusicalNote): Int {
         val index = notes.indexOfFirst {
-            MusicalNote.notesEqualIgnoreOctave(it, note)
+            it.equalsIgnoreOctave(note)
         }
         return index
     }
@@ -80,7 +80,7 @@ data class NoteNames(
      * @return True if note is part of the note names array, else false.
      */
     fun hasNote(note: MusicalNote): Boolean {
-        return notes.any{ MusicalNote.notesEqualIgnoreOctave(it, note) }
+        return notes.any{ it.equalsIgnoreOctave(note) }
     }
 
     override fun equals(other: Any?): Boolean {

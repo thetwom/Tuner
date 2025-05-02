@@ -29,7 +29,7 @@ class SortedAndDistinctInstrumentStrings(
     /** Note indices of different strings.
      * This list is sorted according to the note indices and made unique such that each note
      * index exists only once. Notes of the instrument, which are not part of the musical scale
-     * are excluded. However, the last entry is Int.MAX_VALUE if there are strings which are are
+     * are excluded. However, the last entry is Int.MAX_VALUE if there are strings which are
      * not part of the musical scale.
      */
     val sortedAndDistinctNoteIndices = sortStringsAccordingToNoteIndex(instrument, musicalScale)
@@ -51,26 +51,41 @@ class SortedAndDistinctInstrumentStrings(
     fun isNotePartOfInstrument(note: MusicalNote?): Boolean {
         return when {
             note == null -> false
-            instrument.isChromatic -> musicalScale.getNoteIndex(note) != Int.MAX_VALUE
+            instrument.isChromatic -> musicalScale.hasMatchingNote(note)
             numDifferentNotes == 0 -> false
             else -> {
-                val noteIndex = musicalScale.getNoteIndex(note)
-                if (noteIndex != Int.MAX_VALUE) {
+                val noteIndices = musicalScale.getMatchingNoteIndices(note)
+                if (noteIndices.isEmpty()) {
                     false
                 } else {
-                    val sortedStringListIndex = sortedAndDistinctNoteIndices.binarySearch(noteIndex)
-                    sortedStringListIndex >= 0
+                    noteIndices.firstOrNull { noteIndex ->
+                        val sortedStringListIndex = sortedAndDistinctNoteIndices.binarySearch(noteIndex)
+                        sortedStringListIndex >= 0
+                    } != null
                 }
             }
         }
     }
 
-
     private fun sortStringsAccordingToNoteIndex(instrument: Instrument, musicalScale: MusicalScale2): List<Int> {
-        if (instrument.isChromatic)
+        if (instrument.isChromatic || instrument.strings.isEmpty())
             return ArrayList()
         val strings = instrument.strings
-
-        return strings.map { musicalScale.getNoteIndex(it) }.distinct().sorted()
+        val collectedIndices = ArrayList<Int>()
+        strings.forEach {
+            val indices = musicalScale.getMatchingNoteIndices(it)
+            if (indices.isEmpty())
+                collectedIndices.add(Int.MAX_VALUE)
+            else
+                collectedIndices.addAll(indices.asList())
+        }
+        collectedIndices.sort()
+        val result = ArrayList<Int>()
+        result.add(collectedIndices[0])
+        for (i in 1 until collectedIndices.size) {
+            if (collectedIndices[i] != collectedIndices[i-1])
+                result.add(collectedIndices[i])
+        }
+        return result
     }
 }

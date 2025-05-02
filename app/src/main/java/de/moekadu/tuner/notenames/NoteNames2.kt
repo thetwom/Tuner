@@ -27,9 +27,21 @@ data class NoteNames2(
      */
     fun getNoteIndex(note: MusicalNote): Int {
         val index = notes.indexOfFirst {
-            MusicalNote.notesEqualIgnoreOctave(it, note)
+            it.equalsIgnoreOctave(note)
         }
         return index
+    }
+
+    /** Return indices of notes, which match the input note.
+     * @note The octave is ignore during comparison.
+     * @note "Match" means that any combination of enharmonic/non-enharmonic is the same.
+     * @param note Note for which the index is required.
+     * @return Indices of notes within the notes-array.
+     */
+    fun getMatchingNoteIndices(note: MusicalNote): IntArray {
+        return notes.indices.filter { index ->
+            notes[index].match(note, ignoreOctave = true)
+        }.toIntArray()
     }
 
     /** Obtain note at given index.
@@ -66,7 +78,16 @@ data class NoteNames2(
      * @return True if note is part of the note names array, else false.
      */
     fun hasNote(note: MusicalNote): Boolean {
-        return notes.any{ MusicalNote.notesEqualIgnoreOctave(it, note) }
+        return notes.any{ it.equalsIgnoreOctave(note) }
+    }
+
+    /** Check if a given note has a matching note.
+     * @note Octave index is ignored.
+     * @param note Note for which we find a match.
+     * @return True if note matches any note names array, else false.
+     */
+    fun hasMatch(note: MusicalNote): Boolean {
+        return notes.any{ it.match(note, ignoreOctave = true) }
     }
 
     override fun equals(other: Any?): Boolean {

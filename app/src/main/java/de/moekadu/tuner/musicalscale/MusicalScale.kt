@@ -145,8 +145,24 @@ data class MusicalScale2(
      * @param note Musical note representation.
      * @return Local index of the note or Int.MAX_VALUE if not does not exist in scale.
      */
-    fun getNoteIndex(note: MusicalNote): Int {
-        return noteNameScale.getIndexOfNote(note)
+    fun getNoteIndex2(note: MusicalNote): Int {
+        return noteNameScale.getNoteIndex(note)
+    }
+
+    /** Get indices of matching notes.
+     * @note "Match means that any combination of enharmonic/non-enharmonic is the same.
+     * @param note Note against we match possible notes.
+     * @return Indices relative to reference note, which match the given note.
+     */
+    fun getMatchingNoteIndices(note: MusicalNote): IntArray {
+        return noteNameScale.getMatchingNoteIndices(note)
+    }
+
+    /** Check if the scale has a matching note.
+     * @note "Match means that any combination of enharmonic/non-enharmonic is the same.
+     */
+    fun hasMatchingNote(note: MusicalNote?): Boolean {
+        return noteNameScale.hasMatchingNote(note)
     }
 
     companion object {

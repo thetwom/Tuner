@@ -147,7 +147,7 @@ private fun BaseNote.toIndex() = when(this) {
     BaseNote.B -> 6
     BaseNote.None -> throw RuntimeException("BaseNote.toIndex: Note allowed to call for BaseNote.None")
 }
-private val baseNoteIndexForOctave = 12
+private const val baseNoteIndexForOctave = 12
 
 private data class NoteWithSharpness(val note: BaseNote, val sharpness: Int) {
     constructor(baseNote: BaseNote, modifier: NoteModifier) : this(baseNote, modifier.toSharpness())
