@@ -1,0 +1,317 @@
+<resources>
+    <string name="app_name">Tuner</string>
+
+    <!--    <string name="percent">%d&#x200A;\%</string>-->
+    <string name="percent" translatable="false">%d&#x200A;%%</string>
+    <string name="hertz" translatable="false">%.0f&#x200A;Hz</string>
+    <string name="hertz_1f" translatable="false">%.1f&#x200A;Hz</string>
+    <string name="hertz_str" translatable="false">%s&#x200A;Hz</string>
+    <string name="seconds" translatable="false">%.2f&#x200A;s</string>
+
+    <string name="windowing_function">Funkcja okienkowania</string>
+    <string name="window_hamming">Okno Hamminga</string>
+    <string name="window_hann">Okno Hanna</string>
+    <string name="no_window">Brak funkcji okienkowania</string>
+
+    <string name="appearance">Wygląd</string>
+    <string name="dark_appearance">Ciemny wygląd</string>
+    <string name="light_appearance">Jasny wygląd</string>
+    <string name="system_appearance">Zgodnie z ustawieniami systemu</string>
+
+    <string name="dark_appearance_short">Ciemny</string>
+    <string name="light_appearance_short">Jasny</string>
+    <string name="system_appearance_short">Auto</string>
+    <string name="settings">Ustawienia</string>
+    <string name="overlap">Nakładanie się okien</string>
+    <string name="window_size">Rozmiar okna</string>
+    <string name="minimum_frequency">"Minimalna częstotliwość: "</string>
+    <string name="pitch_history_duration">Czas trwania historii dźwięku</string>
+    <string name="pitch_history_num_faulty_values">Przeskocz do nowego dźwięku</string>
+    <plurals name="pitch_history_num_faulty_values_summary">
+        <item quantity="one">Przeskocz bezpośrednio do nowego wyniku</item>
+        <item quantity="other">Po %d podobnych wynikach dźwięku</item>
+    </plurals>
+    <string name="num_moving_average">Średnia krocząca</string>
+    <plurals name="num_moving_average_summary">
+        <item quantity="one">Bez uśredniania</item>
+        <item quantity="other">Średnia z %d wyników dźwięku</item>
+    </plurals>
+    <string name="about">O aplikacji</string>
+    <string name="about_message">Aplikacja Tuner\nWersja: %s\nLicencja: GPLv3\nhttps://github.com/thetwom/Tuner</string>
+    <string name="reset_all_settings">Przywróć wszystkie ustawienia</string>
+    <string name="reset_settings_prompt">Czy na pewno chcesz przywrócić wszystkie ustawienia?</string>
+    <string name="yes">Tak</string>
+    <string name="no">Nie</string>
+    <string name="autocorrelation">autokorelacja</string>
+    <string name="pitch_history">historia dźwięku</string>
+    <string name="spectrum">widmo</string>
+    <string name="cent" translatable="false">%+d&#x200A;&#162;</string>
+    <string name="cent_nosign" translatable="false">%d&#x200A;&#162;</string>
+    <string name="keep_screen_on">Nie wygaszaj ekranu</string>
+    <string name="samples">próbki</string>
+    <string name="scientific_mode">Tryb naukowy</string>
+    <string name="tolerance_in_cents">Tolerancja</string>
+    <string name="tolerance_summary" translatable="false">&#177;%d&#x200A;&#162;</string>
+    <string name="expert">Zaawansowane</string>
+    <string name="basic">Podstawowe</string>
+    <string name="others">Inne</string>
+
+    <string name="chromatic">Chromatyczny</string>
+    <string name="guitar_eadgbe">Gitara 6-strunowa</string>
+    <string name="bass_eadg">Bas 4-strunowy</string>
+    <string name="bass_beadg">Bas 5-strunowy</string>
+    <string name="ukulele_gcea">Ukulele</string>
+
+    <string name="c_note_name">C</string>
+    <string name="d_note_name">D</string>
+    <string name="e_note_name">E</string>
+    <string name="f_note_name">F</string>
+    <string name="g_note_name">G</string>
+    <string name="a_note_name">A</string>
+    <string name="b_note_name">H</string> <!-- We use "H" in Polish notation-->
+    <string name="asharp_bflat_note_name">-</string>
+
+    <string name="c_solfege">Do</string>
+    <string name="d_solfege">Re</string>
+    <string name="e_solfege">Mi</string>
+    <string name="f_solfege">Fa</string>
+    <string name="g_solfege">Sol</string>
+    <string name="a_solfege">La</string>
+    <string name="b_solfege">Si</string>
+
+    <string name="c_note_international" translatable="false">C</string>
+    <string name="d_note_international" translatable="false">D</string>
+    <string name="e_note_international" translatable="false">E</string>
+    <string name="f_note_international" translatable="false">F</string>
+    <string name="g_note_international" translatable="false">G</string>
+    <string name="a_note_international" translatable="false">A</string>
+    <string name="b_note_international" translatable="false">B</string>
+
+    <string name="notation">Notacja</string>
+    <string name="notation_standard">Domyślna (A-B-C-…)</string>
+    <string name="notation_solfege">Solfeż</string>
+    <string name="notation_international">Międzynarodowa (A-B-C-…)</string>
+
+    <string name="violin_gdae">Skrzypce</string>
+    <string name="abort">Anuluj</string>
+    <string name="instrument_name">Nazwa instrumentu</string>
+    <string name="add_note">Dodaj dźwięk</string>
+    <string name="delete_note">Usuń dźwięk</string>
+    <string name="lately_detected_notes">Ostatnio wykryte dźwięki</string>
+    <string name="done">Gotowe</string>
+    <string name="edit_instrument">Edytuj instrument</string>
+    <string name="predefined_items">Domyślne</string>
+    <string name="custom_item">Własny</string>
+    <string name="file_empty">Plik jest pusty: %s</string>
+    <string name="file_invalid">Plik jest nieprawidłowy: %s</string>
+    <plurals name="items_deleted">
+        <item quantity="one">Usunięto %d element</item>
+        <item quantity="other">Usunięto %d elementy</item>
+    </plurals>
+    <string name="undo">Cofnij</string>
+    <string name="pick_icon">Wybierz ikonę</string>
+    <string name="copy_extension">%s (kopia)</string>
+    <string name="failed_to_archive_items">Nie udało się zapisać elementów do pliku</string>
+    <plurals name="database_num_saved">
+        <item quantity="one">Zapisywanie %d elementu do "%s".</item>
+        <item quantity="other">Zapisywanie %d elementów do "%s".</item>
+    </plurals>
+    <string name="database_empty">Brak elementów do zapisania.</string>
+    <plurals name="load_instruments">
+        <item quantity="one">Wczytywanie %d instrumentu</item>
+        <item quantity="other">Wczytywanie %d instrumentów</item>
+    </plurals>
+    <plurals name="load_temperaments">
+        <item quantity="one">Wczytywanie %d strojenia</item>
+        <item quantity="other">Wczytywanie %d strojeń</item>
+    </plurals>
+    <string name="replace_current_list">Zastąp bieżącą listę</string>
+    <string name="prepend_current_list">Dodaj na początek listy</string>
+    <string name="append_current_list">Dodaj na koniec listy</string>
+    <string name="share">Udostępnij elementy</string>
+    <plurals name="sharing_num_items">
+        <item quantity="one">Udostępnianie %d elementu</item>
+        <item quantity="other">Udostępnianie %d elementów</item>
+    </plurals>
+    <string name="load_from_disk">Wczytaj elementy z pliku</string>
+    <string name="save_to_disk">Zapisz elementy do pliku</string>
+    <string name="prefer_flat">Preferuj \u266D zamiast \u266F</string>
+    <string name="viola_cgda">Altówka</string>
+    <string name="cello_cgda">Wiolonczela</string>
+    <string name="double_bass_eadg">Kontrabas</string>
+    <string name="equal_temperament_12">Strój równomiernie temperowany</string>
+    <string name="equal_temperament_12_desc">12 dźwięków na oktawę</string>
+    <string name="equal_temperament_12_abbr">EDO 12</string>
+<!--    <string name="equal_temperament_17">Equal temperament 17</string>-->
+<!--    <string name="equal_temperament_17_desc">17 notes per octave</string>-->
+<!--    <string name="equal_temperament_17_abbr">EDO 17</string>-->
+<!--    <string name="equal_temperament_19">Equal temperament 19</string>-->
+<!--    <string name="equal_temperament_19_desc">19 notes per octave</string>-->
+<!--    <string name="equal_temperament_19_abbr">EDO 19</string>-->
+<!--    <string name="equal_temperament_22">Equal temperament 22</string>-->
+<!--    <string name="equal_temperament_22_desc">22 notes per octave</string>-->
+<!--    <string name="equal_temperament_22_abbr">EDO 22</string>-->
+<!--    <string name="equal_temperament_24">Equal temperament 24</string>-->
+<!--    <string name="equal_temperament_24_desc">Quarter tone tuning</string>-->
+<!--    <string name="equal_temperament_24_abbr">EDO 24</string>-->
+<!--    <string name="equal_temperament_27">Equal temperament 27</string>-->
+<!--    <string name="equal_temperament_27_desc">27 notes per octave</string>-->
+<!--    <string name="equal_temperament_27_abbr">EDO 27</string>-->
+<!--    <string name="equal_temperament_29">Equal temperament 29</string>-->
+<!--    <string name="equal_temperament_29_desc">29 notes per octave</string>-->
+<!--    <string name="equal_temperament_29_abbr">EDO 29</string>-->
+<!--    <string name="equal_temperament_31">Equal temperament 31</string>-->
+<!--    <string name="equal_temperament_31_desc">31 notes per octave</string>-->
+<!--    <string name="equal_temperament_31_abbr">EDO 31</string>-->
+<!--    <string name="equal_temperament_41">Equal temperament 41</string>-->
+<!--    <string name="equal_temperament_41_desc">41 notes per octave</string>-->
+<!--    <string name="equal_temperament_41_abbr">EDO 41</string>-->
+<!--    <string name="equal_temperament_53">Equal temperament 53</string>-->
+<!--    <string name="equal_temperament_53_desc">53 notes per octave</string>-->
+<!--    <string name="equal_temperament_53_abbr">EDO 53</string>-->
+    <string name="equal_temperament_x">%d-tonowy strój równomiernie temperowany</string>
+    <string name="equal_temperament_x_desc">%d dźwięków na oktawę</string>
+    <string name="equal_temperament_x_abbr">EDO %d</string>
+    <string name="pythagorean_tuning">Strój pitagorejski</string>
+    <string name="pythagorean_tuning_abbr">Pitagorejski</string>
+    <string name="pure_tuning">Strój naturalny (czysto intonowany)</string>
+    <string name="pure_tuning_desc">Skala 5-limit, asymetryczna</string>
+    <string name="pure_tuning_abbr">Naturalny</string>
+    <string name="quarter_comma_mean_tone">Temperacja średniotonowa ¼-komowa</string>
+    <string name="quarter_comma_mean_tone_desc">Czyste tercje wielkie</string>
+    <string name="quarter_comma_mean_tone_abbr">¼-komowa średniotonowa</string>
+    <string name="third_comma_mean_tone">Temperacja średniotonowa ⅓-komowa</string>
+    <string name="third_comma_mean_tone_desc">Czyste tercje małe</string>
+    <string name="third_comma_mean_tone_abbr">⅓-komowa średniotonowa</string>
+    <string name="fifth_comma_mean_tone">Temperacja średniotonowa ⅕-komowa</string>
+    <string name="fifth_comma_mean_tone_desc">Czyste diatoniczne półtony</string>
+    <string name="fifth_comma_mean_tone_abbr">⅕-komowa średniotonowa</string>
+    <string name="werckmeister_iii">Werckmeister III</string>
+    <string name="werckmeister_iii_desc">Podział na ¼ komy</string>
+    <string name="werckmeister_iii_abbr">Werckmeister III</string>
+    <string name="werckmeister_iv">Werckmeister IV</string>
+    <string name="werckmeister_iv_desc">Podział na ⅓ komy</string>
+    <string name="werckmeister_iv_abbr">Werckmeister IV</string>
+    <string name="werckmeister_v">Werckmeister V</string>
+    <string name="werckmeister_v_desc">Inny podział na ¼ komy</string>
+    <string name="werckmeister_v_abbr">Werckmeister V</string>
+    <string name="werckmeister_vi">Werckmeister VI</string>
+    <string name="werckmeister_vi_desc">Septenarius</string>
+    <string name="werckmeister_vi_abbr">Werckmeister VI</string>
+    <string name="kirnberger1">Kirnberger I</string>
+    <string name="kirnberger1_desc">Jedna koma syntoniczna</string>
+    <string name="kirnberger1_abbr">Kirnberger I</string>
+    <string name="kirnberger2">Kirnberger II</string>
+    <string name="kirnberger2_desc">Podział na ½ komy syntonicznej</string>
+    <string name="kirnberger2_abbr">Kirnberger II</string>
+    <string name="kirnberger3">Kirnberger III</string>
+    <string name="kirnberger3_desc">Podział na ¼ komy syntonicznej</string>
+    <string name="kirnberger3_abbr">Kirnberger III</string>
+    <string name="neidhardt1">Neidhardt 1</string>
+    <string name="neidhardt1_desc">Dla wsi, 1732</string>
+    <string name="neidhardt1_abbr">Neidhardt 1</string>
+    <string name="neidhardt2">Neidhardt 2</string>
+    <string name="neidhardt2_desc">Dla małego miasta, 1732</string>
+    <string name="neidhardt2_abbr">Neidhardt 2</string>
+    <string name="neidhardt3">Neidhardt 3</string>
+    <string name="neidhardt3_desc">Dla dużego miasta, 1732</string>
+    <string name="neidhardt3_abbr">Neidhardt 3</string>
+    <string name="valotti">Valotti</string>
+    <string name="valotti_abbr">Valotti</string>
+    <string name="young2">Young 2</string>
+    <string name="young2_abbr">Young 2</string>
+    <string name="reference_frequency">Częstotliwość odniesienia</string>
+    <string name="frequency">Częstotliwość</string>
+    <string name="temperament">Strojenie</string>
+    <string name="root_note">Dźwięk podstawowy</string>
+    <string name="test_tuning">Test strojenia</string>
+    <string name="details">Szczegóły</string>
+    <string name="pythagorean_comma">%d\u2044%d&#x200A;pC</string>
+    <string name="syntonic_comma">%d\u2044%d&#x200A;sC</string>
+    <string name="schisma">%d\u2044%d&#x200A;sch</string>
+    <string name="plus_correction" translatable="false">" + "</string>
+    <string name="minus_correction" translatable="false">" - "</string>
+    <string name="pythagorean_comma_desc">pC: Koma pitagorejska, 531441\u2044524288\nsC: Koma syntoniczna, 81\u204480\nsch: Schizma, 32805\u204432768</string>
+    <string name="circle_of_fifths">Koło kwintowe</string>
+    <string name="set_default">Przywróć domyślne</string>
+    <string name="acknowledged">Potwierdzono</string>
+    <string name="black_night_mode">Czarne tło w trybie ciemnym</string>
+    <string name="system_color_accents">Akcenty kolorystyczne z systemu</string>
+    <string name="incorrect_temperament">Niekompatybilne strojenie!</string>
+    <string name="ok">OK</string>
+    <string name="new_temperament_requires_adapting_reference_note">Nowe strojenie wymaga dostosowania dźwięku odniesienia!</string>
+    <string name="comma_separator">,\ </string>
+    <string name="capture">Nagrywaj</string>
+    <string name="capture_duration">Czas nagrania: %d&#x200A;s</string>
+    <string name="no_capture_duration">Wyłącz nagrywanie</string>
+    <string name="sa_carnatic" translatable="false">Sa</string>
+    <string name="ri1_carnatic" translatable="false">Ri₁</string>
+    <string name="ri2_carnatic" translatable="false">Ri₂</string>
+    <string name="ga1_carnatic" translatable="false">Ga₁</string>
+    <string name="ga2_carnatic" translatable="false">Ga₂</string>
+    <string name="ma1_carnatic" translatable="false">Ma₁</string>
+    <string name="ma2_carnatic" translatable="false">Ma₂</string>
+    <string name="pa_carnatic" translatable="false">Pa</string>
+    <string name="dha1_carnatic" translatable="false">Dha₁</string>
+    <string name="dha2_carnatic" translatable="false">Dha₂</string>
+    <string name="ni1_carnatic" translatable="false">Ni₁</string>
+    <string name="ni2_carnatic" translatable="false">Ni₂</string>
+    <string name="notation_carnatic">Karnatycka</string>
+    <string name="sa_hindustani" translatable="false">Sa</string>
+    <string name="re1_hindustani" translatable="false">Re₁</string>
+    <string name="re2_hindustani" translatable="false">Re₂</string>
+    <string name="ga1_hindustani" translatable="false">Ga₁</string>
+    <string name="ga2_hindustani" translatable="false">Ga₂</string>
+    <string name="ma1_hindustani" translatable="false">Ma₁</string>
+    <string name="ma2_hindustani" translatable="false">Ma₂</string>
+    <string name="pa_hindustani" translatable="false">Pa</string>
+    <string name="dha1_hindustani" translatable="false">Dha₁</string>
+    <string name="dha2_hindustani" translatable="false">Dha₂</string>
+    <string name="ni1_hindustani" translatable="false">Ni₁</string>
+    <string name="ni2_hindustani" translatable="false">Ni₂</string>
+    <string name="notation_hindustani">Hindustańska</string>
+
+    <string name="ni_byzantine" translatable="false">Νη</string>
+    <string name="pa_byzantine" translatable="false">Πα</string>
+    <string name="vou_byzantine" translatable="false">Βου</string>
+    <string name="gha_byzantine" translatable="false">Γα</string>
+    <string name="dhi_byzantine" translatable="false">Δι</string>
+    <string name="ke_byzantine" translatable="false">Κε</string>
+    <string name="zo_byzantine" translatable="false">Ζω</string>
+    <string name="notation_byzantine">Bizantyjska</string>
+
+
+    <string name="helmholtz_notation">Notacja Helmholtza (C, … c\')</string>
+    <string name="extended_quarter_comma_mean_tone">Rozszerzona temperacja średniotonowa ¼-komowa</string>
+    <string name="extended_quarter_comma_mean_tone_desc">Czyste tercje wielkie, 15 dźwięków</string>
+    <string name="extended_quarter_comma_mean_tone_abbr">Rozszerzona ¼-komowa średniotonowa</string>
+    <string name="sensitivity">Czułość</string>
+    <string name="delete_items">Usuń elementy</string>
+    <string name="database_empty_share">Brak elementów do udostępnienia.</string>
+    <string name="audio_record_permission_rationale">Zezwól na dostęp do mikrofonu, aby rozpocząć strojenie.</string>
+    <string name="writing_wave_file">Zapisywanie pliku WAV: %s</string>
+    <string name="failed_writing_wave_file">Nie zapisano pliku WAV.</string>
+    <string name="instruments">Instrumenty</string>
+    <string name="edit">Edytuj</string>
+    <string name="copy_">Kopiuj</string>
+    <string name="delete">Usuń</string>
+    <string name="temperaments">Temperacje</string>
+    <string name="save">Zapisz</string>
+    <string name="temperament_editor">Edytuj temperację</string>
+    <string name="note_number">Liczba dźwięków</string>
+    <string name="cent_str">cent</string>
+    <string name="octave_offset">Przesunięcie oktawy</string>
+    <string name="ratio">Iloraz</string>
+    <string name="temperament_name">Nazwa temperacji</string>
+    <string name="temperament_abbreviation">Skrót</string>
+    <string name="temperament_description">Opis</string>
+    <string name="decreasing_value_error">Wartość musi być większa od poprzedniej.</string>
+    <string name="missing_note_name">Brak nazwy dźwięku.</string>
+    <string name="missing_value">Brak wartości centów lub ilorazu.</string>
+    <string name="duplicate_note_name">Powielona nazwa dźwięku.</string>
+    <string name="invalid_value">Nieprawidłowa wartość.</string>
+    <string name="maximum_value_exceeded">Przekroczono maksymalną wartość %d.</string>
+    <string name="edo_temperaments">Temperacje równomiernie temperowane</string>
+    <string name="other_temperaments">Inne temperacje</string>
+    <string name="custom_temperaments">Własne temperacje</string>
+</resources>
