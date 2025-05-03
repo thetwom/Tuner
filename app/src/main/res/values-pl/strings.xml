@@ -244,7 +244,7 @@
     <string name="capture">Nagrywaj</string>
     <string name="capture_duration">Czas nagrania: %d&#x200A;s</string>
     <string name="no_capture_duration">Wyłącz nagrywanie</string>
-    <string name="sa_carnatic" translatable="false">Sa</string>
+    <string name="sa_carnatic">Sa</string>
     <string name="ri1_carnatic" translatable="false">Ri₁</string>
     <string name="ri2_carnatic" translatable="false">Ri₂</string>
     <string name="ga1_carnatic" translatable="false">Ga₁</string>
