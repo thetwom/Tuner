@@ -18,22 +18,29 @@
 */
 package de.moekadu.tuner.ui.notes
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import de.moekadu.tuner.notenames.BaseNote
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.temperaments.FifthModification
 import de.moekadu.tuner.temperaments.Temperament3
@@ -49,7 +56,10 @@ import de.moekadu.tuner.ui.theme.TunerTheme
 
 data class Fifth(
     val startNote: MusicalNote,
-    val modification: FifthModification?
+    val modification: FifthModification?,
+    val isRoot: Boolean,
+    val drawNoteLight: Boolean,
+    val drawModificationLight: Boolean
 )
 //
 @Composable
@@ -62,10 +72,54 @@ private fun rememberChain(temperament: Temperament3, rootNote: MusicalNote?): Ar
             val unsorted = chain.getRatiosAlongFifths()
             val sorted = chain.getSortedRatios()
             val notes = temperament.noteNames(rootNote)
-            unsorted.mapIndexed { index, us ->
+            val result = unsorted.mapIndexed { index, us ->
                 val i = sorted.indexOfFirst { us == it }
-                Fifth(notes[i], chain.fifths.getOrNull(index))
+                Fifth(
+                    startNote = notes[i],
+                    modification = chain.fifths.getOrNull(index),
+                    isRoot = i == 0,
+                    drawNoteLight = false,
+                    drawModificationLight = false
+                )
             }.toTypedArray()
+
+            if (temperament.size == 12 && result[0].isRoot) {
+                result[result.size - 1] = result[result.size - 1].copy(
+                    modification = chain.getClosingCircleCorrection(),
+                    drawModificationLight = true
+                )
+                result + arrayOf(
+                    Fifth(
+                        result[0].startNote,
+                        null,
+                        false,
+                        drawNoteLight = true,
+                        drawModificationLight = false
+                    )
+                )
+            } else if (temperament.size == 12) {
+                result[result.size-1] = result[result.size-1].copy(
+                    modification = chain.getClosingCircleCorrection(),
+                    drawModificationLight = true
+                )
+                arrayOf(
+                    Fifth(result.last().startNote,
+                        chain.getClosingCircleCorrection(),
+                        false,
+                        drawNoteLight = true,
+                        drawModificationLight = true
+                    )
+                ) + result + arrayOf(
+                    Fifth(result[0].startNote,
+                        null,
+                        false,
+                        drawNoteLight = true,
+                        drawModificationLight = false
+                    )
+                )
+            } else {
+                result
+            }
         }
     }
 }
@@ -97,6 +151,12 @@ fun CircleOfFifthTable(
     }
 
     val fifthArray = rememberChain(temperament, rootNote)
+    val notePrintOptionsDefault = remember(notePrintOptions) {
+        notePrintOptions.copy(useEnharmonic = false)
+    }
+    val notePrintOptionsEnharmonic = remember(notePrintOptions) {
+        notePrintOptions.copy(useEnharmonic = true)
+    }
 
 //    val fifthArray = remember(temperament) {
 //        val cof = temperament.circleOfFifths
@@ -117,13 +177,53 @@ fun CircleOfFifthTable(
         if (fifthArray.isNotEmpty()) {
             fifthArray.forEach { fifth ->
                 item {
-                    Note(
-                        fifth.startNote,
-                        notePrintOptions = notePrintOptions,
-                        withOctave = false,
-                        fontWeight = FontWeight.Bold,
-                        style = noteTypography
-                    )
+                    Row(
+                        //modifier = Modifier.height(40.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.graphicsLayer {
+                            alpha = if(fifth.drawNoteLight) 0.5f else 1f
+                        }
+
+                        //contentAlignment = Alignment.Center
+                    ) {
+                        //Spacer(modifier = Modifier.width(16.dp))
+                        if (fifth.startNote.base != BaseNote.None) {
+                            Note(
+                                fifth.startNote, //note,
+                                notePrintOptions = notePrintOptionsDefault,
+                                withOctave = false,
+                                fontWeight = if (fifth.isRoot) FontWeight.ExtraBold else FontWeight.Normal,
+                                style = noteTypography
+                            )
+                        }
+                        if (fifth.startNote.base != BaseNote.None && fifth.startNote.enharmonicBase != BaseNote.None) {
+                            Text(
+                                "/",
+                                Modifier.padding(horizontal = 2.dp),
+                                fontWeight = if (fifth.isRoot) FontWeight.ExtraBold else FontWeight.Normal,
+                                style = noteTypography
+                            )
+                        }
+                        if (fifth.startNote.enharmonicBase != BaseNote.None) {
+                            Note(
+                                fifth.startNote,
+                                notePrintOptions = notePrintOptionsEnharmonic,
+                                withOctave = false,
+                                fontWeight = if (fifth.isRoot) FontWeight.ExtraBold else FontWeight.Normal,
+                                style = noteTypography
+                            )
+                        }
+//                        Spacer(modifier = Modifier.width(16.dp))
+//                    }
+//                    Note(
+//                        fifth.startNote,
+//                        notePrintOptions = notePrintOptions,
+//                        withOctave = false,
+//                        fontWeight = FontWeight.Bold,
+//                        style = noteTypography
+//                    )
+                    }
                 }
                 fifth.modification?.let { fifthModification ->
                     item {
@@ -131,7 +231,11 @@ fun CircleOfFifthTable(
                             fifthModification = fifthModification,
                             style = MaterialTheme.typography.labelSmall,
                             arrowHeight = noteTypography.fontSize / 5 * 3, // the factor is trial and error, meaning, that for other fonts it could look bad
-                            modifier = Modifier.padding(bottom = (bottomToBaselineDistance))
+                            modifier = Modifier
+                                .padding(bottom = (bottomToBaselineDistance))
+                                .graphicsLayer {
+                                    alpha = if(fifth.drawModificationLight) 0.5f else 1f
+                                }
                         )
                     }
                 }
@@ -177,10 +281,12 @@ private fun CircleOfFifthTable2Preview() {
         }
         val temperament = remember { predefinedTemperamentEDO(12, 0L) }
         val rootNote = remember { temperament.possibleRootNotes()[0] }
-        CircleOfFifthTable(
-            temperament,
-            rootNote,
-            notePrintOptions = notePrintOptions
-        )
+        Box(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
+            CircleOfFifthTable(
+                temperament,
+                rootNote,
+                notePrintOptions = notePrintOptions
+            )
+        }
     }
 }

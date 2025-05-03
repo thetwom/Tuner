@@ -19,10 +19,12 @@
 package de.moekadu.tuner.ui.notes
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -41,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
+import de.moekadu.tuner.notenames.BaseNote
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.temperaments.Temperament3
 import de.moekadu.tuner.temperaments.predefinedTemperamentWerckmeisterVI
@@ -72,6 +75,12 @@ fun CentAndRatioTable(
     val noteNames = remember(temperament, rootNote) {
         temperament.noteNames(rootNote)
     }
+    val notePrintOptionsDefault = remember(notePrintOptions) {
+        notePrintOptions.copy(useEnharmonic = false)
+    }
+    val notePrintOptionsEnharmonic = remember(notePrintOptions) {
+        notePrintOptions.copy(useEnharmonic = true)
+    }
 
     LazyRow(
         modifier = modifier,
@@ -85,18 +94,35 @@ fun CentAndRatioTable(
                 modifier = Modifier.width(IntrinsicSize.Max),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
+                Row(
                     modifier = Modifier.height(40.dp),
-                    contentAlignment = Alignment.Center
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                    //contentAlignment = Alignment.Center
                 ) {
-                    Note(
-                        note,
-                        notePrintOptions = notePrintOptions,
-                        withOctave = false,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    if (note.base != BaseNote.None) {
+                        Note(
+                            note,
+                            notePrintOptions = notePrintOptionsDefault,
+                            withOctave = false,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    if (note.base != BaseNote.None && note.enharmonicBase != BaseNote.None) {
+                        Text("/", Modifier.padding(horizontal = 2.dp))
+                    }
+                    if (note.enharmonicBase != BaseNote.None) {
+                        Note(
+                            note,
+                            notePrintOptions = notePrintOptionsEnharmonic,
+                            withOctave = false,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
                 }
                 Spacer(modifier = Modifier
                     .fillMaxWidth()
