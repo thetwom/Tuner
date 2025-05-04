@@ -42,6 +42,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.random.Random
 
+
 @Singleton
 class TemperamentResources @Inject constructor(
     @ApplicationContext context: Context,
@@ -103,10 +104,19 @@ class TemperamentResources @Inject constructor(
     )
     val musicalScale = store.getTransformablePreferenceFlow(MUSICAL_SCALE_KEY, musicalScaleDefault) {
         try {
-            Json.decodeFromString<MusicalScale2>(it)
+            // the "reload" will reload a temperament if it is a predefined temperament.
+            // this ensures that all string resources are updated correctly. For custom instruments
+            // this will just return the musical scale as it is.
+            reloadPredefinedTemperamentIfNeeded(
+                musicalScale = Json.decodeFromString<MusicalScale2>(it),
+                predefinedTemperaments = predefinedTemperaments
+            )
         } catch(ex: IllegalArgumentException) {
             try {
-                Json.decodeFromString<MusicalScale>(it).toNew()
+                reloadPredefinedTemperamentIfNeeded(
+                    musicalScale = Json.decodeFromString<MusicalScale>(it).toNew(),
+                    predefinedTemperaments = predefinedTemperaments
+                )
             } catch (ex: Exception) {
                 musicalScaleDefault
             }
@@ -324,5 +334,35 @@ class TemperamentResources @Inject constructor(
         private val EDO_TEMPERAMENTS_EXPANDED_KEY = booleanPreferencesKey(
             "edo temperaments expanded"
         )
+    }
+}
+
+private fun reloadPredefinedTemperamentIfNeeded(
+    musicalScale: MusicalScale2,
+    predefinedTemperaments: List<Temperament3>
+): MusicalScale2 {
+    val identifier = when(musicalScale.temperament) {
+        is Temperament3ChainOfFifthsNoEnharmonics -> musicalScale.temperament.uniqueIdentifier
+        is Temperament3ChainOfFifthsEDONames -> musicalScale.temperament.uniqueIdentifier
+        is Temperament3Custom -> null
+        is Temperament3EDO -> null
+        is Temperament3RationalNumbersEDONames -> musicalScale.temperament.uniqueIdentifier
+    }
+    return if (identifier != null) {
+        val reloadedTemperament = predefinedTemperaments.firstOrNull { temperament ->
+            when (temperament) {
+                is Temperament3ChainOfFifthsNoEnharmonics -> temperament.uniqueIdentifier == identifier
+                is Temperament3ChainOfFifthsEDONames -> temperament.uniqueIdentifier == identifier
+                is Temperament3Custom -> false
+                is Temperament3EDO -> false
+                is Temperament3RationalNumbersEDONames -> temperament.uniqueIdentifier == identifier
+            }
+        }
+        if (reloadedTemperament != null)
+            musicalScale.copy(temperament = reloadedTemperament)
+        else
+            musicalScale
+    } else {
+        musicalScale
     }
 }

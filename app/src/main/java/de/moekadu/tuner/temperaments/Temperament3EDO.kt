@@ -8,12 +8,15 @@ import de.moekadu.tuner.notenames.NoteNames2
 import de.moekadu.tuner.notenames.NoteNamesEDOGenerator
 import kotlinx.serialization.Serializable
 
+/** Equal division temperaments.
+ * @param stableId Unique id.
+ * @param notesPerOctave Number of notes per octave.
+ */
 @Serializable
 data class Temperament3EDO(
     override val stableId: Long,
     val notesPerOctave: Int,
 ) : Temperament3 {
-
     override val name: GetText
         get() = GetTextFromResIdWithIntArg(R.string.equal_temperament_x, notesPerOctave)
     override val abbreviation: GetText

@@ -9,6 +9,18 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlin.math.max
 
+/** User defined (or custom) temperaments.
+ * @param _name Temperament name.
+ * @param _abbreviation Temperament short name.
+ * @param _description Temperament description.
+ * @param cents Cent array. This must also include the octave value, so the size of this array
+ *   must be number of notes per octave + 1.
+ * @param _rationalNumbers List of rational numbers, which can be used instead of the cents array.
+ *   Values can be null, if they are note defined. Length of array (if used) must be
+ *   number of notes per octave + 1, since the octave value must be included.
+ * @param _noteNames Note names. If null, we will use the EDO name generator.
+ * @param stableId Unique id.
+ */
 @Serializable
 data class Temperament3Custom(
     val _name: String,

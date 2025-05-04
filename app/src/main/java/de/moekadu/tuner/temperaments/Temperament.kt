@@ -22,6 +22,7 @@ import androidx.compose.runtime.Immutable
 import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.notenames.NoteNames
 import kotlinx.serialization.Serializable
+import kotlin.math.absoluteValue
 import kotlin.math.log
 import kotlin.math.pow
 
@@ -63,14 +64,37 @@ data class Temperament(
     val stableId: Long
 ) {
     fun toNew(noteNames: NoteNames): Temperament3 {
-        return Temperament3Custom(
-            _name = name.value(null),
-            _abbreviation = abbreviation.value(null),
-            _description = description.value(null),
-            cents = cents,
-            _rationalNumbers = arrayOf(),
-            _noteNames = noteNames.notes,
-            stableId = stableId
-        )
+        return if (name.resId != null) {
+            // toNew is not unique so we either use edo, or we use the old one based on cents comparison
+            val p = predefinedTemperaments()
+            val minPredefinedKey = p.minOf { it.stableId }
+            if (equalOctaveDivision != null) {
+                Temperament3EDO(minPredefinedKey - 1 + equalOctaveDivision + 5, equalOctaveDivision)
+            } else {
+                p.firstOrNull {
+                    centsEqual(cents, it.cents())
+                } ?: Temperament3EDO(minPredefinedKey - 1 + 12 + 5, 12)
+            }
+        } else {
+            Temperament3Custom(
+                _name = name.value(null),
+                _abbreviation = abbreviation.value(null),
+                _description = description.value(null),
+                cents = cents,
+                _rationalNumbers = arrayOf(),
+                _noteNames = noteNames.notes,
+                stableId = stableId
+            )
+        }
     }
+}
+
+private fun centsEqual(c1: DoubleArray, c2: DoubleArray): Boolean {
+    if (c1.size != c2. size)
+        return false
+    for (i in c1.indices) {
+        if ((c1[i] - c2[i]).absoluteValue > 0.01)
+            return false
+    }
+    return true
 }

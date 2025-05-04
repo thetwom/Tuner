@@ -92,7 +92,8 @@ fun predefinedTemperamentPythagorean(stableId: Long) = Temperament3ChainOfFifths
         FifthModification(), // E  - B
         FifthModification(), // B  - F#
     ),
-    rootIndex = 5
+    rootIndex = 5,
+    uniqueIdentifier = "pythagorean"
 )
 
 fun predefinedTemperamentPure(stableId: Long) = Temperament3RationalNumbersEDONames(
@@ -114,7 +115,8 @@ fun predefinedTemperamentPure(stableId: Long) = Temperament3RationalNumbersEDONa
         RationalNumber(15, 8), // B
         RationalNumber(2, 1) // C2
     ),
-    stableId = stableId
+    stableId = stableId,
+    uniqueIdentifier = "pure"
 )
 
 fun predefinedTemperamentQuarterCommaMeanTone(stableId: Long)
@@ -136,7 +138,8 @@ fun predefinedTemperamentQuarterCommaMeanTone(stableId: Long)
         FifthModification(syntonicComma = RationalNumber(-1, 4)), // F# - C#
         FifthModification(syntonicComma = RationalNumber(-1, 4)), // C# - G#
     ),
-    rootIndex = 3
+    rootIndex = 3,
+    uniqueIdentifier = "quarter comma mean tone"
 )
 
 fun predefinedTemperamentExtendedQuarterCommaMeanTone(stableId: Long)
@@ -161,7 +164,8 @@ fun predefinedTemperamentExtendedQuarterCommaMeanTone(stableId: Long)
         FifthModification(syntonicComma = RationalNumber(-1, 4)), // G# - D#
         FifthModification(syntonicComma = RationalNumber(-1, 4)), // D# - A#
     ),
-    rootIndex = 4
+    rootIndex = 4,
+    uniqueIdentifier = "extended quarter comma mean tone"
 )
 
 fun predefinedTemperamentThirdCommaMeanTone(stableId: Long)
@@ -183,7 +187,8 @@ fun predefinedTemperamentThirdCommaMeanTone(stableId: Long)
         FifthModification(syntonicComma = RationalNumber(-1, 3)), // F# - C#
         FifthModification(syntonicComma = RationalNumber(-1, 3)), // C# - G#
     ),
-    rootIndex = 3
+    rootIndex = 3,
+    uniqueIdentifier = "third comma mean tone"
 )
 
 
@@ -206,7 +211,8 @@ fun predefinedTemperamentFifthCommaMeanTone(stableId: Long)
         FifthModification(syntonicComma = RationalNumber(-1, 5)), // F# - C#
         FifthModification(syntonicComma = RationalNumber(-1, 5)), // C# - G#
     ),
-    rootIndex = 3
+    rootIndex = 3,
+    uniqueIdentifier = "fifth comma mean tone"
 )
 
 fun predefinedTemperamentWerckmeisterIII(stableId: Long)
@@ -228,7 +234,8 @@ fun predefinedTemperamentWerckmeisterIII(stableId: Long)
         FifthModification(),                                                             // D#/Eb - A#/Bb
         FifthModification(),                                                             // A#/Bb - F
     ),
-    rootIndex = 0
+    rootIndex = 0,
+    uniqueIdentifier = "werckmeister iii"
 )
 
 fun predefinedTemperamentWerckmeisterIV(stableId: Long)
@@ -250,7 +257,8 @@ fun predefinedTemperamentWerckmeisterIV(stableId: Long)
         /* EbBb */ FifthModification(pythagoreanComma = RationalNumber(1, 3)),
         /* BbF */ FifthModification(pythagoreanComma = RationalNumber(-1, 3)),
     ),
-    rootIndex = 0
+    rootIndex = 0,
+    uniqueIdentifier = "werckmeister iv"
 )
 
 fun predefinedTemperamentWerckmeisterV(stableId: Long)
@@ -273,7 +281,8 @@ fun predefinedTemperamentWerckmeisterV(stableId: Long)
         /* BbF */ FifthModification(),
         //FC = FifthModification(pythagoreanComma = RationalNumber(-1, 4))
     ),
-    rootIndex = 0
+    rootIndex = 0,
+    uniqueIdentifier = "werckmeister v"
 )
 
 fun predefinedTemperamentWerckmeisterVI(stableId: Long)
@@ -296,7 +305,8 @@ fun predefinedTemperamentWerckmeisterVI(stableId: Long)
         RationalNumber(196, 104), // B
         RationalNumber(2, 1), // C2
     ),
-    stableId = stableId
+    stableId = stableId,
+    uniqueIdentifier = "werckmeister vi"
 )
 
 fun predefinedTemperamentKirnberger1(stableId: Long)
@@ -320,6 +330,7 @@ fun predefinedTemperamentKirnberger1(stableId: Long)
         //FC = FifthModification()
     ),
     rootIndex = 0,
+    uniqueIdentifier = "kirnberger 1"
 )
 
 fun predefinedTemperamentKirnberger2(stableId: Long)
@@ -342,7 +353,8 @@ fun predefinedTemperamentKirnberger2(stableId: Long)
         /* BbF */ FifthModification(),
         // FC = FifthModification()
     ),
-    rootIndex = 0
+    rootIndex = 0,
+    uniqueIdentifier = "kirnberger 2"
 )
 
 fun predefinedTemperamentKirnberger3(stableId: Long)
@@ -365,7 +377,8 @@ fun predefinedTemperamentKirnberger3(stableId: Long)
         /* BbF */ FifthModification(),
         // FC = FifthModification()
     ),
-    rootIndex = 0
+    rootIndex = 0,
+    uniqueIdentifier = "kirnberger 3"
 )
 
 // Neidhardt 1, für ein Dorf, 1732
@@ -389,7 +402,8 @@ fun predefinedTemperamentNeidhardt1(stableId: Long)
         /* BbF */ FifthModification(pythagoreanComma = RationalNumber(-1, 12)),
         // FC = FifthModification()
     ),
-    rootIndex = 0
+    rootIndex = 0,
+    uniqueIdentifier = "neidhardt 1"
 )
 
 //  Neidhardt 2, für ein Dorf, 1724  / für eine kleine Stadt, 1732
@@ -413,7 +427,8 @@ fun predefinedTemperamentNeidhardt2(stableId: Long)
         /* BbF */ FifthModification(),
         // FC = FifthModification()
     ),
-    rootIndex = 0
+    rootIndex = 0,
+    uniqueIdentifier = "neidhardt 2"
 )
 
 // Neidhardt 3, für eine kleine Stadt, 1724 / für eine große Stadt, 1732
@@ -437,7 +452,8 @@ fun predefinedTemperamentNeidhardt3(stableId: Long)
         /* BbF */ FifthModification(pythagoreanComma = RationalNumber(-1, 12)),
         // FC = FifthModification(pythagoreanComma = RationalNumber(-1, 12))
     ),
-    rootIndex = 0
+    rootIndex = 0,
+    uniqueIdentifier = "neidhardt 3"
 )
 
 // für eine große Stadt, 1724
@@ -461,7 +477,8 @@ fun predefinedTemperamentNeidhardt3(stableId: Long)
 //                /* BbF */ FifthModification(pythagoreanComma = RationalNumber(-1, 12)),
 //                //FC = FifthModification()
 //            ),
-//            rootIndex = 0
+//            rootIndex = 0,
+//            uniqueIdentifier = "neidhardt 4"
 //        )
 
 // Valotti
@@ -485,7 +502,8 @@ fun predefinedTemperamentValotti(stableId: Long)
         /* BflatF */ FifthModification(),
         //FC = FifthModification(pythagoreanComma = RationalNumber(-1, 6))
     ),
-    rootIndex = 0
+    rootIndex = 0,
+    uniqueIdentifier = "valotti"
 )
 
 fun predefinedTemperamentYoung2(stableId: Long)
@@ -508,5 +526,6 @@ fun predefinedTemperamentYoung2(stableId: Long)
         /* BbF */ FifthModification(),
         // FC = FifthModification()
     ),
-    rootIndex = 0
+    rootIndex = 0,
+    uniqueIdentifier = "young 2"
 )

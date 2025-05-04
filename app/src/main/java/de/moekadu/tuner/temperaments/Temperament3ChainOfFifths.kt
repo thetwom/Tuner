@@ -8,7 +8,7 @@ import de.moekadu.tuner.notenames.NoteNamesEDOGenerator
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
-/** Temperament based on a chain of fifths.
+/** Temperament based on a chain of fifths, note names are based on chain of fifths (no enharmonics).
  * @param name Temperament name.
  * @param abbreviation Short name for temperament.
  * @param description Further description of temperament.
@@ -17,6 +17,10 @@ import kotlinx.serialization.Transient
  *   it is always the fifth between two notes. The octave ratio is fixed at 2, so there is
  *   no ratio needed to close the octave.
  * @param rootIndex Index of the fifths, which will be used as the first note of the octave.
+ * @param uniqueIdentifier Unique identifier string between all predefined temperaments. This is
+ *   when loading the currently active temperament at app start, to reload it and not just
+ *   deserializing it, since GetText can point to string ids, which can change between app versions.
+ *   Also it allows to provide fixes over app versions and make sure, that they are actually loaded.
  */
 @Serializable
 data class Temperament3ChainOfFifthsNoEnharmonics(
@@ -25,7 +29,8 @@ data class Temperament3ChainOfFifthsNoEnharmonics(
     override val description: GetText,
     override val stableId: Long,
     val fifths: Array<out FifthModification>,
-    val rootIndex: Int
+    val rootIndex: Int,
+    val uniqueIdentifier: String
 ) : Temperament3 {
     @Transient
     private val _chainOfFifths = ChainOfFifths(fifths, rootIndex)
@@ -70,6 +75,20 @@ data class Temperament3ChainOfFifthsNoEnharmonics(
     }
 }
 
+/** Temperament based on a chain of fifths, note names are same as EDO names (with enharmonics).
+ * @param name Temperament name.
+ * @param abbreviation Short name for temperament.
+ * @param description Further description of temperament.
+ * @param stableId Unique id.
+ * @param fifths Fifths modifications. This must contain (notes_per_octave - 1) values, since
+ *   it is always the fifth between two notes. The octave ratio is fixed at 2, so there is
+ *   no ratio needed to close the octave.
+ * @param rootIndex Index of the fifths, which will be used as the first note of the octave.
+ * @param uniqueIdentifier Unique identifier string between all predefined temperaments. This is
+ *   when loading the currently active temperament at app start, to reload it and not just
+ *   deserializing it, since GetText can point to string ids, which can change between app versions.
+ *   Also it allows to provide fixes over app versions and make sure, that they are actually loaded.
+ */
 @Serializable
 data class Temperament3ChainOfFifthsEDONames(
     override val name: GetText,
@@ -77,7 +96,8 @@ data class Temperament3ChainOfFifthsEDONames(
     override val description: GetText,
     override val stableId: Long,
     val fifths: Array<out FifthModification>,
-    val rootIndex: Int
+    val rootIndex: Int,
+    val uniqueIdentifier: String
 ) : Temperament3 {
     @Transient
     private val _chainOfFifths = ChainOfFifths(fifths, rootIndex)

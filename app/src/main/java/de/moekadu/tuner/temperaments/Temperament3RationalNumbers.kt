@@ -14,6 +14,10 @@ import kotlinx.serialization.Transient
  * @param rationalNumbers List of rational numbers. This must also include the ratio of the octave
  *   (normally RationalNumber(2,1)). So the size of this array must be (notes_per_octave + 1)
  * @param stableId Unique id.
+ * @param uniqueIdentifier Unique identifier string between all predefined temperaments. This is
+ *   when loading the currently active temperament at app start, to reload it and not just
+ *   deserializing it, since GetText can point to string ids, which can change between app versions.
+ *   Also it allows to provide fixes over app versions and make sure, that they are actually loaded.
  */
 @Serializable
 data class Temperament3RationalNumbersEDONames(
@@ -21,7 +25,8 @@ data class Temperament3RationalNumbersEDONames(
     override val abbreviation: GetText,
     override val description: GetText,
     private val rationalNumbers: Array<RationalNumber>,
-    override val stableId: Long
+    override val stableId: Long,
+    val uniqueIdentifier: String
 ) : Temperament3 {
     @Transient
     override val size = rationalNumbers.size - 1
