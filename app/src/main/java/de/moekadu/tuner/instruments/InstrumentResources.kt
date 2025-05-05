@@ -44,9 +44,21 @@ class InstrumentResources @Inject constructor(
 
     val predefinedInstruments = instrumentDatabase.toImmutableList()
 
-    val currentInstrument = store.getSerializablePreferenceFlow(
+//    val currentInstrument = store.getSerializablePreferenceFlow(
+//        CURRENT_INSTRUMENT_KEY, predefinedInstruments[0]
+//    )
+
+    val currentInstrument = store.getTransformablePreferenceFlow(
         CURRENT_INSTRUMENT_KEY, predefinedInstruments[0]
-    )
+    ) {
+        val instrument = Json.decodeFromString<Instrument>(it)
+        if (instrument.isPredefined()) {
+            reloadPredefinedInstrumentIfNeeded(instrument, predefinedInstruments)
+        } else {
+            instrument
+        }
+    }
+
     fun writeCurrentInstrument(instrument: Instrument) {
         applicationScope.launch {
             store.writeSerializablePreference(CURRENT_INSTRUMENT_KEY, instrument)
@@ -179,5 +191,21 @@ class InstrumentResources @Inject constructor(
         private val PREDEFINED_INSTRUMENTS_EXPANDED_KEY = booleanPreferencesKey(
             "predefined instruments expanded"
         )
+    }
+}
+
+private fun reloadPredefinedInstrumentIfNeeded(
+    instrument: Instrument,
+    predefinedInstruments: List<Instrument>
+): Instrument {
+    // if null, we get the string, not the id-based string, for predefined instruments, this
+    // string is a unique identifier.
+    val name = instrument.getNameString(null)
+    return if (name == "") {
+        instrument
+    } else {
+        predefinedInstruments.firstOrNull {
+            it.getNameString(null) == name
+        } ?: instrument
     }
 }

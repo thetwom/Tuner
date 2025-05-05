@@ -20,6 +20,7 @@ package de.moekadu.tuner.instruments
 
 import android.content.Context
 import android.os.Parcelable
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
@@ -34,12 +35,34 @@ import de.moekadu.tuner.ui.notes.asAnnotatedString
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
+/** Instrument.
+ * @param name Name as string (for user defined instruments). For predefined instruments, the
+ *   name resource should be used to provide translations. However, in this case, still set a
+ *   unique name here, since this will serve as a unique identifier to recognize the instrument
+ *   later on again. So, name AND nameResource is set -> predefined instrument. Only name set
+ *   -> user defined instrument.
+ * @param nameResource Name resource id for predefined instruments or null for user defined
+ *   instruments.
+ * @param strings Strings, i.e. the notes of the instrument or empty array for using a
+ *   chromatic scale.
+ * @param icon Instrument icon.
+ * @param stableId Stable id to identify instrument in a list.
+ * @param isChromatic Defines if a instrument is defined via strings or it is chromatic. In latter
+ *   case, strings should be empty.
+ */
 @Serializable
 @Parcelize
 @Immutable
-data class Instrument(private val name: String?, private val nameResource: Int?, val strings: Array<MusicalNote>,
-                      val icon: InstrumentIcon, val stableId: Long, val isChromatic: Boolean = false) :
-    Parcelable {
+data class Instrument(
+    private val name: String,
+    @StringRes private val nameResource: Int?,
+    val strings: Array<MusicalNote>,
+    val icon: InstrumentIcon,
+    val stableId: Long,
+    val isChromatic: Boolean = false
+) : Parcelable {
+    /** Tell if an instrument is a predefined instrument. */
+    fun isPredefined() = nameResource != null
 
     /** Get instrument name as string.
      * @param context Context is only needed, if the instrument name is a string resource.
@@ -48,8 +71,7 @@ data class Instrument(private val name: String?, private val nameResource: Int?,
     fun getNameString(context: Context?): String {
         return when {
             nameResource != null && context != null -> context.getString(nameResource)
-            name != null -> name.toString()
-            else -> throw RuntimeException("No name given for instrument")
+            else -> name
         }
     }
 
@@ -112,7 +134,7 @@ data class Instrument(private val name: String?, private val nameResource: Int?,
     }
 
     override fun hashCode(): Int {
-        var result = name?.hashCode() ?: 0
+        var result = name.hashCode()
         result = 31 * result + (nameResource ?: 0)
         result = 31 * result + strings.contentHashCode()
         result = 31 * result + icon.hashCode()
@@ -123,7 +145,7 @@ data class Instrument(private val name: String?, private val nameResource: Int?,
 }
 
 val instrumentChromatic = Instrument(
-    name = null,
+    name = "Chromatic",
     nameResource = R.string.chromatic,
     strings = arrayOf(),
     icon = InstrumentIcon.piano,
@@ -140,7 +162,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
     )
     instruments.add(
         Instrument(
-            name = null,
+            name = "6-string guitar",
             nameResource = R.string.guitar_eadgbe,
             strings = arrayOf(
                 MusicalNote(BaseNote.E, NoteModifier.None, 2),
@@ -156,7 +178,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
     )
     instruments.add(
         Instrument(
-            name = null,
+            name = "4-string bass",
             nameResource = R.string.bass_eadg,
             strings = arrayOf(
                 MusicalNote(BaseNote.E, NoteModifier.None, 1),
@@ -170,7 +192,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
     )
     instruments.add(
         Instrument(
-            name = null,
+            name = "5-string bass",
             nameResource = R.string.bass_beadg,
             strings = arrayOf(
                 MusicalNote(BaseNote.B, NoteModifier.None, 0),
@@ -185,7 +207,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
     )
     instruments.add(
         Instrument(
-            name = null,
+            name = "Ukulele",
             nameResource = R.string.ukulele_gcea,
             strings = arrayOf(
                 MusicalNote(BaseNote.G, NoteModifier.None, 4),
@@ -199,7 +221,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
     )
     instruments.add(
         Instrument(
-            name = null,
+            name = "Violin",
             nameResource = R.string.violin_gdae,
             strings = arrayOf(
                 MusicalNote(BaseNote.G, NoteModifier.None, 3),
@@ -213,7 +235,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
     )
     instruments.add(
         Instrument(
-            name = null,
+            name = "Viola",
             nameResource = R.string.viola_cgda,
             strings = arrayOf(
                 MusicalNote(BaseNote.C, NoteModifier.None, 3),
@@ -227,7 +249,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
     )
     instruments.add(
         Instrument(
-            name = null,
+            name = "Cello",
             nameResource = R.string.cello_cgda,
             strings = arrayOf(
                 MusicalNote(BaseNote.C, NoteModifier.None, 2),
@@ -241,7 +263,7 @@ private fun createInstrumentDatabase(): ArrayList<Instrument> {
     )
     instruments.add(
         Instrument(
-            name = null,
+            name = "Double bass",
             nameResource = R.string.double_bass_eadg,
             strings = arrayOf(
                 MusicalNote(BaseNote.E, NoteModifier.None, 1),

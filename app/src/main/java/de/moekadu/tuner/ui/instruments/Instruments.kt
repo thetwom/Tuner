@@ -293,7 +293,7 @@ fun Instruments(
 }
 
 private val testInstrument1 = Instrument(
-    name = null,
+    name = "",
     nameResource = R.string.guitar_eadgbe,
     strings = arrayOf(
         MusicalNote(BaseNote.A, NoteModifier.None, octave = 4),
@@ -307,7 +307,7 @@ private val testInstrument1 = Instrument(
 )
 
 private val testInstrument2 = Instrument(
-    name = null,
+    name = "",
     nameResource = R.string.chromatic,
     strings = arrayOf(),
     icon = InstrumentIcon.piano,

@@ -48,7 +48,7 @@ class TargetNoteAutoDetection(
     private val toleranceInCents: Float
     ) {
 
-    private val instrument = instrument ?: Instrument(name = null, nameResource = null, strings = arrayOf(), icon = InstrumentIcon.entries[0], stableId = 0, isChromatic = true)
+    private val instrument = instrument ?: Instrument(name = "", nameResource = null, strings = arrayOf(), icon = InstrumentIcon.entries[0], stableId = 0, isChromatic = true)
 
     private val sortedAndDistinctInstrumentStrings = SortedAndDistinctInstrumentStrings(this.instrument, musicalScale)
     private val sortedAndDistinctNoteIndices get() = sortedAndDistinctInstrumentStrings.sortedAndDistinctNoteIndices
