@@ -42,10 +42,20 @@ data class MusicalScale(
     val stretchTuning: StretchTuning
 ) {
     fun toNew(): MusicalScale2 {
+        val newTemperament = temperament.toNew(noteNames)
+        val possibleRootNames = newTemperament.possibleRootNotes()
+        val _rootNote = possibleRootNames.firstOrNull {
+            it.match(rootNote, ignoreOctave = true)
+        }
+        val _noteNames = newTemperament.noteNames(_rootNote)
+        val _referenceNote = if (_noteNames.hasNote(referenceNote))
+            referenceNote
+        else
+            _noteNames.defaultReferenceNote
         return MusicalScale2(
             temperament = temperament.toNew(noteNames),
-            _rootNote = rootNote,
-            _referenceNote = referenceNote,
+            _rootNote = _rootNote,
+            _referenceNote = _referenceNote,
             referenceFrequency = referenceFrequency,
             frequencyMin = frequencyMin,
             frequencyMax = frequencyMax,

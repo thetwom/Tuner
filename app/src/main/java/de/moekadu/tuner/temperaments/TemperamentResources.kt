@@ -18,6 +18,7 @@
 */
 package de.moekadu.tuner.temperaments
 
+import android.util.Log
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -113,6 +114,7 @@ class TemperamentResources @Inject constructor(
             )
         } catch(ex: IllegalArgumentException) {
             try {
+//                Log.v("Tuner", "TemperamentResources: Trying to load old format scale")
                 reloadPredefinedTemperamentIfNeeded(
                     musicalScale = Json.decodeFromString<MusicalScale>(it).toNew(),
                     predefinedTemperaments = predefinedTemperaments

@@ -18,6 +18,7 @@
 */
 package de.moekadu.tuner.instruments
 
+import android.util.Log
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -30,6 +31,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -51,11 +53,21 @@ class InstrumentResources @Inject constructor(
     val currentInstrument = store.getTransformablePreferenceFlow(
         CURRENT_INSTRUMENT_KEY, predefinedInstruments[0]
     ) {
-        val instrument = Json.decodeFromString<Instrument>(it)
-        if (instrument.isPredefined()) {
-            reloadPredefinedInstrumentIfNeeded(instrument, predefinedInstruments)
-        } else {
-            instrument
+        try {
+            val instrument = Json.decodeFromString<Instrument>(it)
+            if (instrument.isPredefined()) {
+                reloadPredefinedInstrumentIfNeeded(instrument, predefinedInstruments)
+            } else {
+                instrument
+            }
+        } catch(ex: IllegalArgumentException) {
+            try {
+                Json.decodeFromString<InstrumentOld>(it).toNew()
+            } catch (ex2: Exception ){
+                predefinedInstruments[0]
+            }
+        } catch(ex: Exception) {
+            instrumentDatabase[0]
         }
     }
 

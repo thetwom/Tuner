@@ -38,7 +38,7 @@ data class Temperament3Custom(
     @Transient
     override val description = GetTextFromString(_description)
     @Transient
-    override val size = max(_rationalNumbers.size, cents.size)
+    override val size = max(_rationalNumbers.size, cents.size) - 1
 
     override fun cents(): DoubleArray {
         return DoubleArray(size + 1) {
@@ -46,7 +46,7 @@ data class Temperament3Custom(
             if (ratio != null)
                 ratioToCents(ratio.toDouble())
             else
-                cents.getOrNull(it) ?: throw RuntimeException("Cent value not defined of value at index $it")
+                cents.getOrNull(it) ?: throw RuntimeException("Cent value not defined at index $it")
         }
     }
 

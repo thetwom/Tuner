@@ -18,6 +18,7 @@
 */
 package de.moekadu.tuner.temperaments
 
+import android.util.Log
 import androidx.compose.runtime.Immutable
 import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.notenames.NoteNames
@@ -69,18 +70,26 @@ data class Temperament(
             val p = predefinedTemperaments()
             val minPredefinedKey = p.minOf { it.stableId }
             if (equalOctaveDivision != null) {
+//                Log.v("Tuner", "Temperament.toNew: creating EDO $equalOctaveDivision")
                 Temperament3EDO(minPredefinedKey - 1 + equalOctaveDivision + 5, equalOctaveDivision)
             } else {
+//                Log.v("Tuner", "Temperament.toNew: searching temperament")
                 p.firstOrNull {
                     centsEqual(cents, it.cents())
                 } ?: Temperament3EDO(minPredefinedKey - 1 + 12 + 5, 12)
             }
         } else {
+//            Log.v("Tuner", "Temperament.toNew: using temperament as custom, cents.size=${cents.size}")
+            val _cents = if (equalOctaveDivision != null)
+                DoubleArray(equalOctaveDivision + 1) { it * 1200.0 / equalOctaveDivision.toDouble() }
+            else
+                cents
+//            Log.v("Tuner", "Temperament.toNew: using temperament as custom, _cents.size=${_cents.size}, noteName.size=${noteNames.size}")
             Temperament3Custom(
                 _name = name.value(null),
                 _abbreviation = abbreviation.value(null),
                 _description = description.value(null),
-                cents = cents,
+                cents = _cents,
                 _rationalNumbers = arrayOf(),
                 _noteNames = noteNames.notes,
                 stableId = stableId
