@@ -1,49 +1,50 @@
-package de.moekadu.tuner.temperaments
+package de.moekadu.tuner.notenames
 
+import kotlinx.serialization.Serializable
+import java.util.Collections
 import kotlin.math.absoluteValue
 import kotlin.math.log2
 import kotlin.math.roundToInt
 import kotlin.math.sign
 
-/**
- * Code is based on the logic given here:
- * - https://www.tallkite.com/apps/noteNamer.html
- * - https://github.com/thetwom/Tuner/issues/98
- */
-private val log2_32 = log2(3f/2f)
+/** Create note names for EDO scales. */
+@Serializable
+data object NoteNamesEDOGenerator {
 
-/** Number of steps for a fifth.
- *  @param edo Edo steps per octave.
- *  @return Number of steps for a fifth.
- */
-private fun getFifth(edo: Int): Int {
-    var fifth = (edo * log2_32).roundToInt()
-    if (5 * fifth > 3 * edo)
-        fifth -= 1
-    return fifth
-}
+    /** Return the possible root notes (first note of temperament).
+     * @param notesPerOctave Number of notes per octave.
+     * @return Possible root notes, which can be used.
+     */
+    fun possibleRootNotes(notesPerOctave: Int): Array<MusicalNote> {
+        return generateNoteNamesImpl(notesPerOctave)
+    }
 
-/** Number of steps from e.g. C to C# or Eb to E
- * @param edo Edo steps per octave.
- * @return Number of steps to augment by one half tone.
- */
-private fun getAug1(edo: Int): Int {
-    return (7 * getFifth(edo) - 4 * edo)
+    /** Generate note names.
+     * @param notesPerOctave Number of notes per octave.
+     * @param rootNote Name of first note. Must be a note of array returned by
+     *   possibleRootNotes(). If null is passed, a default root note is used (C).
+     * @return Note for each value of the temperament excluding the name of the octave (i.e. each
+     *   value of the cents array excluding the last one). null, if note names cannot be generated.
+     */
+    fun getNoteNames(notesPerOctave: Int, rootNote: MusicalNote?): NoteNames2? {
+        if (notesPerOctave > 72)
+            return null
+        val noteNames = generateNoteNamesImpl(notesPerOctave)
+        val defaultReferenceNote = NoteNameHelpers.findDefaultReferenceNote(noteNames)
+        val incrementOctaveAt = noteNames[0]
+
+        if (rootNote != null) {
+            val shiftLeft = noteNames
+                .indexOfFirst { it.equalsIgnoreOctave(rootNote) }
+                .coerceAtLeast(0) // don't reorder if root note is not found, should not happen
+            Collections.rotate(noteNames.asList(), -shiftLeft)
+        }
+        return NoteNames2(noteNames, defaultReferenceNote, incrementOctaveAt)
+    }
 }
 
 /** Type of seconds. */
 private enum class Second{Maj, Min}
-
-/** Number of steps for a second.
- * @param edo Edo steps per octave.
- * @return Number of steps for a second.
- */
-private fun Second.toNumSteps(edo: Int): Int {
-    return when(this) {
-        Second.Maj ->  2 * getFifth(edo) - edo
-        Second.Min ->  3 * edo - 5 * getFifth(edo)
-    }
-}
 
 private data class BaseNoteStep(val from: BaseNote, val to: BaseNote, val second: Second)
 private val baseNoteSteps = arrayOf(
@@ -212,7 +213,7 @@ private fun generateNoteNamesImpl(notesPerOctave: Int): Array<MusicalNote> {
     val maj2Items = generateNoteModifiers(maj2, aug1)
 
     var lastBaseNoteStep = baseNoteSteps.last()
-    val names = Array(notesPerOctave) {MusicalNote(BaseNote.A, NoteModifier.None)}
+    val names = Array(notesPerOctave) { MusicalNote(BaseNote.A, NoteModifier.None) }
 
     var count = 0
     baseNoteSteps.forEach { baseNoteStep ->
@@ -274,15 +275,12 @@ private fun generateNoteNamesImpl(notesPerOctave: Int): Array<MusicalNote> {
     return names
 }
 
-fun generateNoteNames(notesPerOctave: Int): NoteNames? {
-    // limit since we might not have enough note modifiers
-    // -> did not check, if with the current note modifiers more is possible?
-    if (notesPerOctave > 72)
-        return null
-    val names = generateNoteNamesImpl(notesPerOctave)
-    val defaultReferenceNote = names.firstOrNull {
-        (it.base == BaseNote.A && it.modifier == NoteModifier.None) ||
-                (it.enharmonicBase == BaseNote.A && it.enharmonicModifier == NoteModifier.None)
-    } ?: throw RuntimeException("No note A in note names for $notesPerOctave notes per octave")
-    return NoteNames(names, defaultReferenceNote.copy(octave = 4))
-}
+//private fun generateNoteNames(notesPerOctave: Int): NoteNames? {
+//    // limit since we might not have enough note modifiers
+//    // -> did not check, if with the current note modifiers more is possible?
+//    if (notesPerOctave > 72)
+//        return null
+//    val names = generateNoteNamesImpl(notesPerOctave)
+//    return NoteNames(names, NoteNameHelpers.findDefaultReferenceNote(names))
+//}
+

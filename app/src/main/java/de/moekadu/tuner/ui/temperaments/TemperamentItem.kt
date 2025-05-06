@@ -35,17 +35,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import de.moekadu.tuner.misc.GetTextFromString
-import de.moekadu.tuner.temperaments.Temperament2
+import de.moekadu.tuner.temperaments.Temperament3
+import de.moekadu.tuner.temperaments.Temperament3Custom
 import de.moekadu.tuner.ui.common.EditableListItem
 import de.moekadu.tuner.ui.common.ListItemTask
 import de.moekadu.tuner.ui.theme.TunerTheme
 
 @Composable
 fun TemperamentItem(
-    temperament: Temperament2,
+    temperament: Temperament3,
     modifier: Modifier = Modifier,
-    onOptionsClicked: (temperament: Temperament2, task: ListItemTask) -> Unit = { _, _ ->},
+    onOptionsClicked: (temperament: Temperament3, task: ListItemTask) -> Unit = { _, _ ->},
     isActive: Boolean = false,
     isSelected: Boolean = false,
     readOnly: Boolean = false, // disable delete/edit options
@@ -93,21 +93,25 @@ fun TemperamentItem(
 private fun TemperamentItemPreview() {
     TunerTheme {
         val temperament1 = remember {
-            Temperament2(
-                GetTextFromString("Name 1"),
-                GetTextFromString("Abbr"),
-                GetTextFromString("The description of the first"),
-                12,
-                1L
+            Temperament3Custom(
+                _name = "Name 1",
+                _abbreviation = "Abbr",
+                _description = "The description of the first",
+                cents = DoubleArray(13) { it * 100.0},
+                _rationalNumbers = arrayOf(),
+                _noteNames = null,
+                stableId = 1L
             )
         }
         val temperament2 = remember {
-            Temperament2(
-                GetTextFromString("Name 2"),
-                GetTextFromString("Abbr"),
-                GetTextFromString("The description of the second"),
-                12,
-                1L
+            Temperament3Custom(
+                _name = "Name 2",
+                _abbreviation = "A2",
+                _description = "The description of the second",
+                cents = DoubleArray(13) { it * 100.0},
+                _rationalNumbers = arrayOf(),
+                _noteNames = null,
+                stableId = 1L
             )
         }
         Column {

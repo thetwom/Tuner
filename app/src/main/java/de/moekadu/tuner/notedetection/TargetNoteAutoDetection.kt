@@ -20,8 +20,8 @@ package de.moekadu.tuner.notedetection
 
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIcon
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale2
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
 import kotlin.math.log
 import kotlin.math.max
 import kotlin.math.min
@@ -48,7 +48,7 @@ class TargetNoteAutoDetection(
     private val toleranceInCents: Float
     ) {
 
-    private val instrument = instrument ?: Instrument(name = null, nameResource = null, strings = arrayOf(), icon = InstrumentIcon.entries[0], stableId = 0, isChromatic = true)
+    private val instrument = instrument ?: Instrument(name = "", nameResource = null, strings = arrayOf(), icon = InstrumentIcon.entries[0], stableId = 0, isChromatic = true)
 
     private val sortedAndDistinctInstrumentStrings = SortedAndDistinctInstrumentStrings(this.instrument, musicalScale)
     private val sortedAndDistinctNoteIndices get() = sortedAndDistinctInstrumentStrings.sortedAndDistinctNoteIndices
@@ -79,8 +79,10 @@ class TargetNoteAutoDetection(
      * @param frequency The frequency for which we should set the target note
      * @param previousNote Previously used target note, which will be preferred. Use null to
      *   get an unbiased output.
-     * @return Target note or null for invalid frequencies ore if the instrument has not strings
-     *   which matches the musical scale.
+     * @return Target note or null for invalid frequencies or if the instrument has no strings
+     *   which match the musical scale. The returned note is guaranteed to be an exact part of the
+     *   scale, not the one of the instrument (there can be differences in
+     *   enharmonics/nonenharmoncics).
      */
     fun detect(frequency: Float, previousNote: MusicalNote? = null): MusicalNote? {
         if (frequency <= 0f || (!instrument.isChromatic && numDifferentNotes == 0))
@@ -121,6 +123,13 @@ class TargetNoteAutoDetection(
         }
     }
 
+    /** Determine frequency range where the previous note should stay the target note.
+     * @param note Previously used target note. Only used if it is part of the musical scale (
+     *    must really be equal, not just a match).
+     * @return Frequency range (min, max) as float array. Or
+     *   [Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY] if there is no reason to stay
+     *   at the current target note (i.e. if note == null).
+     */
     private fun getFrequencyRangeWithinWhichWeReturnTheInputNote(note: MusicalNote?): FloatArray {
         when {
             note == null || (!instrument.isChromatic && numDifferentNotes == 0) -> { // never return the input note
@@ -129,7 +138,9 @@ class TargetNoteAutoDetection(
             }
             instrument.isChromatic -> {
 //                Log.v("Tuner", "TargetNoteAutoDetection: instrument.isChromatic")
-                val noteIndex = musicalScale.getNoteIndex(note)
+                val noteIndex = musicalScale.getNoteIndex2(note)
+                if (noteIndex == Int.MAX_VALUE)
+                    return floatArrayOf(Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY)
 //                Log.v("Tuner", "TargetNoteAutoDetection.getFrequencyRangeWithinWhichWeReturnTheInputNote: note=$note, noteIndex=$noteIndex")
                 return setFrequencyRangeForChromaticTarget(noteIndex)
             }
@@ -139,7 +150,9 @@ class TargetNoteAutoDetection(
             }
             else -> {
 //                Log.v("Tuner", "TargetNoteAutoDetection: else")
-                val noteIndex = musicalScale.getNoteIndex(note)
+                val noteIndex = musicalScale.getNoteIndex2(note)
+                if (noteIndex == Int.MAX_VALUE)
+                    return floatArrayOf(Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY)
                 val sortedStringListIndex = sortedAndDistinctNoteIndices.binarySearch(noteIndex)
 
                 return if (sortedStringListIndex < 0 || sortedAndDistinctNoteIndices[sortedStringListIndex] == Int.MAX_VALUE) {

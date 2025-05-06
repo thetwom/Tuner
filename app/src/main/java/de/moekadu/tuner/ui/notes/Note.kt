@@ -50,9 +50,9 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
+import de.moekadu.tuner.notenames.BaseNote
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteModifier
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlin.math.max

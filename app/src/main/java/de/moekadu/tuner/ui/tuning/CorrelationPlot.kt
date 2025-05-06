@@ -35,9 +35,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale2
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
 import de.moekadu.tuner.ui.common.Label
 import de.moekadu.tuner.ui.plot.Anchor
 import de.moekadu.tuner.ui.plot.GestureBasedViewPort
@@ -79,7 +78,7 @@ fun CorrelationPlot(
     plotWindowOutline: PlotWindowOutline = PlotWindowOutline()
 ) {
     val viewPort = remember(targetNote, musicalScale) {
-        val noteIndex = musicalScale.getNoteIndex(targetNote)
+        val noteIndex = musicalScale.getNoteIndex2(targetNote)
         val frequency = musicalScale.getNoteFrequency(noteIndex)
         Rect(
             left = 0f,
@@ -224,7 +223,7 @@ private fun CorrelationPlotPreview() {
             //CorrelationPlotData(timeShifts.size, { timeShifts[it] }, { correlations[it] })
         }
 
-        val musicalScale = remember { MusicalScaleFactory.createTestEdo12() }
+        val musicalScale = remember { MusicalScale2.createTestEdo12() }
         val targetNote = musicalScale.referenceNote
 
         CorrelationPlot(

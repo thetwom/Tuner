@@ -56,8 +56,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.generateNoteNames
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteNamesEDOGenerator
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.PersistentList
@@ -223,7 +223,7 @@ private class TemperamentEditorStateTest : TemperamentEditorState {
     override val description = mutableStateOf("Description of temperament")
     override val numberOfValues = mutableIntStateOf(12)
 
-    val noteNames = generateNoteNames(numberOfValues.intValue)
+    val noteNames = NoteNamesEDOGenerator.getNoteNames(numberOfValues.intValue, null)
 
     override fun modifyName(value: String) {
         name.value = value

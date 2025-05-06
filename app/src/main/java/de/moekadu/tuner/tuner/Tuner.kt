@@ -32,8 +32,8 @@ import de.moekadu.tuner.notedetection.FrequencyEvaluator
 import de.moekadu.tuner.notedetection.launchSoundSourceJob
 import de.moekadu.tuner.notedetection.testFunction
 import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale2
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow

@@ -18,28 +18,24 @@
 */
 package de.moekadu.tuner.temperaments
 
+import de.moekadu.tuner.notenames.NoteNames
 import kotlinx.serialization.Serializable
 
-@Serializable
-data class TemperamentWithNoteNames2(
-    val temperament: Temperament2,
-    val noteNames: NoteNames?
-) {
-    val stableId get() = temperament.stableId
-    fun clone(newStableId: Long): TemperamentWithNoteNames2 {
-        return TemperamentWithNoteNames2(
-            temperament = temperament.copy(stableId = newStableId),
-            noteNames = noteNames
-        )
-    }
-}
 
 @Serializable
 data class TemperamentWithNoteNames(
     val temperament: Temperament,
     val noteNames: NoteNames?
 ) {
-    fun toNew(): TemperamentWithNoteNames2 {
-        return TemperamentWithNoteNames2(temperament.toNew(), noteNames)
+    fun toNew(): Temperament3Custom {
+        return Temperament3Custom(
+            _name = temperament.name.value(null),
+            _abbreviation = temperament.abbreviation.value(null),
+            _description = temperament.description.value(null),
+            cents = temperament.cents,
+            _rationalNumbers = arrayOf(),
+            _noteNames = noteNames?.notes,
+            stableId = temperament.stableId
+        )
     }
 }

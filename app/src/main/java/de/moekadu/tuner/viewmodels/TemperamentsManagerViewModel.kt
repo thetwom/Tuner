@@ -9,9 +9,9 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.moekadu.tuner.R
 import de.moekadu.tuner.hilt.ApplicationScope
+import de.moekadu.tuner.temperaments.Temperament3Custom
 import de.moekadu.tuner.temperaments.TemperamentIO
 import de.moekadu.tuner.temperaments.TemperamentResources
-import de.moekadu.tuner.temperaments.TemperamentWithNoteNames2
 import de.moekadu.tuner.ui.common.EditableListPredefinedSectionImmutable
 import de.moekadu.tuner.ui.common.EditableListData
 import de.moekadu.tuner.ui.temperaments.TemperamentsManagerData
@@ -34,9 +34,9 @@ class TemperamentsManagerViewModel @AssistedInject constructor(
 
     private val activeTemperament = MutableStateFlow(
         pref.predefinedTemperaments.firstOrNull {
-            it.temperament.stableId == initialTemperamentKey
+            it.stableId == initialTemperamentKey
         } ?: pref.customTemperaments.value.firstOrNull {
-            it.temperament.stableId == initialTemperamentKey
+            it.stableId == initialTemperamentKey
         }
     )
 
@@ -55,14 +55,17 @@ class TemperamentsManagerViewModel @AssistedInject constructor(
         getStableId = { it.stableId },
         editableItemsExpanded = pref.customTemperamentsExpanded,
         activeItem = activeTemperament,
-        setNewItems = { pref.writeCustomTemperaments(it) },
+        setNewItems = {
+            val newTemperaments = it.filterIsInstance<Temperament3Custom>()
+            pref.writeCustomTemperaments(newTemperaments)
+        },
         toggleEditableItemsExpanded = { pref.writeCustomTemperamentsExpanded(it) }
     )
 
     override fun saveTemperaments(
         context: Context,
         uri: Uri,
-        temperaments: List<TemperamentWithNoteNames2>
+        temperaments: List<Temperament3Custom>
     ) {
         applicationScope.launch(Dispatchers.IO) {
             context.contentResolver?.openOutputStream(uri, "wt")?.use { stream ->
@@ -75,9 +78,9 @@ class TemperamentsManagerViewModel @AssistedInject constructor(
 
     fun activateTemperament(key: Long) {
         activeTemperament.value = pref.predefinedTemperaments.firstOrNull {
-            it.temperament.stableId == key
+            it.stableId == key
         } ?: pref.customTemperaments.value.firstOrNull {
-            it.temperament.stableId == key
+            it.stableId == key
         }
     }
 }

@@ -31,8 +31,8 @@ import de.moekadu.tuner.notedetection.FrequencyEvaluationResult
 import de.moekadu.tuner.notedetection.TuningState
 import de.moekadu.tuner.notedetection.checkTuning
 import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale2
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
 import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.tuner.Tuner
 import de.moekadu.tuner.ui.instruments.StringWithInfo
@@ -195,7 +195,7 @@ class InstrumentTunerViewModel @Inject constructor (
             && timeSinceThereIsNoFrequencyDetectionResult > DURATION_FOR_MARKING_NOTEDETECTION_AS_INACTIVE) {
             TuningState.Unknown
         } else {
-            val noteIndex = musicalScale.value.getNoteIndex(targetNote)
+            val noteIndex = musicalScale.value.getNoteIndex2(targetNote)
             checkTuning(
                 currentSmoothedFrequency,
                 musicalScale.value.getNoteFrequency(noteIndex),

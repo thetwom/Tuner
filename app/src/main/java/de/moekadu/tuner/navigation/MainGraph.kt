@@ -35,18 +35,15 @@ import androidx.navigation.toRoute
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIcon
+import de.moekadu.tuner.musicalscale.MusicalScale2
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.EditableTemperament
-import de.moekadu.tuner.temperaments.MusicalScale2
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
-import de.moekadu.tuner.temperaments.Temperament2
+import de.moekadu.tuner.temperaments.Temperament3
 import de.moekadu.tuner.temperaments.TemperamentResources
-import de.moekadu.tuner.temperaments.TemperamentWithNoteNames2
-import de.moekadu.tuner.temperaments.generateNoteNames
 import de.moekadu.tuner.temperaments.toEditableTemperament
-import de.moekadu.tuner.ui.screens.InstrumentTuner
 import de.moekadu.tuner.ui.instruments.Instruments
 import de.moekadu.tuner.ui.preferences.ReferenceNoteDialog
+import de.moekadu.tuner.ui.screens.InstrumentTuner
 import de.moekadu.tuner.ui.screens.ScientificTuner
 import de.moekadu.tuner.ui.temperaments.TemperamentDetailsDialog
 import de.moekadu.tuner.ui.temperaments.TemperamentDialog
@@ -213,34 +210,35 @@ fun NavGraphBuilder.mainGraph(
             notePrintOptions = notePrintOptions,
             modifier = Modifier.fillMaxSize(),
             onDismiss = { controller.navigateUp() },
-            onDone = { temperament, noteNames, rootNote ->
-                val predefinedNoteNames = generateNoteNames(temperament.numberOfNotesPerOctave)
-                val noteNamesResolved =
-                    if (predefinedNoteNames?.notes?.contentEquals(noteNames.notes) == true)
-                        null
-                    else
-                        noteNames
-                val temperamentWithNoteNames = TemperamentWithNoteNames2(
-                    temperament, noteNamesResolved
-                )
+            onDone = { temperament, rootNote ->
+//                val predefinedNoteNames = generateNoteNames(temperament.numberOfNotesPerOctave)
+//                val noteNamesResolved =
+//                    if (predefinedNoteNames?.notes?.contentEquals(noteNames.notes) == true)
+//                        null
+//                    else
+//                        noteNames
+//                val temperamentWithNoteNames = TemperamentWithNoteNames2(
+//                    temperament, noteNamesResolved
+//                )
                 val currentReferenceNote = temperamentResources.musicalScale.value.referenceNote
+                val noteNames = temperament.noteNames(rootNote)
+
                 if (noteNames.hasNote(currentReferenceNote)) {
                     temperamentResources.writeMusicalScale(
-                        temperament = temperamentWithNoteNames,
+                        temperament = temperament,
                         rootNote = rootNote
                     )
                     controller.navigateUp()
                 } else {
                     val oldScale = temperamentResources.musicalScale.value
-                    val proposedScale = MusicalScaleFactory.create(
+                    val proposedScale = MusicalScale2(
                         temperament = temperament,
-                        noteNames = noteNamesResolved,
-                        referenceNote = null,
-                        rootNote = rootNote,
+                        _rootNote = rootNote,
+                        _referenceNote = null,
                         referenceFrequency = oldScale.referenceFrequency,
                         frequencyMin = oldScale.frequencyMin,
                         frequencyMax = oldScale.frequencyMax,
-                        stretchTuning = oldScale.stretchTuning
+                        _stretchTuning = oldScale.stretchTuning
                     )
                     controller.navigate(
                         ReferenceFrequencyDialogRoute(
@@ -281,7 +279,7 @@ fun NavGraphBuilder.mainGraph(
                 }
             },
             onEditTemperamentClicked = { temperament, copy ->
-                val name = temperament.temperament.name.value(context)
+                val name = temperament.name.value(context)
                 controller.navigate(
                     TemperamentEditorGraphRoute(
                         temperament.toEditableTemperament(
@@ -291,7 +289,7 @@ fun NavGraphBuilder.mainGraph(
                                 copy -> "$name (${resources.getString(R.string.copy_)})"
                                 else -> null // i.e. use name from temperament
                             },
-                            stableId = if (copy) Temperament2.NO_STABLE_ID else null // null means use stable from temperament
+                            stableId = if (copy) Temperament3.NO_STABLE_ID else null // null means use stable from temperament
                         )
                     )
                 )
@@ -308,9 +306,7 @@ fun NavGraphBuilder.mainGraph(
         val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
         val temperament = it.toRoute<TemperamentInfoDialogRoute>().obtainTemperament()
         TemperamentDetailsDialog(
-            temperament = temperament.temperament,
-            noteNames = temperament.noteNames
-                ?: generateNoteNames(temperament.temperament.numberOfNotesPerOctave)!!,
+            temperament = temperament,
             notePrintOptions = notePrintOptions,
             onDismiss = { controller.navigateUp() }
         )
@@ -365,11 +361,11 @@ data class TemperamentsManagerRoute(
 data class TemperamentInfoDialogRoute(
     val serializedTemperament: String
 ) {
-    constructor(temperament: TemperamentWithNoteNames2) : this(
+    constructor(temperament: Temperament3) : this(
         Json.encodeToString(temperament)
     )
-    fun obtainTemperament(): TemperamentWithNoteNames2 {
-        return Json.decodeFromString<TemperamentWithNoteNames2>(serializedTemperament)
+    fun obtainTemperament(): Temperament3 {
+        return Json.decodeFromString<Temperament3>(serializedTemperament)
     }
 }
 //@Serializable

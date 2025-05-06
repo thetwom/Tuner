@@ -31,7 +31,7 @@ val extendedQuarterCommaMeantone = doubleArrayOf(
     772.63,  // g#
     813.69,  // ab
     889.74,  // a
-    965.78,  // ais
+    965.78,  // a#
     1006.84,  // bb
     1082.89,  // b
     1200.00,  // cs

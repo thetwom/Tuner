@@ -58,11 +58,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.InstrumentIcon
+import de.moekadu.tuner.musicalscale.MusicalScale2
 import de.moekadu.tuner.notedetection.TuningState
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScale2
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.ui.notes.NoteDetector
 import de.moekadu.tuner.ui.notes.NoteDetectorState
 import de.moekadu.tuner.ui.notes.NotePrintOptions
@@ -178,11 +176,11 @@ fun InstrumentEditorPortrait(
     val selectedNoteKey = selectedNoteWithInfo?.key ?: 0
     val selectedNote = selectedNoteWithInfo?.note ?: initializerNote
     val noteSelectorPosition = remember(musicalScale, selectedNote) {
-        val noteIndex = musicalScale.getNoteIndex(selectedNote)
-        if (noteIndex == Int.MAX_VALUE)
+        val noteIndices = musicalScale.getMatchingNoteIndices(selectedNote)
+        if (noteIndices.isEmpty())
             -musicalScale.noteIndexBegin
         else
-            noteIndex - musicalScale.noteIndexBegin
+            noteIndices[0] - musicalScale.noteIndexBegin
     }
 
 //    Log.v("Tuner", "InstrumentEditor: strings: $strings")
@@ -320,11 +318,11 @@ fun InstrumentEditorLandscape(
     val selectedNoteKey = selectedNoteWithInfo?.key ?: 0
     val selectedNote = selectedNoteWithInfo?.note ?: initializerNote
     val noteSelectorPosition = remember(musicalScale, selectedNote) {
-        val noteIndex = musicalScale.getNoteIndex(selectedNote)
-        if (noteIndex == Int.MAX_VALUE)
+        val noteIndices = musicalScale.getMatchingNoteIndices(selectedNote)
+        if (noteIndices.isEmpty())
             -musicalScale.noteIndexBegin
         else
-            noteIndex - musicalScale.noteIndexBegin
+            noteIndices[0] - musicalScale.noteIndexBegin
     }
 
     Row(modifier) {
@@ -475,7 +473,7 @@ fun InstrumentEditorLandscape(
 }
 
 private class InstrumentEditorDataTest : InstrumentEditorData {
-    val musicalScale = MusicalScaleFactory.createTestEdo12()
+    val musicalScale = MusicalScale2.createTestEdo12()
 
     override val icon = MutableStateFlow(InstrumentIcon.piano)
     override val name = MutableStateFlow("Test name")

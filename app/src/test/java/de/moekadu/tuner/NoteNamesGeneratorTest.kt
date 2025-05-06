@@ -1,9 +1,11 @@
 package de.moekadu.tuner
 
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.generateNoteNames
+import de.moekadu.tuner.notenames.BaseNote
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteModifier
+import de.moekadu.tuner.notenames.NoteNamesChainOfFifthsGenerator
+import de.moekadu.tuner.notenames.NoteNamesEDOGenerator
+import de.moekadu.tuner.temperaments.predefinedTemperamentExtendedQuarterCommaMeanTone
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 
@@ -87,8 +89,8 @@ private fun noteModifierToString(modifier: NoteModifier) = when (modifier) {
 class NoteNamesGeneratorTest {
 
     private fun testNumberOfNotesImpl(numberOfNotesPerOctave: Int) {
-        val names = generateNoteNames(numberOfNotesPerOctave)
-        assertEquals(numberOfNotesPerOctave, names.size)
+        val names = NoteNamesEDOGenerator.getNoteNames(numberOfNotesPerOctave, null)
+        assertEquals(numberOfNotesPerOctave, names?.size)
     }
 
     @Test
@@ -96,12 +98,28 @@ class NoteNamesGeneratorTest {
         for (numberOfNotesPerOctave in 5 ..72)
             testNumberOfNotesImpl(numberOfNotesPerOctave)
     }
+
     @Test
     fun testNoteNames() {
         val numberOfNotePerOctave = 20
-        val names = generateNoteNames(numberOfNotePerOctave)
-        assertEquals(numberOfNotePerOctave, names.size)
-        names.notes.forEachIndexed { i, n ->
+        val names = NoteNamesEDOGenerator.getNoteNames(numberOfNotePerOctave, null)
+
+        assertEquals(numberOfNotePerOctave, names?.size)
+        names?.notes?.forEachIndexed { i, n ->
+            println("$i: ${noteToString(n)}")
+        }
+    }
+
+    @Test
+    fun testNoteNamesChainOfFifths() {
+        val chain = predefinedTemperamentExtendedQuarterCommaMeanTone(0L).chainOfFifths()
+        val names = NoteNamesChainOfFifthsGenerator.getNoteNames(
+            chain,
+            MusicalNote(BaseNote.C, NoteModifier.Sharp)
+        )
+
+        assertEquals(chain.fifths.size + 1, names?.size)
+        names?.notes?.forEachIndexed { i, n ->
             println("$i: ${noteToString(n)}")
         }
     }

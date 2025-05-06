@@ -60,7 +60,7 @@ import de.moekadu.tuner.temperaments.EditableTemperament
 import de.moekadu.tuner.temperaments.TemperamentIO
 import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.temperaments.hasErrors
-import de.moekadu.tuner.temperaments.toTemperamentWithNoteNames
+import de.moekadu.tuner.temperaments.toTemperament3Custom
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -247,7 +247,7 @@ private fun loadTemperaments(
         ).show()
 
         temperamentResources.appendTemperaments(
-            temperamentList.mapNotNull { it.toTemperamentWithNoteNames() }
+            temperamentList.mapNotNull { it.toTemperament3Custom() }
         )
     } else if (temperamentList.size == 1) { // one temperament with errors
         controller.navigate(
