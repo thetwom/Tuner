@@ -177,7 +177,7 @@
     <string name="ok">OK</string>
     <string name="new_temperament_requires_adapting_reference_note">L’ajustement de la note de référence est requis pour un nouveau tempérament\u00A0!</string>
     <string name="comma_separator">,\ </string>
-    <string name="asharp_bflat_note_name">-</string>
+    <string name="bflat_note_name">-</string>
     <string name="capture">Enregistrer</string>
     <string name="capture_duration">Durée d’enregistrement\u00A0: %d&#x200A;s</string>
     <string name="no_capture_duration">Pas d’enregistrement</string>

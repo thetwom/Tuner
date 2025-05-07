@@ -194,12 +194,43 @@ private fun generateNoteModifiers(numSteps: Int, aug1: Int): Array<GeneralSecond
 }
 
 private fun generateNoteNamesImpl(notesPerOctave: Int): Array<MusicalNote> {
-    if (notesPerOctave == 6) {
-        val names12 = generateNoteNamesImpl(12)
-        return Array(6) { names12[2 * it + 1] }
-    } else if (notesPerOctave == 8) {
-        val names24 = generateNoteNamesImpl(24)
-        return Array(8) { names24[3 * it] }
+    // first some shortcuts and special definitions
+    when (notesPerOctave) {
+        1 -> {
+            return arrayOf(MusicalNote(base = BaseNote.C, modifier = NoteModifier.None))
+        }
+
+        2 -> {
+            return arrayOf(
+                MusicalNote(base = BaseNote.C, modifier = NoteModifier.None),
+                MusicalNote(
+                    base = BaseNote.F,
+                    modifier = NoteModifier.Sharp,
+                    enharmonicBase = BaseNote.G,
+                    enharmonicModifier = NoteModifier.Flat
+                )
+            )
+        }
+
+        3 -> {
+            val names12 = generateNoteNamesImpl(12)
+            return Array(3) { names12[4 * it] }
+        }
+
+        4 -> {
+            val names24 = generateNoteNamesImpl(12)
+            return Array(4) { names24[3 * it] }
+        }
+
+        6 -> {
+            val names12 = generateNoteNamesImpl(12)
+            return Array(6) { names12[2 * it + 1] }
+        }
+
+        8 -> {
+            val names24 = generateNoteNamesImpl(24)
+            return Array(8) { names24[3 * it] }
+        }
     }
 
     val fifthTmp = (notesPerOctave * log2(3f/2f)).roundToInt()

@@ -39,7 +39,7 @@
     <string name="g_note_name">G</string>
     <string name="a_note_name">A</string>
     <string name="b_note_name">B</string>
-    <string name="asharp_bflat_note_name">-</string>
+    <string name="bflat_note_name">-</string>
     <string name="notation">记谱法</string>
     <string name="notation_standard">默认（A-B-C-…）</string>
     <string name="notation_solfege">唱名法</string>

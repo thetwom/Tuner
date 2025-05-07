@@ -75,12 +75,6 @@ fun CentAndRatioTable(
     val noteNames = remember(temperament, rootNote) {
         temperament.noteNames(rootNote)
     }
-    val notePrintOptionsDefault = remember(notePrintOptions) {
-        notePrintOptions.copy(useEnharmonic = false)
-    }
-    val notePrintOptionsEnharmonic = remember(notePrintOptions) {
-        notePrintOptions.copy(useEnharmonic = true)
-    }
 
     LazyRow(
         modifier = modifier,
@@ -94,36 +88,15 @@ fun CentAndRatioTable(
                 modifier = Modifier.width(IntrinsicSize.Max),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(
-                    modifier = Modifier.height(40.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                    //contentAlignment = Alignment.Center
-                ) {
-                    Spacer(modifier = Modifier.width(16.dp))
-                    if (note.base != BaseNote.None) {
-                        Note(
-                            note,
-                            notePrintOptions = notePrintOptionsDefault,
-                            withOctave = false,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                    if (note.base != BaseNote.None && note.enharmonicBase != BaseNote.None) {
-                        Text("/", Modifier.padding(horizontal = 2.dp))
-                    }
-                    if (note.enharmonicBase != BaseNote.None) {
-                        Note(
-                            note,
-                            notePrintOptions = notePrintOptionsEnharmonic,
-                            withOctave = false,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                }
+                NoteWithEnharmonic(
+                    note,
+                    modifier = Modifier.height(40.dp).padding(horizontal = 16.dp),
+                    notePrintOptions = notePrintOptions,
+                    withOctave = false,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
                 Spacer(modifier = Modifier
                     .fillMaxWidth()
                     .height(1.dp)

@@ -290,7 +290,7 @@ fun TemperamentTableLine(
     val configuration = LocalConfiguration.current
     val locale = ConfigurationCompat.getLocales(configuration).get(0)
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(state) {
         if (state.centOrRatio == null) {
             state.ratio?.let {
                 onValueChange("${it.numerator} / ${it.denominator}")

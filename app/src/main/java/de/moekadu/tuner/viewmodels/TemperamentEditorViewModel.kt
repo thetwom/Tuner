@@ -184,28 +184,32 @@ class TemperamentEditorViewModel @AssistedInject constructor(
     fun changeNumberOfValues(numberOfValues: Int) {
         val oldTemperamentValues  = temperamentValues.value
         val oldNumValues = oldTemperamentValues.size - 1 // num notes per octave + octave note
-        _temperamentValues.value = oldTemperamentValues.mutate { mutated ->
-            val octaveLine = oldTemperamentValues.last()
-            if (numberOfValues < oldNumValues) {
-                mutated.subList(numberOfValues + 1, oldNumValues + 1).clear()
-                mutated[numberOfValues] = octaveLine
-            } else {
-                val newNoteNames = NoteNamesEDOGenerator.getNoteNames(numberOfValues, null)
 
-                for (i in oldNumValues until numberOfValues) {
-                    mutated.add(i, TemperamentTableLineState(
-                        note = newNoteNames?.getOrNull(i),
-                        cent = null,
-                        ratio = null,
-                        isFirstLine = false,
-                        isOctaveLine = false,
-                        decreasingValueError = false,
-                        duplicateNoteError = false
-                    ))
-                }
-                mutated[numberOfValues] = octaveLine
-            }
-        }
+        if (temperamentValues.value.size == oldNumValues)
+            return
+
+        val newNoteNames = NoteNamesEDOGenerator.getNoteNames(numberOfValues, null)
+        _temperamentValues.value = List(numberOfValues + 1) {
+            TemperamentTableLineState(
+                note = if (it == numberOfValues)
+                    newNoteNames?.getOrNull(0)?.copy(octave = 5)
+                else
+                    newNoteNames?.getOrNull(it)?.copy(octave = 4),
+                cent = if (it == numberOfValues)
+                    oldTemperamentValues.lastOrNull()?.cent
+                else
+                    oldTemperamentValues.getOrNull(it)?.cent,
+                ratio = if (it == numberOfValues)
+                    oldTemperamentValues.lastOrNull()?.ratio
+                else
+                    oldTemperamentValues.getOrNull(it)?.ratio,
+                isFirstLine = it == 0,
+                isOctaveLine = it == numberOfValues,
+                decreasingValueError = false,
+                duplicateNoteError = false
+            )
+        }.toPersistentList()
+
         _numberOfValues.intValue = numberOfValues
 
         valueOrderingError = checkAndSetValueOrderingErrors(temperamentValues.value)

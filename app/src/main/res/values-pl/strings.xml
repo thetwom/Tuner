@@ -69,7 +69,7 @@
     <string name="g_note_name">G</string>
     <string name="a_note_name">A</string>
     <string name="b_note_name">H</string> <!-- We use "H" in Polish notation-->
-    <string name="asharp_bflat_note_name">-</string>
+    <string name="bflat_note_name">-</string>
 
     <string name="c_solfege">Do</string>
     <string name="d_solfege">Re</string>

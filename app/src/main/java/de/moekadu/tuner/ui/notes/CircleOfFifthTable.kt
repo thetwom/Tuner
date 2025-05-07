@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -151,22 +152,6 @@ fun CircleOfFifthTable(
     }
 
     val fifthArray = rememberChain(temperament, rootNote)
-    val notePrintOptionsDefault = remember(notePrintOptions) {
-        notePrintOptions.copy(useEnharmonic = false)
-    }
-    val notePrintOptionsEnharmonic = remember(notePrintOptions) {
-        notePrintOptions.copy(useEnharmonic = true)
-    }
-
-//    val fifthArray = remember(temperament) {
-//        val cof = temperament.circleOfFifths
-//        if (cof != null) {
-//            arrayOf(cof.CG, cof.GD, cof.DA, cof.AE, cof.EB, cof.BFsharp, cof.FsharpCsharp,
-//                cof.CsharpGsharp, cof.GsharpEflat, cof.EFlatBflat, cof.BflatF, cof.FC)
-//        } else {
-//            arrayOf()
-//        }
-//    }
 
     LazyRow(
         modifier = modifier,
@@ -177,53 +162,16 @@ fun CircleOfFifthTable(
         if (fifthArray.isNotEmpty()) {
             fifthArray.forEach { fifth ->
                 item {
-                    Row(
-                        //modifier = Modifier.height(40.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.graphicsLayer {
+                    NoteWithEnharmonic(
+                        fifth.startNote, //note,
+                        modifier.graphicsLayer {
                             alpha = if(fifth.drawNoteLight) 0.5f else 1f
-                        }
-
-                        //contentAlignment = Alignment.Center
-                    ) {
-                        //Spacer(modifier = Modifier.width(16.dp))
-                        if (fifth.startNote.base != BaseNote.None) {
-                            Note(
-                                fifth.startNote, //note,
-                                notePrintOptions = notePrintOptionsDefault,
-                                withOctave = false,
-                                fontWeight = if (fifth.isRoot) FontWeight.ExtraBold else FontWeight.Normal,
-                                style = noteTypography
-                            )
-                        }
-                        if (fifth.startNote.base != BaseNote.None && fifth.startNote.enharmonicBase != BaseNote.None) {
-                            Text(
-                                "/",
-                                Modifier.padding(horizontal = 2.dp),
-                                fontWeight = if (fifth.isRoot) FontWeight.ExtraBold else FontWeight.Normal,
-                                style = noteTypography
-                            )
-                        }
-                        if (fifth.startNote.enharmonicBase != BaseNote.None) {
-                            Note(
-                                fifth.startNote,
-                                notePrintOptions = notePrintOptionsEnharmonic,
-                                withOctave = false,
-                                fontWeight = if (fifth.isRoot) FontWeight.ExtraBold else FontWeight.Normal,
-                                style = noteTypography
-                            )
-                        }
-//                        Spacer(modifier = Modifier.width(16.dp))
-//                    }
-//                    Note(
-//                        fifth.startNote,
-//                        notePrintOptions = notePrintOptions,
-//                        withOctave = false,
-//                        fontWeight = FontWeight.Bold,
-//                        style = noteTypography
-//                    )
-                    }
+                        },
+                        notePrintOptions = notePrintOptions,
+                        withOctave = false,
+                        fontWeight = if (fifth.isRoot) FontWeight.ExtraBold else FontWeight.Normal,
+                        style = noteTypography
+                    )
                 }
                 fifth.modification?.let { fifthModification ->
                     item {

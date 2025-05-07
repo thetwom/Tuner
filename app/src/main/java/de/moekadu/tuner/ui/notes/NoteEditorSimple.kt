@@ -50,7 +50,9 @@ fun NoteEditorSimple(
         NoteModifier.entries.map {
             MusicalNote(
                 base = BaseNote.None,
-                modifier = it
+                modifier = it,
+                enharmonicBase = BaseNote.None,
+                enharmonicModifier = it
             )
         }.toTypedArray()
     }
