@@ -29,6 +29,7 @@
     <string name="pitch_history">historie výšky tónu</string>
     <string name="spectrum">spektrum</string>
     <string name="keep_screen_on">Nevypínat displej</string>
+    <string name="display_on_lock_screen">Zobrazení na zamykací obrazovce</string>
     <string name="samples">vzor</string>
     <string name="scientific_mode">Vědecký režim</string>
     <string name="tolerance_in_cents">Tolerance</string>

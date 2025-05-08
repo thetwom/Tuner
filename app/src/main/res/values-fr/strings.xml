@@ -39,6 +39,7 @@
     <string name="pitch_history">historique des hauteurs</string>
     <string name="spectrum">spectre</string>
     <string name="keep_screen_on">Maintenir l’écran allumé</string>
+    <string name="display_on_lock_screen">Afficher sur l\'écran de verrouillage</string>
     <string name="samples">échantillons</string>
     <string name="scientific_mode">Mode scientifique</string>
     <string name="tolerance_in_cents">Tolérance</string>
