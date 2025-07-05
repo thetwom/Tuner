@@ -354,7 +354,7 @@ fun Preferences(
                     name = stringResource(id = R.string.display_on_lock_screen),
                     checked = displayOnLockScreen,
                     onCheckChange = { pref.writeDisplayOnLockScreen(it) },
-                    iconId = R.drawable.ic_screen_on
+                    iconId = R.drawable.ic_lock
                 )
             }
             item {
