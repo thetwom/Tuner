@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,9 +56,8 @@ import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.notedetection.SortedAndDistinctInstrumentStrings
 import de.moekadu.tuner.notedetection.TuningState
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
 import de.moekadu.tuner.ui.instruments.InstrumentButton
 import de.moekadu.tuner.ui.instruments.StringWithInfo
 import de.moekadu.tuner.ui.instruments.Strings
@@ -80,7 +80,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 interface InstrumentTunerData {
-    val musicalScale: StateFlow<MusicalScale>
+    val musicalScale: StateFlow<MusicalScale2>
     val notePrintOptions: StateFlow<NotePrintOptions>
     val toleranceInCents: StateFlow<Int>
 
@@ -113,7 +113,7 @@ interface InstrumentTunerData {
 }
 
 private fun checkInstrumentCompatibility(
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     instrument: Instrument): Boolean {
     if (instrument.isChromatic)
         return true
@@ -202,10 +202,13 @@ fun InstrumentTunerPortrait(
             val notePrintOptionsAsState by data.notePrintOptions.collectAsStateWithLifecycle()
             val toleranceInCentsAsState by data.toleranceInCents.collectAsStateWithLifecycle()
             val instrumentAsState by data.instrument.collectAsStateWithLifecycle()
+            val noteNames by remember { derivedStateOf {
+                musicalScaleAsState.temperament.noteNames(musicalScaleAsState.rootNote)
+            }}
 //        val tickHeightPx = rememberTextLabelHeight(tunerPlotStyle.tickFontStyle)
 //        val tickHeightDp = with(LocalDensity.current) { tickHeightPx.toDp() }
             val noteWidthDp = rememberMaxNoteSize(
-                notes = musicalScaleAsState.noteNames.notes,
+                notes = noteNames.notes,
                 notePrintOptions = notePrintOptionsAsState,
                 fontSize = tunerPlotStyle.stringFontStyle.fontSize,
                 octaveRange = musicalScaleAsState.getNote(
@@ -357,10 +360,13 @@ fun InstrumentTunerLandscape(
         val musicalScaleAsState by data.musicalScale.collectAsStateWithLifecycle()
         val toleranceInCentsAsState by data.toleranceInCents.collectAsStateWithLifecycle()
         val instrumentAsState by data.instrument.collectAsStateWithLifecycle()
+        val noteNames by remember { derivedStateOf {
+            musicalScaleAsState.temperament.noteNames(musicalScaleAsState.rootNote)
+        }}
 //        val tickHeightPx = rememberTextLabelHeight(tunerPlotStyle.tickFontStyle)
 //        val tickHeightDp = with(LocalDensity.current) { tickHeightPx.toDp() }
         val noteWidthDp = rememberMaxNoteSize(
-            notes = musicalScaleAsState.noteNames.notes,
+            notes = noteNames.notes,
             notePrintOptions = notePrintOptionsAsState,
             fontSize = tunerPlotStyle.stringFontStyle.fontSize,
             octaveRange = musicalScaleAsState.getNote(
@@ -498,8 +504,8 @@ fun InstrumentTunerLandscape(
 }
 
 class TestInstrumentTunerData : InstrumentTunerData {
-    override val musicalScale: StateFlow<MusicalScale> = MutableStateFlow(
-        MusicalScaleFactory.createTestEdo12()
+    override val musicalScale: StateFlow<MusicalScale2> = MutableStateFlow(
+        MusicalScale2.createTestEdo12()
     )
 
     override val notePrintOptions: StateFlow<NotePrintOptions>
@@ -507,7 +513,9 @@ class TestInstrumentTunerData : InstrumentTunerData {
     override val toleranceInCents: StateFlow<Int>
             = MutableStateFlow(10)
 
-    private val noteNameScale = musicalScale.value.noteNames
+    private val noteNameScale = musicalScale.value.temperament.noteNames(
+        musicalScale.value.rootNote
+    )
 
     override val instrument: StateFlow<Instrument> = MutableStateFlow(
         Instrument(

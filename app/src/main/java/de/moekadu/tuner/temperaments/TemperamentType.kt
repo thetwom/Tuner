@@ -41,15 +41,15 @@ enum class TemperamentTypeOld {
     // Neidhardt4,
     Valotti,
     Young2,
-    EDO17,
-    EDO19,
-    EDO22,
-    EDO24,
-    EDO27,
-    EDO29,
-    EDO31,
-    EDO41,
-    EDO53,
+//    EDO17,
+//    EDO19,
+//    EDO22,
+//    EDO24,
+//    EDO27,
+//    EDO29,
+//    EDO31,
+//    EDO41,
+//    EDO53,
     Test
 }
 //
@@ -73,15 +73,15 @@ fun TemperamentTypeOld.resourceId() = when(this) {
     TemperamentTypeOld.Neidhardt3 -> R.string.neidhardt3
     TemperamentTypeOld.Valotti -> R.string.valotti
     TemperamentTypeOld.Young2 -> R.string.young2
-    TemperamentTypeOld.EDO17 -> R.string.equal_temperament_17
-    TemperamentTypeOld.EDO19 -> R.string.equal_temperament_19
-    TemperamentTypeOld.EDO22 -> R.string.equal_temperament_22
-    TemperamentTypeOld.EDO24 -> R.string.equal_temperament_24
-    TemperamentTypeOld.EDO27 -> R.string.equal_temperament_27
-    TemperamentTypeOld.EDO29 -> R.string.equal_temperament_29
-    TemperamentTypeOld.EDO31 -> R.string.equal_temperament_31
-    TemperamentTypeOld.EDO41 -> R.string.equal_temperament_41
-    TemperamentTypeOld.EDO53 -> R.string.equal_temperament_53
+//    TemperamentTypeOld.EDO17 -> R.string.equal_temperament_17
+//    TemperamentTypeOld.EDO19 -> R.string.equal_temperament_19
+//    TemperamentTypeOld.EDO22 -> R.string.equal_temperament_22
+//    TemperamentTypeOld.EDO24 -> R.string.equal_temperament_24
+//    TemperamentTypeOld.EDO27 -> R.string.equal_temperament_27
+//    TemperamentTypeOld.EDO29 -> R.string.equal_temperament_29
+//    TemperamentTypeOld.EDO31 -> R.string.equal_temperament_31
+//    TemperamentTypeOld.EDO41 -> R.string.equal_temperament_41
+//    TemperamentTypeOld.EDO53 -> R.string.equal_temperament_53
     TemperamentTypeOld.Test -> R.string.test_tuning
 }
 //

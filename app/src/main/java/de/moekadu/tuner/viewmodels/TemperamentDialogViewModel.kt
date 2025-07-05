@@ -2,17 +2,16 @@ package de.moekadu.tuner.viewmodels
 
 import androidx.compose.runtime.IntState
 import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.moekadu.tuner.hilt.ApplicationScope
-import de.moekadu.tuner.temperaments.NoteNames
-import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.temperaments.Temperament3
 import de.moekadu.tuner.temperaments.TemperamentResources
-import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
 import de.moekadu.tuner.ui.temperaments.TemperamentDialogState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -26,30 +25,32 @@ class TemperamentDialogViewModel  @Inject constructor(
     private val initialMusicalScale = pref.musicalScale.value
 
     private val _temperament = mutableStateOf(initialMusicalScale.temperament)
-    override val temperament: State<Temperament> get() = _temperament
+    override val temperament: State<Temperament3> get() = _temperament
 
-    private val _noteNames = mutableStateOf(initialMusicalScale.noteNames)
-    override val noteNames: State<NoteNames> get() = _noteNames
+//    private val _noteNames = mutableStateOf(initialMusicalScale.noteNames)
+//    override val noteNames: State<NoteNames> get() = _noteNames
 
-    override val defaultTemperament: TemperamentWithNoteNames get() = pref.defaultTemperament
+    override val defaultTemperament: Temperament3 get() = pref.defaultTemperament
+
+    override val rootNotes = derivedStateOf { temperament.value.possibleRootNotes() }
 
     private val _selectedRootNoteIndex = mutableIntStateOf(
-        initialMusicalScale.noteNames.getNoteIndex(initialMusicalScale.rootNote)
+        rootNotes.value
+            .indexOfFirst { it.equalsIgnoreOctave(initialMusicalScale.rootNote) }
             .coerceAtLeast(0)
     )
     override val selectedRootNoteIndex: IntState get() = _selectedRootNoteIndex
 
-    override fun setNewTemperament(temperamentWithNoteNames: TemperamentWithNoteNames) {
+    override fun setNewTemperament(temperament: Temperament3) {
         val oldRootNoteIndex = selectedRootNoteIndex.intValue
-        val oldRootNote = noteNames.value[oldRootNoteIndex]
-        val newNoteNames = temperamentWithNoteNames.noteNames
-            ?: getSuitableNoteNames(temperamentWithNoteNames.temperament.numberOfNotesPerOctave)!!
+        val oldRootNote = rootNotes.value[oldRootNoteIndex]
+        val newNoteNames = temperament.possibleRootNotes()
 
-        _selectedRootNoteIndex.intValue =
-            newNoteNames.getNoteIndex(oldRootNote).coerceAtLeast(0)
+        _selectedRootNoteIndex.intValue = newNoteNames
+            .indexOfFirst { it.equalsIgnoreOctave(oldRootNote) }
+            .coerceAtLeast(0)
 
-        _temperament.value = temperamentWithNoteNames.temperament
-        _noteNames.value = newNoteNames
+        _temperament.value = temperament
     }
 
     override fun selectRootNote(index: Int) {

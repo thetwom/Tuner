@@ -16,11 +16,10 @@ android {
         applicationId = "de.moekadu.tuner"
         minSdk = 23
         targetSdk = 35
-        versionCode = 42
-        versionName = "7.1.2"
+        versionCode = 44
+        versionName = "8.0.0"
         testInstrumentationRunner =  "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
-        resourceConfigurations += listOf("cs", "de", "en", "fr", "zh-rCN")
     }
     buildTypes {
         release {

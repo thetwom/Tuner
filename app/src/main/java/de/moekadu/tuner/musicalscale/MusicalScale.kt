@@ -16,12 +16,19 @@
 * You should have received a copy of the GNU General Public License
 * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
 */
-package de.moekadu.tuner.temperaments
+package de.moekadu.tuner.musicalscale
 
 import androidx.compose.runtime.Immutable
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteNames
+import de.moekadu.tuner.stretchtuning.StretchTuning
+import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.Temperament3
+import de.moekadu.tuner.temperaments.predefinedTemperamentEDO
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
+/** Old musical scale class. */
 @Serializable
 @Immutable
 data class MusicalScale(
@@ -34,16 +41,58 @@ data class MusicalScale(
     val frequencyMax: Float,
     val stretchTuning: StretchTuning
 ) {
+    fun toNew(): MusicalScale2 {
+        val newTemperament = temperament.toNew(noteNames)
+        val possibleRootNames = newTemperament.possibleRootNotes()
+        val _rootNote = possibleRootNames.firstOrNull {
+            it.match(rootNote, ignoreOctave = true)
+        }
+        val _noteNames = newTemperament.noteNames(_rootNote)
+        val _referenceNote = if (_noteNames.hasNote(referenceNote))
+            referenceNote
+        else
+            _noteNames.defaultReferenceNote
+        return MusicalScale2(
+            temperament = temperament.toNew(noteNames),
+            _rootNote = _rootNote,
+            _referenceNote = _referenceNote,
+            referenceFrequency = referenceFrequency,
+            frequencyMin = frequencyMin,
+            frequencyMax = frequencyMax,
+            _stretchTuning = stretchTuning
+        )
+    }
+}
+
+@Serializable
+@Immutable
+data class MusicalScale2(
+    val temperament: Temperament3,
+    val _rootNote: MusicalNote?,
+    val _referenceNote: MusicalNote?,
+    val referenceFrequency: Float,
+    val frequencyMin: Float,
+    val frequencyMax: Float,
+    val _stretchTuning: StretchTuning?
+) {
     @Transient
-    val numberOfNotesPerOctave: Int = temperament.cents.size - 1
+    val numberOfNotesPerOctave = temperament.size
 
     @Transient
-    private val noteNameScale = MusicalScaleNoteNames(noteNames, referenceNote)
+    private val noteNameScale
+            = MusicalScaleNoteNames2(temperament.noteNames(_rootNote), _referenceNote)
+
+    val rootNote get() = noteNameScale.noteNames[0]
+
+    val referenceNote get() = noteNameScale.referenceNote
 
     @Transient
-    val musicalScaleFrequencies = MusicalScaleFrequencies.create(
-        temperament.cents,
-        computeReferenceNoteIndexWithinOctave(),
+    val stretchTuning = _stretchTuning ?: StretchTuning()
+
+    @Transient
+    private val musicalScaleFrequencies = MusicalScaleFrequencies.create(
+        temperament.cents(),
+        noteNameScale.referenceNoteIndexWithinOctave,
         referenceFrequency,
         frequencyMin,
         frequencyMax,
@@ -56,10 +105,6 @@ data class MusicalScale(
     /** Last note index (excluded). */
     @Transient
     val noteIndexEnd: Int = musicalScaleFrequencies.indexEnd
-
-    init {
-        assert(numberOfNotesPerOctave == noteNames.size)
-    }
 
     /** Obtain note representation based on class internal note index.
      * @param noteIndex Local index of note (noteIndexBegin <= noteIndex < noteIndexEnd).
@@ -110,16 +155,38 @@ data class MusicalScale(
      * @param note Musical note representation.
      * @return Local index of the note or Int.MAX_VALUE if not does not exist in scale.
      */
-    fun getNoteIndex(note: MusicalNote): Int {
-        return noteNameScale.getIndexOfNote(note)
+    fun getNoteIndex2(note: MusicalNote): Int {
+        return noteNameScale.getNoteIndex(note)
     }
 
-    private fun computeReferenceNoteIndexWithinOctave(): Int {
-        val rootNoteIndex = noteNameScale.getIndexOfNote(rootNote.copy(octave = referenceNote.octave))
-        return if (rootNoteIndex <= 0) {
-            -rootNoteIndex
-        } else {
-            numberOfNotesPerOctave - rootNoteIndex
+    /** Get indices of matching notes.
+     * @note "Match means that any combination of enharmonic/non-enharmonic is the same.
+     * @param note Note against we match possible notes.
+     * @return Indices relative to reference note, which match the given note.
+     */
+    fun getMatchingNoteIndices(note: MusicalNote): IntArray {
+        return noteNameScale.getMatchingNoteIndices(note)
+    }
+
+    /** Check if the scale has a matching note.
+     * @note "Match means that any combination of enharmonic/non-enharmonic is the same.
+     */
+    fun hasMatchingNote(note: MusicalNote?): Boolean {
+        return noteNameScale.hasMatchingNote(note)
+    }
+
+    companion object {
+        fun createTestEdo12(): MusicalScale2 {
+            return MusicalScale2(
+                predefinedTemperamentEDO(12, 1L),
+                _rootNote = null,
+                _referenceNote = null,
+                referenceFrequency = 440f,
+                frequencyMin = 30f,
+                frequencyMax = 18000f,
+                _stretchTuning = null
+            )
         }
     }
 }
+

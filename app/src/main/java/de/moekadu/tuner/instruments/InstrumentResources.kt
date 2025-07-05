@@ -18,6 +18,7 @@
 */
 package de.moekadu.tuner.instruments
 
+import android.util.Log
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -30,6 +31,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -44,9 +46,31 @@ class InstrumentResources @Inject constructor(
 
     val predefinedInstruments = instrumentDatabase.toImmutableList()
 
-    val currentInstrument = store.getSerializablePreferenceFlow(
+//    val currentInstrument = store.getSerializablePreferenceFlow(
+//        CURRENT_INSTRUMENT_KEY, predefinedInstruments[0]
+//    )
+
+    val currentInstrument = store.getTransformablePreferenceFlow(
         CURRENT_INSTRUMENT_KEY, predefinedInstruments[0]
-    )
+    ) {
+        try {
+            val instrument = Json.decodeFromString<Instrument>(it)
+            if (instrument.isPredefined()) {
+                reloadPredefinedInstrumentIfNeeded(instrument, predefinedInstruments)
+            } else {
+                instrument
+            }
+        } catch(ex: IllegalArgumentException) {
+            try {
+                Json.decodeFromString<InstrumentOld>(it).toNew()
+            } catch (ex2: Exception ){
+                predefinedInstruments[0]
+            }
+        } catch(ex: Exception) {
+            instrumentDatabase[0]
+        }
+    }
+
     fun writeCurrentInstrument(instrument: Instrument) {
         applicationScope.launch {
             store.writeSerializablePreference(CURRENT_INSTRUMENT_KEY, instrument)
@@ -179,5 +203,21 @@ class InstrumentResources @Inject constructor(
         private val PREDEFINED_INSTRUMENTS_EXPANDED_KEY = booleanPreferencesKey(
             "predefined instruments expanded"
         )
+    }
+}
+
+private fun reloadPredefinedInstrumentIfNeeded(
+    instrument: Instrument,
+    predefinedInstruments: List<Instrument>
+): Instrument {
+    // if null, we get the string, not the id-based string, for predefined instruments, this
+    // string is a unique identifier.
+    val name = instrument.getNameString(null)
+    return if (name == "") {
+        instrument
+    } else {
+        predefinedInstruments.firstOrNull {
+            it.getNameString(null) == name
+        } ?: instrument
     }
 }

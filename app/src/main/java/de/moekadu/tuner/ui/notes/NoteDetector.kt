@@ -50,9 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
 import androidx.compose.ui.unit.times
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
@@ -110,7 +109,7 @@ class NoteDetectorState {
 @Composable
 fun NoteDetector(
     state: NoteDetectorState,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
     fontSize: TextUnit = TextUnit.Unspecified,
     textStyle: TextStyle? = MaterialTheme.typography.labelLarge,
@@ -128,8 +127,12 @@ fun NoteDetector(
         musicalScale.getNote(musicalScale.noteIndexBegin).octave..musicalScale.getNote(musicalScale.noteIndexEnd - 1).octave
     }
 
+    val noteNames = remember(musicalScale.temperament, musicalScale.rootNote) {
+        musicalScale.temperament.noteNames(musicalScale.rootNote)
+    }
+
     val minSingleNoteSize = rememberMaxNoteSize(
-        notes = musicalScale.noteNames.notes,
+        notes = noteNames.notes,
         notePrintOptions = notePrintOptions,
         fontSize = fontSizeResolved,
         fontWeight = fontWeightResolved,
@@ -198,7 +201,7 @@ fun NoteDetector(
 private fun NoteDetectorPreview() {
     TunerTheme {
         val state = remember { NoteDetectorState() }
-        val musicalScale = remember { MusicalScaleFactory.createTestEdo12() }
+        val musicalScale = remember { MusicalScale2.createTestEdo12() }
 
         val noteList = remember {
             (20..30).map{ musicalScale.getNote(it) }

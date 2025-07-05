@@ -22,7 +22,7 @@ import android.content.Context
 import android.net.Uri
 import de.moekadu.tuner.BuildConfig
 import de.moekadu.tuner.misc.FileCheck
-import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.notenames.MusicalNote
 import kotlin.math.min
 
 object InstrumentIO {

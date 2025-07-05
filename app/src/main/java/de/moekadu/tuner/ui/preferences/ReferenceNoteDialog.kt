@@ -52,8 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.musicalscale.MusicalScale2
 import de.moekadu.tuner.ui.misc.rememberNumberFormatter
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.NoteSelector
@@ -78,15 +77,15 @@ private fun DecimalFormat.toFloatOrNull(string: String): Float? {
 
 @Composable
 fun ReferenceNoteDialog(
-    initialState: MusicalScale,
-    onReferenceNoteChange: (modifiedState: MusicalScale) -> Unit,
+    initialState: MusicalScale2,
+    onReferenceNoteChange: (modifiedState: MusicalScale2) -> Unit,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     warning: String? = null,
     onDismiss: () -> Unit = {}
 ) {
     var selectedNoteIndex by rememberSaveable { mutableIntStateOf(
-        initialState.getNoteIndex(initialState.referenceNote) - initialState.noteIndexBegin
+        initialState.getNoteIndex2(initialState.referenceNote) - initialState.noteIndexBegin
     ) }
     val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         LocalConfiguration.current.locales[0]
@@ -111,8 +110,9 @@ fun ReferenceNoteDialog(
                     val note = initialState.getNote(selectedNoteIndex + initialState.noteIndexBegin)
                     onReferenceNoteChange(
                         initialState.copy(
-                            referenceNote = note,
-                            referenceFrequency = frequencyAsString.toFloatOrNull() ?: initialState.referenceFrequency
+                            _referenceNote = note,
+                            referenceFrequency = numberFormat.toFloatOrNull(frequencyAsString)
+                                ?: initialState.referenceFrequency
                         )
                     )
                 },
@@ -174,8 +174,8 @@ fun ReferenceNoteDialog(
                 )
                 OutlinedButton(
                     onClick = {
-                        val note = initialState.noteNames.defaultReferenceNote
-                        selectedNoteIndex = initialState.getNoteIndex(note) - initialState.noteIndexBegin
+                        val note = initialState.temperament.noteNames(initialState.rootNote).defaultReferenceNote
+                        selectedNoteIndex = initialState.getNoteIndex2(note) - initialState.noteIndexBegin
                         frequencyAsString = decimalFormat.format(PreferenceResources.ReferenceFrequencyDefault)
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -191,7 +191,7 @@ fun ReferenceNoteDialog(
 @Composable
 private fun AppearanceDialogTest() {
     TunerTheme {
-        val state = remember { MusicalScaleFactory.createTestEdo12() }
+        val state = remember { MusicalScale2.createTestEdo12() }
         val notePrintOptions = remember { NotePrintOptions() }
         ReferenceNoteDialog(
             state,

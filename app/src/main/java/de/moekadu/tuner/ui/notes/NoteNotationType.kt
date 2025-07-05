@@ -20,8 +20,8 @@ package de.moekadu.tuner.ui.notes
 
 import androidx.annotation.StringRes
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.NoteModifier
+import de.moekadu.tuner.notenames.BaseNote
+import de.moekadu.tuner.notenames.NoteModifier
 
 /** Available note notation types. */
 enum class NotationType(@StringRes val stringResourceId: Int) {
@@ -54,7 +54,7 @@ private val noteResourceIds = mapOf(
     NoteNameStem(BaseNote.F) to R.string.f_note_name,
     NoteNameStem(BaseNote.G) to R.string.g_note_name,
     NoteNameStem(BaseNote.A) to R.string.a_note_name,
-    NoteNameStem(BaseNote.A, NoteModifier.Sharp, BaseNote.B, NoteModifier.Flat) to R.string.asharp_bflat_note_name,
+    NoteNameStem(BaseNote.B, NoteModifier.Flat) to R.string.bflat_note_name,
     NoteNameStem(BaseNote.B) to R.string.b_note_name,
 )
 
@@ -90,31 +90,41 @@ private val noteInternationalResourceIds = mapOf(
 
 private val noteCarnaticResourceIds = mapOf(
     NoteNameStem(BaseNote.C) to R.string.sa_carnatic,
-    NoteNameStem(BaseNote.C, NoteModifier.Sharp, BaseNote.D, NoteModifier.Flat) to R.string.ri1_carnatic,
+    NoteNameStem(BaseNote.C, NoteModifier.Sharp) to R.string.ri1_carnatic,
+    NoteNameStem(BaseNote.D, NoteModifier.Flat) to R.string.ri1_carnatic,
     NoteNameStem(BaseNote.D) to R.string.ri2_carnatic,
-    NoteNameStem(BaseNote.D, NoteModifier.Sharp, BaseNote.E, NoteModifier.Flat) to R.string.ga1_carnatic,
+    NoteNameStem(BaseNote.D, NoteModifier.Sharp) to R.string.ga1_carnatic,
+    NoteNameStem(BaseNote.E, NoteModifier.Flat) to R.string.ga1_carnatic,
     NoteNameStem(BaseNote.E) to R.string.ga2_carnatic,
     NoteNameStem(BaseNote.F) to R.string.ma1_carnatic,
-    NoteNameStem(BaseNote.F, NoteModifier.Sharp, BaseNote.G, NoteModifier.Flat) to R.string.ma2_carnatic,
+    NoteNameStem(BaseNote.F, NoteModifier.Sharp) to R.string.ma2_carnatic,
+    NoteNameStem(BaseNote.G, NoteModifier.Flat) to R.string.ma2_carnatic,
     NoteNameStem(BaseNote.G) to R.string.pa_carnatic,
-    NoteNameStem(BaseNote.G, NoteModifier.Sharp, BaseNote.A, NoteModifier.Flat) to R.string.dha1_carnatic,
+    NoteNameStem(BaseNote.G, NoteModifier.Sharp) to R.string.dha1_carnatic,
+    NoteNameStem(BaseNote.A, NoteModifier.Flat) to R.string.dha1_carnatic,
     NoteNameStem(BaseNote.A) to R.string.dha2_carnatic,
-    NoteNameStem(BaseNote.A, NoteModifier.Sharp, BaseNote.B, NoteModifier.Flat) to R.string.ni1_carnatic,
+    NoteNameStem(BaseNote.A, NoteModifier.Sharp) to R.string.ni1_carnatic,
+    NoteNameStem(BaseNote.B, NoteModifier.Flat) to R.string.ni1_carnatic,
     NoteNameStem(BaseNote.B) to R.string.ni2_carnatic,
 )
 
 private val noteHindustaniResourceIds = mapOf(
     NoteNameStem(BaseNote.C) to R.string.sa_hindustani,
-    NoteNameStem(BaseNote.C, NoteModifier.Sharp, BaseNote.D, NoteModifier.Flat) to R.string.re1_hindustani,
+    NoteNameStem(BaseNote.C, NoteModifier.Sharp) to R.string.re1_hindustani,
+    NoteNameStem(BaseNote.D, NoteModifier.Flat) to R.string.re1_hindustani,
     NoteNameStem(BaseNote.D) to R.string.re2_hindustani,
-    NoteNameStem(BaseNote.D, NoteModifier.Sharp, BaseNote.E, NoteModifier.Flat) to R.string.ga1_hindustani,
+    NoteNameStem(BaseNote.D, NoteModifier.Sharp) to R.string.ga1_hindustani,
+    NoteNameStem(BaseNote.E, NoteModifier.Flat) to R.string.ga1_hindustani,
     NoteNameStem(BaseNote.E) to R.string.ga2_hindustani,
     NoteNameStem(BaseNote.F) to R.string.ma1_hindustani,
-    NoteNameStem(BaseNote.F, NoteModifier.Sharp, BaseNote.G, NoteModifier.Flat) to R.string.ma2_hindustani,
+    NoteNameStem(BaseNote.F, NoteModifier.Sharp) to R.string.ma2_hindustani,
+    NoteNameStem(BaseNote.G, NoteModifier.Flat) to R.string.ma2_hindustani,
     NoteNameStem(BaseNote.G) to R.string.pa_hindustani,
-    NoteNameStem(BaseNote.G, NoteModifier.Sharp, BaseNote.A, NoteModifier.Flat) to R.string.dha1_hindustani,
+    NoteNameStem(BaseNote.G, NoteModifier.Sharp) to R.string.dha1_hindustani,
+    NoteNameStem(BaseNote.A, NoteModifier.Flat) to R.string.dha1_hindustani,
     NoteNameStem(BaseNote.A) to R.string.dha2_hindustani,
-    NoteNameStem(BaseNote.A, NoteModifier.Sharp, BaseNote.B, NoteModifier.Flat) to R.string.ni1_hindustani,
+    NoteNameStem(BaseNote.A, NoteModifier.Sharp) to R.string.ni1_hindustani,
+    NoteNameStem(BaseNote.B, NoteModifier.Flat) to R.string.ni1_hindustani,
     NoteNameStem(BaseNote.B) to R.string.ni2_hindustani,
 )
 

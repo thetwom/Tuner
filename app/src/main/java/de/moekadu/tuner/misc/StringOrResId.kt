@@ -63,4 +63,12 @@ data class StringOrResId(
             throw RuntimeException("StringOrResId: No valid string available.")
         }
     }
+
+    fun toGetText(): GetText {
+        return if (resId != null)
+            GetTextFromResId(resId)
+        else
+            GetTextFromString(string ?: "")
+
+    }
 }

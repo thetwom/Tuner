@@ -58,10 +58,9 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
+import de.moekadu.tuner.notenames.NoteNamesEDOGenerator
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlin.math.absoluteValue
 
@@ -223,7 +222,7 @@ fun NoteSelector(
 @Composable
 fun NoteSelector(
     selectedIndex: Int,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     fontSize: TextUnit = TextUnit.Unspecified,
@@ -241,8 +240,12 @@ fun NoteSelector(
         musicalScale.getNote(musicalScale.noteIndexBegin).octave .. musicalScale.getNote(musicalScale.noteIndexEnd-1).octave
     }
 
+    val noteNames = remember(musicalScale.temperament, musicalScale.rootNote) {
+        musicalScale.temperament.noteNames(musicalScale.rootNote)
+    }
+
     val minSingleNoteSize = rememberMaxNoteSize(
-        notes = musicalScale.noteNames.notes,
+        notes = noteNames.notes,
         notePrintOptions = notePrintOptions,
         fontSize = fontSizeResolved,
         fontWeight = fontWeightResolved,
@@ -289,7 +292,7 @@ fun NoteSelector(
 @Composable
 private fun NoteSelectorPreview() {
     TunerTheme {
-        val noteNameScale = remember { getSuitableNoteNames(53) }
+        val noteNameScale = remember { NoteNamesEDOGenerator.getNoteNames(53, null) }
 
         val notePrintOptions = remember {
             NotePrintOptions(
@@ -318,7 +321,7 @@ private fun NoteSelectorPreview() {
 @Composable
 private fun NoteSelector2Preview() {
     TunerTheme {
-        val musicalScale = remember { MusicalScaleFactory.createTestEdo12() }
+        val musicalScale = remember { MusicalScale2.createTestEdo12() }
 
         val notePrintOptions = remember {
             NotePrintOptions(

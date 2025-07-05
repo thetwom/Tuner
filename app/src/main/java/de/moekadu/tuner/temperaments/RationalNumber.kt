@@ -112,6 +112,12 @@ data class RationalNumber(var numerator: Int, var denominator: Int) {
         return result
     }
 
+    operator fun div(other: RationalNumber): RationalNumber {
+        val result = RationalNumber(numerator * other.denominator, denominator * other.numerator)
+        result.reduce()
+        return result
+    }
+
     operator fun div(other: Int): RationalNumber {
         val result = RationalNumber(numerator, denominator * other)
         result.reduce()

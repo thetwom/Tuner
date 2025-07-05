@@ -32,8 +32,8 @@ import de.moekadu.tuner.notedetection.FrequencyEvaluator
 import de.moekadu.tuner.notedetection.launchSoundSourceJob
 import de.moekadu.tuner.notedetection.testFunction
 import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
@@ -57,7 +57,7 @@ import kotlinx.coroutines.withContext
 class Tuner(
     private val pref: PreferenceResources,
     private var instrument: StateFlow<Instrument>,
-    private var musicalScale: StateFlow<MusicalScale>,
+    private var musicalScale: StateFlow<MusicalScale2>,
     private val scope: CoroutineScope,
     private val onResultAvailableListener: OnResultAvailableListener
 ) {

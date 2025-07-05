@@ -18,14 +18,20 @@
 */
 package de.moekadu.tuner.temperaments
 
-import android.content.Context
 import android.util.Log
+import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dagger.hilt.android.qualifiers.ApplicationContext
 import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.misc.DefaultValues
 import de.moekadu.tuner.misc.ResourcesDataStoreBase
+import de.moekadu.tuner.R
+import de.moekadu.tuner.musicalscale.MusicalScale
+import de.moekadu.tuner.musicalscale.MusicalScale2
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.stretchtuning.StretchTuning
+import de.moekadu.tuner.ui.common.EditableListPredefinedSection
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -37,6 +43,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.random.Random
 
+
 @Singleton
 class TemperamentResources @Inject constructor(
     @ApplicationContext context: Context,
@@ -44,36 +51,95 @@ class TemperamentResources @Inject constructor(
 ){
     val store = ResourcesDataStoreBase(context, "temperaments")
 
-    val predefinedTemperaments = temperamentDatabase
-        .map { TemperamentWithNoteNames(it, null) }
-        .toImmutableList()
+    val predefinedTemperaments = predefinedTemperaments().toImmutableList()
+
+    val edoTemperamentsExpanded = store.getPreferenceFlow(
+        EDO_TEMPERAMENTS_EXPANDED_KEY, EdoTemperamentsExpandedDefault
+    )
+    val edoTemperaments = object : EditableListPredefinedSection<Temperament3> {
+        private val minEdo = 5
+        private val maxEdo = 72
+        private val minPredefinedKey = predefinedTemperaments.minOf { it.stableId }
+        override val sectionStringResourceId = R.string.edo_temperaments
+        override val size = maxEdo - minEdo + 1
+        override fun get(index: Int): Temperament3EDO {
+            val edo = minEdo + index
+            return predefinedTemperamentEDO(edo, minPredefinedKey - 1 -index)
+        }
+
+        override val isExpanded get() = edoTemperamentsExpanded
+        override val toggleExpanded: (isExpanded: Boolean) -> Unit = {
+            writeEdoTemperamentsExpanded(it)
+        }
+    }
+
     val defaultTemperament = predefinedTemperaments.first {
-        it.temperament.equalOctaveDivision == 12
+        it.equalOctaveDivision() == 12
     }
 
     val customTemperaments = store.getTransformablePreferenceFlow(
         CUSTOM_TEMPERAMENTS_KEY, CustomTemperamentsDefault
     ) {
         try {
-            Json.decodeFromString<Array<TemperamentWithNoteNames>>(it).toList().toPersistentList()
-        } catch(ex: Exception) {
+            Json.decodeFromString<Array<Temperament3Custom>>(it).toList().toPersistentList()
+        } catch(ex: IllegalArgumentException) {
+            try {
+                Json.decodeFromString<Array<TemperamentWithNoteNames>>(it)
+                    .map { old -> old.toNew() }.toPersistentList()
+            } catch (ex: Exception) {
+                CustomTemperamentsDefault
+            }
+        } catch (ex: Exception){
             CustomTemperamentsDefault
         }
     }
 
-    val musicalScale = store.getSerializablePreferenceFlow(
-        MUSICAL_SCALE_KEY,
-        MusicalScaleFactory.create(
-            defaultTemperament.temperament,
-            noteNames = getSuitableNoteNames(defaultTemperament.temperament.numberOfNotesPerOctave),
-            referenceNote = null,
-            rootNote = null,
-            referenceFrequency = DefaultValues.REFERENCE_FREQUENCY,
-            frequencyMin = DefaultValues.FREQUENCY_MIN,
-            frequencyMax = DefaultValues.FREQUENCY_MAX,
-            stretchTuning = StretchTuning()
-        )
+    private val musicalScaleDefault = MusicalScale2(
+        temperament = defaultTemperament,
+        _rootNote = null,
+        _referenceNote = null,
+        referenceFrequency = DefaultValues.REFERENCE_FREQUENCY,
+        frequencyMin = DefaultValues.FREQUENCY_MIN,
+        frequencyMax = DefaultValues.FREQUENCY_MAX,
+        _stretchTuning = null
     )
+    val musicalScale = store.getTransformablePreferenceFlow(MUSICAL_SCALE_KEY, musicalScaleDefault) {
+        try {
+            // the "reload" will reload a temperament if it is a predefined temperament.
+            // this ensures that all string resources are updated correctly. For custom instruments
+            // this will just return the musical scale as it is.
+            reloadPredefinedTemperamentIfNeeded(
+                musicalScale = Json.decodeFromString<MusicalScale2>(it),
+                predefinedTemperaments = predefinedTemperaments
+            )
+        } catch(ex: IllegalArgumentException) {
+            try {
+//                Log.v("Tuner", "TemperamentResources: Trying to load old format scale")
+                reloadPredefinedTemperamentIfNeeded(
+                    musicalScale = Json.decodeFromString<MusicalScale>(it).toNew(),
+                    predefinedTemperaments = predefinedTemperaments
+                )
+            } catch (ex: Exception) {
+                musicalScaleDefault
+            }
+        } catch (ex: Exception){
+            musicalScaleDefault
+        }
+
+    }
+//    val musicalScale = store.getSerializablePreferenceFlow(
+//        MUSICAL_SCALE_KEY,
+//        MusicalScaleFactory.create(
+//            defaultTemperament.temperament,
+//            noteNames = generateNoteNames(defaultTemperament.temperament.numberOfNotesPerOctave),
+//            referenceNote = null,
+//            rootNote = null,
+//            referenceFrequency = DefaultValues.REFERENCE_FREQUENCY,
+//            frequencyMin = DefaultValues.FREQUENCY_MIN,
+//            frequencyMax = DefaultValues.FREQUENCY_MAX,
+//            stretchTuning = StretchTuning()
+//        )
+//    )
 
     val customTemperamentsExpanded = store.getPreferenceFlow(
         CUSTOM_TEMPERAMENTS_EXPANDED_KEY, CustomTemperamentsExpandedDefault
@@ -81,8 +147,7 @@ class TemperamentResources @Inject constructor(
 
     fun resetAllSettings() {
         applicationScope.launch {
-             val noteNames = defaultTemperament.noteNames
-                 ?: getSuitableNoteNames(defaultTemperament.temperament.numberOfNotesPerOctave)!!
+            val noteNames = defaultTemperament.noteNames(null)
             writeMusicalScale(
                 temperament = defaultTemperament,
                 referenceNote = noteNames.defaultReferenceNote,
@@ -90,6 +155,12 @@ class TemperamentResources @Inject constructor(
                 referenceFrequency = DefaultValues.REFERENCE_FREQUENCY,
                 stretchTuning = StretchTuning()
             )
+        }
+    }
+
+    fun writeEdoTemperamentsExpanded(expanded: Boolean) {
+        applicationScope.launch {
+            store.writePreference(EDO_TEMPERAMENTS_EXPANDED_KEY, expanded)
         }
     }
 
@@ -108,62 +179,62 @@ class TemperamentResources @Inject constructor(
         }
     }
 
-    fun writeMusicalScale(musicalScale: MusicalScale) {
+    fun writeMusicalScale(musicalScale: MusicalScale2) {
         applicationScope.launch {
             store.writeSerializablePreference(MUSICAL_SCALE_KEY, musicalScale)
         }
     }
 
     fun writeMusicalScale(
-        temperament: TemperamentWithNoteNames? = null,
+        temperament: Temperament3? = null,
         referenceNote: MusicalNote? = null,
         rootNote: MusicalNote? = null,
         referenceFrequency: Float? = null,
         stretchTuning: StretchTuning? = null
     ) {
         val currentMusicalScale = musicalScale.value
-        val temperamentResolved = temperament?.temperament ?: currentMusicalScale.temperament
-        val noteNamesResolved = if (temperament?.noteNames != null) {
-            temperament.noteNames
-        } else if (currentMusicalScale.numberOfNotesPerOctave == temperamentResolved.numberOfNotesPerOctave) {
-            currentMusicalScale.noteNames
-        } else {
-            getSuitableNoteNames(temperamentResolved.numberOfNotesPerOctave)
-        }
-        val referenceNoteResolved = if (referenceNote != null) {
-            referenceNote
-        } else if (noteNamesResolved?.hasNote(currentMusicalScale.referenceNote) == true) {
-            currentMusicalScale.referenceNote
-        } else {
-            null
-        }
+        val temperamentResolved = temperament ?: currentMusicalScale.temperament
+
         val rootNoteResolved = if (rootNote != null) {
             rootNote
-        } else if (noteNamesResolved?.hasNote(currentMusicalScale.rootNote) == true) {
-            currentMusicalScale.rootNote
         } else {
-            null
+            val possibleRootNotes = temperamentResolved.possibleRootNotes()
+            if (possibleRootNotes.contains(currentMusicalScale.rootNote)) {
+                currentMusicalScale.rootNote
+            } else {
+                temperamentResolved.noteNames(null)[0]
+            }
         }
+
+        val referenceNoteResolved = if (referenceNote != null) {
+            referenceNote
+        } else {
+            val noteNames = temperamentResolved.noteNames(rootNoteResolved)
+            if (noteNames.hasNote(currentMusicalScale.referenceNote))
+                currentMusicalScale.referenceNote
+            else
+                noteNames.defaultReferenceNote
+        }
+
 //        Log.v("Tuner", "TemperamentResources:writeMusicalScale: ofmin=${currentMusicalScale.frequencyMin}, ofmax=${currentMusicalScale.frequencyMax}")
-        val newMusicalScale = MusicalScaleFactory.create(
+        val newMusicalScale = MusicalScale2(
             temperament = temperamentResolved,
-            noteNames = noteNamesResolved,
-            referenceNote = referenceNoteResolved,
-            rootNote = rootNoteResolved,
+            _rootNote = rootNoteResolved,
+            _referenceNote = referenceNoteResolved,
             referenceFrequency = referenceFrequency ?: currentMusicalScale.referenceFrequency,
             frequencyMin = currentMusicalScale.frequencyMin,
             frequencyMax = currentMusicalScale.frequencyMax,
-            stretchTuning = stretchTuning ?: currentMusicalScale.stretchTuning
+            _stretchTuning = stretchTuning ?: currentMusicalScale.stretchTuning
         )
         applicationScope.launch {
             store.writeSerializablePreference(MUSICAL_SCALE_KEY, newMusicalScale)
         }
     }
 
-    fun writeCustomTemperaments(temperaments: List<TemperamentWithNoteNames>) {
+    fun writeCustomTemperaments(temperaments: List<Temperament3Custom>) {
 //        Log.v("Tuner", "TemperamentResources.writeCustomTemperaments: $temperaments")
         val currentMusicalScale = musicalScale.value
-        // if current temperament did change, update this also
+        // if currently active temperament did change, update this also
         val currentTemperamentId = currentMusicalScale.temperament.stableId
         val modifiedCurrentTemperament = temperaments.firstOrNull {
             it.stableId == currentTemperamentId
@@ -179,9 +250,9 @@ class TemperamentResources @Inject constructor(
     }
 
     /** Add temperament if stable id does not exist, else replace it.*/
-    fun addNewOrReplaceTemperament(temperament: TemperamentWithNoteNames) {
-        val newTemperament = if (temperament.stableId == Temperament.NO_STABLE_ID) {
-            temperament.clone(getNewStableId())
+    fun addNewOrReplaceTemperament(temperament: Temperament3Custom) {
+        val newTemperament = if (temperament.stableId == Temperament3.NO_STABLE_ID) {
+            temperament.copy(stableId = getNewStableId())
         } else {
             temperament
         }
@@ -198,43 +269,43 @@ class TemperamentResources @Inject constructor(
         writeCustomTemperaments(newTemperaments)
     }
 
-    fun appendTemperaments(temperaments: List<TemperamentWithNoteNames>) {
+    fun appendTemperaments(temperaments: List<Temperament3Custom>) {
         val current = this.customTemperaments.value
         val newTemperamentsList = current.mutate { modified ->
             temperaments.forEach {
                 val newKey = getNewStableId(modified)
-                modified.add(it.clone(newKey))
+                modified.add(it.copy(stableId = newKey))
             }
         }
-        Log.v("Tuner", "TemperamentResources.appendTemperaments: size=${temperaments.size}")
+//        Log.v("Tuner", "TemperamentResources.appendTemperaments: size=${temperaments.size}")
         writeCustomTemperaments(newTemperamentsList)
     }
 
-    fun prependTemperaments(temperaments: List<TemperamentWithNoteNames>) {
+    fun prependTemperaments(temperaments: List<Temperament3Custom>) {
         val current = this.customTemperaments.value
         val newTemperamentsList = current.mutate { modified ->
             temperaments.forEachIndexed { index, temperament ->
                 val newKey = getNewStableId(modified)
-                modified.add(index, temperament.clone(newKey))
+                modified.add(index, temperament.copy(stableId = newKey))
             }
         }
         writeCustomTemperaments(newTemperamentsList)
     }
 
-    fun replaceTemperaments(temperaments: List<TemperamentWithNoteNames>) {
+    fun replaceTemperaments(temperaments: List<Temperament3Custom>) {
         var key = 0L
         val currentKey = musicalScale.value.temperament.stableId
         val newTemperamentsList = temperaments.map {
             ++key
             if (key == currentKey)
                 ++key
-            it.clone(key)
+            it.copy(stableId = key)
         }
         writeCustomTemperaments(newTemperamentsList)
     }
 
     private fun getNewStableId(
-        existingTemperaments: List<TemperamentWithNoteNames> = customTemperaments.value
+        existingTemperaments: List<Temperament3> = customTemperaments.value
     ): Long {
         val currentKey = musicalScale.value.temperament.stableId
         while (true) {
@@ -245,12 +316,14 @@ class TemperamentResources @Inject constructor(
     }
 
     companion object {
-        private val CustomTemperamentsDefault = persistentListOf<TemperamentWithNoteNames>()
+        private val CustomTemperamentsDefault = persistentListOf<Temperament3Custom>()
+        private const val EdoTemperamentsExpandedDefault = true
         private const val CustomTemperamentsExpandedDefault = true
         private const val PredefinedTemperamentsExpandedDefault = true
 
         private val MUSICAL_SCALE_KEY= stringPreferencesKey("musical scale")
         private val CUSTOM_TEMPERAMENTS_KEY = stringPreferencesKey("custom temperaments")
+
 
         private val CUSTOM_TEMPERAMENTS_EXPANDED_KEY = booleanPreferencesKey(
             "custom temperaments expanded"
@@ -259,5 +332,39 @@ class TemperamentResources @Inject constructor(
         private val PREDEFINED_TEMPERAMENTS_EXPANDED_KEY = booleanPreferencesKey(
             "predefined temperaments expanded"
         )
+
+        private val EDO_TEMPERAMENTS_EXPANDED_KEY = booleanPreferencesKey(
+            "edo temperaments expanded"
+        )
+    }
+}
+
+private fun reloadPredefinedTemperamentIfNeeded(
+    musicalScale: MusicalScale2,
+    predefinedTemperaments: List<Temperament3>
+): MusicalScale2 {
+    val identifier = when(musicalScale.temperament) {
+        is Temperament3ChainOfFifthsNoEnharmonics -> musicalScale.temperament.uniqueIdentifier
+        is Temperament3ChainOfFifthsEDONames -> musicalScale.temperament.uniqueIdentifier
+        is Temperament3Custom -> null
+        is Temperament3EDO -> null
+        is Temperament3RationalNumbersEDONames -> musicalScale.temperament.uniqueIdentifier
+    }
+    return if (identifier != null) {
+        val reloadedTemperament = predefinedTemperaments.firstOrNull { temperament ->
+            when (temperament) {
+                is Temperament3ChainOfFifthsNoEnharmonics -> temperament.uniqueIdentifier == identifier
+                is Temperament3ChainOfFifthsEDONames -> temperament.uniqueIdentifier == identifier
+                is Temperament3Custom -> false
+                is Temperament3EDO -> false
+                is Temperament3RationalNumbersEDONames -> temperament.uniqueIdentifier == identifier
+            }
+        }
+        if (reloadedTemperament != null)
+            musicalScale.copy(temperament = reloadedTemperament)
+        else
+            musicalScale
+    } else {
+        musicalScale
     }
 }

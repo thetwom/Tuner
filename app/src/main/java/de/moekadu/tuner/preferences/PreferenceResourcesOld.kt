@@ -22,12 +22,13 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
 import dagger.hilt.android.qualifiers.ApplicationContext
+import de.moekadu.tuner.misc.GetTextFromResId
 import de.moekadu.tuner.notedetection.WindowingFunction
-import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.temperaments.Temperament3
 import de.moekadu.tuner.temperaments.TemperamentTypeOld
+import de.moekadu.tuner.temperaments.predefinedTemperaments
 import de.moekadu.tuner.temperaments.resourceId
-import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
-import de.moekadu.tuner.temperaments.temperamentDatabase
 import de.moekadu.tuner.ui.notes.NotationType
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.notes.NotePrintOptionsOld
@@ -171,16 +172,20 @@ class PreferenceResourcesOld @Inject constructor (
     val referenceNote get() = temperamentAndReferenceNote?.referenceNote
     val rootNote get() = temperamentAndReferenceNote?.rootNote
     val referenceFrequency get() = temperamentAndReferenceNote?.referenceFrequency
-    val temperament: TemperamentWithNoteNames?  get() {
+    val temperament: Temperament3?  get() {
         val temperamentType = temperamentAndReferenceNote?.temperamentType
         val rid = temperamentType?.resourceId()
-        val t = temperamentDatabase.firstOrNull {
-            it.name.resId != null && it.name.resId == rid
+        val predefinedTemperaments = predefinedTemperaments()
+        val t = predefinedTemperaments.firstOrNull {
+            val name = it.name
+            if (name is GetTextFromResId) {
+                name.id == rid
+            } else {
+                false
+            }
         }
-        return if (t == null)
-            null
-        else
-            TemperamentWithNoteNames(t, null)
+
+        return t
     }
 
 //    val musicalScale: MusicalScale? get() = temperamentAndReferenceNote?.let {

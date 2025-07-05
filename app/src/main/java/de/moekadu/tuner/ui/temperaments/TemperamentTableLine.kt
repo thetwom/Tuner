@@ -60,12 +60,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.ConfigurationCompat
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
+import de.moekadu.tuner.notenames.BaseNote
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteModifier
+import de.moekadu.tuner.notenames.NoteNamesEDOGenerator
 import de.moekadu.tuner.temperaments.RationalNumber
 import de.moekadu.tuner.temperaments.centsToFrequency
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
 import de.moekadu.tuner.temperaments.ratioToCents
 import de.moekadu.tuner.ui.notes.NotationType
 import de.moekadu.tuner.ui.notes.Note
@@ -290,7 +290,7 @@ fun TemperamentTableLine(
     val configuration = LocalConfiguration.current
     val locale = ConfigurationCompat.getLocales(configuration).get(0)
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(state) {
         if (state.centOrRatio == null) {
             state.ratio?.let {
                 onValueChange("${it.numerator} / ${it.denominator}")
@@ -524,7 +524,7 @@ fun TemperamentTableLine(
 @Composable
 private fun TemperamentTableLinePreview() {
     TunerTheme {
-        val notes = remember { getSuitableNoteNames(12)!! }
+        val notes = remember { NoteNamesEDOGenerator.getNoteNames(12, null)!! }
 
         Column {
             notes.notes.forEachIndexed { index, note ->

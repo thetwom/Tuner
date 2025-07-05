@@ -1,0 +1,9 @@
+    Aplikacja Tuner do strojenia instrumentów muzycznych z takimi funkcjami jak:
+    * Wykrywanie wysokości dźwięku na podstawie autokorelacji i widma FFT.
+    * Poprawa dokładności poprzez ocenę informacji o fazie widma i dopasowanie wielomianowe.
+    * Wyświetlanie zmian wysokości dźwięku w czasie.
+    * Podstawowa baza danych instrumentów (chromatyczne, gitara, bas, skrzypce, ...)
+    * Wsparcie dla niestandardowych instrumentów
+    * Kilka systemów strojenia, takie jak intonacja jednakowa, intonacja czysta, Werckmeister, Kirnberger, ...
+    * Strojenia inne niż 12-tonowe (EDO 17, 19, ..., 41, 53)
+    * Ustawienia naukowe, takie jak rozmiar okna FFT, typ okna FFT, nakładanie się i inne.

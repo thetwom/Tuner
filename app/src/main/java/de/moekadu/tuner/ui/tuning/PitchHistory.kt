@@ -43,9 +43,8 @@ import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
 import de.moekadu.tuner.notedetection.TuningState
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
 import de.moekadu.tuner.ui.common.Label
 import de.moekadu.tuner.ui.notes.Note
 import de.moekadu.tuner.ui.notes.NotePrintOptions
@@ -157,7 +156,7 @@ class PitchHistoryState(
 @Composable
 fun PitchHistory(
     state: PitchHistoryState,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     gestureBasedViewPort: GestureBasedViewPort = remember { GestureBasedViewPort() },
@@ -215,7 +214,7 @@ fun PitchHistory(
     }
 
     val targetFrequency = remember(musicalScale, targetNote) {
-        val noteIndex = musicalScale.getNoteIndex(targetNote)
+        val noteIndex = musicalScale.getNoteIndex2(targetNote)
         musicalScale.getNoteFrequency(noteIndex)
     }
 
@@ -228,7 +227,7 @@ fun PitchHistory(
         // used to jump the the next target note)
         val visibleRangeInIndices2 = 0.38f
 
-        val targetNoteIndex = musicalScale.getNoteIndex(targetNote)
+        val targetNoteIndex = musicalScale.getNoteIndex2(targetNote)
         val currentFrequency = state.pointCoordinates?.y
 
         val noteIndexRange = if (targetNoteIndex == Int.MAX_VALUE && currentFrequency == null) {
@@ -262,8 +261,12 @@ fun PitchHistory(
         )
     }
 
+    val noteNames = remember(musicalScale.temperament, musicalScale.rootNote) {
+        musicalScale.temperament.noteNames(musicalScale.rootNote)
+    }
+
     val maxNoteHeight = rememberMaxNoteSize(
-        musicalScale.noteNames.notes,
+        noteNames.notes,
         notePrintOptions = notePrintOptions,
         fontSize = tickLabelStyle.fontSize,
         fontWeight = null,
@@ -446,7 +449,7 @@ fun PitchHistory2Preview() {
         val notePrintOptions = remember {
             NotePrintOptions()
         }
-        val musicalScale = remember { MusicalScaleFactory.createTestEdo12() }
+        val musicalScale = remember { MusicalScale2.createTestEdo12() }
         val state = remember {
             PitchHistoryState(
                 capacity = 9

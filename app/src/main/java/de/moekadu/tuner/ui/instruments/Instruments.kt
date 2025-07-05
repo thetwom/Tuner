@@ -23,6 +23,9 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -44,9 +47,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
@@ -55,17 +60,21 @@ import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.misc.ShareData
 import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.misc.toastPotentialFileCheckError
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
+import de.moekadu.tuner.notenames.BaseNote
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteModifier
+import de.moekadu.tuner.ui.common.EditableListPredefinedSectionImmutable
 import de.moekadu.tuner.ui.common.EditableList
 import de.moekadu.tuner.ui.common.EditableListData
+import de.moekadu.tuner.ui.common.EditableListItem
+import de.moekadu.tuner.ui.common.ListItemTask
 import de.moekadu.tuner.ui.common.OverflowMenu
 import de.moekadu.tuner.ui.common.OverflowMenuCallbacks
 import de.moekadu.tuner.ui.misc.TunerScaffoldWithoutBottomBar
 import de.moekadu.tuner.ui.notes.NotePrintOptions
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -90,6 +99,7 @@ fun Instruments(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val maxExpectedHeightForFab = 72.dp
     val listState = rememberLazyListState()
 
     val saveInstrumentLauncher = rememberLauncherForActivityResult(
@@ -226,44 +236,64 @@ fun Instruments(
             SnackbarHost(hostState = snackbarHostState)
         }
     ) { paddingValues ->
+        val layoutDirection = LocalLayoutDirection.current
         EditableList(
-            itemTitle = { Text(it.getNameString(context)) },
-            itemDescription = { instrument ->
-                val style = LocalTextStyle.current
-                val stringsString = remember(context, style, instrument, notePrintOptions) {
-                    instrument.getStringsString(
-                        context = context,
-                        notePrintOptions = notePrintOptions,
-                        fontSize = style.fontSize,
-                        fontWeight = style.fontWeight
-                    )
-                }
-                Text(stringsString)
-            },
-            itemIcon = { instrument ->
-                Icon(
-                    ImageVector.vectorResource(id = instrument.icon.resourceId),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize()
-                )
-            },
-            isItemCopyable = { !it.isChromatic },
-            hasItemInfo = { false },
             state = state.listData,
-            //modifier = Modifier.padding(paddingValues = paddingValues),
             modifier = Modifier.consumeWindowInsets(paddingValues),
-            contentPadding = paddingValues,
+            contentPadding = PaddingValues(
+                start = paddingValues.calculateStartPadding(layoutDirection),
+                end = paddingValues.calculateEndPadding(layoutDirection),
+                top = paddingValues.calculateTopPadding(),
+                bottom = paddingValues.calculateBottomPadding() + maxExpectedHeightForFab
+            ),
             onActivateItemClicked = onInstrumentClicked,
-            onEditItemClicked = onEditInstrumentClicked,
-            snackbarHostState = snackbarHostState,
-            listState = listState
-        )
+            snackbarHostState = snackbarHostState
+        ) { item ,itemInfo, itemModifier ->
+            EditableListItem(
+                title = { Text(item.getNameString(context)) },
+                description = {
+                    val style = LocalTextStyle.current
+                    val stringsString = remember(context, style, item, notePrintOptions) {
+                        item.getStringsString(
+                            context = context,
+                            notePrintOptions = notePrintOptions,
+                            fontSize = style.fontSize,
+                            fontWeight = style.fontWeight
+                        )
+                    }
+                    Text(stringsString)
+                },
+                icon = {
+                    Icon(
+                        ImageVector.vectorResource(id = item.icon.resourceId),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                },
+                modifier = itemModifier,
+                onOptionsClicked = {
+                    when (it) {
+                        ListItemTask.Edit -> onEditInstrumentClicked(item, false)
+                        ListItemTask.Copy -> onEditInstrumentClicked(item, true)
+                        ListItemTask.Delete -> {
+                            state.listData.deleteItems(persistentSetOf(item.stableId))
+                        }
+                        ListItemTask.Info -> {}
+                    }
+                },
+                isActive = itemInfo.isActive,
+                isSelected = itemInfo.isSelected,
+                readOnly = itemInfo.readOnly,
+                isCopyable = !item.isChromatic,
+                hasInfo = false
+            )
+        }
 
     }
 }
 
 private val testInstrument1 = Instrument(
-    name = null,
+    name = "",
     nameResource = R.string.guitar_eadgbe,
     strings = arrayOf(
         MusicalNote(BaseNote.A, NoteModifier.None, octave = 4),
@@ -277,7 +307,7 @@ private val testInstrument1 = Instrument(
 )
 
 private val testInstrument2 = Instrument(
-    name = null,
+    name = "",
     nameResource = R.string.chromatic,
     strings = arrayOf(),
     icon = InstrumentIcon.piano,
@@ -319,15 +349,21 @@ private class TestInstrumentsData : InstrumentsData {
     val customInstrumentsExpanded = MutableStateFlow(true)
 
     override val listData = EditableListData(
+        predefinedItemSections = persistentListOf(
+            EditableListPredefinedSectionImmutable(
+                R.string.predefined_items,
+                predefinedInstruments,
+                predefinedInstrumentsExpanded,
+                { predefinedInstrumentsExpanded.value = it }
+            )
+        ),
         getStableId = { it.stableId },
-        predefinedItems = predefinedInstruments,
+        editableItemsSectionResId = R.string.custom_item,
         editableItems = customInstruments,
-        predefinedItemsExpanded = predefinedInstrumentsExpanded,
         editableItemsExpanded = customInstrumentsExpanded,
-        activeItem = activeInstrument,
+        toggleEditableItemsExpanded = { customInstrumentsExpanded.value = it },
         setNewItems = { customInstruments.value = it },
-        togglePredefinedItemsExpanded = { predefinedInstrumentsExpanded.value = it },
-        toggleEditableItemsExpanded = { customInstrumentsExpanded.value = it }
+        activeItem = activeInstrument
     )
 
     override fun saveInstruments(context: Context, uri: Uri, instruments: List<Instrument>) {}

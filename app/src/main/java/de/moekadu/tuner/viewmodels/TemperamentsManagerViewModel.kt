@@ -7,12 +7,15 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.moekadu.tuner.R
 import de.moekadu.tuner.hilt.ApplicationScope
+import de.moekadu.tuner.temperaments.Temperament3Custom
 import de.moekadu.tuner.temperaments.TemperamentIO
 import de.moekadu.tuner.temperaments.TemperamentResources
-import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
+import de.moekadu.tuner.ui.common.EditableListPredefinedSectionImmutable
 import de.moekadu.tuner.ui.common.EditableListData
 import de.moekadu.tuner.ui.temperaments.TemperamentsManagerData
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,28 +34,38 @@ class TemperamentsManagerViewModel @AssistedInject constructor(
 
     private val activeTemperament = MutableStateFlow(
         pref.predefinedTemperaments.firstOrNull {
-            it.temperament.stableId == initialTemperamentKey
+            it.stableId == initialTemperamentKey
         } ?: pref.customTemperaments.value.firstOrNull {
-            it.temperament.stableId == initialTemperamentKey
+            it.stableId == initialTemperamentKey
         }
     )
 
     override val listData = EditableListData(
-        predefinedItems = pref.predefinedTemperaments,
+        predefinedItemSections = persistentListOf(
+            pref.edoTemperaments,
+            EditableListPredefinedSectionImmutable(
+                sectionStringResourceId = R.string.other_temperaments,
+                items = pref.predefinedTemperaments,
+                isExpanded = pref.predefinedTemperamentsExpanded,
+                toggleExpanded = { pref.writePredefinedTemperamentsExpanded(it) }
+            )
+        ),
+        editableItemsSectionResId = R.string.custom_temperaments,
         editableItems = pref.customTemperaments,
         getStableId = { it.stableId },
-        predefinedItemsExpanded = pref.predefinedTemperamentsExpanded,
         editableItemsExpanded = pref.customTemperamentsExpanded,
         activeItem = activeTemperament,
-        setNewItems = { pref.writeCustomTemperaments(it) },
-        togglePredefinedItemsExpanded = { pref.writePredefinedTemperamentsExpanded(it) },
+        setNewItems = {
+            val newTemperaments = it.filterIsInstance<Temperament3Custom>()
+            pref.writeCustomTemperaments(newTemperaments)
+        },
         toggleEditableItemsExpanded = { pref.writeCustomTemperamentsExpanded(it) }
     )
 
     override fun saveTemperaments(
         context: Context,
         uri: Uri,
-        temperaments: List<TemperamentWithNoteNames>
+        temperaments: List<Temperament3Custom>
     ) {
         applicationScope.launch(Dispatchers.IO) {
             context.contentResolver?.openOutputStream(uri, "wt")?.use { stream ->
@@ -65,9 +78,9 @@ class TemperamentsManagerViewModel @AssistedInject constructor(
 
     fun activateTemperament(key: Long) {
         activeTemperament.value = pref.predefinedTemperaments.firstOrNull {
-            it.temperament.stableId == key
+            it.stableId == key
         } ?: pref.customTemperaments.value.firstOrNull {
-            it.temperament.stableId == key
+            it.stableId == key
         }
     }
 }

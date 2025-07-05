@@ -40,6 +40,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -64,9 +65,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.notedetection.TuningState
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
-import de.moekadu.tuner.temperaments.MusicalScaleFactory
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
 import de.moekadu.tuner.ui.misc.TunerScaffold
 import de.moekadu.tuner.ui.misc.rememberTunerAudioPermission
 import de.moekadu.tuner.ui.notes.NotePrintOptions
@@ -85,7 +85,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 interface ScientificTunerData {
-    val musicalScale: StateFlow<MusicalScale>
+    val musicalScale: StateFlow<MusicalScale2>
     val notePrintOptions: StateFlow<NotePrintOptions>
     val toleranceInCents: StateFlow<Int>
     val sampleRate: Int
@@ -229,10 +229,13 @@ fun ScientificTunerPortrait(
         val musicalScaleAsState by data.musicalScale.collectAsStateWithLifecycle()
         val notePrintOptionsAsState by data.notePrintOptions.collectAsStateWithLifecycle()
         val toleranceInCentsAsState by data.toleranceInCents.collectAsStateWithLifecycle()
+        val noteNames by remember { derivedStateOf {
+            musicalScaleAsState.temperament.noteNames(musicalScaleAsState.rootNote)
+        }}
         val tickHeightPx = rememberTextLabelHeight(tunerPlotStyle.tickFontStyle)
         val tickHeightDp = with(LocalDensity.current) { tickHeightPx.toDp() }
         val noteWidthDp = rememberMaxNoteSize(
-            notes = musicalScaleAsState.noteNames.notes,
+            notes = noteNames.notes,
             notePrintOptions = notePrintOptionsAsState,
             fontSize = tunerPlotStyle.stringFontStyle.fontSize,
             octaveRange = musicalScaleAsState.getNote(
@@ -400,10 +403,13 @@ fun ScientificTunerLandscape(
         val notePrintOptionsAsState by data.notePrintOptions.collectAsStateWithLifecycle()
         val musicalScaleAsState by data.musicalScale.collectAsStateWithLifecycle()
         val toleranceInCentsAsState by data.toleranceInCents.collectAsStateWithLifecycle()
+        val noteNames by remember { derivedStateOf {
+            musicalScaleAsState.temperament.noteNames(musicalScaleAsState.rootNote)
+        }}
         val tickHeightPx = rememberTextLabelHeight(tunerPlotStyle.tickFontStyle)
         val tickHeightDp = with(LocalDensity.current) { tickHeightPx.toDp() }
         val noteWidthDp = rememberMaxNoteSize(
-            notes = musicalScaleAsState.noteNames.notes,
+            notes = noteNames.notes,
             notePrintOptions = notePrintOptionsAsState,
             fontSize = tunerPlotStyle.stringFontStyle.fontSize,
             octaveRange = musicalScaleAsState.getNote(
@@ -572,8 +578,8 @@ fun ScientificTunerLandscape(
 }
 
 class TestScientificTunerData : ScientificTunerData {
-    override val musicalScale: StateFlow<MusicalScale>
-            = MutableStateFlow(MusicalScaleFactory.createTestEdo12())
+    override val musicalScale: StateFlow<MusicalScale2>
+            = MutableStateFlow(MusicalScale2.createTestEdo12())
 
     override val notePrintOptions: StateFlow<NotePrintOptions>
         = MutableStateFlow(NotePrintOptions())

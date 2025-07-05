@@ -8,18 +8,12 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.moekadu.tuner.misc.StringOrResId
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.RationalNumber
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteNamesEDOGenerator
 import de.moekadu.tuner.temperaments.EditableTemperament
-import de.moekadu.tuner.temperaments.NoteNames
-import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.Temperament3Custom
 import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.temperaments.TemperamentValidityChecks
-import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
 import de.moekadu.tuner.ui.temperaments.TemperamentEditorState
 import de.moekadu.tuner.ui.temperaments.TemperamentTableLineState
 import kotlinx.collections.immutable.PersistentList
@@ -36,7 +30,7 @@ private fun temperamentToTable(temperament: EditableTemperament)
     val numberOfNotesPerOctave = temperament.noteLines.size - 1
     // use default note names if there is no note name given for any line (and if default notes are available)
     val defaultNoteNames = if (temperament.noteLines.firstOrNull { it?.note != null } == null)
-        getSuitableNoteNames(numberOfNotesPerOctave)
+        NoteNamesEDOGenerator.getNoteNames(numberOfNotesPerOctave, null)
     else
         null
 
@@ -90,16 +84,19 @@ private fun checkAndSetNoteNameErrors(values: PersistentList<TemperamentTableLin
 
 /** Check if list of notes is the same as the default note names.
  * @param noteNameList List of notes to be checked.
- * @return True if the list ist the same as the default note names, else false
+ * @param defaultNames Default names against which we do the check.
+ * @return True if the list is the same as the default note names, else false
  */
-private fun checkIfDefaultNoteNames(noteNameList: List<MusicalNote>): Boolean {
+private fun checkIfDefaultNoteNames(
+    noteNameList: List<MusicalNote>, defaultNames: Array<MusicalNote>?
+): Boolean {
     var useDefaultNoteNames = true
-    val predefinedNoteNames = getSuitableNoteNames(noteNameList.size)
-    if (predefinedNoteNames == null) {
+
+    if (defaultNames == null || defaultNames.size != noteNameList.size) {
         useDefaultNoteNames = false
     } else {
-        for (i in 0 until predefinedNoteNames.size) {
-            if (!MusicalNote.notesEqualIgnoreOctave(predefinedNoteNames[i], noteNameList[i])) {
+        for (i in noteNameList.indices) {
+            if (!noteNameList[i].equalsIgnoreOctave(defaultNames[i])) {
                 useDefaultNoteNames = false
                 break
             }
@@ -187,28 +184,32 @@ class TemperamentEditorViewModel @AssistedInject constructor(
     fun changeNumberOfValues(numberOfValues: Int) {
         val oldTemperamentValues  = temperamentValues.value
         val oldNumValues = oldTemperamentValues.size - 1 // num notes per octave + octave note
-        _temperamentValues.value = oldTemperamentValues.mutate { mutated ->
-            val octaveLine = oldTemperamentValues.last()
-            if (numberOfValues < oldNumValues) {
-                mutated.subList(numberOfValues + 1, oldNumValues + 1).clear()
-                mutated[numberOfValues] = octaveLine
-            } else {
-                val newNoteNames = getSuitableNoteNames(numberOfValues)
 
-                for (i in oldNumValues until numberOfValues) {
-                    mutated.add(i, TemperamentTableLineState(
-                        note = newNoteNames?.getOrNull(i),
-                        cent = null,
-                        ratio = null,
-                        isFirstLine = false,
-                        isOctaveLine = false,
-                        decreasingValueError = false,
-                        duplicateNoteError = false
-                    ))
-                }
-                mutated[numberOfValues] = octaveLine
-            }
-        }
+        if (temperamentValues.value.size == oldNumValues)
+            return
+
+        val newNoteNames = NoteNamesEDOGenerator.getNoteNames(numberOfValues, null)
+        _temperamentValues.value = List(numberOfValues + 1) {
+            TemperamentTableLineState(
+                note = if (it == numberOfValues)
+                    newNoteNames?.getOrNull(0)?.copy(octave = 5)
+                else
+                    newNoteNames?.getOrNull(it)?.copy(octave = 4),
+                cent = if (it == numberOfValues)
+                    oldTemperamentValues.lastOrNull()?.cent
+                else
+                    oldTemperamentValues.getOrNull(it)?.cent,
+                ratio = if (it == numberOfValues)
+                    oldTemperamentValues.lastOrNull()?.ratio
+                else
+                    oldTemperamentValues.getOrNull(it)?.ratio,
+                isFirstLine = it == 0,
+                isOctaveLine = it == numberOfValues,
+                decreasingValueError = false,
+                duplicateNoteError = false
+            )
+        }.toPersistentList()
+
         _numberOfValues.intValue = numberOfValues
 
         valueOrderingError = checkAndSetValueOrderingErrors(temperamentValues.value)
@@ -249,51 +250,56 @@ class TemperamentEditorViewModel @AssistedInject constructor(
         val noteNameList = values.dropLast(1).map {
             it.note ?: return false
         }
-        val predefinedNoteNames = getSuitableNoteNames(values.size - 1)
-        val useDefaultNoteNames = checkIfDefaultNoteNames(noteNameList)
+        val predefinedNoteNames = NoteNamesEDOGenerator.getNoteNames(
+            values.size - 1, null
+        )
+        val useDefaultNoteNames = checkIfDefaultNoteNames(
+            noteNameList, predefinedNoteNames?.notes
+        )
 
-        val defaultReferenceNote = values.firstOrNull {
-            (it.note?.base == BaseNote.A && it.note?.modifier == NoteModifier.None)
-                    || (it.note?.enharmonicBase == BaseNote.A && it.note?.enharmonicModifier == NoteModifier.None)
-        }?.note ?: values.firstOrNull{ it.note != null }?.note ?: return false
+//        val defaultReferenceNote = values.firstOrNull {
+//            (it.note?.base == BaseNote.A && it.note?.modifier == NoteModifier.None)
+//                    || (it.note?.enharmonicBase == BaseNote.A && it.note?.enharmonicModifier == NoteModifier.None)
+//        }?.note ?: values.firstOrNull{ it.note != null }?.note ?: return false
 
         val noteNames = if (useDefaultNoteNames) {
-            predefinedNoteNames
+            predefinedNoteNames!!.notes
         } else {
-            NoteNames(
-                notes = noteNameList.toTypedArray(),
-                defaultReferenceNote =  defaultReferenceNote
-            )
+            noteNameList.toTypedArray()
+            //NoteNames2(
+//                notes = noteNameList.toTypedArray(),
+//                defaultReferenceNote =  defaultReferenceNote,
+//                firstNoteOfOctave = noteNameList[0]
+//            )
         }
 
-        val possibleRatios = values.map { it.obtainRatio() }
-        val hasRatios = !possibleRatios.contains(null)
-        val ratios = if (hasRatios) {
-            possibleRatios.map { it ?: RationalNumber(1,1) }
-        } else {
-            null
-        }
+        val ratios = values.map { it.obtainRatio() }
+//        val hasRatios = !possibleRatios.contains(null)
+//        val ratios = if (hasRatios) {
+//            possibleRatios.map { it ?: RationalNumber(1,1) }
+//        } else {
+//            null
+//        }
         val cents = values.map { it.obtainCent() ?: return false }
 
-        var hasEqualDivisions = true
-        for (i in 0 until cents.size - 2)
-            if (2 * cents[i+1] - cents[i] - cents[i+2] > 0.01)
-                hasEqualDivisions = false
+//        var hasEqualDivisions = true
+//        for (i in 0 until cents.size - 2)
+//            if (2 * cents[i+1] - cents[i] - cents[i+2] > 0.01)
+//                hasEqualDivisions = false
 
-        val temperament = Temperament(
-            name = StringOrResId(name.value),
-            abbreviation = StringOrResId(abbreviation.value),
-            description = StringOrResId(description.value),
+        val temperament = Temperament3Custom(
+            _name = name.value,
+            _abbreviation = abbreviation.value,
+            _description = description.value,
             cents = cents.toDoubleArray(),
-            rationalNumbers = ratios?.toTypedArray(),
-            circleOfFifths = null,
-            equalOctaveDivision = if (hasEqualDivisions) cents.size - 1 else null,
+            _rationalNumbers = ratios.toTypedArray(),
+            //equalOctaveDivision = if (hasEqualDivisions) cents.size - 1 else null,
+            _noteNames = noteNames,
             stableId = stableId
         )
 
-        pref.addNewOrReplaceTemperament(
-            TemperamentWithNoteNames(temperament, noteNames)
-        )
+        pref.addNewOrReplaceTemperament(temperament)
+
         return true
     }
 

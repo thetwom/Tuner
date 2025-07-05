@@ -20,8 +20,8 @@ package de.moekadu.tuner.notedetection
 
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.misc.DefaultValues
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.MusicalScale
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.musicalscale.MusicalScale2
 import kotlin.math.log10
 
 data class FrequencyEvaluationResult(
@@ -38,7 +38,7 @@ class FrequencyEvaluator(
     private val maxNoise: Float,
     private val minHarmonicEnergyContent: Float,
     private val sensitivity: Float,
-    musicalScale: MusicalScale,
+    musicalScale: MusicalScale2,
     instrument: Instrument
 ) {
     private val smoother = OutlierRemovingSmoother(

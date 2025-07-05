@@ -20,9 +20,9 @@ package de.moekadu.tuner.ui.notes
 
 import android.content.res.Resources
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -50,13 +50,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.takeOrElse
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.BaseNote
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteModifier
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.notenames.BaseNote
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.notenames.NoteModifier
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlin.math.max
@@ -165,18 +165,17 @@ private val modifierPrefixStrings = mapOf(
     NoteModifier.NaturalDownDownDown to "\uE115",
 )
 
-/** Stem of note name, which is the not including enharmonic info but no octave info.
+/** Stem of note name, which is the including enharmonic info but no octave info.
  * @param baseNote Base note.
  * @param modifier Note modifier.
- * @param enharmonicBaseNote Base note of enharmonic.
- * @param enharmonicModifier Modifier of enharmonic.
  */
-data class NoteNameStem(val baseNote: BaseNote,
-                        val modifier: NoteModifier = NoteModifier.None,
-                        val enharmonicBaseNote: BaseNote = BaseNote.None,
-                        val enharmonicModifier: NoteModifier = NoteModifier.None) {
-    constructor(note: MusicalNote) : this(
-        note.base, note.modifier, note.enharmonicBase, note.enharmonicModifier
+data class NoteNameStem(
+    val baseNote: BaseNote,
+    val modifier: NoteModifier = NoteModifier.None
+) {
+    constructor(note: MusicalNote, useEnharmonic: Boolean) : this(
+        if (useEnharmonic) note.enharmonicBase else note.base,
+        if (useEnharmonic) note.enharmonicModifier else note.modifier
     )
 }
 
@@ -190,75 +189,131 @@ private fun resolveNoteProperties(
     note: MusicalNote,
     notePrintOptions: NotePrintOptions,
     resources: Resources
-    ): ResolvedNoteProperties {
-    return if (notePrintOptions.useEnharmonic && note.enharmonicBase != BaseNote.None) {
-        resolveNotePropertiesWithoutEnharmonicCheck(
-            note.switchEnharmonic(switchAlsoForBaseNone = true),
-            resources = resources,
+): ResolvedNoteProperties {
+    return if (
+        (!notePrintOptions.useEnharmonic && note.base != BaseNote.None) ||
+        (notePrintOptions.useEnharmonic && note.enharmonicBase == BaseNote.None)
+        ) {
+        resolveNoteProperties(note, resources = resources, useEnharmonic = false
         ) { notePrintOptions.resourceId(it) }
     } else {
-        resolveNotePropertiesWithoutEnharmonicCheck(
-            note,
-            resources = resources,
+        resolveNoteProperties(note, resources = resources, useEnharmonic = true
         ) { notePrintOptions.resourceId(it) }
     }
 }
 
-private fun resolveNotePropertiesWithoutEnharmonicCheck(
+//private fun resolveNoteProperties(
+//    note: MusicalNote,
+//    notePrintOptions: NotePrintOptions,
+//    resources: Resources
+//    ): ResolvedNoteProperties {
+//    return if (notePrintOptions.useEnharmonic && note.enharmonicBase != BaseNote.None) {
+//        resolveNotePropertiesWithoutEnharmonicCheck(
+//            note.switchEnharmonic(switchAlsoForBaseNone = true),
+//            resources = resources,
+//        ) { notePrintOptions.resourceId(it) }
+//    } else {
+//        resolveNotePropertiesWithoutEnharmonicCheck(
+//            note,
+//            resources = resources,
+//        ) { notePrintOptions.resourceId(it) }
+//    }
+//}
+
+//private fun resolveNotePropertiesWithoutEnharmonicCheck(
+//    note: MusicalNote,
+//    resources: Resources,
+//    resourceIdOfStem: (NoteNameStem) -> Int?
+//    ): ResolvedNoteProperties {
+//    // check if we can directly resolve the note
+//    val stem = NoteNameStem(note)
+//    val noteName = resourceIdOfStem(stem)?.let {resources.getText(it)}
+//    if (noteName != null && noteName != "" && noteName != "-") {
+//        return ResolvedNoteProperties(
+//            baseName = noteName,
+//            modifier = NoteModifier.None,
+//            octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else note.octave + note.octaveOffset
+//        )
+//    }
+//
+//    // check if we can directly resolve the enharmonic
+//    val noteEnharmonic = note.switchEnharmonic(switchAlsoForBaseNone = true)
+//    val stemEnharmonic = NoteNameStem(noteEnharmonic)
+//    val noteNameEnharmonic = resourceIdOfStem(stemEnharmonic)?.let { resources.getText(it) }
+//
+//    if (noteNameEnharmonic != null && noteNameEnharmonic != "" && noteNameEnharmonic != "-") {
+//        return ResolvedNoteProperties(
+//            baseName = noteNameEnharmonic,
+//            modifier = NoteModifier.None,
+//            octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else noteEnharmonic.octave + noteEnharmonic.octaveOffset
+//        )
+//    }
+//
+//    // try to resolve note by base name + modifier
+//    val stemBase = NoteNameStem(
+//        note.base, NoteModifier.None, BaseNote.None, NoteModifier.None
+//    )
+//    val noteNameBase = resourceIdOfStem(stemBase)?.let { resources.getText(it) }
+//    if (noteNameBase != null && noteNameBase != "" && noteNameBase != "-") {
+//        return ResolvedNoteProperties(
+//            baseName = noteNameBase,
+//            modifier = note.modifier,
+//            octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else note.octave + note.octaveOffset
+//        )
+//    }
+//
+//    // try to resolve note by enharmonic base name + modifier
+//    val stemEnharmonicBase = NoteNameStem(
+//        noteEnharmonic.base, NoteModifier.None, BaseNote.None, NoteModifier.None
+//    )
+//    val noteNameEnharmonicBase = resourceIdOfStem(stemEnharmonicBase)?.let { resources.getText(it) }
+//    if (noteNameEnharmonicBase != null && noteNameEnharmonicBase != "" && noteNameEnharmonicBase != "-") {
+//        return ResolvedNoteProperties(
+//            baseName = noteNameEnharmonicBase,
+//            modifier = noteEnharmonic.modifier,
+//            octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else noteEnharmonic.octave + noteEnharmonic.octaveOffset
+//        )
+//    }
+//    return ResolvedNoteProperties("O", note.modifier, note.octave)
+//}
+
+private fun resolveNoteProperties(
     note: MusicalNote,
     resources: Resources,
+    useEnharmonic: Boolean,
     resourceIdOfStem: (NoteNameStem) -> Int?
-    ): ResolvedNoteProperties {
+): ResolvedNoteProperties {
     // check if we can directly resolve the note
-    val stem = NoteNameStem(note)
+    val stem = NoteNameStem(note, useEnharmonic)
     val noteName = resourceIdOfStem(stem)?.let {resources.getText(it)}
+    val octaveOffset = if (useEnharmonic) note.enharmonicOctaveOffset else note.octaveOffset
+
     if (noteName != null && noteName != "" && noteName != "-") {
         return ResolvedNoteProperties(
             baseName = noteName,
             modifier = NoteModifier.None,
-            octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else note.octave + note.octaveOffset
-        )
-    }
-
-    // check if we can directly resolve the enharmonic
-    val noteEnharmonic = note.switchEnharmonic(switchAlsoForBaseNone = true)
-    val stemEnharmonic = NoteNameStem(noteEnharmonic)
-    val noteNameEnharmonic = resourceIdOfStem(stemEnharmonic)?.let { resources.getText(it) }
-
-    if (noteNameEnharmonic != null && noteNameEnharmonic != "" && noteNameEnharmonic != "-") {
-        return ResolvedNoteProperties(
-            baseName = noteNameEnharmonic,
-            modifier = NoteModifier.None,
-            octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else noteEnharmonic.octave + noteEnharmonic.octaveOffset
+            octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else note.octave + octaveOffset
         )
     }
 
     // try to resolve note by base name + modifier
     val stemBase = NoteNameStem(
-        note.base, NoteModifier.None, BaseNote.None, NoteModifier.None
+        if (useEnharmonic) note.enharmonicBase else note.base,
+        NoteModifier.None
     )
     val noteNameBase = resourceIdOfStem(stemBase)?.let { resources.getText(it) }
     if (noteNameBase != null && noteNameBase != "" && noteNameBase != "-") {
         return ResolvedNoteProperties(
             baseName = noteNameBase,
-            modifier = note.modifier,
-            octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else note.octave + note.octaveOffset
+            modifier = if (useEnharmonic) note.enharmonicModifier else note.modifier,
+            octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else note.octave + octaveOffset
         )
     }
-
-    // try to resolve note by enharmonic base name + modifier
-    val stemEnharmonicBase = NoteNameStem(
-        noteEnharmonic.base, NoteModifier.None, BaseNote.None, NoteModifier.None
+    return ResolvedNoteProperties(
+        "O",
+        if (useEnharmonic) note.enharmonicModifier else note.modifier,
+        note.octave + octaveOffset
     )
-    val noteNameEnharmonicBase = resourceIdOfStem(stemEnharmonicBase)?.let { resources.getText(it) }
-    if (noteNameEnharmonicBase != null && noteNameEnharmonicBase != "" && noteNameEnharmonicBase != "-") {
-        return ResolvedNoteProperties(
-            baseName = noteNameEnharmonicBase,
-            modifier = noteEnharmonic.modifier,
-            octave = if (note.octave == Int.MAX_VALUE) Int.MAX_VALUE else noteEnharmonic.octave + noteEnharmonic.octaveOffset
-        )
-    }
-    return ResolvedNoteProperties("O", note.modifier, note.octave)
 }
 
 /** Options for note printing.
@@ -465,6 +520,110 @@ fun Note(
     Text(text = noteAsString, modifier = modifier, color = colorResolved)
 }
 
+/** Note with enharmonic if it exists (prints something like e.g. C#/Db).
+ * @param musicalNote Note which should be printed.
+ * @param modifier Modifier.
+ * @param notePrintOptions Options of how to print the note.
+ * @param withOctave True to print with octave index, false to print without octave index.
+ * @param fontSize Font size or Unspecified to get it from the context.
+ */
+@Composable
+fun NoteWithEnharmonic(
+    musicalNote: MusicalNote,
+    modifier: Modifier = Modifier,
+    notePrintOptions: NotePrintOptions = NotePrintOptions(),
+    withOctave: Boolean = true,
+    fontSize: TextUnit = TextUnit.Unspecified,
+    fontWeight: FontWeight? = null,
+    color: Color = Color.Unspecified,
+    style: TextStyle? = null
+) {
+    val resources = LocalContext.current.resources
+    val fontSizeResolved = fontSize.takeOrElse {
+        (style?.fontSize ?: TextUnit.Unspecified).takeOrElse {
+            LocalTextStyle.current.fontSize.takeOrElse { 12.sp }
+        }
+    }
+    val fontWeightResolved = fontWeight ?: style?.fontWeight
+    val colorResolved = color.takeOrElse {
+        style?.color ?: Color.Unspecified
+    }
+
+    val properties = remember(musicalNote, notePrintOptions, resources) {
+        if (musicalNote.base != BaseNote.None) {
+            resolveNoteProperties(
+                note = musicalNote,
+                resources = resources,
+                useEnharmonic = false
+            ) { notePrintOptions.resourceId(it) }
+        } else {
+            null
+        }
+    }
+    val propertiesEnharmonic = remember(musicalNote, notePrintOptions, resources) {
+        if (musicalNote.base != BaseNote.None) {
+            resolveNoteProperties(
+                note = musicalNote,
+                resources = resources,
+                useEnharmonic = true
+            ) { notePrintOptions.resourceId(it) }
+        } else {
+            null
+        }
+    }
+
+    val noteAsString = remember(properties, notePrintOptions, fontSizeResolved, fontWeightResolved, withOctave) {
+        properties?.let {
+            createAnnotatedStringOfNote(
+                it,
+                notePrintOptions,
+                fontSizeResolved,
+                fontWeightResolved,
+                withOctave
+            )
+        }
+    }
+
+    val noteAsStringEnharmonic = remember(propertiesEnharmonic, notePrintOptions, fontSizeResolved, fontWeightResolved, withOctave) {
+        propertiesEnharmonic?.let {
+            createAnnotatedStringOfNote(
+                it,
+                notePrintOptions,
+                fontSizeResolved,
+                fontWeightResolved,
+                withOctave
+            )
+        }
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+    ) {
+        val printDefault = musicalNote.base != BaseNote.None && noteAsString != null
+        val printEnharmonic = (
+                musicalNote.enharmonicBase != BaseNote.None &&
+                        noteAsStringEnharmonic != null &&
+                        properties != propertiesEnharmonic
+        )
+        if (printDefault) {
+            Text(text = noteAsString!!, color = colorResolved)
+        }
+        if (printDefault && printEnharmonic) {
+            Text(
+                text = "/",
+                Modifier.padding(horizontal = 4.dp),
+                fontWeight = fontWeight,
+                fontSize = fontSize,
+                style = style ?: LocalTextStyle.current
+            )
+        }
+        if (printEnharmonic) {
+            Text(text = noteAsStringEnharmonic!!, color = colorResolved)
+        }
+    }
+}
+
 /** Compute the size of the biggest note within a scale.
  * @param notes Notes within one octave of the notes to print.
  * @param notePrintOptions Options which tell how to print notes.
@@ -562,7 +721,7 @@ fun rememberMaxNoteSize(
     }
 }
 
-@Preview(showBackground = true, widthDp = 500, heightDp = 1000)
+@Preview(showBackground = true, widthDp = 500, heightDp = 1200)
 @Composable
 private fun NotePreview() {
     val fontSize = 100.sp
@@ -636,7 +795,7 @@ private fun NotePreview() {
             fontWeight = fontWeight,
             //style = MaterialTheme.typography.displayLarge
         )
-        Note(
+        NoteWithEnharmonic(
             MusicalNote(BaseNote.A, NoteModifier.FlatFlatDownDownDown),
             withOctave = true,
             notePrintOptions = notePrintOptions,
@@ -645,8 +804,11 @@ private fun NotePreview() {
             //style = MaterialTheme.typography.displayLarge
         )
 
-        Note(
-            MusicalNote(BaseNote.A, NoteModifier.FlatFlatFlatDownDown),
+        NoteWithEnharmonic(
+            MusicalNote(
+                BaseNote.A, NoteModifier.FlatFlatFlatDownDown,
+                enharmonicBase = BaseNote.G,
+                enharmonicModifier = NoteModifier.FlatDown),
             withOctave = true,
             notePrintOptions = notePrintOptions,
             fontSize = fontSize,

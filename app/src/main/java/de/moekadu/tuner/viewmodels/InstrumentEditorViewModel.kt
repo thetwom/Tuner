@@ -30,7 +30,7 @@ import de.moekadu.tuner.instruments.instrumentChromatic
 import de.moekadu.tuner.notedetection.FrequencyDetectionCollectedResults
 import de.moekadu.tuner.notedetection.FrequencyEvaluationResult
 import de.moekadu.tuner.preferences.PreferenceResources
-import de.moekadu.tuner.temperaments.MusicalNote
+import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.tuner.Tuner
 import de.moekadu.tuner.ui.instruments.StringWithInfo

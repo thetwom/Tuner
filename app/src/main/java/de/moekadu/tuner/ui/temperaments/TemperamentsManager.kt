@@ -25,6 +25,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -53,36 +56,40 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.moekadu.tuner.R
 import de.moekadu.tuner.misc.ShareData
-import de.moekadu.tuner.misc.StringOrResId
 import de.moekadu.tuner.misc.getFilenameFromUri
 import de.moekadu.tuner.misc.toastPotentialFileCheckError
 import de.moekadu.tuner.temperaments.RationalNumber
 import de.moekadu.tuner.temperaments.EditableTemperament
-import de.moekadu.tuner.temperaments.Temperament
+import de.moekadu.tuner.temperaments.Temperament3
+import de.moekadu.tuner.temperaments.Temperament3Custom
 import de.moekadu.tuner.temperaments.TemperamentIO
-import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
 import de.moekadu.tuner.ui.common.EditableList
 import de.moekadu.tuner.ui.common.EditableListData
+import de.moekadu.tuner.ui.common.EditableListItem
+import de.moekadu.tuner.ui.common.ListItemTask
 import de.moekadu.tuner.ui.common.OverflowMenu
 import de.moekadu.tuner.ui.common.OverflowMenuCallbacks
 import de.moekadu.tuner.ui.misc.TunerScaffoldWithoutBottomBar
 import de.moekadu.tuner.ui.theme.TunerTheme
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 interface TemperamentsManagerData {
-    val listData: EditableListData<TemperamentWithNoteNames>
+    val listData: EditableListData<Temperament3>
     fun saveTemperaments(
         context: Context,
         uri: Uri,
-        temperaments: List<TemperamentWithNoteNames>
+        temperaments: List<Temperament3Custom>
     )
 }
 
@@ -100,7 +107,9 @@ private fun rememberImportExportCallbacks(
     ) { uri ->
         if (uri != null) {
             val temperaments = stateUpdated.listData.extractSelectedItems()
-            stateUpdated.saveTemperaments(context, uri, temperaments)
+            stateUpdated.saveTemperaments(
+                context, uri, temperaments.filterIsInstance<Temperament3Custom>()
+            )
             stateUpdated.listData.clearSelectedItems()
             val filename = getFilenameFromUri(context, uri)
             Toast.makeText(
@@ -183,10 +192,10 @@ private fun rememberImportExportCallbacks(
 fun TemperamentsManager(
     state: TemperamentsManagerData,
     modifier: Modifier = Modifier,
-    onEditTemperamentClicked: (temperament: TemperamentWithNoteNames, copy: Boolean) -> Unit = { _, _ ->},
-    onTemperamentClicked: (temperament: TemperamentWithNoteNames) -> Unit = { },
+    onEditTemperamentClicked: (temperament: Temperament3, copy: Boolean) -> Unit = { _, _ ->},
+    onTemperamentClicked: (temperament: Temperament3) -> Unit = { },
     onLoadTemperaments: (temperaments: List<EditableTemperament>) -> Unit = { },
-    onTemperamentInfoClicked: (temperament: TemperamentWithNoteNames) -> Unit = { },
+    onTemperamentInfoClicked: (temperament: Temperament3) -> Unit = { },
     onNavigateUp: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -195,6 +204,7 @@ fun TemperamentsManager(
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val maxExpectedHeightForFab = 72.dp
 
     val overflowCallbacks = rememberImportExportCallbacks(
         state = state,
@@ -256,15 +266,12 @@ fun TemperamentsManager(
             FloatingActionButton(
                 onClick = {
                     onEditTemperamentClicked(
-                        TemperamentWithNoteNames(
-                            Temperament.create(
-                                StringOrResId(""),
-                                StringOrResId(""),
-                                StringOrResId(""),
-                                12,
-                                Temperament.NO_STABLE_ID
-                            ),
-                            null
+                        Temperament3Custom(
+                            _name = "", _abbreviation = "", _description = "",
+                            cents = DoubleArray(13) { it * 100.0 },
+                            _rationalNumbers = arrayOf(),
+                            _noteNames = null,
+                            stableId = Temperament3.NO_STABLE_ID
                         ),
                         true
                     )
@@ -280,94 +287,113 @@ fun TemperamentsManager(
         }
     ) { paddingValues ->
         val iconTextSize = with(LocalDensity.current) { 18.dp.toSp() }
+        val layoutDirection = LocalLayoutDirection.current
         EditableList(
-            itemTitle = { Text(it.temperament.name.value(context)) },
-            itemDescription = { Text(it.temperament.description.value(context)) },
-            itemIcon = {
-                Surface(
-                    shape = CircleShape,
-                    modifier = Modifier.fillMaxSize(),
-                    color = Color.Transparent,
-                    border = BorderStroke(1.dp, LocalContentColor.current)
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "${it.temperament.name.value(context).getOrNull(0) ?: ""}",
-                            fontSize = iconTextSize
-                        )
-                    }
-                }
-            },
-            isItemCopyable = { true },
-            hasItemInfo = { true },
             state = state.listData,
             modifier = modifier.consumeWindowInsets(paddingValues).fillMaxSize(),
-            contentPadding = paddingValues,
+            contentPadding = PaddingValues(
+                start = paddingValues.calculateStartPadding(layoutDirection),
+                end = paddingValues.calculateEndPadding(layoutDirection),
+                top = paddingValues.calculateTopPadding(),
+                bottom = paddingValues.calculateBottomPadding() + maxExpectedHeightForFab
+            ),
             onActivateItemClicked = { onTemperamentClicked(it) },
-            onEditItemClicked = onEditTemperamentClicked,
-            onItemInfoClicked = onTemperamentInfoClicked,
-            snackbarHostState = snackbarHostState,
-            listState = listState
-        )
+            snackbarHostState = snackbarHostState
+        ) { item, itemInfo, itemModifier ->
+            EditableListItem(
+                title = { Text(item.name.value(context)) },
+                description = { Text(item.description.value(context)) },
+                icon = {
+                    Surface(
+                        shape = CircleShape,
+                        modifier = Modifier.fillMaxSize(),
+                        color = Color.Transparent,
+                        border = BorderStroke(1.dp, LocalContentColor.current)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "${item.name.value(context).getOrNull(0) ?: ""}",
+                                fontSize = iconTextSize
+                            )
+                        }
+                    }
+                },
+                modifier = itemModifier,
+                onOptionsClicked = {
+                    when (it) {
+                        ListItemTask.Edit -> onEditTemperamentClicked(item, false)
+                        ListItemTask.Copy -> onEditTemperamentClicked(item, true)
+                        ListItemTask.Delete -> {
+                            state.listData.deleteItems(persistentSetOf(item.stableId))
+                        }
+                        ListItemTask.Info -> onTemperamentInfoClicked(item)
+                    }
+                },
+                isActive = itemInfo.isActive,
+                isSelected = itemInfo.isSelected,
+                readOnly = itemInfo.readOnly,
+                isCopyable = true,
+                hasInfo = true
+            )
+        }
     }
 }
 
 private class TestTemperamentManagerData : TemperamentsManagerData {
-    private val testTemperament1 = Temperament.create(
-        StringOrResId("Test 1"),
-        StringOrResId("T1"),
-        StringOrResId("Describing Test 1"),
-        12,
-        1L
+    private val testTemperament1 = Temperament3Custom(
+        _name = "Test1", _abbreviation = "T1", _description = "Describing Test 1",
+        cents = DoubleArray(13) { it * 100.0 }, _rationalNumbers = arrayOf(),
+        _noteNames = null,
+        stableId = 1L
     )
 
-    private val testTemperament2 = Temperament.create(
-        StringOrResId("Test 2"),
-        StringOrResId("T2"),
-        StringOrResId("Describing Test 2"),
-        doubleArrayOf(0.0, 12.0, 140.0, 320.0, 410.0, 540.0, 610.0, 720.0, 810.0, 910.0, 1020.0, 1100.0, 1200.0),
+    private val testTemperament2 = Temperament3Custom(
+        _name = "Test 2", _abbreviation = "T2", _description = "Describing Test 2",
+        cents = doubleArrayOf(
+            0.0, 12.0, 140.0, 320.0, 410.0, 540.0, 610.0, 720.0, 810.0, 910.0, 1020.0, 1100.0, 1200.0
+        ),
+        _rationalNumbers = arrayOf(), _noteNames = null,
         2L
     )
 
-    private val testTemperament3 = Temperament.create(
-        StringOrResId("Test 3"),
-        StringOrResId("T3"),
-        StringOrResId("Describing Test 3, ratios"),
-        (0..12).map { RationalNumber(12+it, 12) }.toTypedArray(),
+    private val testTemperament3 = Temperament3Custom(
+        _name = "Test 3", _abbreviation = "T3", _description = "Describing Test 3, ratios",
+        cents = doubleArrayOf(),
+        _rationalNumbers = (0..12).map {
+            RationalNumber(12+it, 12)
+        }.toTypedArray(),
+        _noteNames = null,
         3L
     )
 
     val customTemperaments = MutableStateFlow(
-        persistentListOf(
-            TemperamentWithNoteNames(testTemperament1.copy(stableId = 1), null),
-            TemperamentWithNoteNames(testTemperament2.copy(stableId = 2), null),
-            TemperamentWithNoteNames(testTemperament3.copy(stableId = 3), null),
-        )
+        persistentListOf(testTemperament1, testTemperament2, testTemperament3)
     )
     val predefinedTemperamentsExpanded = MutableStateFlow(false)
     val customTemperamentsExpanded = MutableStateFlow(true)
 
-    val activeTemperament = MutableStateFlow<TemperamentWithNoteNames?>(customTemperaments.value[1])
+    val activeTemperament = MutableStateFlow<Temperament3?>(customTemperaments.value[1])
 
     override val listData = EditableListData(
+        predefinedItemSections = persistentListOf(),
+        editableItemsSectionResId = R.string.custom_temperaments,
         getStableId = { it.stableId },
-        predefinedItems = persistentListOf(),
         editableItems = customTemperaments,
-        predefinedItemsExpanded = predefinedTemperamentsExpanded,
         editableItemsExpanded = customTemperamentsExpanded,
         activeItem = activeTemperament,
-        setNewItems = { customTemperaments.value = it },
-        togglePredefinedItemsExpanded = { predefinedTemperamentsExpanded.value = it },
+        setNewItems = {
+            customTemperaments.value = it.filterIsInstance<Temperament3Custom>().toPersistentList()
+        },
         toggleEditableItemsExpanded = { customTemperamentsExpanded.value = it }
     )
 
     override fun saveTemperaments(
         context: Context,
         uri: Uri,
-        temperaments: List<TemperamentWithNoteNames>
+        temperaments: List<Temperament3Custom>
     ) { }
 }
 

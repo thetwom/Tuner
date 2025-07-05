@@ -16,7 +16,7 @@
 * You should have received a copy of the GNU General Public License
 * along with Tuner.  If not, see <http://www.gnu.org/licenses/>.
 */
-package de.moekadu.tuner.temperaments
+package de.moekadu.tuner.notenames
 
 import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable
@@ -42,7 +42,7 @@ data class NoteNames(
      */
     fun getNoteIndex(note: MusicalNote): Int {
         val index = notes.indexOfFirst {
-            MusicalNote.notesEqualIgnoreOctave(it, note)
+            it.equalsIgnoreOctave(note)
         }
         return index
     }
@@ -80,7 +80,7 @@ data class NoteNames(
      * @return True if note is part of the note names array, else false.
      */
     fun hasNote(note: MusicalNote): Boolean {
-        return notes.any{ MusicalNote.notesEqualIgnoreOctave(it, note) }
+        return notes.any{ it.equalsIgnoreOctave(note) }
     }
 
     override fun equals(other: Any?): Boolean {
@@ -101,7 +101,11 @@ data class NoteNames(
     }
 }
 
-fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
+fun NoteNames.toNew(): NoteNames2 {
+    return NoteNames2(notes, defaultReferenceNote, notes[0])
+}
+
+private fun getSuitableNoteNames(numberOfNotesPerOctave: Int): NoteNames? {
     return when (numberOfNotesPerOctave) {
         // 12 tones
         12 -> {

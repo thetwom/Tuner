@@ -40,10 +40,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.NoteNames
-import de.moekadu.tuner.temperaments.Temperament
-import de.moekadu.tuner.temperaments.createTestTemperamentWerckmeisterVI
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
+import de.moekadu.tuner.temperaments.Temperament3
+import de.moekadu.tuner.temperaments.predefinedTemperamentWerckmeisterVI
 import de.moekadu.tuner.ui.notes.CentAndRatioTable
 import de.moekadu.tuner.ui.notes.CircleOfFifthTable
 import de.moekadu.tuner.ui.notes.NotePrintOptions
@@ -51,12 +49,14 @@ import de.moekadu.tuner.ui.theme.TunerTheme
 
 @Composable
 fun TemperamentDetailsDialog(
-    temperament: Temperament,
-    noteNames: NoteNames,
+    temperament: Temperament3,
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit = {},
 ) {
+    val hasChainOfFifths = remember(temperament) {
+        temperament.chainOfFifths() != null
+    }
     AlertDialog(
         onDismissRequest = { onDismiss() },
         confirmButton = {
@@ -79,14 +79,13 @@ fun TemperamentDetailsDialog(
             ) {
                 CentAndRatioTable(
                     temperament,
-                    noteNames,
-                    rootNoteIndex = 0,
+                    rootNote = null,
                     notePrintOptions = notePrintOptions,
                     modifier = Modifier.fillMaxWidth(),
                     horizontalContentPadding = 16.dp
                 )
 
-                if (temperament.circleOfFifths != null) {
+                if (hasChainOfFifths) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         stringResource(id = R.string.circle_of_fifths),
@@ -98,8 +97,7 @@ fun TemperamentDetailsDialog(
                     )
                     CircleOfFifthTable(
                         temperament = temperament,
-                        noteNames = noteNames,
-                        rootNoteIndex = 0,
+                        rootNote = null,
                         notePrintOptions = notePrintOptions,
                         modifier = Modifier.fillMaxWidth(),
                         horizontalContentPadding = 16.dp
@@ -121,11 +119,10 @@ fun TemperamentDetailsDialog(
 @Composable
 private fun TemperamentDetailsDialogPreview() {
     TunerTheme {
-        val temperament = remember { createTestTemperamentWerckmeisterVI() }
-        val noteNames = remember { getSuitableNoteNames(temperament.numberOfNotesPerOctave)!! }
+        val temperament = remember { predefinedTemperamentWerckmeisterVI(0L) }
+
         TemperamentDetailsDialog(
             temperament,
-            noteNames,
             NotePrintOptions()
         )
     }

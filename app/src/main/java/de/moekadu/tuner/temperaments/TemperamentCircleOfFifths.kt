@@ -237,7 +237,7 @@ val circleOfFifthsNeidhardt3 = TemperamentCircleOfFifths(
 )
 
 // für eine große Stadt, 1724
-val circleOfFifthsNeidthardt4 = TemperamentCircleOfFifths(
+val circleOfFifthsNeidhardt4 = TemperamentCircleOfFifths(
     CG = FifthModification(pythagoreanComma = RationalNumber(-1, 6)),
     GD = FifthModification(pythagoreanComma = RationalNumber(-1, 6)),
     DA = FifthModification(pythagoreanComma = RationalNumber(-1, 6)),

@@ -42,6 +42,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.IntState
 import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,12 +54,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.moekadu.tuner.R
-import de.moekadu.tuner.temperaments.MusicalNote
-import de.moekadu.tuner.temperaments.NoteNames
-import de.moekadu.tuner.temperaments.Temperament
-import de.moekadu.tuner.temperaments.TemperamentWithNoteNames
-import de.moekadu.tuner.temperaments.getSuitableNoteNames
-import de.moekadu.tuner.temperaments.temperamentDatabase
+import de.moekadu.tuner.notenames.MusicalNote
+import de.moekadu.tuner.temperaments.Temperament3
+import de.moekadu.tuner.temperaments.predefinedTemperamentEDO
 import de.moekadu.tuner.ui.notes.CentAndRatioTable
 import de.moekadu.tuner.ui.notes.CircleOfFifthTable
 import de.moekadu.tuner.ui.notes.NotePrintOptions
@@ -65,15 +64,16 @@ import de.moekadu.tuner.ui.notes.NoteSelector
 import de.moekadu.tuner.ui.theme.TunerTheme
 
 interface TemperamentDialogState {
-    val temperament: State<Temperament>
-    val noteNames: State<NoteNames>
+    val temperament: State<Temperament3>
+    //val noteNames: State<NoteNames>
     //val predefinedTemperaments: ImmutableList<TemperamentWithNoteNames>
     //val customTemperaments: StateFlow<ImmutableList<TemperamentWithNoteNames>>
+    val rootNotes: State<Array<MusicalNote> >
     val selectedRootNoteIndex: IntState
 
-    val defaultTemperament: TemperamentWithNoteNames
+    val defaultTemperament: Temperament3
 
-    fun setNewTemperament(temperamentWithNoteNames: TemperamentWithNoteNames)
+    fun setNewTemperament(temperament: Temperament3)
     fun selectRootNote(index: Int)
 }
 
@@ -84,13 +84,20 @@ fun TemperamentDialog(
     notePrintOptions: NotePrintOptions,
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit = {},
-    onDone: (Temperament, NoteNames, rootNote: MusicalNote) -> Unit = { _, _, _ -> },
+    onDone: (Temperament3, rootNote: MusicalNote) -> Unit = { _, _ -> },
     onChooseTemperaments: () -> Unit = {}
 ) {
 //    val customTemperaments by state.customTemperaments.collectAsStateWithLifecycle()
 //    val temperamentsList by remember { derivedStateOf {
 //        (customTemperaments + state.predefinedTemperaments).toImmutableList()
 //    }}
+
+    val rootNote by remember { derivedStateOf {
+        state.rootNotes.value[state.selectedRootNoteIndex.intValue]
+    }}
+    val hasChainOfFifths by remember { derivedStateOf {
+        state.temperament.value.chainOfFifths() != null
+    }}
     val context = LocalContext.current
 
     Scaffold(
@@ -107,8 +114,7 @@ fun TemperamentDialog(
                     TextButton(onClick = {
                         onDone(
                             state.temperament.value,
-                            state.noteNames.value,
-                            state.noteNames.value[state.selectedRootNoteIndex.intValue]
+                            state.rootNotes.value[state.selectedRootNoteIndex.intValue]
                         )
                     }) {
                         Text(stringResource(id = R.string.done))
@@ -166,7 +172,7 @@ fun TemperamentDialog(
             Spacer(modifier = Modifier.height(4.dp))
             NoteSelector(
                 selectedIndex = state.selectedRootNoteIndex.intValue,
-                notes = state.noteNames.value.notes,
+                notes = state.rootNotes.value,
                 notePrintOptions = notePrintOptions,
                 onIndexChanged = { state.selectRootNote(it) }
             )
@@ -198,14 +204,13 @@ fun TemperamentDialog(
 
             CentAndRatioTable(
                 state.temperament.value,
-                state.noteNames.value,
-                state.selectedRootNoteIndex.intValue,
+                state.rootNotes.value[state.selectedRootNoteIndex.intValue],
                 notePrintOptions = notePrintOptions,
                 modifier = Modifier.fillMaxWidth(),
                 horizontalContentPadding = 16.dp
             )
 
-            if (state.temperament.value.circleOfFifths != null) {
+            if (hasChainOfFifths) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     stringResource(id = R.string.circle_of_fifths),
@@ -217,8 +222,7 @@ fun TemperamentDialog(
                 )
                 CircleOfFifthTable(
                     temperament = state.temperament.value,
-                    noteNames = state.noteNames.value,
-                    rootNoteIndex = state.selectedRootNoteIndex.intValue,
+                    rootNote = rootNote,
                     notePrintOptions = notePrintOptions,
                     modifier = Modifier.fillMaxWidth(),
                     horizontalContentPadding = 16.dp
@@ -236,30 +240,32 @@ fun TemperamentDialog(
 }
 
 private class TemperamentDialogTestState : TemperamentDialogState {
-    override var temperament = mutableStateOf(temperamentDatabase[0])
-    override var noteNames
-            = mutableStateOf(getSuitableNoteNames(temperamentDatabase[0].numberOfNotesPerOctave)!!)
-
-    override val defaultTemperament = TemperamentWithNoteNames(
-        temperamentDatabase[0], null
+    override var temperament = mutableStateOf<Temperament3>(
+        predefinedTemperamentEDO(12, 1L)
     )
+
+    override val defaultTemperament = predefinedTemperamentEDO(12, 1L)
+
+    override val rootNotes = derivedStateOf {
+        temperament.value.possibleRootNotes()
+    }
 
     override val selectedRootNoteIndex = mutableIntStateOf(0)
 
-    override fun setNewTemperament(temperamentWithNoteNames: TemperamentWithNoteNames) {
+    override fun setNewTemperament(temperament: Temperament3) {
         val oldRootNoteIndex = selectedRootNoteIndex.intValue
-        val oldRootNote = noteNames.value[oldRootNoteIndex]
-        val newNoteNames = temperamentWithNoteNames.noteNames
-            ?: getSuitableNoteNames(temperamentWithNoteNames.temperament.numberOfNotesPerOctave)!!
-        val rootNoteIndexInNewScale = newNoteNames.getNoteIndex(oldRootNote)
+        val oldRootNote = rootNotes.value[oldRootNoteIndex]
+        val newNoteNames = temperament.possibleRootNotes()
+
+        val rootNoteIndexInNewScale = newNoteNames
+            .indexOfFirst { it.equalsIgnoreOctave(oldRootNote) }
         selectedRootNoteIndex.intValue = if (rootNoteIndexInNewScale == -1) {
             0
         } else {
             rootNoteIndexInNewScale
         }
 
-        temperament.value = temperamentWithNoteNames.temperament
-        noteNames.value = newNoteNames
+        this.temperament.value = temperament
     }
 
     override fun selectRootNote(index: Int) {

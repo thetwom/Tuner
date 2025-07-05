@@ -18,6 +18,8 @@
 */
 package de.moekadu.tuner.temperaments
 
+import de.moekadu.tuner.notenames.MusicalNote
+
 object TemperamentValidityChecks {
     /** Possible errors for the different cent/ratio values of the temperament table. */
     enum class ValueOrdering {
@@ -106,7 +108,7 @@ object TemperamentValidityChecks {
             } else {
                 for (j in i + 1 until numberOfNotes - 1) {
                     val noteNext = obtainNote(j)
-                    if (noteNext != null && MusicalNote.notesEqualIgnoreOctave(note, noteNext)) {
+                    if (noteNext != null && note.match(noteNext, ignoreOctave = true)) {
                         duplicateNoteErrors[i] = true
                         duplicateNoteErrors[j] = true
                         if (error != NoteNameError.Undefined)

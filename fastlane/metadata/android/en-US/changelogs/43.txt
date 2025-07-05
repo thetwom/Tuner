@@ -1,0 +1,19 @@
+v7.0.0:
+- New UI backend (jetpack compose).
+- (Hopefully) improved note detection for some edge cases.
+- User defined temperaments.
+
+v7.1.0:
+- Fix displaying preferences correctly on Android 15.
+- Enable edge-to-edge mode (meaning that e.g. lists are displayed
+  down to the bottom behind navigation bar).
+
+v7.1.1:
+- Fix common crash when detecting low frequencies.
+
+v7.1.2:
+- Fix sharp/flap preference behavior for (non 12 tone) scales.
+
+v7.1.3:
+- Fix locale conflict when setting floating point frequencies for reference
+  frequency.
