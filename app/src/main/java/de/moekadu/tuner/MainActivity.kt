@@ -148,8 +148,7 @@ class MainActivity : ComponentActivity() {
                 }
                 DisposableEffect(controller) {
                     val listener = NavController.OnDestinationChangedListener { _, _, _ ->
-                        if (controller.previousBackStackEntry == null
-                            && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                             setShowWhenLocked(pref.displayOnLockScreen.value)
                         }
                     }
