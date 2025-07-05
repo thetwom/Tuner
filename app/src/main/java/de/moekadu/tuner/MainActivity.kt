@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -95,9 +96,9 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null)
             handleFileLoadingIntent(intent)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            this.setShowWhenLocked(pref.displayOnLockScreen.value)
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+//            this.setShowWhenLocked(pref.displayOnLockScreen.value)
+//        }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -145,16 +146,18 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
-
-//                DisposableEffect(controller) {
-//                    val listener = NavController.OnDestinationChangedListener { controller, _, _ ->
-//                        canNavigateUp = controller.previousBackStackEntry != null
-//                    }
-//                    controller.addOnDestinationChangedListener(listener)
-//                    onDispose {
-//                        controller.removeOnDestinationChangedListener(listener)
-//                    }
-//                }
+                DisposableEffect(controller) {
+                    val listener = NavController.OnDestinationChangedListener { _, _, _ ->
+                        if (controller.previousBackStackEntry == null
+                            && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                            setShowWhenLocked(pref.displayOnLockScreen.value)
+                        }
+                    }
+                    controller.addOnDestinationChangedListener(listener)
+                    onDispose {
+                        controller.removeOnDestinationChangedListener(listener)
+                    }
+                }
 
                 NavHost(
                     modifier = Modifier.fillMaxSize(),
