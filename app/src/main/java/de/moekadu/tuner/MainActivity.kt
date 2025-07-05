@@ -96,10 +96,6 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null)
             handleFileLoadingIntent(intent)
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-//            this.setShowWhenLocked(pref.displayOnLockScreen.value)
-//        }
-
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 pref.screenAlwaysOn.collect {
