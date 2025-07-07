@@ -22,6 +22,13 @@ import androidx.compose.runtime.Stable
 import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.notenames.NoteNames2
 
+private fun resolveReferenceNote(noteNames: NoteNames2, referenceNote: MusicalNote?): MusicalNote {
+    return when {
+        referenceNote == null -> noteNames.defaultReferenceNote
+        noteNames.hasNote(referenceNote) -> referenceNote
+        else -> noteNames.defaultReferenceNote
+    }
+}
 /** Note names, which can map indices between musical notes and via verse.
  * @param noteNames Note names of one octave.
  * @param referenceNote Reference note of the scale, which refers to noteIndex 0.
@@ -33,7 +40,7 @@ class MusicalScaleNoteNames2(
     referenceNote: MusicalNote?
 ) {
     /** Reference note. */
-    val referenceNote = referenceNote ?: noteNames.defaultReferenceNote
+    val referenceNote = resolveReferenceNote(noteNames, referenceNote)
 
     /** Reference note index within the octave (index in notes). */
     val referenceNoteIndexWithinOctave = noteNames.getNoteIndex(this.referenceNote)

@@ -33,17 +33,17 @@ class MusicalScaleNoteNamesTest {
 
         val scale = MusicalScaleNoteNames2(notes, MusicalNote(BaseNote.A, NoteModifier.None, 4))
 
-        assertEquals(-1, scale.getIndexOfNote(MusicalNote(BaseNote.G, NoteModifier.Sharp, 4)))
-        assertEquals(0, scale.getIndexOfNote(MusicalNote(BaseNote.A, NoteModifier.None, 4)))
-        assertEquals(1, scale.getIndexOfNote(MusicalNote(BaseNote.A, NoteModifier.Sharp, 4)))
-        assertEquals(2, scale.getIndexOfNote(MusicalNote(BaseNote.B, NoteModifier.None, 4)))
-        assertEquals(3, scale.getIndexOfNote(MusicalNote(BaseNote.C, NoteModifier.None, 5)))
-        assertEquals(4, scale.getIndexOfNote(MusicalNote(BaseNote.C, NoteModifier.Sharp, 5)))
-        assertEquals(16, scale.getIndexOfNote(MusicalNote(BaseNote.C, NoteModifier.Sharp, 6)))
+        assertEquals(-1, scale.getNoteIndex(MusicalNote(BaseNote.G, NoteModifier.Sharp, 4)))
+        assertEquals(0, scale.getNoteIndex(MusicalNote(BaseNote.A, NoteModifier.None, 4)))
+        assertEquals(1, scale.getNoteIndex(MusicalNote(BaseNote.A, NoteModifier.Sharp, 4)))
+        assertEquals(2, scale.getNoteIndex(MusicalNote(BaseNote.B, NoteModifier.None, 4)))
+        assertEquals(3, scale.getNoteIndex(MusicalNote(BaseNote.C, NoteModifier.None, 5)))
+        assertEquals(4, scale.getNoteIndex(MusicalNote(BaseNote.C, NoteModifier.Sharp, 5)))
+        assertEquals(16, scale.getNoteIndex(MusicalNote(BaseNote.C, NoteModifier.Sharp, 6)))
 
         for (someIndex in -100 .. 100) {
             val someNote = scale.getNoteOfIndex(someIndex)
-            val recoveredIndex = scale.getIndexOfNote(someNote)
+            val recoveredIndex = scale.getNoteIndex(someNote)
             println(someNote)
             assertEquals(someIndex, recoveredIndex)
         }

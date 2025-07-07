@@ -10,12 +10,12 @@ plugins {
 
 android {
     namespace = "de.moekadu.tuner"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "de.moekadu.tuner"
         minSdk = 23
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 44
         versionName = "8.0.0"
         testInstrumentationRunner =  "androidx.test.runner.AndroidJUnitRunner"
