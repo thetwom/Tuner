@@ -30,7 +30,8 @@ enum class NotationType(@StringRes val stringResourceId: Int) {
     Solfege(R.string.notation_solfege), /**< Solfege. */
     Carnatic(R.string.notation_carnatic), /**< Carnatic Indian notation. */
     Hindustani(R.string.notation_hindustani), /**< Hindustani Indian notation. */
-    Byzantine(R.string.notation_byzantine) /**< Byzantine notation system. */
+    Byzantine(R.string.notation_byzantine), /**< Byzantine notation system. */
+    Vietnamese(R.string.notation_vietnamese)
 }
 
 fun NotationType.resourceIds(): Map<NoteNameStem, Int> {
@@ -41,6 +42,7 @@ fun NotationType.resourceIds(): Map<NoteNameStem, Int> {
         NotationType.Carnatic -> noteCarnaticResourceIds
         NotationType.Hindustani -> noteHindustaniResourceIds
         NotationType.Byzantine -> noteByzantineResourceIds
+        NotationType.Vietnamese -> noteVietnameseResourceIds
     }
 }
 
@@ -128,6 +130,15 @@ private val noteHindustaniResourceIds = mapOf(
     NoteNameStem(BaseNote.B) to R.string.ni2_hindustani,
 )
 
+private val noteVietnameseResourceIds = mapOf(
+    NoteNameStem(BaseNote.C) to R.string.c_note_vietnamese,
+    NoteNameStem(BaseNote.D) to R.string.d_note_vietnamese,
+    NoteNameStem(BaseNote.E) to R.string.e_note_vietnamese,
+    NoteNameStem(BaseNote.F) to R.string.f_note_vietnamese,
+    NoteNameStem(BaseNote.G) to R.string.g_note_vietnamese,
+    NoteNameStem(BaseNote.A) to R.string.a_note_vietnamese,
+    NoteNameStem(BaseNote.B) to R.string.b_note_vietnamese,
+)
 //fun noteNameResourceIdOfStem(notationType: NotationType, stem: NoteNameStem): Int? {
 //    return when (notationType) {
 //        NotationType.Standard -> noteResourceIds[stem]

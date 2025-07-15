@@ -315,4 +315,12 @@
     <string name="edo_temperaments">Equal temperaments</string>
     <string name="other_temperaments">Other temperaments</string>
     <string name="custom_temperaments">Custom temperaments</string>
+    <string name="notation_vietnamese">Vietnamese</string>
+    <string name="c_note_vietnamese">Hò</string>
+    <string name="d_note_vietnamese">Xư</string>
+    <string name="e_note_vietnamese">Y</string>
+    <string name="f_note_vietnamese">Xang</string>
+    <string name="g_note_vietnamese">Xê</string>
+    <string name="a_note_vietnamese">Công</string>
+    <string name="b_note_vietnamese">Phan</string>
 </resources>
