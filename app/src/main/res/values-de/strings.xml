@@ -258,4 +258,5 @@
     <string name="other_temperaments">Weitere Stimmungen</string>
     <string name="custom_temperaments">Benutzerdefinierte Stimmungen</string>
     <string name="notation_vietnamese">Vietnamesisch</string>
+    <string name="use_default">Standard verwenden</string>
 </resources>

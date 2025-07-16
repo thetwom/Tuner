@@ -114,7 +114,7 @@
     <string name="copy_extension">%s (copy)</string>
     <string name="failed_to_archive_items">Failed to write items to file</string>
     <plurals name="database_num_saved">
-        <item quantity="one">Writing %d items to \"%s\".</item>
+        <item quantity="one">Writing %d item to \"%s\".</item>
         <item quantity="other">Writing %d items to \"%s\".</item>
     </plurals>
     <string name="database_empty">There are no items which can be saved.</string>
@@ -323,4 +323,5 @@
     <string name="g_note_vietnamese">Xê</string>
     <string name="a_note_vietnamese">Công</string>
     <string name="b_note_vietnamese">Phan</string>
+    <string name="use_default">Use default</string>
 </resources>

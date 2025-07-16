@@ -22,7 +22,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -55,7 +54,6 @@ import de.moekadu.tuner.navigation.preferenceGraph
 import de.moekadu.tuner.navigation.mainGraph
 import de.moekadu.tuner.navigation.temperamentEditorGraph
 import de.moekadu.tuner.navigation.TemperamentEditorGraphRoute
-import de.moekadu.tuner.navigation.TemperamentsManagerRoute
 import de.moekadu.tuner.preferences.NightMode
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.preferences.migrateFromV6
@@ -137,7 +135,7 @@ class MainActivity : ComponentActivity() {
 //                        Log.v("Tuner", "MainActivity2: Loading file ...")
                         controller.popBackStack(TunerRoute, inclusive = false)
                         controller.navigate(TemperamentDialogRoute)
-                        controller.navigate(TemperamentsManagerRoute(temperaments.musicalScale.value.temperament.stableId))
+//                         controller.navigate(TemperamentsManagerRoute(temperaments.musicalScale.value.temperament.stableId))
                         loadTemperaments(
                             controller, temperamentList, temperaments, this@MainActivity
                         )

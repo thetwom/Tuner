@@ -36,6 +36,7 @@ import de.moekadu.tuner.R
 import de.moekadu.tuner.instruments.Instrument
 import de.moekadu.tuner.instruments.InstrumentIcon
 import de.moekadu.tuner.musicalscale.MusicalScale2
+import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.preferences.PreferenceResources
 import de.moekadu.tuner.temperaments.EditableTemperament
 import de.moekadu.tuner.temperaments.Temperament3
@@ -43,24 +44,25 @@ import de.moekadu.tuner.temperaments.TemperamentResources
 import de.moekadu.tuner.temperaments.toEditableTemperament
 import de.moekadu.tuner.ui.instruments.Instruments
 import de.moekadu.tuner.ui.preferences.ReferenceNoteDialog
+import de.moekadu.tuner.ui.preferences.RootNoteDialog
 import de.moekadu.tuner.ui.screens.InstrumentTuner
 import de.moekadu.tuner.ui.screens.ScientificTuner
 import de.moekadu.tuner.ui.temperaments.TemperamentDetailsDialog
-import de.moekadu.tuner.ui.temperaments.TemperamentDialog
+import de.moekadu.tuner.ui.temperaments.TemperamentsDialog2
 import de.moekadu.tuner.ui.temperaments.TemperamentsManager
 import de.moekadu.tuner.viewmodels.InstrumentTunerViewModel
 import de.moekadu.tuner.viewmodels.InstrumentViewModel
 import de.moekadu.tuner.viewmodels.ScientificTunerViewModel
 import de.moekadu.tuner.viewmodels.TemperamentDialogViewModel
+import de.moekadu.tuner.viewmodels.TemperamentDialog2ViewModel
 import de.moekadu.tuner.viewmodels.TemperamentsManagerViewModel
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Composable
 private fun createTemperamentDialogViewModel(
     controller: NavController, backStackEntry: NavBackStackEntry
-): TemperamentDialogViewModel? {
+): TemperamentDialog2ViewModel? {
     val parentEntry = remember(backStackEntry) {
         try {
             controller.getBackStackEntry<TemperamentDialogRoute>()
@@ -71,7 +73,7 @@ private fun createTemperamentDialogViewModel(
     return if (parentEntry == null)
         null
     else
-        hiltViewModel<TemperamentDialogViewModel>(parentEntry)
+        hiltViewModel<TemperamentDialog2ViewModel>(parentEntry)
 }
 
 
@@ -195,88 +197,56 @@ fun NavGraphBuilder.mainGraph(
         )
     }
 
-    composable<TemperamentDialogRoute> {
-        val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
+    composable<TemperamentDialogRoute> { route ->
+//        val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
         val resources = LocalContext.current.resources
-//        val viewModel: TemperamentViewModel = hiltViewModel()
-        val viewModel: TemperamentDialogViewModel = createTemperamentDialogViewModel(
+//        val viewModeTemperamentDialogs2ViewModel: TemperamentViewModel = hiltViewModel()
+        val viewModel: TemperamentDialog2ViewModel = createTemperamentDialogViewModel(
             controller = controller,
-            backStackEntry = it
+            backStackEntry = route
         )!!
-//        val context = LocalContext.current
-
-        TemperamentDialog(
-            state = viewModel,
-            notePrintOptions = notePrintOptions,
-            modifier = Modifier.fillMaxSize(),
-            onDismiss = { controller.navigateUp() },
-            onDone = { temperament, rootNote ->
-//                val predefinedNoteNames = generateNoteNames(temperament.numberOfNotesPerOctave)
-//                val noteNamesResolved =
-//                    if (predefinedNoteNames?.notes?.contentEquals(noteNames.notes) == true)
-//                        null
-//                    else
-//                        noteNames
-//                val temperamentWithNoteNames = TemperamentWithNoteNames2(
-//                    temperament, noteNamesResolved
-//                )
-                val currentReferenceNote = temperamentResources.musicalScale.value.referenceNote
-                val noteNames = temperament.noteNames(rootNote)
-
-                if (noteNames.hasNote(currentReferenceNote)) {
-                    temperamentResources.writeMusicalScale(
-                        temperament = temperament,
-                        rootNote = rootNote
-                    )
-                    controller.navigateUp()
-                } else {
-                    val oldScale = temperamentResources.musicalScale.value
-                    val proposedScale = MusicalScale2(
-                        temperament = temperament,
-                        _rootNote = rootNote,
-                        _referenceNote = null,
-                        referenceFrequency = oldScale.referenceFrequency,
-                        frequencyMin = oldScale.frequencyMin,
-                        frequencyMax = oldScale.frequencyMax,
-                        _stretchTuning = oldScale.stretchTuning
-                    )
-                    controller.navigate(
-                        ReferenceFrequencyDialogRoute(
-                            proposedScale,
-                            resources.getString(R.string.new_temperament_requires_adapting_reference_note)
-                        )
-                    ) {
-                        popUpTo(TemperamentDialogRoute) { inclusive = true }
-                    }
-                }
-            },
-            onChooseTemperaments = { controller.navigate(TemperamentsManagerRoute(
-                viewModel.temperament.value.stableId
-            )) }
-        )
-    }
-
-    composable<TemperamentsManagerRoute> {
         val context = LocalContext.current
-        val resources = context.resources
-        val initialTemperamentKey = it.toRoute<TemperamentsManagerRoute>().currentTemperamentKey
-        val viewModel = hiltViewModel<TemperamentsManagerViewModel, TemperamentsManagerViewModel.Factory>{ factory ->
-            factory.create(initialTemperamentKey)
-        }
-        val viewModelParentDialog = createTemperamentDialogViewModel(
-            controller = controller,
-            backStackEntry = it
-        )
-        TemperamentsManager(
+
+        TemperamentsDialog2(
             state = viewModel,
+            //notePrintOptions = notePrintOptions,
             modifier = Modifier.fillMaxSize(),
-            onTemperamentClicked = { temperament ->
-                if (viewModelParentDialog != null) {
-                    viewModelParentDialog.setNewTemperament(temperament)
-                    controller.navigateUp()
-                } else {
-                    viewModel.activateTemperament(temperament.stableId)
+            onNavigateUp = { controller.navigateUp() },
+            onTemperamentClicked = { temperament, rootNote ->
+                controller.navigate(
+                    RootNoteDialogRoute(temperament, rootNote)
+                ) {
+                    popUpTo(TemperamentDialogRoute) { inclusive = true }
                 }
+                // val currentReferenceNote = temperamentResources.musicalScale.value.referenceNote
+                // val noteNames = temperament.noteNames(rootNote)
+
+                // if (noteNames.hasNote(currentReferenceNote)) {
+                //     temperamentResources.writeMusicalScale(
+                //         temperament = temperament,
+                //         rootNote = rootNote
+                //     )
+                //     controller.navigateUp()
+                // } else {
+                //     val oldScale = temperamentResources.musicalScale.value
+                //     val proposedScale = MusicalScale2(
+                //         temperament = temperament,
+                //         _rootNote = rootNote,
+                //         _referenceNote = null,
+                //         referenceFrequency = oldScale.referenceFrequency,
+                //         frequencyMin = oldScale.frequencyMin,
+                //         frequencyMax = oldScale.frequencyMax,
+                //         _stretchTuning = oldScale.stretchTuning
+                //     )
+                //     controller.navigate(
+                //         ReferenceFrequencyDialogRoute(
+                //             proposedScale,
+                //             resources.getString(R.string.new_temperament_requires_adapting_reference_note)
+                //         )
+                //     ) {
+                //         popUpTo(TemperamentDialogRoute) { inclusive = true }
+                //     }
+                // }
             },
             onEditTemperamentClicked = { temperament, copy ->
                 val name = temperament.name.value(context)
@@ -298,9 +268,58 @@ fun NavGraphBuilder.mainGraph(
             onTemperamentInfoClicked = { temperament ->
                 controller.navigate(TemperamentInfoDialogRoute(temperament))
             },
-            onNavigateUp = { controller.navigateUp() }
+
+            // onChooseTemperaments = { controller.navigate(TemperamentsManagerRoute(
+            //     viewModel.temperament.value.stableId
+            // )) }
         )
     }
+
+//     composable<TemperamentsManagerRoute> {
+//         val context = LocalContext.current
+//         val resources = context.resources
+//         val initialTemperamentKey = it.toRoute<TemperamentsManagerRoute>().currentTemperamentKey
+//         val viewModel = hiltViewModel<TemperamentsManagerViewModel, TemperamentsManagerViewModel.Factory>{ factory ->
+//             factory.create(initialTemperamentKey)
+//         }
+//         val viewModelParentDialog = createTemperamentDialogViewModel(
+//             controller = controller,
+//             backStackEntry = it
+//         )
+//         TemperamentsManager(
+//             state = viewModel,
+//             modifier = Modifier.fillMaxSize(),
+//             onTemperamentClicked = { temperament ->
+//                 if (viewModelParentDialog != null) {
+//                     viewModelParentDialog.setNewTemperament(temperament)
+//                     controller.navigateUp()
+//                 } else {
+//                     viewModel.activateTemperament(temperament.stableId)
+//                 }
+//             },
+//             onEditTemperamentClicked = { temperament, copy ->
+//                 val name = temperament.name.value(context)
+//                 controller.navigate(
+//                     TemperamentEditorGraphRoute(
+//                         temperament.toEditableTemperament(
+//                             context = context,
+//                             name = when {
+//                                 copy && name == "" -> ""
+//                                 copy -> "$name (${resources.getString(R.string.copy_)})"
+//                                 else -> null // i.e. use name from temperament
+//                             },
+//                             stableId = if (copy) Temperament3.NO_STABLE_ID else null // null means use stable from temperament
+//                         )
+//                     )
+//                 )
+//             },
+//             onLoadTemperaments = onLoadTemperaments,
+//             onTemperamentInfoClicked = { temperament ->
+//                 controller.navigate(TemperamentInfoDialogRoute(temperament))
+//             },
+//             onNavigateUp = { controller.navigateUp() }
+//         )
+//     }
 
     dialog<TemperamentInfoDialogRoute> {
         val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
@@ -312,6 +331,51 @@ fun NavGraphBuilder.mainGraph(
         )
     }
 
+    dialog<RootNoteDialogRoute> {
+        val data = it.toRoute<RootNoteDialogRoute>()
+        val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
+        val resources = LocalContext.current.resources
+
+        RootNoteDialog(
+            data.rootNote,
+            data.temperament,
+            onDone = { rootNote ->
+                val currentReferenceNote = temperamentResources.musicalScale.value.referenceNote
+                val noteNames = data.temperament.noteNames(rootNote)
+
+                if (noteNames.hasNote(currentReferenceNote)) {
+                    temperamentResources.writeMusicalScale(
+                        temperament = data.temperament,
+                        rootNote = rootNote
+                    )
+                    controller.navigateUp()
+                } else {
+                    val oldScale = temperamentResources.musicalScale.value
+                    val proposedScale = MusicalScale2(
+                        temperament = data.temperament,
+                        _rootNote = rootNote,
+                        _referenceNote = null,
+                        referenceFrequency = oldScale.referenceFrequency,
+                        frequencyMin = oldScale.frequencyMin,
+                        frequencyMax = oldScale.frequencyMax,
+                        _stretchTuning = oldScale.stretchTuning
+                    )
+                    controller.navigate(
+                        ReferenceFrequencyDialogRoute(
+                            proposedScale,
+                            resources.getString(R.string.new_temperament_requires_adapting_reference_note)
+                        )
+                    ) {
+                        popUpTo(data) { inclusive = true }
+                    }
+                }
+            },
+            onDismiss = {
+                controller.navigateUp()
+            },
+            notePrintOptions = notePrintOptions
+        )
+    }
 
 //    dialog<TestRoute>(
 //        deepLinks = listOf(
@@ -352,10 +416,10 @@ data class ReferenceFrequencyDialogRoute(
 @Serializable
 data object TemperamentDialogRoute
 
-@Serializable
-data class TemperamentsManagerRoute(
-    val currentTemperamentKey: Long
-)
+// @Serializable
+// data class TemperamentsManagerRoute(
+//     val currentTemperamentKey: Long
+// )
 
 @Serializable
 data class TemperamentInfoDialogRoute(
@@ -367,6 +431,18 @@ data class TemperamentInfoDialogRoute(
     fun obtainTemperament(): Temperament3 {
         return Json.decodeFromString<Temperament3>(serializedTemperament)
     }
+}
+
+@Serializable
+data class RootNoteDialogRoute(
+    val serializedTemperament: String, val serializedRootNote: String
+) {
+    constructor(temperament: Temperament3, rootNote: MusicalNote) : this(
+        Json.encodeToString(temperament),
+        Json.encodeToString(rootNote)
+    )
+    val temperament get() = Json.decodeFromString<Temperament3>(serializedTemperament)
+    val rootNote get() = Json.decodeFromString<MusicalNote>(serializedRootNote)
 }
 //@Serializable
 //data object TestRoute
