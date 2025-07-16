@@ -1,0 +1,10 @@
+v8.0.0:
+- Improvements of note namings in different temperaments
+  (breaks compatibility to older versions)
+- Polish and Hungary translations (thanks to Omikorin and meskobalasz)
+- More EDO temperaments
+
+v8.1.0:
+- Vietnamese note naming
+- Improved workflow for selecting temperaments
+- Add option to show tuner on lock screen (thanks to m0nkeyc0de)
