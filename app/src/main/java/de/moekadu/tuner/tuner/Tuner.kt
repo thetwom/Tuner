@@ -54,6 +54,14 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/** Tuner.
+ * @note Tuner starts after calling `connect()` and pauses when calling `disconnect()`.
+ * @param pref Preferences tuner parameters.
+ * @param instrument Currently used instrument (which notes are possible target notes).
+ * @param musicalScale Musical scale which maps frequencies to notes.
+ * @param scope Coroutine scope where the tuner runs.
+ * @param onResultAvailableListener Listener to which we send results (on Dispatchers.Main)
+ */
 class Tuner(
     private val pref: PreferenceResources,
     private var instrument: StateFlow<Instrument>,
@@ -61,22 +69,31 @@ class Tuner(
     private val scope: CoroutineScope,
     private val onResultAvailableListener: OnResultAvailableListener
 ) {
+    /** Callback which is used to send results. */
     interface OnResultAvailableListener {
+        /** Method called when a new frequency is detected.
+         * @param result The frequency detection result.
+         */
         fun onFrequencyDetected(result: FrequencyDetectionCollectedResults)
+
+        /** Method called when a detected frequency is postprocessed.
+         * This means the resulting frequency is filtered, smoothed and a target note is set.
+         * @param result The postprocessing result.
+         */
         fun onFrequencyEvaluated(result: FrequencyEvaluationResult)
     }
 
     private val _userDefinedTargetNote = MutableStateFlow<MusicalNote?>(null)
     private val userDefinedTargetNote = _userDefinedTargetNote.asStateFlow()
 
-    private sealed class Command {
-        data class Reconnect(
-            val scope: CoroutineScope, val listener: OnResultAvailableListener
-        ) : Command()
-        data object Disconnect : Command()
-        data object ChangePreferences : Command()
-    }
-
+    // private sealed class Command {
+    //     data class Reconnect(
+    //         val scope: CoroutineScope, val listener: OnResultAvailableListener
+    //     ) : Command()
+    //     data object Disconnect : Command()
+    //     data object ChangePreferences : Command()
+    // }
+    private enum class Command { Reconnect, Disconnect, ChangePreferences }
     private val channel = Channel<Command>(Channel.CONFLATED)
     private val restartChannel = Channel<Command>(Channel.CONFLATED)
 
@@ -128,45 +145,54 @@ class Tuner(
 
         scope.launch {
 //            var job: Job? = null
-            var reconnect: Command.Reconnect? = null
+            // reconnect is outside the following merge, so it will keep track if there is
+            // a disconnect ore a connect
+            var reconnect = false
             merge(channel.consumeAsFlow(), restartChannel.consumeAsFlow())
                 .map { v ->
                     when (v) {
-                        is Command.Reconnect -> {
-                            reconnect = v
+                        Command.Reconnect -> {
+                            reconnect = true
                         }
-                        is Command.Disconnect -> {
-                            reconnect = null
+                        Command.Disconnect -> {
+                            reconnect = false
                         }
+                        // in case of a setting-change, we do emit the current reconnect state
+                        // ... so in the end it will recreate the task in the collectLatest block
+                        // if reconnect is currently on, else it wont.
                         else -> {}
                     }
                     reconnect
                 }
                 .buffer(1, BufferOverflow.DROP_OLDEST)
-                .collectLatest { v ->
+                // collectLatest will CANCEL running jobs (run) when a new value is emitted
+                // so each time a value arrives, we cancel the run job, and only restart it
+                // if reconnect is not null
+                .collectLatest { r ->
                     // Log.v("Tuner", "Tuner: buffer before delay")
                     // sometimes, several settings are changed at the same time,
                     // which would lead to many tuner restarts in a very short time.
                     // the small delay avoid these restarts.
                     delay(50)
                     // Log.v("Tuner", "Tuner: buffer after delay $v, $reconnect, $isActive")
-                    if (isActive && v != null)
-                        run(v.listener)
+                    if (isActive && r)
+                        run()
                     // Log.v("Tuner", "Tuner: after 'if run'")
-            }
+                }
         }
     }
+
+    /** Start the tuner job. */
     fun connect() {
-        channel.trySend(Command.Reconnect(scope, onResultAvailableListener))
+        channel.trySend(Command.Reconnect)
     }
 
+    /** Stop the tuner job. */
     fun disconnect() {
         channel.trySend(Command.Disconnect)
     }
 
-    private suspend fun run(
-        onResultAvailableListener: OnResultAvailableListener
-    ) = coroutineScope {
+    private suspend fun run() = coroutineScope {
 //        Log.v("Tuner", "Tuner: start running again ...")
         waveWriter.setBufferSize(pref.sampleRate * pref.waveWriterDurationInSeconds.value)
 

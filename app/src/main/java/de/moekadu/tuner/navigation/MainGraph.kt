@@ -51,6 +51,7 @@ import de.moekadu.tuner.ui.temperaments.TemperamentDetailsDialog
 import de.moekadu.tuner.ui.temperaments.TemperamentsDialog2
 import de.moekadu.tuner.viewmodels.InstrumentTunerViewModel
 import de.moekadu.tuner.viewmodels.InstrumentViewModel
+import de.moekadu.tuner.viewmodels.ReferenceNoteDialogViewModel
 import de.moekadu.tuner.viewmodels.ScientificTunerViewModel
 import de.moekadu.tuner.viewmodels.TemperamentDialog2ViewModel
 import kotlinx.serialization.Serializable
@@ -182,6 +183,8 @@ fun NavGraphBuilder.mainGraph(
     dialog<ReferenceFrequencyDialogRoute> {
         val state = it.toRoute<ReferenceFrequencyDialogRoute>()
         val notePrintOptions by preferences.notePrintOptions.collectAsStateWithLifecycle()
+        val viewModel: ReferenceNoteDialogViewModel = hiltViewModel()
+
         ReferenceNoteDialog(
             initialState = state.musicalScale,
             onReferenceNoteChange = { newState ->
@@ -189,6 +192,7 @@ fun NavGraphBuilder.mainGraph(
                 controller.navigateUp()
             },
             notePrintOptions = notePrintOptions,
+            frequencyDetector = viewModel,
             warning = state.warning,
             onDismiss = { controller.navigateUp() }
         )

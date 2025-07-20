@@ -72,7 +72,7 @@ fun rememberTunerAudioPermission(snackbarHostState: SnackbarHostState): Boolean 
     val permissionGranted by remember { derivedStateOf { permission.status.isGranted }}
 //    Log.v("Tuner", "MainGraph: 1: permissions_granted = ${permission.status.isGranted}, rational = ${permission.status.shouldShowRationale}")
 
-    // TODO: relaunching ssems to fail ...
+    // TODO: relaunching seems to fail ...
     LaunchedEffect(permission.status, reopenSnackbarChannel) {
         if (!permission.status.isGranted) {
             if (permission.status.shouldShowRationale)

@@ -324,4 +324,5 @@
     <string name="a_note_vietnamese">Công</string>
     <string name="b_note_vietnamese">Phan</string>
     <string name="use_default">Use default</string>
+    <string name="detect_frequency">Detect frequency</string>
 </resources>

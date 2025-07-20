@@ -24,24 +24,10 @@ import de.moekadu.tuner.notenames.MusicalNote
 import de.moekadu.tuner.musicalscale.MusicalScale2
 import kotlin.math.log10
 
-/** Result of FrequencyEvaluator.
- * @param smoothedFrequency Smoothed frequency.
- * @param target Tuning target or null if no target available.
- * @param timeSinceThereIsNoFrequencyDetectionResult Time since there is no frequency detection
- *   result.
- * @param framePosition Frame position of the underlying time sample.
- */
-data class FrequencyEvaluationResult(
-    val smoothedFrequency: Float,
-    val target: TuningTarget?,
-    val timeSinceThereIsNoFrequencyDetectionResult: Float,
-    val framePosition: Int
-)
-
-/** Postprocess frequency and find suitable target note.
+/** Postprocess frequency.
+ * Compared to the FrequencyEvaluator, this does not find target notes.
  * @param numMovingAverage Number of values used for computing moving average for frequency
  *   smoothing.
- * @param toleranceInCents Tolerance in cents for target note to be in tune.
  * @param maxNumFaultyValues How many values can be of before the smoother discards the history.
  * @param maxNoise If noise in signal is higher than this value, we will not use this value.
  * @param minHarmonicEnergyContent Minimum required harmonic content in signal. If below, we will
@@ -49,18 +35,13 @@ data class FrequencyEvaluationResult(
  * @param sensitivity Another measure to sort out bad samples. A value from 0 to 100. If 0, we
  *   will never use a signal. If 100 we use every signal. If somewhere between we evaluate the
  *   harmonic energy of the signal an require its absolute values to be high enough.
- * @param musicalScale Musical scale which maps frequencies to notes.
- * @param instrument Instrument which defines the allowed notes.
  */
-class FrequencyEvaluator(
+class FrequencyEvaluatorSimple(
     numMovingAverage: Int,
-    toleranceInCents: Float,
     maxNumFaultyValues: Int,
     private val maxNoise: Float,
     private val minHarmonicEnergyContent: Float,
-    private val sensitivity: Float,
-    musicalScale: MusicalScale2,
-    instrument: Instrument
+    private val sensitivity: Float
 ) {
     private val smoother = OutlierRemovingSmoother(
         numMovingAverage,
@@ -72,74 +53,27 @@ class FrequencyEvaluator(
         numBuffers = 3
     )
 
-    private val tuningTargetComputer = TuningTargetComputer(musicalScale, instrument, toleranceInCents)
-    private var currentTargetNote: MusicalNote? = null
-    private var timeStepOfLastSuccessfulFrequencyDetection = 0
-
-    private var lastTime = 0
-
-    fun evaluate(
-        frequencyCollectionResults: FrequencyDetectionCollectedResults?,
-        userDefinedNote: MusicalNote?
-    ): FrequencyEvaluationResult {
+    /** Evaluate results.
+     * @param frequencyCollectionResults Input from frequency detector.
+     * @return Postprocessed (smoothed and filtered) frequency or 0f if sample should be discarded.
+     */
+    fun evaluate(frequencyCollectionResults: FrequencyDetectionCollectedResults?): Float {
         var smoothedFrequency = 0f
-        var frequencyDetectionTimeStep = -1
-        var dt = -1f
 //        Log.v("Tuner", "FrequencyEvaluator.evaluate: frequencyCollectionResults = $frequencyCollectionResults")
-        val newTarget = frequencyCollectionResults?.let {
-            frequencyDetectionTimeStep = it.timeSeries.framePosition
-            dt = it.timeSeries.dt
+        frequencyCollectionResults?.let {
 //            Log.v("Tuner", "FrequencyEvaluator.evaluate: noise = ${it.noise}, maxNoise=$maxNoise, f=${it.frequency}")
-            val requiredEnergyLevel = 100 - sensitivity - 0.0001f // minus a very small number, to make sure, that a level of 0 always enables evaluation for sensitivity 100
+            val requiredEnergyLevel =
+                100 - sensitivity - 0.0001f // minus a very small number, to make sure, that a level of 0 always enables evaluation for sensitivity 100
 //            Log.v("Tuner", "FrequencyEvaluator.evaluate: energy = ${it.harmonicEnergyAbsolute} signalLevel = ${transformEnergyToLevelFrom0To100(it.harmonicEnergyAbsolute)}, required = $requiredEnergyLevel")
             if (it.noise < maxNoise
                 && it.harmonicEnergyContentRelative >= minHarmonicEnergyContent
                 && transformEnergyToLevelFrom0To100(it.harmonicEnergyAbsolute) >= requiredEnergyLevel
-                ) {
+            ) {
                 smoothedFrequency = smoother(it.frequency)
-
-//                Log.v("Tuner", "FrequencyEvaluator.evaluate: smoothedFrequency=$smoothedFrequency")
-                if (smoothedFrequency > 0f) {
-                    timeStepOfLastSuccessfulFrequencyDetection = frequencyDetectionTimeStep
-                    tuningTargetComputer(
-                        smoothedFrequency,
-                        currentTargetNote,
-                        userDefinedNote
-                    )
-                } else {
-                    null
-                }
-            } else {
-                null
             }
         }
-
-        newTarget?.note?.let {
-            currentTargetNote = it
-        }
-
-        val time = frequencyCollectionResults?.timeSeries?.framePosition ?: 0
-//        val diff = time - lastTime
-        lastTime = time
-//        Log.v("Tuner", "FrequencyEvaluator.evaluate: time since last update = $diff")
-        return FrequencyEvaluationResult(
-            smoothedFrequency,
-            newTarget,
-            (frequencyDetectionTimeStep - timeStepOfLastSuccessfulFrequencyDetection) * dt,
-            frequencyDetectionTimeStep
-        )
+        return smoothedFrequency
     }
-//    }.collect {
-//        ensureActive()
-////                Log.v("Tuner", "TunerViewModel: evaluating target: $it, $coroutineContext")
-//        it.target?.let{ tuningTarget ->
-//            currentTargetNote = tuningTarget.note
-//            _tuningTarget.value = tuningTarget
-//        }
-//        _timeSinceThereIsNoFrequencyDetectionResult.value = it.timeSinceThereIsNoFrequencyDetectionResult
-//        if (it.smoothedFrequency > 0f)
-//            _currentFrequency.value = it.smoothedFrequency
-//    }
 
     private fun transformEnergyToLevelFrom0To100(energy: Float): Float {
         // sine waves of maximum amplitude (1f) would have a level of log10(1f)
