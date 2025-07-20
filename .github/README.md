@@ -1,7 +1,7 @@
 # Tuner
 
 > [!IMPORTANT]
-> This app has migrated to (codeberg)[https://codeberg.org/thetwom/Tuner]
+> This app has migrated to [codeberg](https://codeberg.org/thetwom/Tuner)
 
 This is a basic tuner app. 
 
