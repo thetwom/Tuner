@@ -1,5 +1,8 @@
 # Tuner
 
+> [!IMPORTANT]
+> This app has migrated to (codeberg)[https://codeberg.org/thetwom/Tuner]
+
 This is a basic tuner app. 
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
@@ -9,13 +12,8 @@ This is a basic tuner app.
      alt="Get it on Google Play"
      height="80">](https://play.google.com/store/apps/details?id=de.moekadu.tuner)
 
-# Screenshots
-<div>
-    <img width="24%" src="fastlane/metadata/android/en-US/images/phoneScreenshots/00.png">
-    <img width="24%" src="fastlane/metadata/android/en-US/images/phoneScreenshots/01.png">
-    <img width="24%" src="fastlane/metadata/android/en-US/images/phoneScreenshots/02.png">
-    <img width="24%" src="fastlane/metadata/android/en-US/images/phoneScreenshots/03.png">
-</div>
+| ![screenshot-0](https://github.com/thetwom/Tuner/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/00.png) | ![screenshot-1](https://github.com/thetwom/Tuner/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/01.png) | ![screenshot-3](https://github.com/thetwom/Tuner/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/02.png) | ![screenshot-4](https://github.com/thetwom/Tuner/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/03.png) |
+|------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
 
 # Features
 
