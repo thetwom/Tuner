@@ -128,28 +128,13 @@ private fun LazyListState.centerIndex(): Int {
  * @return Index within strings or -1 if there is no string is found.
  */
 private fun findIndexOfClosestScrollableHighlightedString(
-    strings: List<StringWithInfo>?,
+    strings: List<StringWithInfo>,
     highlightedStringKey: Int?,
     highlightedStringNote: MusicalNote?,
-    musicalScale: MusicalScale2,
     listState: LazyListState
 ): Int {
     return if (highlightedStringKey == null && highlightedStringNote == null) {
         -1
-    } else if (strings == null) { // -> chromatic scale
-        if (highlightedStringKey != null) {
-            highlightedStringKey // in chromatic scale the index in the scale corresponds to the key
-        } else if (highlightedStringNote != null) {
-            val centerItemIndex = listState.centerIndex()
-            musicalScale
-                .getMatchingNoteIndices(highlightedStringNote)
-                .minByOrNull {
-                    val noteIndex = it - musicalScale.noteIndexBegin
-                    (noteIndex - centerItemIndex).absoluteValue
-                }?: -1
-        } else {
-            -1
-        }
     } else {
         val closestIndex = listState.layoutInfo.visibleItemsInfo
             .filter {
@@ -192,12 +177,12 @@ private fun findIndexOfClosestScrollableHighlightedString(
  * @return Index within strings of the next string with the given note or -1 if no string is found.
  */
 private fun findNextScrollableStringIndex(
-    strings: ImmutableList<StringWithInfo>?,
+    strings: ImmutableList<StringWithInfo>,
     note: MusicalNote?,
     numHighlightedStrings: Int,
     listState: LazyListState
 ): Int {
-    if (note == null || strings == null)
+    if (note == null)
         return -1
     if (numHighlightedStrings == 1)
         return strings.indexOfFirst { it.note == note }
@@ -317,7 +302,7 @@ private fun StringsSidebar(
 
 @Composable
 fun Strings(
-    strings: ImmutableList<StringWithInfo>?, // if null, we assume chromatic
+    strings: ImmutableList<StringWithInfo>,
     musicalScale: MusicalScale2,
     modifier: Modifier = Modifier,
     tuningState: TuningState = TuningState.Unknown,
@@ -346,31 +331,30 @@ fun Strings(
     }
 
     val minOctave = remember(strings, musicalScale) {
-        strings?.minOfOrNull { it.note.octave }
+        strings.minOfOrNull { it.note.octave }
             ?: musicalScale.getNote(musicalScale.noteIndexBegin).octave
     }
     val maxOctave = remember(strings, musicalScale) {
-        strings?.maxOfOrNull { it.note.octave }
+        strings.maxOfOrNull { it.note.octave }
             ?: musicalScale.getNote(musicalScale.noteIndexEnd - 1).octave
     }
     val minNoteIndex = remember(strings, musicalScale) {
-        strings?.minOfOrNull {
+        strings.minOfOrNull {
             musicalScale.getMatchingNoteIndices(it.note).minOrNull() ?: musicalScale.noteIndexBegin
         } ?: musicalScale.noteIndexBegin
     }
     val maxNoteIndex = remember(strings, musicalScale) {
-        strings?.maxOfOrNull {
+        strings.maxOfOrNull {
             musicalScale.getMatchingNoteIndices(it.note).maxOrNull()
                 ?: (musicalScale.noteIndexEnd - 1)
         } ?: (musicalScale.noteIndexEnd - 1)
     }
-    val numStrings = strings?.size ?: (maxNoteIndex - minNoteIndex)
 
     val numHighlightedStrings = remember(highlightedNoteKey, highlightedNote) {
         if (highlightedNoteKey != null)
-            strings?.count { it.key == highlightedNoteKey }?: 1
+            strings.count { it.key == highlightedNoteKey }
         else
-            strings?.count { it.note == highlightedNote } ?: 1
+            strings.count { it.note == highlightedNote }
     }
 
     val noteNames = remember(musicalScale.temperament) {
@@ -421,7 +405,7 @@ fun Strings(
     LaunchedEffect(key1 = highlightedNoteKey, key2 = highlightedNote) {
         if (state.scrollMode == StringsScrollMode.Automatic) {
             val i = findIndexOfClosestScrollableHighlightedString(
-                strings, highlightedNoteKey, highlightedNote, musicalScale, state.listState
+                strings, highlightedNoteKey, highlightedNote, state.listState
             )
             state.scrollTo(i, coroutineContext)
         }
@@ -460,7 +444,6 @@ fun Strings(
                     strings,
                     highlightedNoteKey,
                     highlightedNote,
-                    musicalScale,
                     state.listState
                 )
                 scope.launch { state.scrollTo(i, coroutineContext) }
@@ -479,7 +462,6 @@ fun Strings(
                         strings,
                         highlightedNoteKey,
                         highlightedNote,
-                        musicalScale,
                         state.listState
                     )
                     scope.launch { state.scrollTo(i, coroutineContext) }
@@ -510,24 +492,15 @@ fun Strings(
                 contentPadding = PaddingValues(vertical = 4.dp),
                 state = state.listState
             ) {
-                items(numStrings, key = { strings?.get(it)?.key ?: it }) { index ->
-                    val key = strings?.get(index)?.key ?: index
-                    val noteInfo = strings?.get(index)
-                    val noteNameScaleIndex = remember(noteInfo, musicalScale, index) {
-                        if (noteInfo == null) {
-                            (musicalScale.noteIndexBegin + index)
-                        } else {
-                            val indices = musicalScale.getMatchingNoteIndices(noteInfo.note)
-                            when(indices.size) {
-                                0 -> (minNoteIndex + maxNoteIndex) / 2
-                                else -> indices.average().roundToInt()
-                            }
+                items(strings.size, key = { strings[it].key }) { index ->
+                    val key = strings[index].key
+                    val note = strings[index].note
+                    val noteNameScaleIndex = remember(note, musicalScale) {
+                        val indices = musicalScale.getMatchingNoteIndices(note)
+                        when(indices.size) {
+                            0 -> (minNoteIndex + maxNoteIndex) / 2
+                            else -> indices.average().roundToInt()
                         }
-                        //noteInfo?.musicalScaleIndex ?: (musicalScale.noteIndexBegin + index)
-                    }
-
-                    val note = remember(noteInfo, musicalScale) {
-                        noteInfo?.note ?: musicalScale.getNote(noteNameScaleIndex)
                     }
 
                     // we prefer key over highlighted note
@@ -576,7 +549,6 @@ fun Strings(
                         strings,
                         highlightedNoteKey,
                         highlightedNote,
-                        musicalScale,
                         state.listState
                     )
                     scope.launch { state.scrollTo(i, coroutineContext) }
@@ -638,19 +610,6 @@ private fun StringsPreview() {
                     highlightedNote = note
                 },
                 outline = PlotWindowOutline(lineWidth = 2.dp),
-                modifier = Modifier.weight(0.5f)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            var highlightedNoteKey by remember { mutableIntStateOf(10) }
-            Strings(
-                strings = null,
-                musicalScale = musicalScale,
-                tuningState = TuningState.InTune,
-                highlightedNoteKey = highlightedNoteKey,
-                notePrintOptions = notePrintOptions,
-                sidebarPosition = StringsSidebarPosition.End,
-                onStringClicked = { key, note ->
-                },
                 modifier = Modifier.weight(0.5f)
             )
         }

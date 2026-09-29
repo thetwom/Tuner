@@ -10,6 +10,9 @@ The present modification only generates a few symbols.
 - To preview a glyph use
   ./glyphs.py --test openarrowupnew | gs -sDEVICE=pngmono -sOutputFile=out.png -r72 -g1000x1000 -dBATCH -dNOPAUSE -q -
   where "openarrowupnew" must be the name of the glyph and out.png is the previe2.
+- The treble and bass clef of the note staff are not part of the
+  font but stored as path data in NoteStaff.kt. Regenerate them
+  with "./clef_paths.py" (needs ghostscript and potrace).
 
 ---- What comes is the original readme -------
 
