@@ -335,7 +335,14 @@ data class NotePrintOptions(
     fun resourceId(noteNameStem: NoteNameStem) = resourceIds[noteNameStem]
 }
 
-private val musicalSymbolFont = FontFamily(Font(R.font.gonville))
+internal val musicalSymbolFont = FontFamily(Font(R.font.gonville))
+
+/** Accidental of a note modifier as gonville glyphs (microtonal arrows followed by the
+ * sharp/flat symbol), meant to be rendered with [musicalSymbolFont].
+ * @return Glyphs or an empty string for NoteModifier.None.
+ */
+internal fun NoteModifier.accidentalSymbols(): String =
+    (modifierPrefixStrings[this] ?: "") + (modifierPostfixStrings[this] ?: "")
 
 private fun createAnnotatedStringOfNote(
     properties: ResolvedNoteProperties,

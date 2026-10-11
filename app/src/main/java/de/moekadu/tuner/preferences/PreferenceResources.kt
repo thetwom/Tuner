@@ -34,6 +34,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import de.moekadu.tuner.hilt.ApplicationScope
 import de.moekadu.tuner.notedetection.WindowingFunction
 import de.moekadu.tuner.ui.notes.NotePrintOptions
+import de.moekadu.tuner.ui.notes.StaffClef
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
@@ -116,6 +117,26 @@ class PreferenceResources @Inject constructor (
         writeNotePrintOptions(notePrintOptions.value.copy(
             useEnharmonic = !currentUseEnharmonic
         ))
+    }
+
+    // key signature of the note staff: > 0 number of sharps, < 0 number of flats
+    val keySignature = getPreferenceFlow(KEY_SIGNATURE_KEY, KeySignatureDefault)
+    fun writeKeySignature(keySignature: Int) {
+        writePreference(KEY_SIGNATURE_KEY, keySignature)
+    }
+
+    // clef setup of the note staff
+    val staffClef = getTransformablePreferenceFlow(STAFF_CLEF_KEY, StaffClefDefault) { name ->
+        StaffClef.entries.firstOrNull { it.name == name } ?: StaffClefDefault
+    }
+    fun writeStaffClef(staffClef: StaffClef) {
+        writePreference(STAFF_CLEF_KEY, staffClef.name)
+    }
+
+    // show the chromatic instrument as note staff instead of a list of all notes
+    val chromaticAsStaff = getPreferenceFlow(CHROMATIC_AS_STAFF_KEY, ChromaticAsStaffDefault)
+    fun writeChromaticAsStaff(chromaticAsStaff: Boolean) {
+        writePreference(CHROMATIC_AS_STAFF_KEY, chromaticAsStaff)
     }
 
     // scientific mode
@@ -212,6 +233,9 @@ class PreferenceResources @Inject constructor (
                 it[NOTE_PRINT_OPTIONS_KEY] = Json.encodeToString(NotePrintOptionsDefault)
                 it[SENSITIVITY_KEY] = SensitivityDefault
                 it[SCIENTIFIC_MODE_KEY] = ScientificModeDefault
+                it[KEY_SIGNATURE_KEY] = KeySignatureDefault
+                it[STAFF_CLEF_KEY] = StaffClefDefault.name
+                it[CHROMATIC_AS_STAFF_KEY] = ChromaticAsStaffDefault
                 it[NUM_MOVING_AVERAGE_KEY] = NumMovingAverageDefault
                 it[WINDOW_SIZE_KEY] = WindowSizeExponentDefault
                 it[WINDOWING_KEY] = WindowingDefault.name
@@ -296,6 +320,9 @@ class PreferenceResources @Inject constructor (
         private const val DisplayOnLockScreenDefault = false
         private val NotePrintOptionsDefault = NotePrintOptions()
         private const val ScientificModeDefault = false
+        private const val KeySignatureDefault = 0
+        private val StaffClefDefault = StaffClef.Grand
+        private const val ChromaticAsStaffDefault = false
 //        private val MusicalScaleDefault = MusicalScaleFactory.create(TemperamentType.EDO12)
         private val WindowingDefault = WindowingFunction.Tophat
         private val OverlapDefault = 25f / 100f
@@ -317,6 +344,9 @@ class PreferenceResources @Inject constructor (
 //        const val PREFER_FLAT_KEY = "prefer_flat"
 //        const val SOLFEGE_KEY = "solfege"
         private val SCIENTIFIC_MODE_KEY = booleanPreferencesKey("scientific_mode")
+        private val KEY_SIGNATURE_KEY = intPreferencesKey("key_signature")
+        private val STAFF_CLEF_KEY = stringPreferencesKey("staff_clef")
+        private val CHROMATIC_AS_STAFF_KEY = booleanPreferencesKey("chromatic_as_staff")
 //        private val NOTATION_KEY = stringPreferencesKey("notation")
         private val TEMPERAMENT_AND_REFERENCE_NOTE_KEY = stringPreferencesKey("temperament_and_reference_note")
         private val WINDOWING_KEY = stringPreferencesKey("windowing")

@@ -207,6 +207,16 @@ fun Preferences(
                 )
             }
             item {
+                val chromaticAsStaff by pref.chromaticAsStaff.collectAsStateWithLifecycle()
+                SwitchPreference(
+                    name = stringResource(id = R.string.chromatic_as_staff),
+                    checked = chromaticAsStaff,
+                    onCheckChange = { pref.writeChromaticAsStaff(it) },
+                    iconId = R.drawable.ic_piano,
+                    supporting = stringResource(id = R.string.chromatic_as_staff_summary)
+                )
+            }
+            item {
                 val sensitivity by pref.sensitivity.collectAsStateWithLifecycle()
                 SliderPreference(
                     name = stringResource(id = R.string.sensitivity),

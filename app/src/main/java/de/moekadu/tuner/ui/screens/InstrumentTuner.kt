@@ -68,6 +68,8 @@ import de.moekadu.tuner.ui.misc.TunerScaffold
 import de.moekadu.tuner.ui.misc.rememberTunerAudioPermission
 import de.moekadu.tuner.ui.notes.NoteLockedButton
 import de.moekadu.tuner.ui.notes.NotePrintOptions
+import de.moekadu.tuner.ui.notes.NoteStaff
+import de.moekadu.tuner.ui.notes.StaffClef
 import de.moekadu.tuner.ui.notes.rememberMaxNoteSize
 import de.moekadu.tuner.ui.plot.GestureBasedViewPort
 import de.moekadu.tuner.ui.theme.TunerTheme
@@ -84,6 +86,16 @@ interface InstrumentTunerData {
     val notePrintOptions: StateFlow<NotePrintOptions>
     val toleranceInCents: StateFlow<Int>
 
+    /** Key signature of the note staff: > 0 number of sharps, < 0 number of flats. */
+    val keySignature: StateFlow<Int>
+    fun onKeySignatureChanged(keySignature: Int)
+
+    /** Clef setup of the note staff. */
+    val staffClef: StateFlow<StaffClef>
+    fun onStaffClefChanged(staffClef: StaffClef)
+
+    /** True to show the chromatic instrument as note staff instead of the list of all notes. */
+    val chromaticAsStaff: StateFlow<Boolean>
     val instrument: StateFlow<Instrument>
 
     // Data specific to instruments
@@ -122,6 +134,16 @@ private fun checkInstrumentCompatibility(
         sortedStrings.sortedAndDistinctNoteIndices.isEmpty() -> true
         sortedStrings.sortedAndDistinctNoteIndices.last() == Int.MAX_VALUE -> false
         else -> true
+    }
+}
+
+/** Lock the currently shown note of a chromatic instrument, or unlock it if already locked.
+ * For chromatic instruments, the note key is the note index relative to noteIndexBegin.
+ */
+private fun InstrumentTunerData.toggleChromaticTargetLock(musicalScale: MusicalScale2) {
+    val noteIndex = musicalScale.getNoteIndex2(targetNote)
+    if (noteIndex != Int.MAX_VALUE) {
+        onStringClicked(noteIndex - musicalScale.noteIndexBegin, targetNote)
     }
 }
 
@@ -201,6 +223,9 @@ fun InstrumentTunerPortrait(
             val musicalScaleAsState by data.musicalScale.collectAsStateWithLifecycle()
             val notePrintOptionsAsState by data.notePrintOptions.collectAsStateWithLifecycle()
             val toleranceInCentsAsState by data.toleranceInCents.collectAsStateWithLifecycle()
+            val keySignatureAsState by data.keySignature.collectAsStateWithLifecycle()
+            val staffClefAsState by data.staffClef.collectAsStateWithLifecycle()
+            val chromaticAsStaffAsState by data.chromaticAsStaff.collectAsStateWithLifecycle()
             val instrumentAsState by data.instrument.collectAsStateWithLifecycle()
             val noteNames by remember { derivedStateOf {
                 musicalScaleAsState.temperament.noteNames(musicalScaleAsState.rootNote)
@@ -243,7 +268,36 @@ fun InstrumentTunerPortrait(
                 onClick = onInstrumentButtonClicked
             )
 
-            if (instrumentAsState.strings.isNotEmpty() || instrumentAsState.isChromatic) {
+            if (instrumentAsState.isChromatic && chromaticAsStaffAsState) {
+                NoteStaff(
+                    note = data.targetNote,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(stringsHeight)
+                        .padding(
+                            start = tunerPlotStyle.margin,
+                            top = tunerPlotStyle.margin,
+                            end = noteWidthDp
+                        ),
+                    tuningState = data.tuningState,
+                    notePrintOptions = notePrintOptionsAsState,
+                    staffColor = tunerPlotStyle.stringColor,
+                    inTuneColor = tunerPlotStyle.positiveColor,
+                    outOfTuneColor = tunerPlotStyle.negativeColor,
+                    unknownTuningColor = tunerPlotStyle.inactiveStringColor,
+                    fontSize = tunerPlotStyle.stringFontStyle.fontSize,
+                    outline = tunerPlotStyle.plotWindowOutline,
+                    keySignature = if (musicalScaleAsState.numberOfNotesPerOctave == 12) {
+                        keySignatureAsState
+                    } else {
+                        null
+                    },
+                    onKeySignatureChange = { data.onKeySignatureChanged(it) },
+                    staffClef = staffClefAsState,
+                    onStaffClefChange = { data.onStaffClefChanged(it) },
+                    onClick = { data.toggleChromaticTargetLock(musicalScaleAsState) }
+                )
+            } else if (instrumentAsState.strings.isNotEmpty() || instrumentAsState.isChromatic) {
                 Strings(
                     strings = if (instrumentAsState.isChromatic) null else data.strings,
                     musicalScale = musicalScaleAsState,
@@ -359,6 +413,9 @@ fun InstrumentTunerLandscape(
         val notePrintOptionsAsState by data.notePrintOptions.collectAsStateWithLifecycle()
         val musicalScaleAsState by data.musicalScale.collectAsStateWithLifecycle()
         val toleranceInCentsAsState by data.toleranceInCents.collectAsStateWithLifecycle()
+        val keySignatureAsState by data.keySignature.collectAsStateWithLifecycle()
+        val staffClefAsState by data.staffClef.collectAsStateWithLifecycle()
+        val chromaticAsStaffAsState by data.chromaticAsStaff.collectAsStateWithLifecycle()
         val instrumentAsState by data.instrument.collectAsStateWithLifecycle()
         val noteNames by remember { derivedStateOf {
             musicalScaleAsState.temperament.noteNames(musicalScaleAsState.rootNote)
@@ -401,35 +458,63 @@ fun InstrumentTunerLandscape(
 
             )
 
-            Strings(
-                strings = if (instrumentAsState.isChromatic) null else data.strings,
-                musicalScale = musicalScaleAsState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(top = tunerPlotStyle.margin),
-                tuningState = data.tuningState,
-                highlightedNoteKey = data.selectedNoteKey,
-                highlightedNote = data.targetNote,
-                notePrintOptions = notePrintOptionsAsState,
-                defaultColor = tunerPlotStyle.stringColor,
-                onDefaultColor = tunerPlotStyle.onStringColor,
-                inTuneColor = tunerPlotStyle.positiveColor,
-                onInTuneColor = tunerPlotStyle.onPositiveColor,
-                outOfTuneColor = tunerPlotStyle.negativeColor,
-                onOutOfTuneColor = tunerPlotStyle.onNegativeColor,
-                unknownTuningColor = tunerPlotStyle.inactiveStringColor,
-                onUnknownTuningColor = tunerPlotStyle.onInactiveStringColor,
-                fontSize = tunerPlotStyle.stringFontStyle.fontSize,
-                sidebarPosition = StringsSidebarPosition.Start,
-                sidebarWidth = noteWidthDp,
-                outline = if (data.stringsState.scrollMode == StringsScrollMode.Manual)
-                    tunerPlotStyle.plotWindowOutlineDuringGesture
-                else
-                    tunerPlotStyle.plotWindowOutline,
-                state = data.stringsState,
-                onStringClicked = { key, note -> data.onStringClicked(key, note) }
-            )
+            if (instrumentAsState.isChromatic && chromaticAsStaffAsState) {
+                NoteStaff(
+                    note = data.targetNote,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(start = noteWidthDp, top = tunerPlotStyle.margin),
+                    tuningState = data.tuningState,
+                    notePrintOptions = notePrintOptionsAsState,
+                    staffColor = tunerPlotStyle.stringColor,
+                    inTuneColor = tunerPlotStyle.positiveColor,
+                    outOfTuneColor = tunerPlotStyle.negativeColor,
+                    unknownTuningColor = tunerPlotStyle.inactiveStringColor,
+                    fontSize = tunerPlotStyle.stringFontStyle.fontSize,
+                    outline = tunerPlotStyle.plotWindowOutline,
+                    keySignature = if (musicalScaleAsState.numberOfNotesPerOctave == 12) {
+                        keySignatureAsState
+                    } else {
+                        null
+                    },
+                    onKeySignatureChange = { data.onKeySignatureChanged(it) },
+                    staffClef = staffClefAsState,
+                    onStaffClefChange = { data.onStaffClefChanged(it) },
+                    onClick = { data.toggleChromaticTargetLock(musicalScaleAsState) }
+                )
+            } else {
+                Strings(
+                    strings = if (instrumentAsState.isChromatic) null else data.strings,
+                    musicalScale = musicalScaleAsState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(top = tunerPlotStyle.margin),
+                    tuningState = data.tuningState,
+                    highlightedNoteKey = data.selectedNoteKey,
+                    highlightedNote = data.targetNote,
+                    notePrintOptions = notePrintOptionsAsState,
+                    defaultColor = tunerPlotStyle.stringColor,
+                    onDefaultColor = tunerPlotStyle.onStringColor,
+                    inTuneColor = tunerPlotStyle.positiveColor,
+                    onInTuneColor = tunerPlotStyle.onPositiveColor,
+                    outOfTuneColor = tunerPlotStyle.negativeColor,
+                    onOutOfTuneColor = tunerPlotStyle.onNegativeColor,
+                    unknownTuningColor = tunerPlotStyle.inactiveStringColor,
+                    onUnknownTuningColor = tunerPlotStyle.onInactiveStringColor,
+                    fontSize = tunerPlotStyle.stringFontStyle.fontSize,
+                    sidebarPosition = StringsSidebarPosition.Start,
+                    sidebarWidth = noteWidthDp,
+                    outline = if (data.stringsState.scrollMode == StringsScrollMode.Manual) {
+                        tunerPlotStyle.plotWindowOutlineDuringGesture
+                    } else {
+                        tunerPlotStyle.plotWindowOutline
+                    },
+                    state = data.stringsState,
+                    onStringClicked = { key, note -> data.onStringClicked(key, note) }
+                )
+            }
 
             AnimatedVisibility(data.selectedNoteKey != null) {
                 NoteLockedButton(
@@ -512,6 +597,15 @@ class TestInstrumentTunerData : InstrumentTunerData {
             = MutableStateFlow(NotePrintOptions())
     override val toleranceInCents: StateFlow<Int>
             = MutableStateFlow(10)
+    override val keySignature = MutableStateFlow(0)
+    override fun onKeySignatureChanged(keySignature: Int) {
+        this.keySignature.value = keySignature
+    }
+    override val staffClef = MutableStateFlow(StaffClef.Grand)
+    override fun onStaffClefChanged(staffClef: StaffClef) {
+        this.staffClef.value = staffClef
+    }
+    override val chromaticAsStaff = MutableStateFlow(false)
 
     private val noteNameScale = musicalScale.value.temperament.noteNames(
         musicalScale.value.rootNote
